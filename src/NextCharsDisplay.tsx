@@ -108,11 +108,9 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
             }
         }
         // Check if the commandLine prop has changed
-        console.log('componentDidUpdate', this.props.commandLine);
         if (this.props.commandLine !== prevProps.commandLine) {
             // Handle the new commandLine prop, for example by setting state
-            console.log('compenetDidUpdate', this.props.commandLine);
-            this.setState({ phrase: new Phrase(this.props.commandLine) });
+            this.setState({ nextChars: this.getNextCharacters(this.props.commandLine) });
 
             // Or perform any other actions necessary to respond to the change
             this.handleCommandLineChange(this.props.commandLine);
@@ -128,7 +126,7 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
     setNewPhrase = () => {
         const newPhrase = this.getRandomPhrase();
         console.log('setNewPhrase', newPhrase);
-        this.setState({ phrase: new Phrase(newPhrase), nextChars: newPhrase, nextCharsIsVisible: true });
+        this.setState({ phrase: new Phrase(newPhrase), nextChars: this.getNextCharacters(newPhrase), nextCharsIsVisible: true });
         // this.props.onNewPhrase(newPhrase); 
     }
 
@@ -273,7 +271,7 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
     getNextCharacters(stringBeingTested: string): string {
         const nextIndex = this.getFirstNonMatchingChar(stringBeingTested);
         const nextChars = this.state.phrase.value.substring(nextIndex, nextIndex + 40);
-        return nextChars;
+        return nextChars || stringBeingTested.substring(nextIndex, nextIndex + 10);
     }
 
     /**
