@@ -1,0 +1,221 @@
+:root {
+    --terminal-font-family: 'Fira Code', monospace;
+    --terminal-font-size: 16px;
+    --terminal-line-height: 1.5em;
+    color: white;
+}
+
+html,
+body {
+    background-color: #000;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    font-family: var(--terminal-font-family);
+}
+
+.chord-navigation {
+
+    img {
+        display: block;
+        width: 40px;
+        height: 40px;
+        margin: 5px;
+    }
+
+    &:after {
+        content: "";
+        display: table;
+        clear: both;
+    }
+}
+
+.key-container {
+    float: left;
+    flex-direction: column;
+    align-items: left;
+    /* Center-align the items horizontally */
+    text-align: left;
+    /* Center-align the text */
+    margin-bottom: 15px;
+    /* Add some space between the pairs */
+}
+
+.key-container label {
+    line-height: 0.6em;
+    vertical-align: text-top;
+}
+
+.log-time {
+    color: grey;
+    font-weight: 100m
+}
+
+.log-hour {
+    color: cyan;
+    font-weight: 100;
+}
+
+.log-minute {
+    color: #FF09;
+    font-weight: bold;
+}
+
+.log-second {
+    color: green;
+    font-weight: 100;
+}
+
+.log-prefix {
+    color: gray;
+}
+
+.terminal-nav {
+    color: white;
+    background-color: #000;
+    font-weight: bold;
+    flex-shrink: 1;
+    padding: 0 10px;
+    line-height: 2em;
+}
+
+pre#nextChars {
+    padding: 0;
+    margin: 0;
+    min-height: 1.5em;
+    font-size: var(--terminal-font-size) +2px;
+    line-height: 1.5em;
+}
+
+video#terminal-video {
+    width: 95%;
+    padding-left: 2.5%;
+    top: 0;
+    left: 0;
+    position: absolute;
+    z-index: 1;
+}
+
+div.terminal {
+    background-color: #0000;
+    z-index: 10;
+}
+
+.xterm .xterm-viewport {
+    background-color: rgba(0, 0, 0, 0.5);
+    /* Adjust the alpha value for transparency */
+}
+
+#timer-root {
+    color: white;
+    float: left;
+}
+
+.terminal {
+    /* Terminal styles */
+    background-color: #0003;
+    z-index: 10;
+    color: white;
+    font-size: var(--terminal-font-size);
+    display: flex;
+    height: 100%;
+    width: 100%;
+    padding: 0;
+    margin: 0;
+    flex-direction: column;
+
+    .prompt {
+        color: lightseagreen;
+
+        .domain {
+            color: darkkhaki;
+        }
+
+        .user {
+            color: magenta;
+        }
+    }
+}
+
+
+#terminal .terminal-output {
+    /* Output area styles */
+    color: #FFF;
+
+    z-index: 10;
+
+}
+
+.wpm {
+    color: #fa807280;
+    padding: 0 5px;
+}
+
+/* Responsive font size and padding */
+@media (max-width: 500px) {
+
+    /* Example breakpoint for mobile devices */
+    :root {
+        --terminal-line-height: 1.2em;
+    }
+
+    body {
+        padding: 10px;
+    }
+
+    .terminal {
+        padding: 5px;
+        /* Adjust padding if necessary */
+    }
+
+    /* Add any additional mobile-specific styles here */
+}
+
+.terminal-line {
+    display: flex;
+    align-items: flex-start;
+    /* Align items to the top */
+}
+
+.prompt-tail-container {
+    margin-right: 4px;
+    /* Space between the prompt tail and the input */
+}
+
+.terminal-prompt.tail {
+    /* Aligning the prompt-tail vertically */
+    align-self: top;
+}
+
+.terminal-input {
+    flex: 1;
+    background: none;
+    border: none;
+    color: yellow;
+    caret-color: lightyellow;
+    resize: none;
+    white-space: pre-wrap;
+    overflow-y: hidden;
+    padding: 0;
+    vertical-align: top;
+    /* If you want the textarea to grow without a scrollbar */
+    /* Remove fixed height to allow auto-expanding */
+}
+
+.terminal-input:focus {
+    outline: none;
+}
+
+.terminal-line:not(.first-line) {
+    display: flex;
+    align-items: center;
+}
+
+.terminal .domain {
+    color: darkkhaki;
+}
+
+.terminal-progress-bar {
+    /* Progress bar styles */
+    background-color: darkblue;
+}

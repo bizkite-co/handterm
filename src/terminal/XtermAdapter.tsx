@@ -76,6 +76,7 @@ export class XtermAdapter extends React.Component<XtermAdapterProps, XtermAdapte
       this.terminalElementRef = terminalElementRef;
       this.terminalElement = terminalElementRef.current
       this.terminal.open(terminalElementRef.current);
+      this.terminal.loadAddon(new FitAddon());
       this.terminal.write('\x1b[4h');
       // Other terminal initialization code...
     }
@@ -96,12 +97,7 @@ export class XtermAdapter extends React.Component<XtermAdapterProps, XtermAdapte
       console.error('terminalElementRef.current is NULL');
     }
     this.terminal.onData(this.onDataHandler.bind(this));
-    this.terminal.onKey((key) => {
-      console.log('key pressed', key);
-    })
-    this.terminal.onLineFeed(() => {
-      console.log('LF pressed', this.terminal.buffer.active.cursorX, this.terminal.buffer.active.cursorY);
-    })
+    // this.terminal.onKey(this.onKeyHandler.bind(this));
     this.terminal.onCursorMove(() => {
       // console.log('Cursor moved', this.terminal.buffer.active.cursorX, this.terminal.buffer.active.cursorY);
     })
@@ -126,17 +122,18 @@ export class XtermAdapter extends React.Component<XtermAdapterProps, XtermAdapte
     if (data.charCodeAt(0) === 127) {
       console.log('Backspace pressed');
       if (this.terminal.buffer.active.cursorX < this.promptLength) return;
-      this.terminal.write('\x1b[D\x1b[P');
+      this.terminal.write('\x1b[D');
       // this.terminal.write('\x1b[D \x1b[D');
       // let cursorIndex = this.terminal.buffer.active.cursorX;
-      // this.terminal.buffer.active.cursorX = cursorIndex - 1;
-      // this.terminal.buffer.active.cursorX = cursorIndex - 1;
-      // this.terminal.buffer.active.cursorX = cursorIndex - 1;
-      // this.terminal.buffer.active.cursorX = cursorIndex - 1;
     }
   }
 
-  public onDataHandler(data: string): void {
+  onKeyHandler(key: string): void {
+    // They seems nice but might not handle some multi-byte characters?
+    // It's keyboard-centric
+  }
+
+  onDataHandler(data: string): void {
     // Set the cursor mode on the terminal
     this.setCursorMode(this.terminal);
 
@@ -159,14 +156,6 @@ export class XtermAdapter extends React.Component<XtermAdapterProps, XtermAdapte
           return;
         }
       }
-    }
-    if (data.charCodeAt(0) === 127) {
-      console.log('Backspace pressed');
-      if (this.terminal.buffer.active.cursorX < this.promptLength) return;
-      this.terminal.write('\x1b[D\x1b[P');
-      // this.terminal.write('\x1b[D \x1b[D');
-      // let cursorIndex = this.terminal.buffer.active.cursorX;
-      return;
     }
     if (data.charCodeAt(0) === 3) { // Ctrl+C
       this.setState({ isInPhraseMode: false });
