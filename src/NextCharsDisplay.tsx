@@ -16,7 +16,7 @@ interface NextCharsDisplayProps {
     commandLine: string;
     onTimerStatusChange: (isActive: boolean) => void;
     isInPhraseMode: boolean;
-
+    onNewPhrase: (phrase: string) => void;
 }
 interface NextCharsDisplayState {
     isActive: boolean;
@@ -33,7 +33,6 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
 
     private _nextChars: HTMLElement;
     private _nextCharsRate: HTMLDivElement;
-    private _phrase = new Phrase('');
 
     private _wholePhraseChords: HTMLElement;
     private _chordImageHolder: HTMLElement;
@@ -74,7 +73,6 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
         super(props);
         this._errorDisplayRef = createRef();
         const handleInputEvent = this.testInput.bind(this);
-        // this._phrase = createElement('div', TerminalCssClasses.Phrase);
         this._lambdaUrl = 'https://l7c5uk7cutnfql5j4iunvx4fuq0yjfbs.lambda-url.us-east-1.on.aws/';
         this.voiceSynth = window.speechSynthesis as SpeechSynthesis;
         this._nextChars = document.getElementById(TerminalCssClasses.NextChars) as HTMLElement;
@@ -94,7 +92,6 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
         this.isTestMode = localStorage.getItem('testMode') == 'true';
         this._timerRef = createRef();
         // this._timer = new Timer();
-        this.attachEventListeners();
     }
 
     componentDidMount() {
@@ -105,7 +102,13 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
     }
 
     componentDidUpdate(prevProps: NextCharsDisplayProps) {
+        if (this.props.isInPhraseMode !== prevProps.isInPhraseMode) {
+            if (this.props.isInPhraseMode) {
+                this.setNewPhrase();
+            }
+        }
         // Check if the commandLine prop has changed
+        console.log('componentDidUpdate', this.props.commandLine);
         if (this.props.commandLine !== prevProps.commandLine) {
             // Handle the new commandLine prop, for example by setting state
             console.log('compenetDidUpdate', this.props.commandLine);
@@ -125,8 +128,8 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
     setNewPhrase = () => {
         const newPhrase = this.getRandomPhrase();
         console.log('setNewPhrase', newPhrase);
-        this.setState({ phrase: new Phrase(newPhrase) });
-        this.updateDisplay(newPhrase);
+        this.setState({ phrase: new Phrase(newPhrase), nextChars: newPhrase, nextCharsIsVisible: true });
+        // this.props.onNewPhrase(newPhrase); 
     }
 
     getRandomPhrase(): string {
@@ -192,7 +195,7 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
         if (this._timerRef.current) {
             this._timerRef.current.reset();
         }
-        if (this._nextChars) this._nextChars.innerText = this._phrase.value;
+        if (this._nextChars) this._nextChars.innerText = this.state.phrase.value;
         if (this._testArea) {
             this._testArea.style.border = "2px solid lightgray";
             this._testArea.disabled = false;
@@ -210,23 +213,11 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
         return result;
     }
 
-    attachEventListeners() {
-        if (this._testArea) {
-            this._testArea.addEventListener('keyup', (e: Event) => {
-                if (this._voiceMode && this._voiceMode.checked) {
-                    this.sayText(e as KeyboardEvent);
-                }
-            })
-            this._testArea.addEventListener('input', (e: Event) => {
-                this.testInput(this._testArea.value);
-            });
-        }
-    }
     set wpm(wpm: HTMLSpanElement) {
         this._wpm = wpm;
     }
     get phrase(): Phrase {
-        return this._phrase;
+        return this.state.phrase;
     }
     public get nextChars(): HTMLElement {
         return this._nextChars;
@@ -265,26 +256,23 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
     }
 
     reset(): void {
-        this._phrase = new Phrase('');
+        this.state.phrase = new Phrase('');
         this.setNext('');
         this._nextChars.hidden = true;
     }
 
     set phrase(phrase: HTMLInputElement) {
-        this._phrase = new Phrase(phrase.value);
+        this.state.phrase = new Phrase(phrase.value);
     }
 
-    updateDisplay(testPhrase: string): void {
-        console.log('updateDisplay', testPhrase);
-        const nextIndex = this.getFirstNonMatchingChar(testPhrase);
-        this.setNext(testPhrase);
-        const nextChars = this._phrase.value.substring(nextIndex, nextIndex + 40);
+    setNextCharsDisplay(stringBeingTested: string): void {
+        console.log('updateDisplay', stringBeingTested);
+        this.setState({ nextChars: this.getNextCharacters(stringBeingTested) });
     }
 
-    getNextCharacters(testPhrase: string, fullPhrase: string): string {
-        console.log('getNextCharacters', testPhrase, fullPhrase);
-        const nextIndex = this.getFirstNonMatchingChar(testPhrase);
-        const nextChars = fullPhrase.substring(nextIndex, nextIndex + 40);
+    getNextCharacters(stringBeingTested: string): string {
+        const nextIndex = this.getFirstNonMatchingChar(stringBeingTested);
+        const nextChars = this.state.phrase.value.substring(nextIndex, nextIndex + 40);
         return nextChars;
     }
 
@@ -304,74 +292,29 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
         return result;
     }
 
-    private formatNextChars(chars: string): string {
-        let result = chars;
-        // Format the characters as needed for display, e.g., replace spaces, add span for the next character, etc.
-        // Return the formatted string to be set as innerHTML of the nextCharsElement
-        return result;
-    }
-
-    public async chordify(): Promise<Array<ChordRow>> {
-        const phrase = new Phrase(this._phrase.value);
-        console.log('phrase', phrase);
-        const chordRows: Array<ChordRow> = phrase.chords.map((chord: Chord) => { return { char: chord.key, chord: parseInt(chord.chordCode, 16), strokes: '' }; });
-        this._wholePhraseChords.innerHTML = phrase.chordsHTML.join('');
-        this.setNext('');
-        // this._timer.setSvg('start');
-        if (this._testArea) this._testArea.focus();
-        // TODO: disable phrase elemeent
-        // this._phrase.disabled = true;
-
-        return chordRows;
-    }
-
-    resetChordify = () => {
-        if (this._phrase) {
-            // TODO: blank out the phrase input element.
-            // this._phrase.value = '';
-            // TODO: enable phrase elemeent
-            // this._phrase.disabled = false;
-        }
-        if (this._wholePhraseChords) this._wholePhraseChords.innerHTML = '';
-        if (this._allChordsList) this._allChordsList.hidden = true;
-        if (this._testArea) {
-            this._testArea.value = '';
-            this._testArea.disabled = false;
-        }
-    };
     private setNext = (testPhrase: string): HTMLElement | null => {
         const nextIndex = this.getFirstNonMatchingChar(testPhrase);
         if (nextIndex < 0) {
             return null;
         }
         // Remove the outstanding class from the previous chord.
-        Array
-            .from(this._wholePhraseChords?.children ?? [])
-            .forEach((chord, i) => {
-                chord.classList.remove("next");
-            });
 
-        if (nextIndex > this._phrase.value.length - 1) {
+        if (nextIndex > this.state.phrase.value.length - 1) {
             return null;
         }
 
-        let nextCharacter = `<span class="nextCharacter">${this._phrase.value.substring(nextIndex, nextIndex + 1).replace(' ', '&nbsp;')}</span>`;
+        this.setNextCharsDisplay(testPhrase);
 
-        this.updateDisplay(testPhrase);
-        const nextChars = this._phrase.value.substring(nextIndex, nextIndex + 40);
-        this._nextChars.innerHTML = this.formatNextChars(nextChars);
+        const nextChordHTML = this.state.phrase.chordsHTML[nextIndex] as HTMLElement;
 
-        const next = this._wholePhraseChords?.children[nextIndex] as HTMLElement;
-
-        let inChord = Phrase.findChordHTML(nextChars[0]);
-
-        if (inChord) {
-            inChord.classList.add("next");
-            if (this._chordImageHolder) this._chordImageHolder.replaceChildren(inChord);
+        if (nextChordHTML) {
+            nextChordHTML.classList.add("next");
+            if (this._chordImageHolder) this._chordImageHolder.replaceChildren(nextChordHTML);
         }
 
-        if (this._svgCharacter && next) {
-            const nameAttribute = next.getAttribute("name");
+        // Set the next character in the SVG element
+        if (this._svgCharacter && nextChordHTML) {
+            const nameAttribute = nextChordHTML.getAttribute("name");
             if (nameAttribute) {
                 this._svgCharacter.innerHTML = nameAttribute
                     .replace("Space", spaceDisplayChar)
@@ -382,7 +325,7 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
             this._svgCharacter.hidden = false;
         }
         this._wpm.innerText = this.getWpm();
-        return next;
+        return nextChordHTML;
     };
 
     cancel = () => {
@@ -406,29 +349,18 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
         this.setNext('');
     }
 
-    testInput = (inputString: string) => {
-        console.log("testInput", inputString);
-        const currentChar = inputString.slice(-1); // Get the last character of the inputString
-        const expectedChar = this._nextChar; // Expected character to be typed next
+    testInput = (stringBeingTested: string) => {
+        
         this.startTImer();
-        // Use WPM calculator here.
-        if (currentChar === expectedChar) {
-            const charTime = createCharTime(
-                currentChar,
-                Number(((this._centiSecond - this._prevCharTime) / 100).toFixed(2)),
-                this._centiSecond / 100
-            );
-            this._charTimeArray.push(charTime);
-        }
 
-        const next = this.setNext(inputString);
-        if (next) {
-            next.classList.remove("error");
+        const nextChordHTML = this.setNext(stringBeingTested);
+        if (nextChordHTML) {
+            nextChordHTML.classList.remove("error");
         }
         this._prevCharTime = this._centiSecond;
 
         // TODO: de-overlap this and comparePhrase
-        if (inputString.length === 0) {
+        if (stringBeingTested.length === 0) {
             // stop timer
             if (this._testArea) this._testArea.style.border = "";
             const chordImageHolderChild = this._chordImageHolder?.firstChild as HTMLImageElement;
@@ -437,22 +369,24 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
             return;
         }
 
-        if (inputString
-            == this._phrase.value
-                .trim().substring(0, inputString.length)
+        if (stringBeingTested
+            == this.state.phrase.value
+                .trim().substring(0, stringBeingTested.length)
         ) {
-            if (this._testArea) this._testArea.style.border = "4px solid #FFF3";
+            // if (this._testArea) this._testArea.style.border = "4px solid #FFF3";
             this.hideError();
-            this._nextChars.textContent = this.getNextCharacters(inputString, this._phrase.value);
+            // TODO: This should update the actual display
+            // TODO: Make sure why nextChars is already updated here and remove this if condition or update it.
+            // this.state.nextChars = this.getNextCharacters(inputString, this.state.phrase.value);
         }
         else {
             // #MISMATCHED
             // Alert mismatched text with red border.
             if (this._testArea) this._testArea.style.border = "4px solid red";
-            next?.classList.add("error");
-            console.log('NextCharsDisplay.testInput mismatch', this._errorDisplayRef);
+            nextChordHTML?.classList.add("error");
+            console.log('NextCharsDisplay.testInput mismatch', this.state.phrase.value, stringBeingTested);
             if (this._errorDisplayRef.current) {
-                const mismatchedChar = this._phrase.value[this.getFirstNonMatchingChar(this._phrase.value)];
+                const mismatchedChar = this.state.phrase.value[this.getFirstNonMatchingChar(this.state.phrase.value)];
                 const mismatchedCharCode: string = allChords.find((x: Chord) => x.key == mismatchedChar)?.chordCode ?? '';
                 console.log('Showing error');
                 this.setState({ mismatchedChar, mismatchedCharCode });
@@ -465,7 +399,7 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
             // if (chordImageHolderChild) chordImageHolderChild.hidden = false;
         }
 
-        if (inputString.trim() == this._phrase.value.trim()) {
+        if (stringBeingTested.trim() == this.state.phrase.value.trim()) {
             // SUCCESS 
             // SHOW completion indication
             // this._timer.setSvg('stop');
@@ -491,15 +425,15 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
         // this._timer.start();
     }
 
-    private getFirstNonMatchingChar = (testPhrase: string): number => {
-        if (!this._phrase.value) return 0;
-        const sourcePhrase = this._phrase.value.split('');
-        if (testPhrase.length == 0) {
+    private getFirstNonMatchingChar = (stringBeingTested: string): number => {
+        if (!this.state.phrase.value) return 0;
+        const sourcePhrase = this.state.phrase.value;
+        if (stringBeingTested.length == 0) {
             return 0;
         }
         var result = 0;
-        for (let i = 0; i < testPhrase.length; i++) {
-            if (testPhrase[i] !== sourcePhrase[i]) {
+        for (let i = 0; i < stringBeingTested.length; i++) {
+            if (stringBeingTested[i] !== sourcePhrase[i]) {
                 return i;
             }
             result++;
@@ -551,7 +485,6 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
     }
 
     render() {
-        console.log('IsInPhraseMode: ', this.props.isInPhraseMode);
         return (
             <div hidden={!this.props.isInPhraseMode}>
                 {/* ...other components */}
@@ -567,7 +500,7 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
                     ref={this._timerRef}
                 />
                 <pre id={TerminalCssClasses.NextChars}>
-                    {this._phrase.value}
+                    {this.state.nextChars}
                 </pre>
             </div>
         );

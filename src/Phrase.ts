@@ -11,6 +11,7 @@ export class Phrase {
 
     constructor(value: string) {
         this._value = value;
+        this.setChords();
     }
 
     get value(): string {
@@ -26,8 +27,7 @@ export class Phrase {
     }
 
     setChords(): void {
-        const phraseArray = this._value.split('');
-        phraseArray.forEach((char) => {
+        Array.from(this._value).forEach((char) => {
             const foundChordHTML = Phrase.findChordHTML(char);
             if (foundChordHTML) {
                 this._chordsHTML.push(foundChordHTML);
@@ -52,7 +52,12 @@ export class Phrase {
         let inChord: HTMLElement | null = null;
         const foundChords
             = Array.from(allChords)
-                .filter(x => { return x.key == chordChar; });
+                .filter(x => { 
+                    return x.key
+                    .replace('&#x2581;', ' ') 
+                    .replace('(underscore)', '_') 
+                    == chordChar; 
+                });
         // Load the clone in Chord order into the wholePhraseChords div.
         if (foundChords.length > 0) {
             // const inChord = foundChords[0].cloneNode(true) as HTMLDivElement;
@@ -61,7 +66,7 @@ export class Phrase {
             inChord.setAttribute("name", foundChord.key);
         }
         else {
-            console.log("Missing chord:", chordChar);
+            console.error("Missing chord:", chordChar?.charCodeAt(0));
         }
         return inChord;
     }
