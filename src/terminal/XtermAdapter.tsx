@@ -84,7 +84,6 @@ export class XtermAdapter extends React.Component<XtermAdapterProps, XtermAdapte
 
   componentDidUpdate(prevProps: Readonly<XtermAdapterProps>, prevState: Readonly<XtermAdapterState>, snapshot?: any): void {
     if (prevProps.terminalElementRef?.current !== this.props.terminalElementRef?.current) {
-      console.log('componentDidUpdate terminalElementRef changed', this.props.terminalElementRef?.current);
       this.initializeTerminal();
     }
   }
@@ -145,7 +144,7 @@ export class XtermAdapter extends React.Component<XtermAdapterProps, XtermAdapte
 
   onDataHandler(data: string): void {
     const charCodes = data.split('').map(char => char.charCodeAt(0)).join(',');
-    console.log('onDataHandler', data, charCodes, this.terminal.buffer.active.cursorX, this.terminal.buffer.active.cursorY);
+    // console.info('onDataHandler', data, charCodes, this.terminal.buffer.active.cursorX, this.terminal.buffer.active.cursorY);
     // Set the cursor mode on the terminal
     this.setCursorMode(this.terminal);
     // Handle Backspace and Navigation keys
@@ -220,7 +219,6 @@ export class XtermAdapter extends React.Component<XtermAdapterProps, XtermAdapte
           this.nextCharsDisplayRef.current.resetTimer();
         return;
       }
-      console.log("setting command", command);
       this.setState({ commandLine: command });
     } else {
       // For other input, just return it to the terminal.
@@ -338,7 +336,7 @@ export class XtermAdapter extends React.Component<XtermAdapterProps, XtermAdapte
 
   handlePhraseSuccess(phrase: string, wpm: number) {
     console.log('XtermAdapter onPhraseSuccess', phrase, wpm);
-    this.setState(prevState => ({ outputElements: [...prevState.outputElements, phrase] }));
+    this.setState(prevState => ({ outputElements: [...prevState.outputElements, wpm.toString() + ":" + phrase] }));
     this.prompt();
   }
 

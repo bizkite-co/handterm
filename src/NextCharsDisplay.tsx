@@ -37,17 +37,11 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
 
     private _chordImageHolder: HTMLElement;
     private _svgCharacter: HTMLElement;
-    private _testMode: HTMLInputElement;
     private _testArea: HTMLTextAreaElement;
-    private _nextChar: string = '';
     private _timerRoot: HTMLElement | null = null;
     private _timerRef: React.RefObject<any>;
     private timerComponentRoot: Root | null = null
-    private _chordified: HTMLElement;
-    private _errorCount: HTMLElement;
-    private _voiceMode: HTMLInputElement;
     private voiceSynth: SpeechSynthesis;
-    private _prevCharTime: number = 0;
     private _charTimeArray: CharTime[] = [];
     private _charTimes: HTMLElement;
     private _wpm: HTMLSpanElement;
@@ -77,10 +71,6 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
         this._charTimes = createElement('div', TerminalCssClasses.CharTimes);
         this._chordImageHolder = document.querySelector(`#${TerminalCssClasses.ChordImageHolder}`) as HTMLElement;
         this._svgCharacter = createElement('img', TerminalCssClasses.SvgCharacter);
-        this._testMode = createElement('input', TerminalCssClasses.TestMode) as HTMLInputElement;
-        this.attachTestMode();
-        this._chordified = createElement('div', TerminalCssClasses.chordified);
-        this._voiceMode = createElement('input', TerminalCssClasses.voiceMode) as HTMLInputElement;
         this._testArea = (document.getElementById(TerminalCssClasses.TestArea) as HTMLTextAreaElement);
         this.isTestMode = localStorage.getItem('testMode') == 'true';
         this._timerRef = createRef();
@@ -112,13 +102,12 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
 
     handleCommandLineChange(newCommandLine: string) {
         // TODO: Logic to handle the change in commandLine
-        console.log('handleCommandLineChange', newCommandLine);
         this.testInput(newCommandLine);
     }
+    
 
     setNewPhrase = (phraseName?: string) => {
         const newPhrase = phraseName && Phrases.getPhrase(phraseName) ? Phrases.getPhrase(phraseName) : Phrases.getRandomPhrase();
-        console.log('setNewPhrase', newPhrase);
         this.setState({ phrase: new Phrase(newPhrase), nextChars: this.getNextCharacters(newPhrase), nextCharsIsVisible: true });
         // this.props.onNewPhrase(newPhrase); 
     }
@@ -188,15 +177,6 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
         }
     }
 
-    findOrConstructPhrase(): HTMLInputElement {
-        let result = document.getElementById(TerminalCssClasses.Phrase) as HTMLInputElement;
-        if (!result) {
-            console.log(`Phrase not found at document.getElementById('${TerminalCssClasses.Phrase}')`, document.getElementById(TerminalCssClasses.Phrase));
-            result = createElement('input', TerminalCssClasses.Phrase)
-        }
-        return result;
-    }
-
     set wpm(wpm: HTMLSpanElement) {
         this._wpm = wpm;
     }
@@ -210,35 +190,6 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
         return this._nextCharsRate;
     }
 
-    get chordified(): HTMLElement {
-        return this._chordified;
-    }
-
-    set testMode(testMode: HTMLInputElement) {
-        this._testMode = testMode;
-        this._testMode.checked = localStorage.getItem('testMode') == 'true';
-        this.isTestMode = this._testMode.checked;
-        this.attachTestMode();
-    }
-
-    private attachTestMode() {
-        this._testMode.addEventListener('change', e => {
-            localStorage.setItem('testMode', this.isTestMode.valueOf().toString());
-            this.getWpm();
-        })
-    }
-
-    set testArea(testArea: HTMLTextAreaElement) {
-        this._testArea = testArea;
-        this._testArea.addEventListener('input', (e: Event) => {
-            this.testInput(this._testArea.value);
-        });
-    }
-
-    get testArea(): HTMLTextAreaElement {
-        return this._testArea;
-    }
-
     reset(): void {
         this.state.phrase = new Phrase('');
         this.setNext('');
@@ -250,7 +201,6 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
     }
 
     setNextCharsDisplay(stringBeingTested: string): void {
-        console.log('updateDisplay', stringBeingTested);
         this.setState({ nextChars: this.getNextCharacters(stringBeingTested) });
     }
 
@@ -320,7 +270,6 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
             this._testArea.style.border = "";
         }
         this._charTimeArray = [];
-        this._prevCharTime = 0;
         if (this.wpm) this.wpm.innerText = '0';
         if (this._charTimes) this._charTimes.innerHTML = '';
         // clear error class from all chords
@@ -335,7 +284,6 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
         if (nextChordHTML) {
             nextChordHTML.classList.remove("error");
         }
-        this._prevCharTime = this._centiSecond;
 
         // TODO: de-overlap this and comparePhrase
         if (stringBeingTested.length === 0) {

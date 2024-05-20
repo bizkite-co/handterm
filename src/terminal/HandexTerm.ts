@@ -19,19 +19,12 @@ export class HandexTerm implements IHandexTerm {
   private _commandHistory: string[] = [];
   private wpmCalculator: IWPMCalculator = new WPMCalculator();
   private static readonly commandHistoryLimit = 100;
-  private wholePhraseChords: HTMLElement | null = null;
-  private chordImageHolder: HTMLElement | null = null;
-  private svgCharacter: HTMLElement | null = null;
-  private testMode: HTMLInputElement | null = null;
-  private setWpmCallback: () => void = () => {};
 
   constructor() {
     this._persistence = new LocalStoragePersistence();
-    this.wholePhraseChords = createElement('div', 'whole-phrase-chords')
   }
 
   public handleCommand(command: string): string {
-    console.log('handleCommand', command);
     let status = 404;
     let response = "Command not found.";
     if (command === 'clear') {
