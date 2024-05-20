@@ -1,33 +1,26 @@
 import React, { useState, useImperativeHandle, forwardRef } from 'react';
 
 interface ErrorDisplayProps {
-  svgCharacter: HTMLElement;
-  chordImageHolder: HTMLElement;
   mismatchedChar: string;
   mismatchedCharCode: string;
   isVisible: boolean;
+  errorCount: number;
 }
 
 const ErrorDisplay = forwardRef((props: ErrorDisplayProps, ref) => {
   const [errorCount, setErrorCount] = useState(0);
-  const { svgCharacter, chordImageHolder, mismatchedChar, mismatchedCharCode, isVisible } = props;
+  const { mismatchedChar, mismatchedCharCode, isVisible } = props;
 
 
   const showError = (charCode: string) => {
-    // svgCharacter.hidden = !isVisible;
-
-    // chordImageHolder.hidden = false;
-    // const firstChild = chordImageHolder.children[0] as HTMLElement;
-    // firstChild.hidden = false;
-    // mismatchedCharCode = charCode;
     setErrorCount(prevCount => prevCount + 1);
-    console.log("showError", isVisible, mismatchedChar, mismatchedCharCode, errorCount);
+    console.log("ErrorDisplay isVisible", isVisible, mismatchedChar, mismatchedCharCode, errorCount);
   };
 
   const hideError = () => {
     // svgCharacter.hidden = false;
     // chordImageHolder.hidden = false;
-    console.log("hideError", isVisible, mismatchedChar, mismatchedCharCode, errorCount);
+    console.log("ErrorDisplay isVisible", isVisible, mismatchedChar, mismatchedCharCode, errorCount);
   };
 
   // Use useImperativeHandle to expose functions to the parent component

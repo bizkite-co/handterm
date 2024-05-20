@@ -35,10 +35,11 @@ export class XtermAdapter extends React.Component<XtermAdapterProps, XtermAdapte
   private lastTouchDistance: number | null = null;
   private currentFontSize: number = 17;
   // private outputElement: HTMLElement;
-  private videoElement: HTMLVideoElement;
+  // private videoElement: HTMLVideoElement;
+  private videoElementRef: React.RefObject<HTMLVideoElement> = React.createRef();
   private promptDelimiter: string = '$';
   private promptLength: number = 0;
-  private webCam: IWebCam;
+  private webCam: IWebCam | null = null;
   private isShowVideo: boolean = false;
 
   private nextCharsDisplayRoot: Root | null = null;
@@ -57,8 +58,7 @@ export class XtermAdapter extends React.Component<XtermAdapterProps, XtermAdapte
       isActive: false,
       outputElements: this.getCommandHistory()
     }
-    this.videoElement = this.createVideoElement();
-    this.webCam = new WebCam(this.videoElement);
+    // this.videoElement = this.createVideoElement();
     // this.terminalElement.prepend(this.videoElement);
     this.wholePhraseChords = document.getElementById(TerminalCssClasses.WholePhraseChords) as HTMLElement;
     this.nextCharsRate = document.getElementById(TerminalCssClasses.NextCharsRate) as HTMLDivElement;
@@ -102,10 +102,13 @@ export class XtermAdapter extends React.Component<XtermAdapterProps, XtermAdapte
       // console.log('Cursor moved', this.terminal.buffer.active.cursorX, this.terminal.buffer.active.cursorY);
     })
     // this.loadCommandHistory();
-    // this.setViewPortOpacity();
+    this.setViewPortOpacity();
     this.loadFontSize();
     this.terminal.focus();
     this.prompt();
+    if(this.videoElementRef.current) {
+        this.webCam = new WebCam(this.videoElementRef.current);
+    }
   }
 
   wpmCallback = () => {
@@ -121,12 +124,10 @@ export class XtermAdapter extends React.Component<XtermAdapterProps, XtermAdapte
   handleBackSpaceAndNavigation(data: string): boolean {
     let result = false;
     if (data.charCodeAt(0) === 127) {
-      if (this.terminal.buffer.active.cursorX < this.promptLength) return true;
+      console.log('Backspace pressed', this.terminal.buffer.active.cursorX, this.terminal.buffer.active.cursorY);
+      if (this.isCursorOnPrompt()) return true;
       this.terminal.write('\x1b[D\x1b[P');
-      console.log('Backspace pressed');
       result = true;
-      // this.terminal.write('\x1b[D \x1b[D');
-      // let cursorIndex = this.terminal.buffer.active.cursorX;
     }
     return result;
   }
@@ -136,38 +137,44 @@ export class XtermAdapter extends React.Component<XtermAdapterProps, XtermAdapte
     this.setState(prevState => ({ outputElements: [...prevState.outputElements, phrase] }));
   }
 
-
-  onKeyHandler(key: string): void {
-    // They seems nice but might not handle some multi-byte characters?
-    // It's keyboard-centric
+  isCursorOnPrompt(): boolean {
+    const isFirstLine = this.terminal.buffer.active.cursorY === 0;
+    const isLeftOfPromptChar = this.terminal.buffer.active.cursorX < this.promptLength;
+    return isFirstLine && isLeftOfPromptChar;
   }
 
   onDataHandler(data: string): void {
+    const charCodes = data.split('').map(char => char.charCodeAt(0)).join(',');
+    console.log('onDataHandler', data, charCodes, this.terminal.buffer.active.cursorX, this.terminal.buffer.active.cursorY);
     // Set the cursor mode on the terminal
     this.setCursorMode(this.terminal);
     // Handle Backspace and Navigation keys
     if (this.handleBackSpaceAndNavigation(data)) return;
     if (data.charCodeAt(0) === 27) { // escape and navigation characters
-      // console.log(
-      //   "BufferXY:", this.terminal.buffer.active.cursorX, this.terminal.buffer.active.cursorY,
-      //   "lines", this.terminal.buffer.active.viewportY, "chars:", data.split('').map(x => x.charCodeAt(0)));
       // TODO: Abstract out the prompt area no-nav-to.
       if (data.charCodeAt(1) === 91) {
-        if (data.charCodeAt(2) === 65 && this.terminal.buffer.active.cursorY < 2) {
+        if(data.length > 2) {
+          if(data.charCodeAt(2) === 72) { // HOME
+            console.log('Home pressed');
+            // TODO: Handle Home key
+            // while(this.terminal.buffer.active.cursorX > this.promptLength) {
+            //   this.terminal.write('\x1b[D');
+            // }
+            return;
+          }
+        }
+        if (data.charCodeAt(2) === 65 && this.isCursorOnPrompt()) {
           return;
         }
         if (
           data.charCodeAt(2) === 68
-          && (
-            this.terminal.buffer.active.cursorX < this.promptLength
-            && this.terminal.buffer.active.cursorY === 0)
-        ) {
+          && this.isCursorOnPrompt()) {
           return;
         }
       }
     }
     if (data.charCodeAt(0) === 3) { // Ctrl+C
-      this.setState({ isInPhraseMode: false });
+      this.setState({ isInPhraseMode: false, commandLine: '' });
       this.terminal.reset();
       this.prompt();
     }
@@ -195,11 +202,12 @@ export class XtermAdapter extends React.Component<XtermAdapterProps, XtermAdapte
 
         return;
       }
-      if (command === 'phrase') {
+      if (command === 'phrase' || command.startsWith('phrase ')) {
 
         console.log("phrase");
         this.setState({ isInPhraseMode: true });
       }
+      // TODO: A bunch of phrase command stuff should be omoved from NextCharsDisplay to here, such as phrase generation.
       let result = this.handexTerm.handleCommand(command);
       this.setState(prevState => ({ outputElements: [...prevState.outputElements, result] }));
     } else if (this.state.isInPhraseMode) {
@@ -224,7 +232,7 @@ export class XtermAdapter extends React.Component<XtermAdapterProps, XtermAdapte
 
   private setViewPortOpacity(): void {
     const viewPort = document.getElementsByClassName('xterm-viewport')[0] as HTMLDivElement;
-    viewPort.style.opacity = "0.5";
+    viewPort.style.opacity = "0.0";
   }
 
   private loadFontSize(): void {
@@ -243,7 +251,7 @@ export class XtermAdapter extends React.Component<XtermAdapterProps, XtermAdapte
 
   public toggleVideo(): boolean {
     this.isShowVideo = !this.isShowVideo;
-    this.webCam.toggleVideo(this.isShowVideo);
+    this.webCam?.toggleVideo(this.isShowVideo);
     return this.isShowVideo;
   }
 
@@ -262,16 +270,9 @@ export class XtermAdapter extends React.Component<XtermAdapterProps, XtermAdapte
         command += line.translateToString(true);
       }
     }
-    return command.substring(command.indexOf(this.promptDelimiter) + 1).trim();
+    const promptEndIndex = command.indexOf(this.promptDelimiter) + 1;
+    return command.substring(promptEndIndex).trimStart();
     // return command;
-  }
-
-  private createVideoElement(isVisible: boolean = false): HTMLVideoElement {
-    const video = document.createElement('video');
-    video.id = 'terminal-video';
-    video.hidden = !isVisible;
-    // Additional styles and attributes can be set here
-    return video;
   }
 
   prompt(user: string = 'guest', host: string = 'handex.io') {
@@ -335,6 +336,12 @@ export class XtermAdapter extends React.Component<XtermAdapterProps, XtermAdapte
     this.setState({ isActive });
   }
 
+  handlePhraseSuccess(phrase: string, wpm: number) {
+    console.log('XtermAdapter onPhraseSuccess', phrase, wpm);
+    this.setState(prevState => ({ outputElements: [...prevState.outputElements, phrase] }));
+    this.prompt();
+  }
+
   render() {
     // Use state and refs in your render method
     return (
@@ -351,6 +358,7 @@ export class XtermAdapter extends React.Component<XtermAdapterProps, XtermAdapte
           commandLine={this.state.commandLine}
           isInPhraseMode={this.state.isInPhraseMode}
           onNewPhrase={this.setNewPhrase}
+          onPhraseSuccess={this.handlePhraseSuccess}
         />
         <div
           ref={this.terminalElementRef as React.RefObject<HTMLDivElement>}
@@ -361,6 +369,7 @@ export class XtermAdapter extends React.Component<XtermAdapterProps, XtermAdapte
           onTouchEnd={this.handleTouchEnd}
         />
         <video
+          ref={this.videoElementRef as React.RefObject<HTMLVideoElement>}
           id="terminal-video"
           hidden={!this.isShowVideo}
         ></video>

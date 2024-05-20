@@ -1,16 +1,32 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite + React + TS</title>
-    <link rel="stylesheet" href="/src/assets/xterm.css" />
-    <link rel="stylesheet" href="/src/assets/terminal.css" />
-    <link rel="stylesheet" href="/src/assets/web-cam.css" />
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/terminal/main.tsx"></script>
-  </body>
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vite + React + TS</title>
+  <link rel="stylesheet" href="/src/assets/xterm.css" />
+  <link rel="stylesheet" href="/src/assets/terminal.css" />
+  <link rel="stylesheet" href="/src/assets/web-cam.css" />
+</head>
+
+<body>
+  <svg xmlns="http://www.w3.org/2000/svg" id="terminal-nav-svg" style="display: none" 
+    hidden="hidden">
+    <defs>
+      <polygon id="start" points="1,1 6,5 1,9" fill="#0F0F" z-index="1010" />
+      <rect id="start-stop" y="1" x="6" width="3" height="8" fill="#000F" z-index="1000" />
+      <rect id="stop" y="1" width="8" height="8" fill="#000F" z-index="1000" />
+      <circle id="dot" cx="3" cy="5" r="2" stroke="none" />
+      <g id="pause">
+        <rect id="pause-1" x="1" y="1" width="2" height="8" fill="#FFFF" z-index="1000" />
+        <rect id="pause-2" x="5" y="1" width="2" height="8" fill="#FFFF" z-index="1000" />
+      </g>
+    </defs>
+  </svg>
+  <div id="root"></div>
+  <script type="module" src="/src/terminal/main.tsx"></script>
+</body>
+
 </html>
