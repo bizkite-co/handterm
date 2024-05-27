@@ -310,7 +310,7 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
             if (this._errorDisplayRef.current) {
                 const firstNonMatchingChar = this.getFirstNonMatchingChar(stringBeingTested);
                 const mismatchedChar = this.state.phrase.value[firstNonMatchingChar];
-                const mismatchedCharCode: string = this.state.phrase.chords[firstNonMatchingChar].chordCode;
+                const mismatchedCharCode: string = this.state.phrase.chords[firstNonMatchingChar]?.chordCode;
                 console.log('Showing error');
                 this.setState({ 
                     mismatchedIsVisible: true,

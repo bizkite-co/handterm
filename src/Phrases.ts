@@ -7,6 +7,8 @@ export default class Phrases {
         {
             name: "handex", phrase: "Type anywhere with this one-handed keyboard. Stop sitting down to type. Stop looking down to send messages. Built to the shape of your finger actions, this device will eliminate your need to reposition your fingers while typeing. Use the same keyboard, designed for your hand, everywhere. You never have to learn a new one. The natural motions of your fingers compose the characters. It's build around your hand, so you don't have to reorient your finger placement on a board. Repositioning your fingers on a board is the biggest hurdle of typing-training, so don't do it. Handex is built around your finger movements, so you'll never have to reposition your fingers to find a key. Even unusual keys, such `\\`, `~`, `|`, `^`, `&` are easy to type. Handex liberates you from the key-board-shackle problem. 151 keys are currently available and more are coming."
         },
+        { name: "asdf", phrase: "asdf sad dad daf fas fad das dad sas"},
+        {name: "jkl;", phrase: "jill kill jelly lilly jolly jill"},
         {
             name: "hello-world", phrase: "Hello, World!"
         },

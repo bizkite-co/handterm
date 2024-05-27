@@ -115,7 +115,9 @@ div.terminal {
     background-color: rgba(0, 0, 0, 0.3);
     /* Adjust the alpha value for transparency */
 }
-
+.xterm-screen {
+    width: 100%;
+}
 #timer-root {
     color: white;
     float: left;
@@ -126,7 +128,7 @@ div.terminal {
     background-color: #0003;
     z-index: 10;
     color: white;
-    font-size: var(--terminal-font-size);
+    /* font-size: var(--terminal-font-size); */
     display: flex;
     height: 100%;
     width: 100%;
@@ -151,6 +153,7 @@ div.terminal {
 #terminal-output {
     /* Output area styles */
     z-index: 10000;
+    font-size: var(--terminal-font-size);
 }
 
 #terminal-output div {
@@ -164,22 +167,14 @@ div.terminal {
 }
 
 /* Responsive font size and padding */
-@media (max-width: 500px) {
-
+@media (max-width: 600px) {
     /* Example breakpoint for mobile devices */
     :root {
         --terminal-line-height: 1.2em;
     }
-
     body {
-        padding: 10px;
-    }
-
-    .terminal {
         padding: 5px;
-        /* Adjust padding if necessary */
     }
-
     /* Add any additional mobile-specific styles here */
 }
 
@@ -205,7 +200,7 @@ div.terminal {
     border: none;
     color: yellow;
     caret-color: lightyellow;
-    resize: none;
+    /* resize: none; */
     white-space: pre-wrap;
     overflow-y: hidden;
     padding: 0;

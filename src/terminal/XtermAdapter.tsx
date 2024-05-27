@@ -46,6 +46,7 @@ export class XtermAdapter extends React.Component<XtermAdapterProps, XtermAdapte
 
   private wholePhraseChords: HTMLElement | null = null;
   private isInPhraseMode: boolean = false;
+  private fitAddon = new FitAddon();
 
   constructor(props: XtermAdapterProps, state: XtermAdapterState) {
     super(props);
@@ -76,7 +77,8 @@ export class XtermAdapter extends React.Component<XtermAdapterProps, XtermAdapte
       this.terminalElementRef = terminalElementRef;
       this.terminalElement = terminalElementRef.current
       this.terminal.open(terminalElementRef.current);
-      this.terminal.loadAddon(new FitAddon());
+      this.terminal.loadAddon(this.fitAddon);
+      this.fitAddon.fit();
       this.terminal.write('\x1b[4h');
       // Other terminal initialization code...
     }
@@ -87,7 +89,15 @@ export class XtermAdapter extends React.Component<XtermAdapterProps, XtermAdapte
       this.initializeTerminal();
     }
   }
-
+  componentWillUnmount(): void {
+    window.removeEventListener('resize', this.handleResize);
+  }
+  
+  handleResize = () => {
+    // Assuming fitAddon is stored as a class member
+    console.log('handleResize');
+    this.fitAddon?.fit();
+  }
   componentDidMount() {
     const { terminalElement, terminalElementRef } = this.props;
     if (terminalElementRef?.current) {
@@ -105,9 +115,10 @@ export class XtermAdapter extends React.Component<XtermAdapterProps, XtermAdapte
     this.loadFontSize();
     this.terminal.focus();
     this.prompt();
-    if(this.videoElementRef.current) {
-        this.webCam = new WebCam(this.videoElementRef.current);
+    if (this.videoElementRef.current) {
+      this.webCam = new WebCam(this.videoElementRef.current);
     }
+    window.addEventListener('resize', this.handleResize);
   }
 
   wpmCallback = () => {
@@ -144,7 +155,7 @@ export class XtermAdapter extends React.Component<XtermAdapterProps, XtermAdapte
 
   onDataHandler(data: string): void {
     const charCodes = data.split('').map(char => char.charCodeAt(0)).join(',');
-    // console.info('onDataHandler', data, charCodes, this.terminal.buffer.active.cursorX, this.terminal.buffer.active.cursorY);
+    console.info('onDataHandler', data, charCodes, this.terminal.buffer.active.cursorX, this.terminal.buffer.active.cursorY);
     // Set the cursor mode on the terminal
     this.setCursorMode(this.terminal);
     // Handle Backspace and Navigation keys
@@ -152,8 +163,8 @@ export class XtermAdapter extends React.Component<XtermAdapterProps, XtermAdapte
     if (data.charCodeAt(0) === 27) { // escape and navigation characters
       // TODO: Abstract out the prompt area no-nav-to.
       if (data.charCodeAt(1) === 91) {
-        if(data.length > 2) {
-          if(data.charCodeAt(2) === 72) { // HOME
+        if (data.length > 2) {
+          if (data.charCodeAt(2) === 72) { // HOME
             console.log('Home pressed');
             // TODO: Handle Home key
             // while(this.terminal.buffer.active.cursorX > this.promptLength) {
@@ -173,6 +184,7 @@ export class XtermAdapter extends React.Component<XtermAdapterProps, XtermAdapte
       }
     }
     if (data.charCodeAt(0) === 3) { // Ctrl+C
+      console.log('Ctrl+C pressed');
       this.setState({ isInPhraseMode: false, commandLine: '' });
       this.terminal.reset();
       this.prompt();
@@ -231,12 +243,15 @@ export class XtermAdapter extends React.Component<XtermAdapterProps, XtermAdapte
   private setViewPortOpacity(): void {
     const viewPort = document.getElementsByClassName('xterm-viewport')[0] as HTMLDivElement;
     viewPort.style.opacity = "0.0";
+    // const xtermScreen = document.getElementsByClassName('xterm-screen')[0] as HTMLDivElement;
+    // const terminal = document.getElementById('terminal') as HTMLDivElement;
   }
 
   private loadFontSize(): void {
     const fontSize = localStorage.getItem('terminalFontSize');
     if (fontSize) {
       this.currentFontSize = parseInt(fontSize);
+      document.documentElement.style.setProperty('--terminal-font-size', `${this.currentFontSize}px`);
       if (this.terminalElement) {
 
         this.terminalElement.style.fontSize = `${this.currentFontSize}px`;
@@ -304,7 +319,7 @@ export class XtermAdapter extends React.Component<XtermAdapterProps, XtermAdapte
         const scaleFactor = currentDistance / this.lastTouchDistance;
         this.currentFontSize *= scaleFactor;
         // TODO: Figure out how to resize fonts now with REact.
-        // this.terminalElement.style.fontSize = `${this.currentFontSize}px`;
+        document.documentElement.style.setProperty('--terminal-font-size', `${this.currentFontSize}px`);
         this.lastTouchDistance = currentDistance;
         this.terminal.options.fontSize = this.currentFontSize;
         this.terminal.refresh(0, this.terminal.rows - 1); // Refresh the terminal display
@@ -312,11 +327,17 @@ export class XtermAdapter extends React.Component<XtermAdapterProps, XtermAdapte
     }
   }
 
+  private increaseFontSize() {
+    this.currentFontSize += 1;
+    this.terminal.options.fontSize = this.currentFontSize;
+    this.terminal.refresh(0, this.terminal.rows - 1);
+    localStorage.setItem('terminalFontSize', `${this.currentFontSize}`);
+  }
 
   private handleTouchEnd: TouchEventHandler<HTMLDivElement> = (event: React.TouchEvent<HTMLDivElement>) => {
 
     localStorage.setItem('terminalFontSize', `${this.currentFontSize}`);
-    console.log('terminalFontSize', this.currentFontSize);
+    console.log('SET terminalFontSize', this.currentFontSize);
     this.lastTouchDistance = null;
   }
 
