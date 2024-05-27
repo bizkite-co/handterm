@@ -1,6 +1,5 @@
-import { NextCharsDisplay } from "./NextCharsDisplay.js";
 import { TerminalCssClasses } from "./terminal/TerminalTypes.js";
-import { CharTime, spaceDisplayChar, CancelCallback, InputEventCallback, createCharTime } from "./types/Types.js";
+import { CharTime} from "./types/Types.js";
 
 
 export class HandChord {
@@ -29,9 +28,6 @@ export class HandChord {
         this.wpm = document.getElementById("wpm") as HTMLElement;
 
 
-        const handleInputEvent: InputEventCallback = (event: InputEvent) => {
-            console.error("Handle Input Event not implementd:", event);
-        };
         this.prevCharTime = 0;
         this.pangrams = document.getElementById("pangrams") as HTMLElement;
         this.prevCharTime = 0;

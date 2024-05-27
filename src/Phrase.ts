@@ -1,5 +1,4 @@
 import { allChords } from "./allChords.js";
-import * as phrases from './Phrases.js';
 import { Chord } from "./types/Types.js";
 import { createHTMLElementFromHTML } from "./utils/dom";
 
