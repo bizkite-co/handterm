@@ -1,6 +1,4 @@
 // TerminalGame.ts
-import { IPersistence } from './Persistence';
-import { IHandexTerm } from './HandexTerm';
 
 export class TerminalGame {
 

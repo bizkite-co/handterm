@@ -7,7 +7,7 @@ export interface IPersistence {
 }
 
 export class LocalStoragePersistence implements IPersistence {
-  saveCommandHistory(command: string): void {
+  saveCommandHistory(): void {
     // Use localStorage to save the command history
   }
 

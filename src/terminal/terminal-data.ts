@@ -7,6 +7,7 @@ openDb.onupgradeneeded = function() {
     var db = openDb.result;
     var store = db.createObjectStore('WpmStore', {keyPath: 'id'});
     var index = store.createIndex('CharacterIndex', ['character']);
+    console.log('WpmStore and CharacterIndex created', index);
 };
 
 openDb.onsuccess = function() {

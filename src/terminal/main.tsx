@@ -1,7 +1,5 @@
-import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
-import { HandexTerm } from './HandexTerm';
 
 document.addEventListener('DOMContentLoaded', () => {
   const rootElement = document.getElementById('root');
@@ -12,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Any other non-React initialization can still happen here
     const terminalNav = document.getElementById('terminal-nav');
-    if(terminalNav) terminalNav.addEventListener('click', (event) => {
+    if(terminalNav) terminalNav.addEventListener('click', () => {
       rootElement.focus();
     });
   }

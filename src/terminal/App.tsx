@@ -1,9 +1,6 @@
 // App.tsx
 import React from 'react';
 import { XtermAdapter } from './XtermAdapter';
-import { LocalStoragePersistence } from './Persistence';
-import { HandexTerm } from './HandexTerm';
-import { TerminalCssClasses } from './TerminalTypes';
 
 // App.tsx
 class App extends React.Component {
