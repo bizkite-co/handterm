@@ -2,7 +2,6 @@
 import { LogKeys, TimeHTML } from './TerminalTypes';
 import { IWPMCalculator, WPMCalculator } from './WPMCalculator';
 import { IPersistence, LocalStoragePersistence } from './Persistence';
-import { createElement } from '../utils/dom';
 import { createHTMLElementFromHTML } from '../utils/dom';
 
 export interface IHandexTerm {
@@ -73,7 +72,6 @@ export class HandexTerm implements IHandexTerm {
   parseCommand(input: string): void {
     const args = input.split(/\s+/); // Split the input by whitespace
     const command = args[0]; // The first element is the command
-    const options = args.slice(1); // The rest are the associated options/arguments
 
     // Now you can handle the command and options
     

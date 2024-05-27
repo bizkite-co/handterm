@@ -1,4 +1,4 @@
-import React, { useState, useImperativeHandle, forwardRef } from 'react';
+import { useState, useImperativeHandle, forwardRef } from 'react';
 
 interface ErrorDisplayProps {
   svgCharacter: HTMLElement;
@@ -10,10 +10,10 @@ interface ErrorDisplayProps {
 
 const ErrorDisplay = forwardRef((props: ErrorDisplayProps, ref) => {
   const [errorCount, setErrorCount] = useState(0);
-  const { mismatchedChar, mismatchedCharCode, isVisible } = props;
+  const { mismatchedChar, mismatchedCharCode } = props;
 
 
-  const showError = (charCode: string) => {
+  const showError = () => {
     setErrorCount(prevCount => prevCount + 1);
     // console.log("ErrorDisplay isVisible", isVisible, mismatchedChar, mismatchedCharCode, errorCount);
   };

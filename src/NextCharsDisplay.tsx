@@ -1,13 +1,10 @@
-import { Chord, spaceDisplayChar, ChordRow, createCharTime, CharTime } from "./types/Types.js";
+import {  spaceDisplayChar, CharTime } from "./types/Types.js";
 import { createElement } from "./utils/dom.js";
 import { TerminalCssClasses } from "./terminal/TerminalTypes.js";
-import { createHTMLElementFromHTML } from "./utils/dom.js";
-import { WPMCalculator } from "./terminal/WPMCalculator.js";
 
-import React, { createRef, useState } from 'react';
+import React, { createRef } from 'react';
 import { createRoot, Root } from 'react-dom/client'; // Import createRoot
 import Timer from './Timer.js'; // Import the React component
-import { allChords } from "./allChords.js";
 import ErrorDisplay from "./ErrorDisplay";
 import Phrases from './Phrases';
 import { Phrase } from "./Phrase";

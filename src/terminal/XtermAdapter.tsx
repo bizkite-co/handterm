@@ -5,10 +5,7 @@ import { HandexTerm, IHandexTerm } from './HandexTerm';
 import { TerminalCssClasses } from './TerminalTypes';
 import { IWebCam, WebCam } from '../utils/WebCam';
 import React, { TouchEventHandler } from 'react';
-import ReactDOM from 'react-dom';
-import { createRoot, Root } from 'react-dom/client';
 import { NextCharsDisplay } from '../NextCharsDisplay';
-import { createElement } from '../utils/dom';
 import { Output } from '../terminal/Output';
 
 interface XtermAdapterState {
@@ -28,7 +25,6 @@ export class XtermAdapter extends React.Component<XtermAdapterProps, XtermAdapte
 
   private nextCharsDisplayRef: React.RefObject<NextCharsDisplay> = React.createRef();
   private handexTerm: IHandexTerm;
-  private nextCharsRate: HTMLDivElement;
   private terminal: Terminal;
   private terminalElement: HTMLElement | null = null;
   private terminalElementRef: React.RefObject<HTMLElement>;
@@ -42,15 +38,12 @@ export class XtermAdapter extends React.Component<XtermAdapterProps, XtermAdapte
   private webCam: IWebCam | null = null;
   private isShowVideo: boolean = false;
 
-  private nextCharsDisplayRoot: Root | null = null;
 
-  private wholePhraseChords: HTMLElement | null = null;
-  private isInPhraseMode: boolean = false;
   private fitAddon = new FitAddon();
 
-  constructor(props: XtermAdapterProps, state: XtermAdapterState) {
+  constructor(props: XtermAdapterProps ) {
     super(props);
-    const { terminalElement, terminalElementRef } = props;
+    const { terminalElementRef } = props;
     this.terminalElementRef = terminalElementRef;
     this.handexTerm = new HandexTerm();
     this.state = {
@@ -61,9 +54,6 @@ export class XtermAdapter extends React.Component<XtermAdapterProps, XtermAdapte
     }
     // this.videoElement = this.createVideoElement();
     // this.terminalElement.prepend(this.videoElement);
-    this.wholePhraseChords = document.getElementById(TerminalCssClasses.WholePhraseChords) as HTMLElement;
-    this.nextCharsRate = document.getElementById(TerminalCssClasses.NextCharsRate) as HTMLDivElement;
-    this.wholePhraseChords = createElement('div', TerminalCssClasses.WholePhraseChords);
     this.terminal = new Terminal({
       fontFamily: '"Fira Code", Menlo, "DejaVu Sans Mono", "Lucida Console", monospace',
       cursorBlink: true,
@@ -72,7 +62,7 @@ export class XtermAdapter extends React.Component<XtermAdapterProps, XtermAdapte
   }
 
   initializeTerminal() {
-    const { terminalElementRef, terminalElement } = this.props;
+    const { terminalElementRef } = this.props;
     if (terminalElementRef?.current) {
       this.terminalElementRef = terminalElementRef;
       this.terminalElement = terminalElementRef.current
@@ -84,7 +74,7 @@ export class XtermAdapter extends React.Component<XtermAdapterProps, XtermAdapte
     }
   }
 
-  componentDidUpdate(prevProps: Readonly<XtermAdapterProps>, prevState: Readonly<XtermAdapterState>, snapshot?: any): void {
+  componentDidUpdate(prevProps: Readonly<XtermAdapterProps> ): void {
     if (prevProps.terminalElementRef?.current !== this.props.terminalElementRef?.current) {
       this.initializeTerminal();
     }
@@ -99,7 +89,7 @@ export class XtermAdapter extends React.Component<XtermAdapterProps, XtermAdapte
     this.fitAddon?.fit();
   }
   componentDidMount() {
-    const { terminalElement, terminalElementRef } = this.props;
+    const { terminalElementRef } = this.props;
     if (terminalElementRef?.current) {
       this.initializeTerminal();
     } else {
@@ -183,12 +173,19 @@ export class XtermAdapter extends React.Component<XtermAdapterProps, XtermAdapte
         }
       }
     }
+
     if (data.charCodeAt(0) === 3) { // Ctrl+C
       console.log('Ctrl+C pressed');
       this.setState({ isInPhraseMode: false, commandLine: '' });
       this.terminal.reset();
       this.prompt();
     }
+
+    if(data.charCodeAt(0) === 4) { // Ctrl+D
+      console.log('Ctrl+D pressed');
+      this.increaseFontSize();
+    }
+
     if (data.charCodeAt(0) === 13) { // Enter key
       // Process the command before clearing the terminal
       // TODO: cancel timer
@@ -207,7 +204,7 @@ export class XtermAdapter extends React.Component<XtermAdapterProps, XtermAdapte
       }
       if (command === 'video') {
         this.toggleVideo();
-        let result = this.handexTerm.handleCommand(command + ' --' + this.isShowVideo);
+        this.handexTerm.handleCommand(command + ' --' + this.isShowVideo);
         // TODO: handle toggle video 
         // this.outputElement.appendChild(result);
 
@@ -234,7 +231,6 @@ export class XtermAdapter extends React.Component<XtermAdapterProps, XtermAdapte
       this.setState({ commandLine: command });
     } else {
       // For other input, just return it to the terminal.
-      let wpm = this.handexTerm.handleCharacter(data);
 
       this.terminal.write(data);
     }
@@ -334,7 +330,7 @@ export class XtermAdapter extends React.Component<XtermAdapterProps, XtermAdapte
     localStorage.setItem('terminalFontSize', `${this.currentFontSize}`);
   }
 
-  private handleTouchEnd: TouchEventHandler<HTMLDivElement> = (event: React.TouchEvent<HTMLDivElement>) => {
+  private handleTouchEnd: TouchEventHandler<HTMLDivElement> = () => {
 
     localStorage.setItem('terminalFontSize', `${this.currentFontSize}`);
     console.log('SET terminalFontSize', this.currentFontSize);
