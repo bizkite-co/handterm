@@ -7,11 +7,11 @@ const Timer = forwardRef(( ref: any) => {
   const [svgStatus, setSvgStatus] = useState<'start' | 'stop' | 'pause'>('start');
 
   useEffect(() => {
-    let intervalId: NodeJS.Timeout | null = null;
+    let intervalId: number | null = null;
 
     if (isActive) {
       setSvgStatus('pause');
-      intervalId = setInterval(() => {
+      intervalId = window.setInterval(() => {
         setCentiSecond((prevCentiSecond: number) => prevCentiSecond + 1);
       }, 10);
     } else if (!isActive && centiSecond !== 0) {

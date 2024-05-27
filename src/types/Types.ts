@@ -24,5 +24,3 @@ export interface Chord {
     chordCode: string;
     index: number;
 }
-
-const timerStatus = 'stopped' | 'running' | 'paused';
