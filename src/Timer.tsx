@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useImperativeHandle, forwardRef} from 'react';
 
 
-const Timer = forwardRef(( ref: any) => {
+const Timer = forwardRef((_props: any, ref: any) => {
   const [centiSecond, setCentiSecond] = useState(0);
   const [isActive, setIsActive] = useState(false);
   const [svgStatus, setSvgStatus] = useState<'start' | 'stop' | 'pause'>('start');
