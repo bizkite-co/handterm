@@ -4,11 +4,8 @@ export interface IWebCam {
 }
 
 export class WebCam {
-    private isVideo: boolean = false;
-    private facingMode: string = 'user';
     private preview: HTMLVideoElement;
-    constructor(videoElement: HTMLVideoElement, isVideo: boolean = false) {
-        this.isVideo = isVideo;
+    constructor(videoElement: HTMLVideoElement) {
         this.preview = videoElement;
         this.preview.autoplay = true;
         this.preview.muted = true;
