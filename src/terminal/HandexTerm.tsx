@@ -1,8 +1,9 @@
 // HandexTerm.ts
-import { LogKeys, TimeHTML, CharDuration } from './TerminalTypes';
+import { LogKeys, TimeHTML, CharDuration, CharWPM } from './TerminalTypes';
 import { IWPMCalculator, WPMCalculator } from './WPMCalculator';
 import { IPersistence, LocalStoragePersistence } from './Persistence';
 import { createHTMLElementFromHTML } from '../utils/dom';
+import React from 'react';
 
 export interface IHandexTerm {
   // Define the interface for your HandexTerm logic
@@ -11,6 +12,7 @@ export interface IHandexTerm {
   handleCharacter(character: string): number;
   getCommandHistory(): string[];
 }
+
 
 export class HandexTerm implements IHandexTerm {
   // Implement the interface methods
@@ -23,10 +25,10 @@ export class HandexTerm implements IHandexTerm {
     this._persistence = new LocalStoragePersistence();
   }
 
+
   public handleCommand(command: string): string {
     let status = 404;
     let response = "Command not found.";
-    console.log("Phrase WPM:", this.wpmCalculator.getWPMs());
     if (command === 'clear') {
       status = 200;
       this.clearCommandHistory();
@@ -54,19 +56,7 @@ export class HandexTerm implements IHandexTerm {
     if (this._commandHistory.length > HandexTerm.commandHistoryLimit) {
       this._commandHistory.shift(); // Remove the oldest command
     }
-    const commandTime = new Date();
-    const timeCode = this.createTimeCode(commandTime);
-    let commandText = this.createCommandRecord(command, commandTime);
-    const commandElement = createHTMLElementFromHTML(commandText);
-    let commandResponseElement = document.createElement('div');
-    commandResponseElement.dataset.status = status.toString();
-    commandResponseElement.appendChild(commandElement);
-    commandResponseElement.appendChild(createHTMLElementFromHTML(`<div class="response">${response}</div>`));
-    let wpm = this.saveCommandResponseHistory(commandResponseElement, timeCode.join('')); // Save updated history to localStorage
-    commandText = commandText.replace(/{{wpm}}/g, ('_____' + wpm.toFixed(0)).slice(-4));
-    if (!this._commandHistory) { this._commandHistory = []; }
-    const commandResponse = commandResponseElement.outerHTML;
-    this._commandHistory.push(commandResponse);
+    let commandResponse = this.saveCommandResponseHistory(command, response, status); // Save updated history to localStorage
     return commandResponse;
   }
 
@@ -109,13 +99,47 @@ export class HandexTerm implements IHandexTerm {
     return commandHistory;
   }
 
-  private saveCommandResponseHistory(commandResponseElement: HTMLDivElement, commandTime: string): number {
+  private WpmsToHTML(wpms: CharWPM[], name: string | undefined) {
+    name = name ?? "slowest-characters";
+    return (
+      <dl id={name} >
+        {wpms.map((wpm, index) => (
+          <React.Fragment key={index}>
+            <dt>{wpm.character}</dt>
+            <dd>{wpm.wpm.toFixed(2)}</dd>
+          </React.Fragment>
+        ))}
+      </dl>
+    );
+  }
+
+  private saveCommandResponseHistory(command: string, response: string, status: number): string {
+    const commandTime = new Date();
+    const timeCode = this.createTimeCode(commandTime).join(':');
+    let commandText = this.createCommandRecord(command, commandTime);
+    const commandElement = createHTMLElementFromHTML(commandText);
+    let commandResponseElement = document.createElement('div');
+    commandResponseElement.dataset.status = status.toString();
+    commandResponseElement.appendChild(commandElement);
+    commandResponseElement.appendChild(createHTMLElementFromHTML(`<div class="response">${response}</div>`));
+
     // Only keep the latest this.commandHistoryLimit number of commands
-    let wpmSum = this.wpmCalculator.saveKeystrokes(commandTime);
+    const wpms = this.wpmCalculator.getWPMs();
+    console.log("WPMs:", wpms);
+    let wpmSum = this.wpmCalculator.saveKeystrokes(timeCode);
     this.wpmCalculator.clearKeystrokes();
     commandResponseElement.innerHTML = commandResponseElement.innerHTML.replace(/{{wpm}}/g, ('_____' + wpmSum.toFixed(0)).slice(-4));
-    this._persistence.setItem(`${LogKeys.Command}_${commandTime}`, commandResponseElement.outerHTML);
-    return wpmSum;
+    this._persistence.setItem(`${LogKeys.Command}_${timeCode}`, commandResponseElement.outerHTML);
+
+    commandText = commandText.replace(/{{wpm}}/g, ('_____' + wpmSum.toFixed(0)).slice(-4));
+
+    if (!this._commandHistory) { this._commandHistory = []; }
+    const commandResponse = commandResponseElement.outerHTML;
+    this._commandHistory.push(commandResponse);
+    const wpmsHTML = this.WpmsToHTML(wpms.charWpms, "Lowest WPMs");
+    this._commandHistory.push(wpmsHTML.toString());
+    return commandResponse;
+
   }
 
   clearCommandHistory(): void {

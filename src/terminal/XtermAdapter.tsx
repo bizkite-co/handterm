@@ -30,8 +30,6 @@ export class XtermAdapter extends React.Component<XtermAdapterProps, XtermAdapte
   private terminalElementRef: React.RefObject<HTMLElement>;
   private lastTouchDistance: number | null = null;
   private currentFontSize: number = 17;
-  // private outputElement: HTMLElement;
-  // private videoElement: HTMLVideoElement;
   private videoElementRef: React.RefObject<HTMLVideoElement> = React.createRef();
   private promptDelimiter: string = '$';
   private promptLength: number = 0;
@@ -161,6 +159,7 @@ export class XtermAdapter extends React.Component<XtermAdapterProps, XtermAdapte
   }
 
   onDataHandler(data: string): void {
+    // TODO: Move business logic to HandexTerm and just leave `@xterm/xterm.js` handling features in here.
     const charCodes = data.split('').map(char => char.charCodeAt(0)).join(',');
     if(this.isDebug) {
       console.info('onDataHandler', data, charCodes, this.terminal.buffer.active.cursorX, this.terminal.buffer.active.cursorY);
@@ -209,7 +208,10 @@ export class XtermAdapter extends React.Component<XtermAdapterProps, XtermAdapte
       // Process the command before clearing the terminal
       // TODO: cancel timer
       if (this.nextCharsDisplayRef.current) this.nextCharsDisplayRef.current.cancelTimer();
-      this.setState({ isInPhraseMode: false });
+      if(this.state.isInPhraseMode) {
+        this.setState({ isInPhraseMode: false });
+         
+      }
       let command = this.getCurrentCommand();
       // Clear the terminal after processing the command
       this.terminal.reset();

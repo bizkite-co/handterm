@@ -7,6 +7,8 @@ declare global {
       svg: React.SVGProps<SVGSVGElement>;
       img: React.ImgHTMLAttributes<HTMLImageElement>;
       div: React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>;
+      dl: React.DetailedHTMLProps<React.HTMLAttributes<HTMLDListElement>, HTMLDListElement>;
+      canvas: React.DetailedHTMLProps<React.CanvasHTMLAttributes<HTMLCanvasElement>, HTMLCanvasElement>;
     }
   }
 }
