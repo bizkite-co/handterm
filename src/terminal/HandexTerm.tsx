@@ -160,6 +160,7 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
     this._commandHistory.push(wpmsHTML.toString());
 
     this.setState(prevState => ({ outputElements: [...prevState.outputElements, commandResponse] }));
+    this.setState(prevState => ({ outputElements: [...prevState.outputElements, wpmsHTML] }));
 
     return commandResponse;
 
@@ -188,7 +189,7 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
   public handleCharacter(character: string) {
     const charDuration: CharDuration = this.wpmCalculator.addKeystroke(character);
     const wpm = this.wpmCalculator.getWPM(charDuration);
-    console.log('wpm', wpm);
+    if(this.isDebug) console.log('wpm', wpm);
     if (character.charCodeAt(0) === 3) { // Ctrl+C
       console.log('Ctrl+C pressed');
       this.setState({ isInPhraseMode: false, commandLine: '' });

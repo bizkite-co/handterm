@@ -113,10 +113,6 @@ export class XtermAdapter extends React.Component<IXtermAdapterProps, IXtermAdap
     window.addEventListener('resize', this.handleResize);
   }
 
-  wpmCallback = () => {
-    console.log("Timer not implemented");
-  }
-
   setCursorMode(terminal: Terminal) {
     terminal.options.cursorBlink = true;
     terminal.options.cursorStyle = 'block';
