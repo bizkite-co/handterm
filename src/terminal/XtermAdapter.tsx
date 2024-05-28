@@ -9,7 +9,6 @@ interface IXtermAdapterState {
   commandLine: string;
   isInPhraseMode: boolean;
   isActive: boolean;
-  outputElements: string[]
 }
 
 interface IXtermAdapterProps {
@@ -30,7 +29,7 @@ export class XtermAdapter extends React.Component<IXtermAdapterProps, IXtermAdap
   private promptDelimiter: string = '$';
   private promptLength: number = 0;
   private webCam: IWebCam | null = null;
-  private isShowVideo: boolean = false;
+  public isShowVideo: boolean = false;
   private fitAddon = new FitAddon();
   private isDebug: boolean = false;
 
@@ -42,7 +41,6 @@ export class XtermAdapter extends React.Component<IXtermAdapterProps, IXtermAdap
       commandLine: '',
       isInPhraseMode: false,
       isActive: false,
-      outputElements: []
     }
     // this.videoElement = this.createVideoElement();
     // this.terminalElement.prepend(this.videoElement);
@@ -228,11 +226,6 @@ export class XtermAdapter extends React.Component<IXtermAdapterProps, IXtermAdap
     this.promptLength = promptText.length - 21;
     this.terminal.write(promptText);
     // this.promptLength = this.terminal.buffer.active.cursorX;
-  }
-
-  // Method to render data to the terminal
-  renderOutput(data: string): void {
-    this.terminal.write(data);
   }
 
   public handleTouchStart: TouchEventHandler<HTMLDivElement> = (event: React.TouchEvent<HTMLDivElement>) => {

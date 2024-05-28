@@ -225,7 +225,7 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
       }
       if (command === 'video') {
         this.adapterRef.current?.toggleVideo();
-        // this.handexTerm.handleCommand(command + ' --' + this.isShowVideo);
+        this.handleCommand(command + ' --' + this.adapterRef.current?.isShowVideo);
         // TODO: handle toggle video 
         // this.outputElement.appendChild(result);
 
@@ -242,7 +242,7 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
         this.setState({ isInPhraseMode: true });
       }
       // TODO: A bunch of phrase command stuff should be omoved from NextCharsDisplay to here, such as phrase generation.
-      // let result = this.handexTerm.handleCommand(command);
+      let result = this.handleCommand(command);
     } else if (this.state.isInPhraseMode) {
       // # IN PHRASE MODE
       // this.handexTerm.handleCharacter(character);
