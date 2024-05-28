@@ -5,6 +5,8 @@ import { IPersistence, LocalStoragePersistence } from './Persistence';
 import { createHTMLElementFromHTML } from '../utils/dom';
 import React from 'react';
 import { XtermAdapter } from './XtermAdapter';
+import { NextCharsDisplay } from '../NextCharsDisplay';
+import { Output } from '../terminal/Output';
 
 export interface IHandexTermProps {
   // Define the interface for your HandexTerm logic
@@ -15,24 +17,33 @@ export interface IHandexTermState {
   // Define the interface for your HandexTerm state
   outputElements: React.ReactNode[];
   isInPhraseMode: boolean;
+  isActive: boolean;
+  commandLine: string;
 }
 
 
 export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermState> {
   // Implement the interface methods
   terminalElementRef = React.createRef<HTMLDivElement>();
+  private adapterRef = React.createRef<XtermAdapter>();
+  private nextCharsDisplayRef: React.RefObject<NextCharsDisplay> = React.createRef();
   private _persistence: IPersistence;
   private _commandHistory: string[] = [];
   private wpmCalculator: IWPMCalculator = new WPMCalculator();
   private static readonly commandHistoryLimit = 100;
+  private isDebug: boolean = false;
+
 
   constructor(IHandexTermProps: IHandexTermProps) {
     super(IHandexTermProps);
     this._persistence = new LocalStoragePersistence();
     this.state = {
       outputElements: this.getCommandHistory(),
-      isInPhraseMode: false
+      isInPhraseMode: false,
+      isActive: false,
+      commandLine: ''
     }
+    this.loadDebugValue();
   }
 
   public handleCommand(command: string): string {
@@ -174,10 +185,81 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
   }
 
 
-  public handleCharacter(character: string): number {
+  public handleCharacter(character: string) {
     const charDuration: CharDuration = this.wpmCalculator.addKeystroke(character);
     const wpm = this.wpmCalculator.getWPM(charDuration);
     console.log('wpm', wpm);
+    if (character.charCodeAt(0) === 3) { // Ctrl+C
+      console.log('Ctrl+C pressed');
+      this.setState({ isInPhraseMode: false, commandLine: '' });
+      this.adapterRef.current?.terminalReset();
+      this.adapterRef.current?.prompt();
+
+    }
+
+    if (character.charCodeAt(0) === 4) { // Ctrl+D
+      console.log('Ctrl+D pressed');
+
+      // this.increaseFontSize();
+    }
+
+    if (character.charCodeAt(0) === 13) { // Enter key
+      // Process the command before clearing the terminal
+      // TODO: cancel timer
+      if (this.nextCharsDisplayRef.current) this.nextCharsDisplayRef.current.cancelTimer();
+      if (this.state.isInPhraseMode) {
+        this.setState({ isInPhraseMode: false });
+
+      }
+      let command = this.adapterRef.current?.getCurrentCommand() ?? '';
+      // Clear the terminal after processing the command
+      this.terminalReset();
+      // TODO: reset timer
+      // Write the new prompt after clearing
+      this.adapterRef.current?.prompt();
+      if (command === '') return;
+      if (command === 'clear') {
+        // this.handexTerm.clearCommandHistory();
+        this.setState({ outputElements: [], isInPhraseMode: false, commandLine: '' });
+        return;
+      }
+      if (command === 'video') {
+        this.adapterRef.current?.toggleVideo();
+        // this.handexTerm.handleCommand(command + ' --' + this.isShowVideo);
+        // TODO: handle toggle video 
+        // this.outputElement.appendChild(result);
+
+        return;
+      }
+      if (command.startsWith('debug')) {
+        let isDebug = command.includes('--true') || command.includes('-t');
+        this.toggleIsDebug(isDebug);
+        return;
+      }
+      if (command === 'phrase' || command.startsWith('phrase ')) {
+        // Start phrase mode
+        console.log("phrase");
+        this.setState({ isInPhraseMode: true });
+      }
+      // TODO: A bunch of phrase command stuff should be omoved from NextCharsDisplay to here, such as phrase generation.
+      // let result = this.handexTerm.handleCommand(command);
+    } else if (this.state.isInPhraseMode) {
+      // # IN PHRASE MODE
+      // this.handexTerm.handleCharacter(character);
+      this.terminalWrite(character);
+      let command = this.adapterRef.current?.getCurrentCommand() + character;
+
+      if (command.length === 0) {
+        if (this.nextCharsDisplayRef.current)
+          this.nextCharsDisplayRef.current.resetTimer();
+        return;
+      }
+      this.setState({ commandLine: command });
+    } else {
+      // For other input, just return it to the terminal.
+      // this.handexTerm.handleCharacter(character);
+      this.terminalWrite(character);
+    }
     return charDuration.durationMilliseconds;
   }
 
@@ -197,13 +279,72 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
     return `<span class="log-hour">${hours}</span><span class="log-minute">${minutes}</span><span class="log-second">${seconds}</span>`;
   }
 
+  toggleIsDebug(setIsDebug: boolean | undefined) {
+    this.isDebug = !this.isDebug;
+    if (setIsDebug) {
+      this.isDebug = setIsDebug;
+    }
+    localStorage.setItem('xterm-debug', String(this.isDebug));
+    console.log('Xterm debug:', localStorage.getItem('xterm-debug'));
+  }
+
+  loadDebugValue() {
+    if (localStorage.getItem('xterm-debug') === 'true') {
+      this.isDebug = true;
+    } else {
+      this.isDebug = false;
+    }
+  }
+
+  setNewPhrase(phrase: string) {
+    // Write phrase to output.
+    this.setState(prevState => ({ outputElements: [...prevState.outputElements, phrase] }));
+  }
+
+  handlePhraseSuccess(phrase: string, wpm: number) {
+    console.log('XtermAdapter onPhraseSuccess', phrase, wpm);
+    this.setState(prevState => ({ outputElements: [...prevState.outputElements, wpm.toString() + ":" + phrase] }));
+    this.adapterRef.current?.prompt();
+  }
+
+  handleTimerStatusChange(isActive: boolean) {
+    console.log('handleTimerStatusChange', isActive);
+    this.setState({ isActive });
+  }
+
+  private terminalReset(): void {
+    this.adapterRef.current?.terminalReset();
+  }
+  private terminalWrite(data: string): void {
+    this.adapterRef.current?.terminalWrite(data);
+  }
+
   public render() {
     return (
-      <XtermAdapter
-        terminalElement={this.terminalElementRef.current}
-        terminalElementRef={this.terminalElementRef}
-        onAddCharacter={this.handleCharacter.bind(this)}
-      />
+      <>
+        <Output
+          elements={this.state.outputElements}
+          onTouchStart={this.adapterRef.current?.handleTouchStart}
+          onTouchEnd={this.adapterRef.current?.handleTouchEnd}
+          onTouchMove={this.adapterRef.current?.handleTouchMove}
+        />
+        <NextCharsDisplay
+          ref={this.nextCharsDisplayRef}
+          onTimerStatusChange={this.handleTimerStatusChange}
+          commandLine={this.state.commandLine}
+          isInPhraseMode={this.state.isInPhraseMode}
+          onNewPhrase={this.setNewPhrase}
+          onPhraseSuccess={this.handlePhraseSuccess}
+        />
+        <XtermAdapter
+          ref={this.adapterRef}
+          terminalElement={this.terminalElementRef.current}
+          terminalElementRef={this.terminalElementRef}
+          onAddCharacter={this.handleCharacter.bind(this)}
+          writeData={this.terminalWrite.bind(this)}
+          resetTerminal={this.terminalReset.bind(this)}
+        />
+      </>
     )
   }
 }

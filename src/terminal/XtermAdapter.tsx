@@ -4,8 +4,6 @@ import { FitAddon } from '@xterm/addon-fit';
 import { TerminalCssClasses } from './TerminalTypes';
 import { IWebCam, WebCam } from '../utils/WebCam';
 import React, { TouchEventHandler } from 'react';
-import { NextCharsDisplay } from '../NextCharsDisplay';
-import { Output } from '../terminal/Output';
 
 interface IXtermAdapterState {
   commandLine: string;
@@ -18,10 +16,11 @@ interface IXtermAdapterProps {
   terminalElement: HTMLElement | null;
   terminalElementRef: React.RefObject<HTMLElement>;
   onAddCharacter: (character: string) => void;
+  writeData: (data: string) => void;
+  resetTerminal: () => void;
 }
 
 export class XtermAdapter extends React.Component<IXtermAdapterProps, IXtermAdapterState> {
-  private nextCharsDisplayRef: React.RefObject<NextCharsDisplay> = React.createRef();
   private terminal: Terminal;
   private terminalElement: HTMLElement | null = null;
   private terminalElementRef: React.RefObject<HTMLElement>;
@@ -67,6 +66,15 @@ export class XtermAdapter extends React.Component<IXtermAdapterProps, IXtermAdap
     }
   }
 
+  terminalReset(): void {
+    this.terminal.reset();
+  }
+
+  terminalWrite(data: string): void {
+    this.terminal.write(data);
+  }
+
+
   componentDidUpdate(prevProps: Readonly<IXtermAdapterProps> ): void {
     if (prevProps.terminalElementRef?.current !== this.props.terminalElementRef?.current) {
       this.initializeTerminal();
@@ -74,6 +82,9 @@ export class XtermAdapter extends React.Component<IXtermAdapterProps, IXtermAdap
   }
   componentWillUnmount(): void {
     window.removeEventListener('resize', this.handleResize);
+  }
+  getTerminalText(): string {
+    return this.getCurrentCommand();
   }
   
   handleResize = () => {
@@ -98,7 +109,6 @@ export class XtermAdapter extends React.Component<IXtermAdapterProps, IXtermAdap
     this.loadFontSize();
     this.terminal.focus();
     this.prompt();
-    this.loadDebugValue();
     if (this.videoElementRef.current) {
       this.webCam = new WebCam(this.videoElementRef.current);
     }
@@ -126,32 +136,10 @@ export class XtermAdapter extends React.Component<IXtermAdapterProps, IXtermAdap
     return result;
   }
 
-  setNewPhrase(phrase: string) {
-    // Write phrase to output.
-    this.setState(prevState => ({ outputElements: [...prevState.outputElements, phrase] }));
-  }
-
   isCursorOnPrompt(): boolean {
     const isFirstLine = this.terminal.buffer.active.cursorY === 0;
     const isLeftOfPromptChar = this.terminal.buffer.active.cursorX < this.promptLength;
     return isFirstLine && isLeftOfPromptChar;
-  }
-
-  toggleXtermDebug(setIsDebug: boolean | undefined) {
-    this.isDebug = !this.isDebug;
-    if (setIsDebug) {
-      this.isDebug = setIsDebug;
-    }
-    localStorage.setItem('xterm-debug', String(this.isDebug));
-    console.log('Xterm debug:', localStorage.getItem('xterm-debug'));
-  }
-
-  loadDebugValue() {
-    if (localStorage.getItem('xterm-debug') === 'true') {
-      this.isDebug = true;
-    } else {
-      this.isDebug = false;
-    }
   }
 
   onDataHandler(data: string): void {
@@ -188,76 +176,8 @@ export class XtermAdapter extends React.Component<IXtermAdapterProps, IXtermAdap
       }
     }
     this.props.onAddCharacter(data);
-    if (data.charCodeAt(0) === 3) { // Ctrl+C
-      console.log('Ctrl+C pressed');
-      this.setState({ isInPhraseMode: false, commandLine: '' });
-      this.terminal.reset();
-      this.prompt();
-    }
-
-    if(data.charCodeAt(0) === 4) { // Ctrl+D
-      console.log('Ctrl+D pressed');
-      this.increaseFontSize();
-    }
-
-    if (data.charCodeAt(0) === 13) { // Enter key
-      // Process the command before clearing the terminal
-      // TODO: cancel timer
-      if (this.nextCharsDisplayRef.current) this.nextCharsDisplayRef.current.cancelTimer();
-      if(this.state.isInPhraseMode) {
-        this.setState({ isInPhraseMode: false });
-         
-      }
-      let command = this.getCurrentCommand();
-      // Clear the terminal after processing the command
-      this.terminal.reset();
-      // TODO: reset timer
-      // Write the new prompt after clearing
-      this.prompt();
-      if (command === '') return;
-      if (command === 'clear') {
-        // this.handexTerm.clearCommandHistory();
-        this.setState({ outputElements: [], isInPhraseMode: false, commandLine: '' });
-        return;
-      }
-      if (command === 'video') {
-        this.toggleVideo();
-        // this.handexTerm.handleCommand(command + ' --' + this.isShowVideo);
-        // TODO: handle toggle video 
-        // this.outputElement.appendChild(result);
-
-        return;
-      }
-      if (command.startsWith('debug')) {
-        let isDebug = command.includes('--true') || command.includes('-t');
-        this.toggleXtermDebug(isDebug);
-        return;
-      }
-      if (command === 'phrase' || command.startsWith('phrase ')) {
-        // Start phrase mode
-        console.log("phrase");
-        this.setState({ isInPhraseMode: true });
-      }
-      // TODO: A bunch of phrase command stuff should be omoved from NextCharsDisplay to here, such as phrase generation.
-      // let result = this.handexTerm.handleCommand(command);
-    } else if (this.state.isInPhraseMode) {
-      // # IN PHRASE MODE
-      // this.handexTerm.handleCharacter(data);
-      this.terminal.write(data);
-      let command = this.getCurrentCommand() + data;
-
-      if (command.length === 0) {
-        if (this.nextCharsDisplayRef.current)
-          this.nextCharsDisplayRef.current.resetTimer();
-        return;
-      }
-      this.setState({ commandLine: command });
-    } else {
-      // For other input, just return it to the terminal.
-      // this.handexTerm.handleCharacter(data);
-      this.terminal.write(data);
-    }
   }
+
 
   private setViewPortOpacity(): void {
     const viewPort = document.getElementsByClassName('xterm-viewport')[0] as HTMLDivElement;
@@ -287,7 +207,7 @@ export class XtermAdapter extends React.Component<IXtermAdapterProps, IXtermAdap
     return this.isShowVideo;
   }
 
-  private getCurrentCommand(): string {
+  public getCurrentCommand(): string {
     const buffer = this.terminal.buffer.active;
     // Assuming the command prompt starts at the top of the terminal (line 0)
     // Adjust the starting line accordingly if your prompt starts elsewhere
@@ -315,7 +235,7 @@ export class XtermAdapter extends React.Component<IXtermAdapterProps, IXtermAdap
     this.terminal.write(data);
   }
 
-  private handleTouchStart: TouchEventHandler<HTMLDivElement> = (event: React.TouchEvent<HTMLDivElement>) => {
+  public handleTouchStart: TouchEventHandler<HTMLDivElement> = (event: React.TouchEvent<HTMLDivElement>) => {
     setTimeout(() => {
       // this.terminalElement.focus();
     }, 500)
@@ -326,7 +246,7 @@ export class XtermAdapter extends React.Component<IXtermAdapterProps, IXtermAdap
     }
   }
 
-  private handleTouchMove: TouchEventHandler<HTMLDivElement> = (event: React.TouchEvent<HTMLDivElement>) => {
+  public handleTouchMove: TouchEventHandler<HTMLDivElement> = (event: React.TouchEvent<HTMLDivElement>) => {
     if (event.touches.length === 2) {
       // event.preventDefault();
       const currentDistance = this.getDistanceBetweenTouches(event.touches);
@@ -342,14 +262,14 @@ export class XtermAdapter extends React.Component<IXtermAdapterProps, IXtermAdap
     }
   }
 
-  private increaseFontSize() {
+  public increaseFontSize() {
     this.currentFontSize += 1;
     this.terminal.options.fontSize = this.currentFontSize;
     this.terminal.refresh(0, this.terminal.rows - 1);
     localStorage.setItem('terminalFontSize', `${this.currentFontSize}`);
   }
 
-  private handleTouchEnd: TouchEventHandler<HTMLDivElement> = () => {
+  public handleTouchEnd: TouchEventHandler<HTMLDivElement> = () => {
 
     localStorage.setItem('terminalFontSize', `${this.currentFontSize}`);
     console.log('SET terminalFontSize', this.currentFontSize);
@@ -365,35 +285,10 @@ export class XtermAdapter extends React.Component<IXtermAdapterProps, IXtermAdap
     );
   }
 
-  handleTimerStatusChange(isActive: boolean) {
-    console.log('handleTimerStatusChange', isActive);
-    this.setState({ isActive });
-  }
-
-  handlePhraseSuccess(phrase: string, wpm: number) {
-    console.log('XtermAdapter onPhraseSuccess', phrase, wpm);
-    this.setState(prevState => ({ outputElements: [...prevState.outputElements, wpm.toString() + ":" + phrase] }));
-    this.prompt();
-  }
-
   render() {
     // Use state and refs in your render method
     return (
       <>
-        <Output
-          elements={this.state.outputElements}
-          onTouchStart={this.handleTouchStart}
-          onTouchEnd={this.handleTouchEnd}
-          onTouchMove={this.handleTouchMove}
-        />
-        <NextCharsDisplay
-          ref={this.nextCharsDisplayRef}
-          onTimerStatusChange={this.handleTimerStatusChange}
-          commandLine={this.state.commandLine}
-          isInPhraseMode={this.state.isInPhraseMode}
-          onNewPhrase={this.setNewPhrase}
-          onPhraseSuccess={this.handlePhraseSuccess}
-        />
         <div
           ref={this.terminalElementRef as React.RefObject<HTMLDivElement>}
           id={TerminalCssClasses.Terminal}
