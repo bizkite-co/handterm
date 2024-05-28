@@ -243,7 +243,7 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
         this.setState({ isInPhraseMode: true });
       }
       // TODO: A bunch of phrase command stuff should be omoved from NextCharsDisplay to here, such as phrase generation.
-      let result = this.handleCommand(command);
+      this.handleCommand(command);
     } else if (this.state.isInPhraseMode) {
       // # IN PHRASE MODE
       // this.handexTerm.handleCharacter(character);
