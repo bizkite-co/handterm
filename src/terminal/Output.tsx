@@ -3,24 +3,30 @@ import { TerminalCssClasses } from "./TerminalTypes";
 
 
 export interface OutputProps {
-    elements: string[];
-    onTouchStart?: TouchEventHandler<HTMLDivElement>;
-    onTouchEnd?: TouchEventHandler<HTMLDivElement>;
-    onTouchMove?: TouchEventHandler<HTMLDivElement>;
+    elements: React.ReactNode[];
+    onTouchStart: TouchEventHandler<HTMLDivElement>;
+    onTouchEnd: TouchEventHandler<HTMLDivElement>;
+    onTouchMove: TouchEventHandler<HTMLDivElement>;
 }
 
-export const Output: React.FC<OutputProps> = ({...props}) => {
+export const Output: React.FC<OutputProps> = ({ elements, ...props }) => {
     return (
-        <div 
-            id={TerminalCssClasses.Output} 
+        <div
+            id={TerminalCssClasses.Output}
             className={TerminalCssClasses.Output}
             onTouchStart={props.onTouchStart}
             onTouchMove={props.onTouchMove}
             onTouchEnd={props.onTouchEnd}
-            >
-            {props.elements.map((htmlString, index) => (
-                <div key={index} dangerouslySetInnerHTML={{ __html: htmlString }} />
-            ))}
+        >
+            {elements.map((element, index) => {
+                if (typeof element === 'string') {
+                    // Only use dangerouslySetInnerHTML for string values
+                    return <div key={index} dangerouslySetInnerHTML={{ __html: element }} />;
+                } else {
+                    // For non-string ReactNode elements, render them directly
+                    return <div key={index}>{element}</div>;
+                }
+            })}
         </div>
     );
 };

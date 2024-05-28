@@ -3,7 +3,7 @@ import { LogKeys, TimeHTML, CharDuration, CharWPM } from './TerminalTypes';
 import { IWPMCalculator, WPMCalculator } from './WPMCalculator';
 import { IPersistence, LocalStoragePersistence } from './Persistence';
 import { createHTMLElementFromHTML } from '../utils/dom';
-import React from 'react';
+import React, { TouchEventHandler } from 'react';
 import { XtermAdapter } from './XtermAdapter';
 import { NextCharsDisplay } from '../NextCharsDisplay';
 import { Output } from '../terminal/Output';
@@ -319,14 +319,26 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
     this.adapterRef.current?.terminalWrite(data);
   }
 
+  private handleTouchStart: TouchEventHandler<HTMLDivElement> = (event: React.TouchEvent<HTMLDivElement>) => {
+    this.adapterRef.current?.handleTouchStart(event);
+  }
+
+  private handleTouchEnd: TouchEventHandler<HTMLDivElement> = (event: React.TouchEvent<HTMLDivElement>) => {
+    this.adapterRef.current?.handleTouchEnd(event);
+  }
+
+  private handleTouchMove: TouchEventHandler<HTMLDivElement> = (event: React.TouchEvent<HTMLDivElement>) => {
+    this.adapterRef.current?.handleTouchMove(event);
+  }
+
   public render() {
     return (
       <>
         <Output
           elements={this.state.outputElements}
-          onTouchStart={this.adapterRef.current?.handleTouchStart}
-          onTouchEnd={this.adapterRef.current?.handleTouchEnd}
-          onTouchMove={this.adapterRef.current?.handleTouchMove}
+          onTouchStart={this.handleTouchStart}
+          onTouchEnd={this.handleTouchEnd}
+          onTouchMove={this.handleTouchMove}
         />
         <NextCharsDisplay
           ref={this.nextCharsDisplayRef}
