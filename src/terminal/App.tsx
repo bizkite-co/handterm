@@ -1,6 +1,6 @@
 // App.tsx
 import React from 'react';
-import { XtermAdapter } from './XtermAdapter';
+import { HandexTerm } from './HandexTerm';
 
 // App.tsx
 class App extends React.Component {
@@ -13,10 +13,7 @@ class App extends React.Component {
   render() {
     return (
       <div>
-        <XtermAdapter
-          terminalElement={this.terminalElementRef.current}
-          terminalElementRef={this.terminalElementRef}
-
+        <HandexTerm 
         />
       </div>
     );

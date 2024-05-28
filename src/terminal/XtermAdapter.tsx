@@ -1,30 +1,27 @@
 // XtermAdapter.ts
 import { Terminal } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
-import { HandexTerm, IHandexTerm } from './HandexTerm';
 import { TerminalCssClasses } from './TerminalTypes';
 import { IWebCam, WebCam } from '../utils/WebCam';
 import React, { TouchEventHandler } from 'react';
 import { NextCharsDisplay } from '../NextCharsDisplay';
 import { Output } from '../terminal/Output';
 
-interface XtermAdapterState {
+interface IXtermAdapterState {
   commandLine: string;
   isInPhraseMode: boolean;
   isActive: boolean;
   outputElements: string[]
 }
 
-interface XtermAdapterProps {
+interface IXtermAdapterProps {
   terminalElement: HTMLElement | null;
   terminalElementRef: React.RefObject<HTMLElement>;
+  onAddCharacter: (character: string) => void;
 }
 
-export class XtermAdapter extends React.Component<XtermAdapterProps, XtermAdapterState> {
-
-
+export class XtermAdapter extends React.Component<IXtermAdapterProps, IXtermAdapterState> {
   private nextCharsDisplayRef: React.RefObject<NextCharsDisplay> = React.createRef();
-  private handexTerm: IHandexTerm;
   private terminal: Terminal;
   private terminalElement: HTMLElement | null = null;
   private terminalElementRef: React.RefObject<HTMLElement>;
@@ -38,16 +35,15 @@ export class XtermAdapter extends React.Component<XtermAdapterProps, XtermAdapte
   private fitAddon = new FitAddon();
   private isDebug: boolean = false;
 
-  constructor(props: XtermAdapterProps ) {
+  constructor(props: IXtermAdapterProps ) {
     super(props);
     const { terminalElementRef } = props;
     this.terminalElementRef = terminalElementRef;
-    this.handexTerm = new HandexTerm();
     this.state = {
       commandLine: '',
       isInPhraseMode: false,
       isActive: false,
-      outputElements: this.getCommandHistory()
+      outputElements: []
     }
     // this.videoElement = this.createVideoElement();
     // this.terminalElement.prepend(this.videoElement);
@@ -71,7 +67,7 @@ export class XtermAdapter extends React.Component<XtermAdapterProps, XtermAdapte
     }
   }
 
-  componentDidUpdate(prevProps: Readonly<XtermAdapterProps> ): void {
+  componentDidUpdate(prevProps: Readonly<IXtermAdapterProps> ): void {
     if (prevProps.terminalElementRef?.current !== this.props.terminalElementRef?.current) {
       this.initializeTerminal();
     }
@@ -191,7 +187,7 @@ export class XtermAdapter extends React.Component<XtermAdapterProps, XtermAdapte
         }
       }
     }
-
+    this.props.onAddCharacter(data);
     if (data.charCodeAt(0) === 3) { // Ctrl+C
       console.log('Ctrl+C pressed');
       this.setState({ isInPhraseMode: false, commandLine: '' });
@@ -220,13 +216,13 @@ export class XtermAdapter extends React.Component<XtermAdapterProps, XtermAdapte
       this.prompt();
       if (command === '') return;
       if (command === 'clear') {
-        this.handexTerm.clearCommandHistory();
+        // this.handexTerm.clearCommandHistory();
         this.setState({ outputElements: [], isInPhraseMode: false, commandLine: '' });
         return;
       }
       if (command === 'video') {
         this.toggleVideo();
-        this.handexTerm.handleCommand(command + ' --' + this.isShowVideo);
+        // this.handexTerm.handleCommand(command + ' --' + this.isShowVideo);
         // TODO: handle toggle video 
         // this.outputElement.appendChild(result);
 
@@ -243,11 +239,10 @@ export class XtermAdapter extends React.Component<XtermAdapterProps, XtermAdapte
         this.setState({ isInPhraseMode: true });
       }
       // TODO: A bunch of phrase command stuff should be omoved from NextCharsDisplay to here, such as phrase generation.
-      let result = this.handexTerm.handleCommand(command);
-      this.setState(prevState => ({ outputElements: [...prevState.outputElements, result] }));
+      // let result = this.handexTerm.handleCommand(command);
     } else if (this.state.isInPhraseMode) {
       // # IN PHRASE MODE
-      this.handexTerm.handleCharacter(data);
+      // this.handexTerm.handleCharacter(data);
       this.terminal.write(data);
       let command = this.getCurrentCommand() + data;
 
@@ -259,7 +254,7 @@ export class XtermAdapter extends React.Component<XtermAdapterProps, XtermAdapte
       this.setState({ commandLine: command });
     } else {
       // For other input, just return it to the terminal.
-      this.handexTerm.handleCharacter(data);
+      // this.handexTerm.handleCharacter(data);
       this.terminal.write(data);
     }
   }
@@ -290,10 +285,6 @@ export class XtermAdapter extends React.Component<XtermAdapterProps, XtermAdapte
     this.isShowVideo = !this.isShowVideo;
     this.webCam?.toggleVideo(this.isShowVideo);
     return this.isShowVideo;
-  }
-
-  public getCommandHistory(): string[] {
-    return this.handexTerm.getCommandHistory();
   }
 
   private getCurrentCommand(): string {

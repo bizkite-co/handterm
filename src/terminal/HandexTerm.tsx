@@ -4,27 +4,36 @@ import { IWPMCalculator, WPMCalculator } from './WPMCalculator';
 import { IPersistence, LocalStoragePersistence } from './Persistence';
 import { createHTMLElementFromHTML } from '../utils/dom';
 import React from 'react';
+import { XtermAdapter } from './XtermAdapter';
 
-export interface IHandexTerm {
+export interface IHandexTermProps {
   // Define the interface for your HandexTerm logic
-  handleCommand(input: string): string;
-  clearCommandHistory(): void;
-  handleCharacter(character: string): number;
-  getCommandHistory(): string[];
+
+}
+
+export interface IHandexTermState {
+  // Define the interface for your HandexTerm state
+  outputElements: React.ReactNode[];
+  isInPhraseMode: boolean;
 }
 
 
-export class HandexTerm implements IHandexTerm {
+export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermState> {
   // Implement the interface methods
+  terminalElementRef = React.createRef<HTMLDivElement>();
   private _persistence: IPersistence;
   private _commandHistory: string[] = [];
   private wpmCalculator: IWPMCalculator = new WPMCalculator();
   private static readonly commandHistoryLimit = 100;
 
-  constructor() {
+  constructor(IHandexTermProps: IHandexTermProps) {
+    super(IHandexTermProps);
     this._persistence = new LocalStoragePersistence();
+    this.state = {
+      outputElements: this.getCommandHistory(),
+      isInPhraseMode: false
+    }
   }
-
 
   public handleCommand(command: string): string {
     let status = 404;
@@ -138,6 +147,9 @@ export class HandexTerm implements IHandexTerm {
     this._commandHistory.push(commandResponse);
     const wpmsHTML = this.WpmsToHTML(wpms.charWpms, "Lowest WPMs");
     this._commandHistory.push(wpmsHTML.toString());
+
+    this.setState(prevState => ({ outputElements: [...prevState.outputElements, commandResponse] }));
+
     return commandResponse;
 
   }
@@ -185,4 +197,13 @@ export class HandexTerm implements IHandexTerm {
     return `<span class="log-hour">${hours}</span><span class="log-minute">${minutes}</span><span class="log-second">${seconds}</span>`;
   }
 
+  public render() {
+    return (
+      <XtermAdapter
+        terminalElement={this.terminalElementRef.current}
+        terminalElementRef={this.terminalElementRef}
+        onAddCharacter={this.handleCharacter.bind(this)}
+      />
+    )
+  }
 }
