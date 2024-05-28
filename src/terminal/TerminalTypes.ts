@@ -44,4 +44,5 @@ export type CharDuration = {
 export type CharWPM = {
     character: string;
     wpm: number;
+    durationMilliseconds: number;
 }

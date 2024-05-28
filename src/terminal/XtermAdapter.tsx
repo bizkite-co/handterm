@@ -37,9 +37,8 @@ export class XtermAdapter extends React.Component<XtermAdapterProps, XtermAdapte
   private promptLength: number = 0;
   private webCam: IWebCam | null = null;
   private isShowVideo: boolean = false;
-
-
   private fitAddon = new FitAddon();
+  private isDebug: boolean = false;
 
   constructor(props: XtermAdapterProps ) {
     super(props);
@@ -105,6 +104,7 @@ export class XtermAdapter extends React.Component<XtermAdapterProps, XtermAdapte
     this.loadFontSize();
     this.terminal.focus();
     this.prompt();
+    this.loadDebugValue();
     if (this.videoElementRef.current) {
       this.webCam = new WebCam(this.videoElementRef.current);
     }
@@ -124,7 +124,7 @@ export class XtermAdapter extends React.Component<XtermAdapterProps, XtermAdapte
   handleBackSpaceAndNavigation(data: string): boolean {
     let result = false;
     if (data.charCodeAt(0) === 127) {
-      console.log('Backspace pressed', this.terminal.buffer.active.cursorX, this.terminal.buffer.active.cursorY);
+      if(this.isDebug) console.log('Backspace pressed', this.terminal.buffer.active.cursorX, this.terminal.buffer.active.cursorY);
       if (this.isCursorOnPrompt()) return true;
       this.terminal.write('\x1b[D\x1b[P');
       result = true;
@@ -143,9 +143,28 @@ export class XtermAdapter extends React.Component<XtermAdapterProps, XtermAdapte
     return isFirstLine && isLeftOfPromptChar;
   }
 
+  toggleXtermDebug(setIsDebug: boolean | undefined) {
+    this.isDebug = !this.isDebug;
+    if (setIsDebug) {
+      this.isDebug = setIsDebug;
+    }
+    localStorage.setItem('xterm-debug', String(this.isDebug));
+    console.log('Xterm debug:', localStorage.getItem('xterm-debug'));
+  }
+
+  loadDebugValue() {
+    if (localStorage.getItem('xterm-debug') === 'true') {
+      this.isDebug = true;
+    } else {
+      this.isDebug = false;
+    }
+  }
+
   onDataHandler(data: string): void {
     const charCodes = data.split('').map(char => char.charCodeAt(0)).join(',');
-    console.info('onDataHandler', data, charCodes, this.terminal.buffer.active.cursorX, this.terminal.buffer.active.cursorY);
+    if(this.isDebug) {
+      console.info('onDataHandler', data, charCodes, this.terminal.buffer.active.cursorX, this.terminal.buffer.active.cursorY);
+    }
     // Set the cursor mode on the terminal
     this.setCursorMode(this.terminal);
     // Handle Backspace and Navigation keys
@@ -190,6 +209,7 @@ export class XtermAdapter extends React.Component<XtermAdapterProps, XtermAdapte
       // Process the command before clearing the terminal
       // TODO: cancel timer
       if (this.nextCharsDisplayRef.current) this.nextCharsDisplayRef.current.cancelTimer();
+      this.setState({ isInPhraseMode: false });
       let command = this.getCurrentCommand();
       // Clear the terminal after processing the command
       this.terminal.reset();
@@ -210,8 +230,13 @@ export class XtermAdapter extends React.Component<XtermAdapterProps, XtermAdapte
 
         return;
       }
+      if (command.startsWith('debug')) {
+        let isDebug = command.includes('--true') || command.includes('-t');
+        this.toggleXtermDebug(isDebug);
+        return;
+      }
       if (command === 'phrase' || command.startsWith('phrase ')) {
-
+        // Start phrase mode
         console.log("phrase");
         this.setState({ isInPhraseMode: true });
       }
@@ -219,9 +244,10 @@ export class XtermAdapter extends React.Component<XtermAdapterProps, XtermAdapte
       let result = this.handexTerm.handleCommand(command);
       this.setState(prevState => ({ outputElements: [...prevState.outputElements, result] }));
     } else if (this.state.isInPhraseMode) {
-      // # PHRASE MODE
-      let command = this.getCurrentCommand() + data;
+      // # IN PHRASE MODE
+      this.handexTerm.handleCharacter(data);
       this.terminal.write(data);
+      let command = this.getCurrentCommand() + data;
 
       if (command.length === 0) {
         if (this.nextCharsDisplayRef.current)
@@ -231,7 +257,7 @@ export class XtermAdapter extends React.Component<XtermAdapterProps, XtermAdapte
       this.setState({ commandLine: command });
     } else {
       // For other input, just return it to the terminal.
-
+      this.handexTerm.handleCharacter(data);
       this.terminal.write(data);
     }
   }

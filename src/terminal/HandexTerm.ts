@@ -1,5 +1,5 @@
 // HandexTerm.ts
-import { LogKeys, TimeHTML } from './TerminalTypes';
+import { LogKeys, TimeHTML, CharDuration } from './TerminalTypes';
 import { IWPMCalculator, WPMCalculator } from './WPMCalculator';
 import { IPersistence, LocalStoragePersistence } from './Persistence';
 import { createHTMLElementFromHTML } from '../utils/dom';
@@ -26,6 +26,7 @@ export class HandexTerm implements IHandexTerm {
   public handleCommand(command: string): string {
     let status = 404;
     let response = "Command not found.";
+    console.log("Phrase WPM:", this.wpmCalculator.getWPMs());
     if (command === 'clear') {
       status = 200;
       this.clearCommandHistory();
@@ -35,7 +36,7 @@ export class HandexTerm implements IHandexTerm {
       status = 200;
       response = "Would you like to play a game?"
     }
-    if(command === 'phrase') {
+    if (command === 'phrase') {
       status = 200;
       response = "Type the phrase as fast as you can."
     }
@@ -74,7 +75,7 @@ export class HandexTerm implements IHandexTerm {
     const command = args[0]; // The first element is the command
 
     // Now you can handle the command and options
-    
+
 
     // Based on the command, you can switch and call different functions
     switch (command) {
@@ -138,7 +139,10 @@ export class HandexTerm implements IHandexTerm {
 
 
   public handleCharacter(character: string): number {
-    return this.wpmCalculator.recordKeystroke(character).durationMilliseconds;
+    const charDuration: CharDuration = this.wpmCalculator.addKeystroke(character);
+    const wpm = this.wpmCalculator.getWPM(charDuration);
+    console.log('wpm', wpm);
+    return charDuration.durationMilliseconds;
   }
 
   createCommandRecord(command: string, commandTime: Date): string {
