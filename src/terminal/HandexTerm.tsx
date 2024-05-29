@@ -3,10 +3,11 @@ import { LogKeys, TimeHTML, CharDuration, CharWPM } from './TerminalTypes';
 import { IWPMCalculator, WPMCalculator } from './WPMCalculator';
 import { IPersistence, LocalStoragePersistence } from './Persistence';
 import { createHTMLElementFromHTML } from '../utils/dom';
-import React, { TouchEventHandler } from 'react';
+import React, { LegacyRef, TouchEventHandler } from 'react';
 import { XtermAdapter } from './XtermAdapter';
 import { NextCharsDisplay } from '../NextCharsDisplay';
 import { Output } from '../terminal/Output';
+import { TerminalGame } from './TerminalGame';
 import ReactDOMServer from 'react-dom/server';
 
 
@@ -29,11 +30,13 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
   terminalElementRef = React.createRef<HTMLDivElement>();
   private adapterRef = React.createRef<XtermAdapter>();
   private nextCharsDisplayRef: React.RefObject<NextCharsDisplay> = React.createRef();
+  private terminalGameRef = React.createRef<TerminalGame>();
   private _persistence: IPersistence;
   private _commandHistory: string[] = [];
   private wpmCalculator: IWPMCalculator = new WPMCalculator();
   private static readonly commandHistoryLimit = 100;
   private isDebug: boolean = false;
+  canvasHeight: string = '100px';
 
 
   constructor(IHandexTermProps: IHandexTermProps) {
@@ -44,6 +47,7 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
       isInPhraseMode: false,
       isActive: false,
       commandLine: ''
+      
     }
     this.loadDebugValue();
   }
@@ -374,6 +378,11 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
           onTouchEnd={this.handleTouchEnd}
           onTouchMove={this.handleTouchMove}
         />
+        <TerminalGame
+          ref={this.terminalGameRef}
+          canvasHeight={this.canvasHeight}
+          />
+
         <NextCharsDisplay
           ref={this.nextCharsDisplayRef}
           onTimerStatusChange={this.handleTimerStatusChange}
