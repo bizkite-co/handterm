@@ -156,7 +156,11 @@ div.terminal {
         }
     }
 }
-
+.hidden-canvas {
+    visibility: hidden;
+    position: absolute;
+    left: -9999px;
+}
 
 #terminal-output {
     /* Output area styles */

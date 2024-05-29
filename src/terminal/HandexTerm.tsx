@@ -47,7 +47,7 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
       isInPhraseMode: false,
       isActive: false,
       commandLine: ''
-      
+
     }
     this.loadDebugValue();
   }
@@ -381,7 +381,9 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
         <TerminalGame
           ref={this.terminalGameRef}
           canvasHeight={this.canvasHeight}
-          />
+          canvasWidth="800"
+          isInPhraseMode={this.state.isInPhraseMode}
+        />
 
         <NextCharsDisplay
           ref={this.nextCharsDisplayRef}
