@@ -21,7 +21,7 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
     this.setupCanvas();
   }
 
-  componentDidUpdate(prevProps: Readonly<ITerminalGameProps>, prevState: Readonly<ITerminalGameState>, snapshot?: any): void {
+  componentDidUpdate(prevProps: Readonly<ITerminalGameProps>): void {
     if (!prevProps.isInPhraseMode !== this.props.isInPhraseMode) {
       this.startAnimationLoop();
     }

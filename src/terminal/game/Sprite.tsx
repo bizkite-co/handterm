@@ -1,6 +1,6 @@
 export class Sprite {
-  private image: HTMLImageElement;
-  private frameCount: number;
+  public image: HTMLImageElement;
+  public frameCount: number;
   private frameWidth: number;
   private frameHeight: number;
 
