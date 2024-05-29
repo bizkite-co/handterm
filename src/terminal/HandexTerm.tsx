@@ -7,6 +7,8 @@ import React, { TouchEventHandler } from 'react';
 import { XtermAdapter } from './XtermAdapter';
 import { NextCharsDisplay } from '../NextCharsDisplay';
 import { Output } from '../terminal/Output';
+import ReactDOMServer from 'react-dom/server';
+
 
 export interface IHandexTermProps {
   // Define the interface for your HandexTerm logic
@@ -49,18 +51,22 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
   public handleCommand(command: string): string {
     let status = 404;
     let response = "Command not found.";
+
     if (command === 'clear') {
       status = 200;
       this.clearCommandHistory();
+      this.setState({ outputElements: [], isInPhraseMode: false, commandLine: '' });
+      this.adapterRef.current?.prompt();
       return '';
     }
     if (command === 'play') {
       status = 200;
       response = "Would you like to play a game?"
     }
-    if (command === 'phrase') {
+    if (command === 'phrase' || command.startsWith('phrase ')) {
       status = 200;
       response = "Type the phrase as fast as you can."
+      this.setState({ isInPhraseMode: true });
     }
     if (command.startsWith('video --')) {
       status = 200;
@@ -70,7 +76,30 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
       else {
         response = "Stopping video camera..."
       }
+      this.adapterRef.current?.toggleVideo();
+      this.handleCommand(command + ' --' + this.adapterRef.current?.isShowVideo);
+      // TODO: handle toggle video 
+      // this.outputElement.appendChild(result);
+
+      return "video";
     }
+
+
+    if (this.nextCharsDisplayRef.current) this.nextCharsDisplayRef.current.cancelTimer();
+    if (this.state.isInPhraseMode) {
+      this.setState({ isInPhraseMode: false });
+    }
+    // Clear the terminal after processing the command
+    // TODO: reset timer
+    // Write the new prompt after clearing
+    this.adapterRef.current?.prompt();
+    if (command === '') return "no-op";
+    if (command.startsWith('debug')) {
+      let isDebug = command.includes('--true') || command.includes('-t');
+      this.toggleIsDebug(isDebug);
+      return "debug";
+    }
+
 
     // Truncate the history if it's too long before saving
     if (this._commandHistory.length > HandexTerm.commandHistoryLimit) {
@@ -122,15 +151,40 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
   private WpmsToHTML(wpms: CharWPM[], name: string | undefined) {
     name = name ?? "slowest-characters";
     return (
-      <dl id={name} >
-        {wpms.map((wpm, index) => (
-          <React.Fragment key={index}>
-            <dt>{wpm.character}</dt>
-            <dd>{wpm.wpm.toFixed(2)}</dd>
-          </React.Fragment>
-        ))}
-      </dl>
+      <table className="wpm-table-container">
+        <tbody>
+          <tr><th colSpan={2}>{name}</th></tr>
+          {wpms.map((wpm, index) => (
+            <React.Fragment key={index}>
+              <tr id={name} className="wpm-table" >
+                <td>{wpm.character.replace("\r", "\\r")}</td>
+                <td>{wpm.wpm.toFixed(2)}</td>
+              </tr>
+            </React.Fragment>
+          ))}
+        </tbody>
+      </table>
     );
+  }
+
+  averageWpmByCharacter(charWpms: CharWPM[]): CharWPM[] {
+    const charGroups: Record<string, { totalWpm: number, count: number }> = {};
+
+    // Sum WPMs for each character and count occurrences
+    charWpms.forEach(({ character, wpm }) => {
+      if (!charGroups[character]) {
+        charGroups[character] = { totalWpm: 0, count: 0 };
+      }
+      charGroups[character].totalWpm += wpm;
+      charGroups[character].count++;
+    });
+
+    // Calculate average WPM for each character
+    return Object.entries(charGroups).map(([character, { totalWpm, count }]) => ({
+      character,
+      wpm: totalWpm / count,
+      durationMilliseconds: 0, // You may want to handle duration aggregation differently
+    }));
   }
 
   private saveCommandResponseHistory(command: string, response: string, status: number): string {
@@ -149,18 +203,24 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
     let wpmSum = this.wpmCalculator.saveKeystrokes(timeCode);
     this.wpmCalculator.clearKeystrokes();
     commandResponseElement.innerHTML = commandResponseElement.innerHTML.replace(/{{wpm}}/g, ('_____' + wpmSum.toFixed(0)).slice(-4));
-    this._persistence.setItem(`${LogKeys.Command}_${timeCode}`, commandResponseElement.outerHTML);
 
     commandText = commandText.replace(/{{wpm}}/g, ('_____' + wpmSum.toFixed(0)).slice(-4));
 
     if (!this._commandHistory) { this._commandHistory = []; }
     const commandResponse = commandResponseElement.outerHTML;
     this._commandHistory.push(commandResponse);
-    const wpmsHTML = this.WpmsToHTML(wpms.charWpms, "Lowest WPMs");
-    this._commandHistory.push(wpmsHTML.toString());
+    const characterAverages = this.averageWpmByCharacter(wpms.charWpms);
+    const slowestCharacters = this.WpmsToHTML(characterAverages.sort((a, b) => a.wpm - b.wpm).slice(0, 3), "slowest-characters");
+    this._commandHistory.push(slowestCharacters.toString());
 
     this.setState(prevState => ({ outputElements: [...prevState.outputElements, commandResponse] }));
-    this.setState(prevState => ({ outputElements: [...prevState.outputElements, wpmsHTML] }));
+    this.setState(prevState => ({ outputElements: [...prevState.outputElements, slowestCharacters] }));
+
+    const slowestCharactersHTML = ReactDOMServer.renderToStaticMarkup(slowestCharacters);
+
+    // Now you can append slowestCharactersHTML as a string to your element's innerHTML
+    commandResponseElement.innerHTML += slowestCharactersHTML;
+    this._persistence.setItem(`${LogKeys.Command}_${timeCode}`, commandResponseElement.outerHTML);
 
     return commandResponse;
 
@@ -189,7 +249,7 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
   public handleCharacter(character: string) {
     const charDuration: CharDuration = this.wpmCalculator.addKeystroke(character);
     const wpm = this.wpmCalculator.getWPM(charDuration);
-    if(this.isDebug) console.log('wpm', wpm);
+    if (this.isDebug) console.log('wpm', wpm);
     if (character.charCodeAt(0) === 3) { // Ctrl+C
       console.log('Ctrl+C pressed');
       this.setState({ isInPhraseMode: false, commandLine: '' });
@@ -207,43 +267,10 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
     if (character.charCodeAt(0) === 13) { // Enter key
       // Process the command before clearing the terminal
       // TODO: cancel timer
-      if (this.nextCharsDisplayRef.current) this.nextCharsDisplayRef.current.cancelTimer();
-      if (this.state.isInPhraseMode) {
-        this.setState({ isInPhraseMode: false });
-
-      }
       let command = this.adapterRef.current?.getCurrentCommand() ?? '';
-      // Clear the terminal after processing the command
       this.terminalReset();
-      // TODO: reset timer
-      // Write the new prompt after clearing
-      this.adapterRef.current?.prompt();
-      if (command === '') return;
-      if (command === 'clear') {
-        // this.handexTerm.clearCommandHistory();
-        this.setState({ outputElements: [], isInPhraseMode: false, commandLine: '' });
-        return;
-      }
-      if (command === 'video') {
-        this.adapterRef.current?.toggleVideo();
-        this.handleCommand(command + ' --' + this.adapterRef.current?.isShowVideo);
-        // TODO: handle toggle video 
-        // this.outputElement.appendChild(result);
-
-        return;
-      }
-      if (command.startsWith('debug')) {
-        let isDebug = command.includes('--true') || command.includes('-t');
-        this.toggleIsDebug(isDebug);
-        return;
-      }
-      if (command === 'phrase' || command.startsWith('phrase ')) {
-        // Start phrase mode
-        console.log("phrase");
-        this.setState({ isInPhraseMode: true });
-      }
-      // TODO: A bunch of phrase command stuff should be omoved from NextCharsDisplay to here, such as phrase generation.
       this.handleCommand(command);
+      // TODO: A bunch of phrase command stuff should be omoved from NextCharsDisplay to here, such as phrase generation.
     } else if (this.state.isInPhraseMode) {
       // # IN PHRASE MODE
       // this.handexTerm.handleCharacter(character);
@@ -354,8 +381,6 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
           terminalElement={this.terminalElementRef.current}
           terminalElementRef={this.terminalElementRef}
           onAddCharacter={this.handleCharacter.bind(this)}
-          writeData={this.terminalWrite.bind(this)}
-          resetTerminal={this.terminalReset.bind(this)}
         />
       </>
     )

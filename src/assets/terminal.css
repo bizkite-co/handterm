@@ -96,6 +96,7 @@ pre#nextChars {
     float: left;
 }
 
+
 video#terminal-video {
     width: 100%;
     top: 0;
@@ -118,6 +119,8 @@ div.terminal {
 .xterm-screen {
     width: 100%;
 }
+
+
 #timer-root {
     color: white;
     float: left;
@@ -159,6 +162,7 @@ div.terminal {
 #terminal-output div {
     z-index: 1000;
 }
+
 
 
 .wpm {

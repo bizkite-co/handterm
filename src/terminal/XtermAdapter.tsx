@@ -6,17 +6,12 @@ import { IWebCam, WebCam } from '../utils/WebCam';
 import React, { TouchEventHandler } from 'react';
 
 interface IXtermAdapterState {
-  commandLine: string;
-  isInPhraseMode: boolean;
-  isActive: boolean;
 }
 
 interface IXtermAdapterProps {
   terminalElement: HTMLElement | null;
   terminalElementRef: React.RefObject<HTMLElement>;
   onAddCharacter: (character: string) => void;
-  writeData: (data: string) => void;
-  resetTerminal: () => void;
 }
 
 export class XtermAdapter extends React.Component<IXtermAdapterProps, IXtermAdapterState> {
@@ -38,9 +33,6 @@ export class XtermAdapter extends React.Component<IXtermAdapterProps, IXtermAdap
     const { terminalElementRef } = props;
     this.terminalElementRef = terminalElementRef;
     this.state = {
-      commandLine: '',
-      isInPhraseMode: false,
-      isActive: false,
     }
     // this.videoElement = this.createVideoElement();
     // this.terminalElement.prepend(this.videoElement);
