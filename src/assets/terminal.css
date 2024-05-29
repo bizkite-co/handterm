@@ -126,6 +126,11 @@ div.terminal {
     float: left;
 }
 
+.wpm-table-row .number {
+    color: lightgreen;
+    text-align: right;
+}
+
 .terminal {
     /* Terminal styles */
     background-color: #0003;

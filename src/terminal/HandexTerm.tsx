@@ -51,11 +51,14 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
   public handleCommand(command: string): string {
     let status = 404;
     let response = "Command not found.";
+    if (this.state.isInPhraseMode) {
+      response = "";
+    }
+    this.setState({ outputElements: [], isInPhraseMode: false, commandLine: '' });
 
     if (command === 'clear') {
       status = 200;
       this.clearCommandHistory();
-      this.setState({ outputElements: [], isInPhraseMode: false, commandLine: '' });
       this.adapterRef.current?.prompt();
       return '';
     }
@@ -99,7 +102,6 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
       this.toggleIsDebug(isDebug);
       return "debug";
     }
-
 
     // Truncate the history if it's too long before saving
     if (this._commandHistory.length > HandexTerm.commandHistoryLimit) {
@@ -151,14 +153,18 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
   private WpmsToHTML(wpms: CharWPM[], name: string | undefined) {
     name = name ?? "slowest-characters";
     return (
-      <table className="wpm-table-container">
+      <table className="wpm-table">
         <tbody>
           <tr><th colSpan={2}>{name}</th></tr>
           {wpms.map((wpm, index) => (
             <React.Fragment key={index}>
-              <tr id={name} className="wpm-table" >
-                <td>{wpm.character.replace("\r", "\\r")}</td>
-                <td>{wpm.wpm.toFixed(2)}</td>
+              <tr id={name} className="wpm-table-row" >
+                <td>{wpm.character
+                  .replace("\r", "\\r")
+                  .replace(" ", "\\s")
+                }
+                </td>
+                <td className="number">{wpm.wpm.toFixed(2)}</td>
               </tr>
             </React.Fragment>
           ))}
@@ -209,8 +215,8 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
     if (!this._commandHistory) { this._commandHistory = []; }
     const commandResponse = commandResponseElement.outerHTML;
     this._commandHistory.push(commandResponse);
-    const characterAverages = this.averageWpmByCharacter(wpms.charWpms);
-    const slowestCharacters = this.WpmsToHTML(characterAverages.sort((a, b) => a.wpm - b.wpm).slice(0, 3), "slowest-characters");
+    const characterAverages = this.averageWpmByCharacter(wpms.charWpms.filter(wpm => wpm.durationMilliseconds > 1));
+    const slowestCharacters = this.WpmsToHTML(characterAverages.sort((a, b) => a.wpm - b.wpm).slice(0, 3), "slow-chars");
     this._commandHistory.push(slowestCharacters.toString());
 
     this.setState(prevState => ({ outputElements: [...prevState.outputElements, commandResponse] }));
