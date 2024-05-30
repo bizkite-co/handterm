@@ -27,3 +27,4 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./dist  # Set this to the output directory of Vite build
+          cname: handterm.com
