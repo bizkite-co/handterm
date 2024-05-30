@@ -13,12 +13,12 @@ export class Zombie4 extends BaseCharacter {
   constructor(context: CanvasRenderingContext2D) {
     super(context);
     // Load sprites for different animations
-    this.loadSprite('src/assets/Zombie4Package/Sprites/Idle.png', 'idle', 5);
-    this.loadSprite('src/assets/Zombie4Package/Sprites/Walk.png', 'walk', 13);
-    this.loadSprite('src/assets/Zombie4Package/Sprites/Attack.png', 'attack', 15);
-    this.loadSprite('src/assets/Zombie4Package/Sprites/Hurt.png', 'hurt', 7);
-    this.loadSprite('src/assets/Zombie4Package/Sprites/Death.png', 'death', 12);
-    this.loadSprite('src/assets/Zombie4Package/Sprites/Spawn.png', 'spawn', 10);
+    this.loadSprite('images/Zombie4Package/Sprites/Idle.png', 'idle', 5);
+    this.loadSprite('images/Zombie4Package/Sprites/Walk.png', 'walk', 13);
+    this.loadSprite('images/Zombie4Package/Sprites/Attack.png', 'attack', 15);
+    this.loadSprite('images/Zombie4Package/Sprites/Hurt.png', 'hurt', 7);
+    this.loadSprite('images/Zombie4Package/Sprites/Death.png', 'death', 12);
+    this.loadSprite('images/Zombie4Package/Sprites/Spawn.png', 'spawn', 10);
     this.velocity.x = 1;
     this.currentAnimation = ZombieActions.Walk;
   }
