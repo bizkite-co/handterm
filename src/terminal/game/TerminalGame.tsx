@@ -1,5 +1,6 @@
 import React from 'react';
 import { Zombie4 } from './Zombie4';
+import { Hero } from './Hero';
 
 interface ITerminalGameProps {
   canvasHeight: string
@@ -15,6 +16,7 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
   private canvasRef = React.createRef<HTMLCanvasElement>();
   public context: CanvasRenderingContext2D | null = null;
   private zombie4?: Zombie4;
+  private hero?: Hero;
   private animationFrameId?: number;
 
   componentDidMount() {
@@ -39,6 +41,7 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
         return;
       }
       this.context = context;
+      this.hero = new Hero(this.context);
       this.zombie4 = new Zombie4(this.context);
       this.startAnimationLoop();
     } else {
@@ -66,8 +69,14 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
         console.error("zombie4 is not available");
         return; // Exit the loop if zombie4 is not available
       }
+      if (!this.hero) {
+        console.error("hero is not available");
+        return; // Exit the loop if hero is not available
+      }
 
       this.context.clearRect(0, 0, this.context.canvas.width, this.context.canvas.height);
+      this.hero.animate(timestamp);
+      this.hero.draw();
       this.zombie4.animate(timestamp);
       this.zombie4.draw();
 
@@ -93,7 +102,7 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
       <canvas 
         // className="hidden-canvas"
         ref={this.canvasRef} 
-        width={800} 
+        width={1000} 
         height={this.props.canvasHeight}>
 
         </canvas>
