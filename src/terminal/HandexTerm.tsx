@@ -7,7 +7,7 @@ import React, { TouchEventHandler } from 'react';
 import { XtermAdapter } from './XtermAdapter';
 import { NextCharsDisplay } from '../NextCharsDisplay';
 import { Output } from '../terminal/Output';
-import { TerminalGame } from './TerminalGame';
+import { TerminalGame } from './game/TerminalGame';
 import ReactDOMServer from 'react-dom/server';
 
 

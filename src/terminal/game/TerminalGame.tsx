@@ -1,5 +1,5 @@
 import React from 'react';
-import { Zombie4 } from './game/Zombie4';
+import { Zombie4 } from './Zombie4';
 
 interface ITerminalGameProps {
   canvasHeight: string
