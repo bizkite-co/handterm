@@ -30,7 +30,6 @@ export class Sprite {
         };
         this.image.onerror = () => {
             console.log('Image failed to load: ' + imagePath);
-            assert(false, 'Image failed to load: ' + imagePath);
         }
         this.image.src = imagePath;
         this.frameCount = frameCount;
