@@ -14,22 +14,5 @@ export class Zombie4 extends BaseCharacter {
     super(context);
     // Load sprites for different animations
     this.loadActions(Zombie4Actions);
-    this.velocity.dx = 0.3;
-    this.currentAnimation = 'Walk';
-  }
-
-  public animate(timestamp: number) {
-    super.animate(timestamp);
-    // Override with specific logic for Zombie4
-    // If the attack animation has finished, switch back to walking and reset frame index
-    if (this.currentAnimation === 'Attack' && this.sprite && this.frameIndex === this.sprite.frameCount - 1) {
-      this.currentAnimation = 'Walk';
-      this.frameIndex = 0; // Reset frame index for walk animation
-    }
-
-    // If the current animation is walk, continue moving the zombie
-    if (this.currentAnimation === 'Walk') {
-      this.position.leftX = this.position.leftX < this.context.canvas.width ? this.position.leftX + this.velocity.dx : -55;
-    }
   }
 }
