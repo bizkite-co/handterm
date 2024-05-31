@@ -36,38 +36,20 @@ export const Actions: Record<AnimationKey, CharacterAction> = {
     },
     Attack: {
         key: 'Attack',
-        animation: {
-            imagePath: '',
-            frameCount: 0,
-            frameWidth: 0,
-            frameHeight: 0,
-            framePositions: undefined
-        },
+        animation: HeroAnimations.Attack,
         dx: 0,
         dy: 0
     },
     Hurt: {
         key: 'Attack',
-        animation: {
-            imagePath: '',
-            frameCount: 0,
-            frameWidth: 0,
-            frameHeight: 0,
-            framePositions: undefined
-        },
+        animation: HeroAnimations.Hurt,
         dx: 0,
         dy: 0
     },
     Death: {
         key: 'Attack',
-        animation: {
-            imagePath: '',
-            frameCount: 0,
-            frameWidth: 0,
-            frameHeight: 0,
-            framePositions: undefined
-        },
+        animation: HeroAnimations.Hurt,
         dx: 0,
         dy: 0
-    }
+    },
 };
