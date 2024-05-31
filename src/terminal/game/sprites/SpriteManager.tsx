@@ -20,7 +20,7 @@ export class SpriteManager {
     }
 
     private waitForManagerImageLoad(image: HTMLImageElement): Promise<void> {
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             const onLoad = () => {
                 // Cleanup: Remove both event listeners
                 image.removeEventListener('load', onLoad);
