@@ -1,7 +1,9 @@
 
-import React, { useState, useEffect } from 'react';
-import { Sprite } from './sprites/Sprite';
+import React, { useState, useEffect, useContext } from 'react';
 import { Actions, AnimationKey } from './CharacterActions';
+import SpriteManagerContext from '../SpriteManagerContext';
+import { Sprite } from './sprites/Sprite';
+
 
 type CharacterActionComponentProps = {
   initialAction: AnimationKey;
@@ -9,27 +11,33 @@ type CharacterActionComponentProps = {
   // Other props such as onActionComplete callback, etc.
 };
 
-const CharacterActionComponent: React.FC<CharacterActionComponentProps> = ({
+export const CharacterActionComponent: React.FC<CharacterActionComponentProps> = ({
   initialAction,
   position,
   // ...otherProps
 }) => {
   const [currentAction, setCurrentAction] = useState<AnimationKey>(initialAction);
-  const [sprite, setSprite] = useState<Sprite | null>(null);
+  const [characterPosition, setCharacterPosition] = useState(position);
+  const [sprite, setSprite] = useState<Sprite | null>(null); // Define sprite state here
 
-  // Initialize the sprite based on the current action
+  const spriteManager = useContext(SpriteManagerContext); // Assuming SpriteManager is provided in the context
+  // Immediately throw an error if spriteManager is undefined to prevent further execution
+  if (!spriteManager) {
+    throw new Error('SpriteManagerContext.Provider is missing in the component tree.');
+  }
+  // Load sprite for the current action
   useEffect(() => {
     const action = Actions[currentAction];
-    const newSprite = new Sprite(
-      action.animation.imagePath,
-      action.animation.frameCount,
-      action.animation.frameWidth,
-      action.animation.frameHeight,
-      action.animation.framePositions
-    );
-    setSprite(newSprite);
-    // You might need to handle cleanup as well if the component unmounts
-  }, [currentAction]);
+    spriteManager.loadSprite(action.animation).then((loadedSprite) => {
+      setSprite(loadedSprite);
+      // Render the sprite using the sprite instance
+      // Update character position based on dx and dy
+      setCharacterPosition({
+        leftX: characterPosition.leftX + action.dx,
+        topY: characterPosition.topY + action.dy
+      });
+    });
+  }, [currentAction, spriteManager, characterPosition]);
 
   // Handle rendering the sprite based on the current action and position
   const renderSprite = () => {
@@ -59,5 +67,3 @@ const CharacterActionComponent: React.FC<CharacterActionComponentProps> = ({
     </div>
   );
 };
-
-export default CharacterActionComponent;

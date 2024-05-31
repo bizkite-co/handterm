@@ -1,8 +1,12 @@
 // App.tsx
 import React from 'react';
 import { HandexTerm } from './HandexTerm';
-
+import SpriteManagerContext from './SpriteManagerContext';
+import { SpriteManager } from './game/sprites/SpriteManager';
 // App.tsx
+
+const spriteManager = new SpriteManager();
+
 class App extends React.Component {
   terminalElementRef = React.createRef<HTMLDivElement>();
 
@@ -12,10 +16,10 @@ class App extends React.Component {
 
   render() {
     return (
-      <div>
+      <SpriteManagerContext.Provider value={spriteManager}>
         <HandexTerm 
         />
-      </div>
+      </SpriteManagerContext.Provider>
     );
   }
 }

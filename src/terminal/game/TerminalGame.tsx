@@ -1,6 +1,7 @@
 import React from 'react';
 import { Zombie4 } from './Zombie4';
 import { Hero } from './Hero';
+import { CharacterActionComponent } from './CharacterActionComponent';
 
 interface ITerminalGameProps {
   canvasHeight: string
@@ -9,7 +10,10 @@ interface ITerminalGameProps {
 }
 
 interface ITerminalGameState {
-
+  heroAction: 'Run' | 'Walk' | 'Idle' | 'Attack' | 'Hurt' | 'Death';
+  heroPosition: { leftX: 0; topY: 20 };
+  zombieAction: 'Walk' | 'Hurt' | 'Death' | 'Idle' | 'Attack';
+  zombie4Position: { leftX: -75; topY: 0 };
 }
 
 export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalGameState> {
@@ -18,6 +22,16 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
   private zombie4?: Zombie4;
   private hero?: Hero;
   private animationFrameId?: number;
+
+  constructor(props: ITerminalGameProps) {
+    super(props);
+    this.state = {
+      heroAction: 'Run',
+      heroPosition: { leftX: 0, topY: 20 },
+      zombieAction: 'Walk',
+      zombie4Position: { leftX: -75, topY: 0 },
+    };
+  }
 
   componentDidMount() {
     this.setupCanvas();
@@ -99,13 +113,25 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
   // Additional methods for calculating WPM, updating the progress bar, etc.
   render() {
     return (
-      <canvas 
-        // className="hidden-canvas"
-        ref={this.canvasRef} 
-        width={1000} 
-        height={this.props.canvasHeight}>
+      <>
+        <canvas
+          // className="hidden-canvas"
+          ref={this.canvasRef}
+          width={1000}
+          height={this.props.canvasHeight}>
 
         </canvas>
+        <CharacterActionComponent
+          initialAction={this.state.heroAction}
+          position={this.state.heroPosition}
+        // ...otherProps
+        />
+        <CharacterActionComponent
+          initialAction={this.state.zombieAction}
+          position={this.state.zombie4Position}
+        // ...otherProps
+        />
+      </>
     );
   }
 }
