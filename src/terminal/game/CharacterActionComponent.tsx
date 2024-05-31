@@ -5,61 +5,85 @@ import SpriteManagerContext from '../SpriteManagerContext';
 import { Sprite } from './sprites/Sprite';
 
 
-type CharacterActionComponentProps = {
-  initialAction: AnimationKey;
+interface ICharacterActionComponentProps {
+  action: AnimationKey;
   position: { leftX: number; topY: number };
+  context: CanvasRenderingContext2D | null;
   // Other props such as onActionComplete callback, etc.
 };
 
-export const CharacterActionComponent: React.FC<CharacterActionComponentProps> = ({
-  initialAction,
-  position,
-  // ...otherProps
-}) => {
-  const [currentAction, setCurrentAction] = useState<AnimationKey>(initialAction);
-  const [characterPosition, setCharacterPosition] = useState(position);
+export const CharacterActionComponent: React.FC<ICharacterActionComponentProps> = (props: ICharacterActionComponentProps) => {
+  const [currentAction, setCurrentAction] = useState<AnimationKey>(props.action);
+  const [characterPosition, setCharacterPosition] = useState(props.position);
   const [sprite, setSprite] = useState<Sprite | null>(null); // Define sprite state here
+  const [currentFrameIndex, setCurrentFrameIndex] = useState(0);
+  const [lastFrameTime, setLastFrameTime] = useState(Date.now());
+
+  const offscreenCanvas = document.createElement('canvas');
+  if (props.context) {
+    offscreenCanvas.width = props.context.canvas.width;
+    offscreenCanvas.height = props.context.canvas.height;
+  }
+  const offscreenCtx = offscreenCanvas.getContext('2d');
+
+  const frameDelay = 100; // Adjust frame delay for animation speed
 
   const spriteManager = useContext(SpriteManagerContext); // Assuming SpriteManager is provided in the context
   // Immediately throw an error if spriteManager is undefined to prevent further execution
   if (!spriteManager) {
     throw new Error('SpriteManagerContext.Provider is missing in the component tree.');
   }
-  // Load sprite for the current action
+
+  // Load and update the sprite based on the current action
   useEffect(() => {
-    const action = Actions[currentAction];
-    spriteManager.loadSprite(action.animation).then((loadedSprite) => {
+    const actionData = Actions[currentAction];
+    spriteManager.loadSprite(actionData.animation).then((loadedSprite) => {
       setSprite(loadedSprite);
-      // Render the sprite using the sprite instance
-      // Update character position based on dx and dy
-      setCharacterPosition({
-        leftX: characterPosition.leftX + action.dx,
-        topY: characterPosition.topY + action.dy
-      });
+      // You may want to reset the frame index here
     });
-  }, [currentAction, spriteManager, characterPosition]);
+  }, [currentAction]);
 
   // Handle rendering the sprite based on the current action and position
-  const renderSprite = () => {
-    if (sprite) {
-      // The actual rendering logic goes here
-      // For example, using canvas context to draw the sprite
-      // ctx.drawImage(...) based on the sprite and frameIndex
+  const renderSprite = (offscreenCtx: CanvasRenderingContext2D, visibleCtx: CanvasRenderingContext2D, frameIndex: number, sprite: Sprite, position: { leftX: number; topY: number }) => {
+    const now = Date.now();
+    const newFrameIndex = sprite.updateFrameIndex(frameIndex, now, lastFrameTime, frameDelay);
+
+    // Update frame index and last frame time if necessary
+    if (newFrameIndex !== frameIndex) {
+      setCurrentFrameIndex(newFrameIndex);
+      setLastFrameTime(now);
     }
+
+    // Draw the current frame of the sprite
+    // Draw your sprite on the off-screen canvas
+    sprite.draw(offscreenCtx, newFrameIndex, position.leftX, position.topY);
+
+    // Now draw the off-screen canvas to the visible canvas
+    visibleCtx.clearRect(0, 0, visibleCtx.canvas.width, visibleCtx.canvas.height);
+    visibleCtx.drawImage(offscreenCanvas, 0, 0);
   };
 
-  // Handle periodically changing the action, for example, based on position
   useEffect(() => {
-    const attackEvery = 60;
-    const newAction = position.leftX % attackEvery === 0 ? 'Attack' : 'Walk';
-    setCurrentAction(newAction);
-  }, [position]);
+    if (!props.context || !sprite) {
+      return;
+    }
 
-  // Call renderSprite on each animation frame or when necessary
-  useEffect(() => {
-    const animationFrameId = requestAnimationFrame(renderSprite);
-    return () => cancelAnimationFrame(animationFrameId);
-  }, [renderSprite]);
+    let animationFrameId: number;
+
+    // Define the animation loop function
+    const loop = () => {
+      if (props.context && offscreenCtx) renderSprite(offscreenCtx, props.context, currentFrameIndex, sprite, props.position);
+      animationFrameId = requestAnimationFrame(loop);
+    };
+
+    // Start the animation loop
+    animationFrameId = requestAnimationFrame(loop);
+
+    // Cleanup function to cancel the animation frame when the component unmounts or dependencies change
+    return () => {
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, [props.context, currentFrameIndex, lastFrameTime, sprite, props.position]);
 
   return (
     <div>

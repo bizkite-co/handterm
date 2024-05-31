@@ -14,14 +14,17 @@ interface ITerminalGameState {
   heroPosition: { leftX: 0; topY: 20 };
   zombieAction: 'Walk' | 'Hurt' | 'Death' | 'Idle' | 'Attack';
   zombie4Position: { leftX: -75; topY: 0 };
+  context: CanvasRenderingContext2D | null
 }
 
 export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalGameState> {
   private canvasRef = React.createRef<HTMLCanvasElement>();
-  public context: CanvasRenderingContext2D | null = null;
+
   private zombie4?: Zombie4;
   private hero?: Hero;
   private animationFrameId?: number;
+  private animationCount: number = 0;
+  public context: CanvasRenderingContext2D | null = null;
 
   constructor(props: ITerminalGameProps) {
     super(props);
@@ -30,6 +33,7 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
       heroPosition: { leftX: 0, topY: 20 },
       zombieAction: 'Walk',
       zombie4Position: { leftX: -75, topY: 0 },
+      context: null as CanvasRenderingContext2D | null
     };
   }
 
@@ -39,7 +43,14 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
 
   componentDidUpdate(prevProps: Readonly<ITerminalGameProps>): void {
     if (!prevProps.isInPhraseMode !== this.props.isInPhraseMode) {
-      this.startAnimationLoop();
+      const canvas = this.canvasRef.current;
+      if (!canvas) return;
+      const context = canvas.getContext('2d');
+      if (!(context instanceof CanvasRenderingContext2D)) {
+        console.error("Obtained context is not a CanvasRenderingContext2D instance.");
+        return;
+      }
+      this.startAnimationLoop(context);
     }
     if (prevProps.isInPhraseMode && !this.props.isInPhraseMode) {
       this.stopAnimationLoop();
@@ -50,31 +61,33 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
     const canvas = this.canvasRef.current;
     if (canvas) {
       const context = canvas.getContext('2d');
-      if (!(context instanceof CanvasRenderingContext2D)) {
+      if (context instanceof CanvasRenderingContext2D) {
+        // Set the context in the state instead of a class property
+        this.setState({ context: context });
+        this.hero = new Hero(context);
+        this.zombie4 = new Zombie4(context);
+        // No need to pass context to startAnimationLoop, as it will use the context from the state
+        this.startAnimationLoop();
+      } else {
         console.error("Obtained context is not a CanvasRenderingContext2D instance.");
-        return;
       }
-      this.context = context;
-      this.hero = new Hero(this.context);
-      this.zombie4 = new Zombie4(this.context);
-      this.startAnimationLoop();
     } else {
       console.error("Failed to get canvas element.");
     }
   }
 
-  startAnimationLoop() {
-    console.log("startAnimationLoop");
+  startAnimationLoop(context: CanvasRenderingContext2D) {
+    console.log("startAnimationLoop", this.state.context instanceof CanvasRenderingContext2D);
 
     // Use an arrow function to maintain the correct 'this' context
-    const loop = (timestamp: number) => {
+    const loop = () => {
 
-      if (!this.context) {
+      if (!this.state.context) {
         console.error("Context is not available");
         return; // Exit the loop if the context is not available
       }
 
-      if (!this.context.canvas) {
+      if (!this.state.context.canvas) {
         console.error("Canvas is not available");
         return; // Exit the loop if the canvas is not available
       }
@@ -88,18 +101,22 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
         return; // Exit the loop if hero is not available
       }
 
-      this.context.clearRect(0, 0, this.context.canvas.width, this.context.canvas.height);
-      this.hero.animate(timestamp);
-      this.hero.draw();
-      this.zombie4.animate(timestamp);
-      this.zombie4.draw();
+      // if (this.animationCount % 1000 === 0) this.setHeroIdle();
 
+      this.state.context?.clearRect(0, 0, context?.canvas.width, context?.canvas.height);
+
+      this.animationCount = this.animationCount < 1000 ? this.animationCount + 1 : 0;
+      // console.log("animationCount: ", this.animationCount);
       // Save the request ID to be able to cancel it
       this.animationFrameId = requestAnimationFrame(loop);
     };
 
     // Start the animation loop
     this.animationFrameId = requestAnimationFrame(loop);
+  }
+
+  setHeroIdle() {
+    this.setState({ heroAction: 'Walk' });
   }
 
   stopAnimationLoop() {
@@ -115,22 +132,24 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
     return (
       <>
         <canvas
-          // className="hidden-canvas"
           ref={this.canvasRef}
-          width={1000}
+          width={this.props.canvasWidth}
           height={this.props.canvasHeight}>
-
         </canvas>
-        <CharacterActionComponent
-          initialAction={this.state.heroAction}
-          position={this.state.heroPosition}
-        // ...otherProps
-        />
-        <CharacterActionComponent
-          initialAction={this.state.zombieAction}
-          position={this.state.zombie4Position}
-        // ...otherProps
-        />
+        {this.state.context && (
+          <CharacterActionComponent
+            action={this.state.heroAction}
+            position={this.state.heroPosition}
+            context={this.state.context}
+          />
+        )}
+        {this.state.context && (
+          <CharacterActionComponent
+            action={this.state.zombieAction}
+            position={this.state.zombie4Position}
+            context={this.state.context}
+          />
+        )}
       </>
     );
   }
