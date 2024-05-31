@@ -3,7 +3,7 @@ import { SpriteAnimation } from '../../sprites/SpriteTypes';
 
 export const HeroAnimations = {
     Run: {
-        imagePath: 'public/images/Adventurer/Adventurer-1.5/adventurer-v1.5-Sheet.png',
+        imagePath: '/images/Adventurer/Adventurer-1.5/adventurer-v1.5-Sheet.png',
         frameCount: 6,
         frameWidth: 50,
         frameHeight: 37,
@@ -17,7 +17,7 @@ export const HeroAnimations = {
         ],
     } as SpriteAnimation,
     Idle: {
-        imagePath: 'public/images/Adventurer/Adventurer-1.5/adventurer-v1.5-Sheet.png',
+        imagePath: '/images/Adventurer/Adventurer-1.5/adventurer-v1.5-Sheet.png',
         frameCount: 4,
         frameWidth: 50,
         frameHeight: 37,
@@ -29,7 +29,7 @@ export const HeroAnimations = {
         ],
     } as SpriteAnimation,
     Walk: {
-        imagePath: 'public/images/Adventurer/Adventurer-1.5/adventurer-v1.5-Sheet.png',
+        imagePath: '/images/Adventurer/Adventurer-1.5/adventurer-v1.5-Sheet.png',
         frameCount: 4,
         frameWidth: 50,
         frameHeight: 37,
