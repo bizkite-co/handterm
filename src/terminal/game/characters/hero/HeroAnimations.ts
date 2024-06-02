@@ -3,6 +3,7 @@ import { SpriteAnimation } from '../../sprites/SpriteTypes';
 
 export const HeroAnimations = {
     Run: {
+        name: 'Run',
         imagePath: '/images/Adventurer/Adventurer-1.5/adventurer-v1.5-Sheet.png',
         frameCount: 6,
         frameWidth: 50,
@@ -53,6 +54,30 @@ export const HeroAnimations = {
         ],
     } as SpriteAnimation,
     Hurt: {
+        imagePath: '/images/Adventurer/Adventurer-1.5/adventurer-v1.5-Sheet.png',
+        frameCount: 4,
+        frameWidth: 50,
+        frameHeight: 37,
+        framePositions: [
+            { leftX: 0, topY: 0 },
+            { leftX: 50, topY: 0 },
+            { leftX: 100, topY: 0 },
+            { leftX: 150, topY: 0 },
+        ],
+    } as SpriteAnimation,
+    Die: {
+        imagePath: '/images/Adventurer/Adventurer-1.5/adventurer-v1.5-Sheet.png',
+        frameCount: 4,
+        frameWidth: 50,
+        frameHeight: 37,
+        framePositions: [
+            { leftX: 0, topY: 0 },
+            { leftX: 50, topY: 0 },
+            { leftX: 100, topY: 0 },
+            { leftX: 150, topY: 0 },
+        ],
+    } as SpriteAnimation,
+    Jump: {
         imagePath: '/images/Adventurer/Adventurer-1.5/adventurer-v1.5-Sheet.png',
         frameCount: 4,
         frameWidth: 50,

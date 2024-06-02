@@ -57,18 +57,22 @@ export class Sprite {
         topY: number, 
         scale: number = 1.5
     ) {
-        let frameLeftX, frameTopY;
+        let frameLeftX = 0, frameTopY = 0;
         if (this.frameSequence) {
             // Use the frame sequence if provided
             const frameCoords = this.frameSequence[frameIndex];
-            frameLeftX = frameCoords.leftX;
-            frameTopY = frameCoords.topY;
+            if(frameCoords){
+                frameLeftX = frameCoords.leftX;
+                frameTopY = frameCoords.topY;
+            } else {
+                console.log("No frameCoords found for frameIndex:", frameIndex);
+            }
         } else {
             // Calculate frame position for strip-style sprites
             frameLeftX = this.frameWidth * frameIndex;
             frameTopY = 0;
         }
-
+        // console.log(`Drawing frameIndex: ${frameIndex} at frameLeftX:`, frameLeftX, "frameTopY:", frameTopY);
         context.drawImage(
             this.image,
             frameLeftX, frameTopY, // source x, y
