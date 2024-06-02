@@ -1,7 +1,6 @@
 
-import React, { useState, useEffect, useContext, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ActionType } from './ActionTypes';
-import SpriteManagerContext from '../SpriteManagerContext';
 import { BaseCharacter } from './BaseCharacter';
 
 
@@ -20,7 +19,6 @@ export const CharacterActionComponent: React.FC<ICharacterActionComponentProps> 
   props: ICharacterActionComponentProps
 ) => {
   const [frameIndex, setFrameIndex] = useState(0); // Track the current frame index
-  const spriteManager = useContext(SpriteManagerContext);
   const frameDelay = 100;
   const prevActionRef = useRef<string | null>(null);
   let lastFrameTime = useRef(Date.now());
@@ -33,11 +31,14 @@ export const CharacterActionComponent: React.FC<ICharacterActionComponentProps> 
       let currentAction = props.baseCharacter.getCurrentAction();
       // If movement handling is within this component, you can update dx and dy here
       // If not, you can call onMove with actionData.dx and actionAjax.dy
+      
       const newPosition = {
         leftX: props.position.leftX + currentAction.dx,
         topY: props.position.topY + currentAction.dy
       };
-      console.log("Calling onMove", currentAction.dx, currentAction.dy);
+      if (newPosition.leftX > 1000) {
+        newPosition.leftX = 0;
+      }
       props.onPositionChange(newPosition);
 
       prevActionRef.current = props.currentActionType;
@@ -48,7 +49,10 @@ export const CharacterActionComponent: React.FC<ICharacterActionComponentProps> 
 
   // CharacterActionComponent.tsx
   useEffect(() => {
-    if (props.currentActionType && prevActionRef.current !== props.currentActionType) {
+    if (
+      props.currentActionType 
+      && prevActionRef.current !== props.currentActionType
+    ) {
       // Call setCurrentAction on baseCharacter to update the action and sprite
       props.baseCharacter.setCurrentActionType(props.currentActionType);
 

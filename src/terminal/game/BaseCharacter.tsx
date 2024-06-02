@@ -4,8 +4,15 @@ import { SpriteAnimation } from './sprites/SpriteTypes';
 import { Action, ActionType, HeroActions } from './ActionTypes';
 import { SpriteManager } from './sprites/SpriteManager';
 
-export class BaseCharacter {
-  protected context: CanvasRenderingContext2D;
+interface BaseCharacterProps {
+  
+}
+
+interface BaseCharacterState {
+  
+}
+export class BaseCharacter extends React.Component<BaseCharacterProps, BaseCharacterState> {
+  public context: CanvasRenderingContext2D;
   public sprites: Record<string, Sprite> = {};
   public actions: Record<ActionType, Action>;
   protected sprite: Sprite;
@@ -21,7 +28,9 @@ export class BaseCharacter {
     context: CanvasRenderingContext2D, 
     actions: Record<ActionType, Action>,
     actionType: ActionType,
+    props: BaseCharacterProps
   ) {
+    super(props);
     this.currentActionType = actionType;
     this.context = context;
     this.sprite = this.sprites[actionType];

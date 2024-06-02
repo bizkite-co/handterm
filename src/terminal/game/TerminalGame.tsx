@@ -105,7 +105,6 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
         return; // Exit the loop if hero is not available
       }
 
-      // if (this.animationCount % 1000 === 0) this.setHeroIdle();
       this.state.context?.clearRect(0, 0, context?.canvas.width, context?.canvas.height);
 
       if (this.drawHero) {
@@ -115,7 +114,13 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
         this.drawZombie4(this.state.context, this.state.zombie4Position);
       }
 
-      this.animationCount = this.animationCount < 1000 ? this.animationCount + 1 : 0;
+      this.animationCount = this.animationCount < 200 
+        ? this.animationCount + 1 
+        : 0;
+      if (this.animationCount % 1000 === 0) this.setState(
+        { heroAction: this.state.heroAction === 'Run' ? 'Walk' : 'Run' }
+      );
+
       // console.log("animationCount: ", this.animationCount);
       // Save the request ID to be able to cancel it
       this.animationFrameIndex = requestAnimationFrame(loop);
