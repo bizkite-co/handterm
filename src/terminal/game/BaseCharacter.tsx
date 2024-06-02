@@ -11,7 +11,7 @@ export class BaseCharacter {
   public currentActionType: ActionType;
   protected frameIndex: number = 0;
   private lastFrameTime: number = 0;
-  private frameDelay: number = 100;
+  private frameDelay: number = 500;
   protected position: { leftX: number; topY: number } = { leftX: 75, topY: 0 };
   protected velocity: { dx: number; dy: number } = { dx: 1, dy: 0 };
   protected spriteManager = new SpriteManager();
@@ -63,14 +63,15 @@ export class BaseCharacter {
 
   public getSprite() : Sprite {
     // Just return the current sprite
-    return this.sprite;
+    let spriteFromSprites = this.sprites[this.currentActionType];
+    return spriteFromSprites;
   }
 
   public animate(timestamp: number) {
     this.sprite = this.sprites[this.currentActionType];
     if (this.sprite && timestamp - this.lastFrameTime > this.frameDelay) {
-
       // Update the frame index
+      console.log("Animating: ", this.currentActionType, this.frameIndex);
       this.frameIndex = this.sprite.updateFrameIndex(this.frameIndex, timestamp, this.lastFrameTime, this.frameDelay);
 
       this.lastFrameTime = timestamp;
