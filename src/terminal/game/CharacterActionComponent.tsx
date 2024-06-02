@@ -25,12 +25,14 @@ export const CharacterActionComponent: React.FC<ICharacterActionComponentProps> 
   const prevActionRef = useRef<string | null>(null);
   let lastFrameTime = useRef(Date.now());
 
-  // Handle loading the sprite when the action changes
+ // Handle loading the sprite when the action changes
   useEffect(() => {
-    if (spriteManager && props.currentActionType && prevActionRef.current !== props.currentActionType) {
+    if (
+      props.currentActionType 
+    ) {
       let currentAction = props.baseCharacter.getCurrentAction();
       // If movement handling is within this component, you can update dx and dy here
-      // If not, you can call onMove with actionData.dx and actionData.dy
+      // If not, you can call onMove with actionData.dx and actionAjax.dy
       const newPosition = {
         leftX: props.position.leftX + currentAction.dx,
         topY: props.position.topY + currentAction.dy
@@ -41,7 +43,7 @@ export const CharacterActionComponent: React.FC<ICharacterActionComponentProps> 
       prevActionRef.current = props.currentActionType;
     }
   }, [
-    props.currentActionType, props.baseCharacter, props.position, props.onPositionChange
+    props.currentActionType, props.baseCharacter, frameIndex
   ]);
 
   // CharacterActionComponent.tsx

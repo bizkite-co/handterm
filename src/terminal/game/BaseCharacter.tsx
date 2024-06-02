@@ -1,3 +1,4 @@
+import React, { Component } from 'react';
 import { Sprite } from './sprites/Sprite';
 import { SpriteAnimation } from './sprites/SpriteTypes';
 import { Action, ActionType, HeroActions } from './ActionTypes';
