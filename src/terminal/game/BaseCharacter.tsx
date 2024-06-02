@@ -27,7 +27,6 @@ export class BaseCharacter {
     this.actions = actions;
     console.log("BaseCharacter: ", this.currentActionType, actions);
     this.loadActions(actions);
-    // Assuming you load sprites here or somewhere else
   }
 
   public async loadSprite(actionKey: ActionType, animationData: SpriteAnimation) {
