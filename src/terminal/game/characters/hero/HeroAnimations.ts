@@ -1,9 +1,8 @@
 // HeroAnimations.ts
-import { SpriteAnimation } from '../../sprites/SpriteTypes';
+import { SpriteAnimation } from '../../types/SpriteTypes';
 
 export const HeroAnimations = {
     Run: {
-        name: 'Run',
         imagePath: '/images/Adventurer/Adventurer-1.5/adventurer-v1.5-Sheet.png',
         frameCount: 6,
         frameWidth: 50,

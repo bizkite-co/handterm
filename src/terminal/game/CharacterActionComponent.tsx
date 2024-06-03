@@ -1,17 +1,19 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { ActionType } from './ActionTypes';
+import { ActionType } from './types/ActionTypes';
 import { BaseCharacter } from './BaseCharacter';
+import { Position } from './types/Position';
 
 
 interface ICharacterActionComponentProps {
   onReady: (
-    draw: (context: CanvasRenderingContext2D, position: { leftX: number; topY: number; }) => void,
+    draw: (position: Position) => void,
     setFrameIndex: React.Dispatch<React.SetStateAction<number>>
   ) => void;
   baseCharacter: BaseCharacter;
   currentActionType: ActionType;
   position: { leftX: number; topY: number };
+  name?: string;
   onPositionChange: (newPosition: { leftX: number; topY: number }) => void;
 };
 
@@ -23,15 +25,16 @@ export const CharacterActionComponent: React.FC<ICharacterActionComponentProps> 
   const prevActionRef = useRef<string | null>(null);
   let lastFrameTime = useRef(Date.now());
 
- // Handle loading the sprite when the action changes
+  // Handle loading the sprite when the action changes
   useEffect(() => {
     if (
-      props.currentActionType 
+      props.currentActionType
     ) {
       let currentAction = props.baseCharacter.getCurrentAction();
+      // console.log("Current action:", props.currentActionType);
       // If movement handling is within this component, you can update dx and dy here
       // If not, you can call onMove with actionData.dx and actionAjax.dy
-      
+
       const newPosition = {
         leftX: props.position.leftX + currentAction.dx,
         topY: props.position.topY + currentAction.dy
@@ -47,19 +50,16 @@ export const CharacterActionComponent: React.FC<ICharacterActionComponentProps> 
     props.currentActionType, props.baseCharacter, frameIndex
   ]);
 
-  // CharacterActionComponent.tsx
   useEffect(() => {
-    if (
-      props.currentActionType 
-      && prevActionRef.current !== props.currentActionType
-    ) {
-      // Call setCurrentAction on baseCharacter to update the action and sprite
-      props.baseCharacter.setCurrentActionType(props.currentActionType);
-
-      // Update the component state to reflect the new action
-      prevActionRef.current = props.currentActionType;
-    }
-  }, [props.currentActionType, props.baseCharacter]);
+    // console.log('CharacterActionComponent useEffect, currentActionType:', props.currentActionType);
+    // Call setCurrentAction on baseCharacter to update the action and sprite
+    props.baseCharacter.setCurrentActionType(props.currentActionType);
+    // After calling setCurrentActionType, update prevActionRef to the new action
+    prevActionRef.current = props.currentActionType;
+    // Remove props.baseCharacter from the dependencies array if you are sure that
+    // it does not change, or it is not relevant for this effect.
+  }, [props.currentActionType]);
+  // console.log('CharacterActionComponent render, currentActionType:', props.currentActionType);
 
   useEffect(() => {
     let animationFrameId: number;
@@ -76,6 +76,10 @@ export const CharacterActionComponent: React.FC<ICharacterActionComponentProps> 
           let newIndex = (prevIndex + 1) % frameCount;
           return newIndex;
         });
+        if (frameIndex > sprite.frameCount) {
+          console.log("Frame index out of bounds:", frameIndex, sprite.frameCount);
+          // setFrameIndex(0);
+        }
         lastFrameTime.current = now - (elapsed % frameDelay);
       }
 
@@ -92,14 +96,9 @@ export const CharacterActionComponent: React.FC<ICharacterActionComponentProps> 
   // Draw the character with the current frame index
   useEffect(() => {
     const drawWithCurrentFrameIndex = (
-      context: CanvasRenderingContext2D,
-      position: { leftX: number, topY: number }
+      position: Position
     ) => {
-      const sprite = props.baseCharacter.getSprite(); // Get the current sprite from baseCharacter
-      if (sprite) {
-        // console.log("drawWithCurrentFrameIndex", frameIndex);
-        sprite.draw(context, frameIndex, position.leftX, position.topY);
-      }
+      props.baseCharacter.draw(frameIndex, position);
     };
 
     props.onReady(drawWithCurrentFrameIndex, setFrameIndex);

@@ -1,9 +1,7 @@
 // SpriteTypes.ts
 
-export type FramePosition = {
-  leftX: number;
-  topY: number;
-};
+import { Position } from "./Position";
+
 
 export type SpriteAnimation = {
   name: string;
@@ -11,5 +9,5 @@ export type SpriteAnimation = {
   frameCount: number;
   frameWidth: number;
   frameHeight: number;
-  framePositions?: FramePosition[];
+  framePositions?: Position[];
 };

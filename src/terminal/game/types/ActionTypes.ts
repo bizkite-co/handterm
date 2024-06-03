@@ -1,7 +1,7 @@
 // ActionTypes.ts
-import { SpriteAnimation } from './sprites/SpriteTypes';
-import { HeroAnimations } from './characters/hero/HeroAnimations';
-import { Zombie4Animations } from './characters/zombie4/Zobie4Animations';
+import { SpriteAnimation } from './SpriteTypes';
+import { HeroAnimations } from '../characters/hero/HeroAnimations';
+import { Zombie4Animations } from '../characters/zombie4/Zobie4Animations';
 
 export type Action = {
   animation: SpriteAnimation;

@@ -1,5 +1,5 @@
 import { Sprite } from './Sprite';
-import { SpriteAnimation } from './SpriteTypes';
+import { SpriteAnimation } from '../types/SpriteTypes';
 
 export class SpriteManager {
     private spriteCache = new Map<string, Sprite>();

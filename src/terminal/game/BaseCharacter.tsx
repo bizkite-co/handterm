@@ -1,11 +1,12 @@
-import React, { Component } from 'react';
+import React from 'react';
 import { Sprite } from './sprites/Sprite';
-import { SpriteAnimation } from './sprites/SpriteTypes';
-import { Action, ActionType, HeroActions } from './ActionTypes';
+import { SpriteAnimation } from './types/SpriteTypes';
+import { Action, ActionType } from './types/ActionTypes';
 import { SpriteManager } from './sprites/SpriteManager';
+import { Motion, Position } from './types/Position';
 
 interface BaseCharacterProps {
-  
+  position: Position 
 }
 
 interface BaseCharacterState {
@@ -20,8 +21,7 @@ export class BaseCharacter extends React.Component<BaseCharacterProps, BaseChara
   protected frameIndex: number = 0;
   private lastFrameTime: number = 0;
   private frameDelay: number = 500;
-  protected position: { leftX: number; topY: number } = { leftX: 75, topY: 0 };
-  protected velocity: { dx: number; dy: number } = { dx: 1, dy: 0 };
+  protected velocity: Motion = { dx: 1, dy: 0 };
   protected spriteManager = new SpriteManager();
 
   constructor(
@@ -35,7 +35,6 @@ export class BaseCharacter extends React.Component<BaseCharacterProps, BaseChara
     this.context = context;
     this.sprite = this.sprites[actionType];
     this.actions = actions;
-    console.log("BaseCharacter: ", this.currentActionType, actions);
     this.loadActions(actions);
   }
 
@@ -87,14 +86,14 @@ export class BaseCharacter extends React.Component<BaseCharacterProps, BaseChara
     }
   }
 
-  public draw() {
+  public draw(frameIndex: number, position: Position) {
     const sprite = this.sprites[this.currentActionType];
     if (sprite) {
       sprite.draw(
         this.context,
-        this.frameIndex,
-        this.position.leftX,
-        this.position.topY,
+        frameIndex,
+        position.leftX,
+        position.topY,
         2
       ); // Example scale factor
     }

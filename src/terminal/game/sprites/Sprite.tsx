@@ -65,7 +65,7 @@ export class Sprite {
                 frameLeftX = frameCoords.leftX;
                 frameTopY = frameCoords.topY;
             } else {
-                console.log("No frameCoords found for frameIndex:", frameIndex);
+                console.log("No frameCoords found for frameIndex:", frameIndex, leftX, topY, this.image);
             }
         } else {
             // Calculate frame position for strip-style sprites

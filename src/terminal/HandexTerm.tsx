@@ -9,6 +9,7 @@ import { NextCharsDisplay } from '../NextCharsDisplay';
 import { Output } from '../terminal/Output';
 import { TerminalGame } from './game/TerminalGame';
 import ReactDOMServer from 'react-dom/server';
+import { ActionType } from './game/types/ActionTypes';
 
 
 export interface IHandexTermProps {
@@ -22,6 +23,8 @@ export interface IHandexTermState {
   isInPhraseMode: boolean;
   isActive: boolean;
   commandLine: string;
+  heroAction: ActionType;
+  zombie4Action: ActionType;
 }
 
 
@@ -37,6 +40,7 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
   private static readonly commandHistoryLimit = 100;
   private isDebug: boolean = false;
   canvasHeight: string = '100px';
+  private heroRunTimeoutId: number | null = null;
 
 
   constructor(IHandexTermProps: IHandexTermProps) {
@@ -46,12 +50,18 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
       outputElements: this.getCommandHistory(),
       isInPhraseMode: false,
       isActive: false,
-      commandLine: ''
-
+      commandLine: '',
+      heroAction: 'Idle',
+      zombie4Action: 'Walk'
     }
     this.loadDebugValue();
   }
 
+  componentWillUnmount(): void {
+    if(this.heroRunTimeoutId) {
+      clearTimeout(this.heroRunTimeoutId);
+    }
+  }
   public handleCommand(command: string): string {
     let status = 404;
     let response = "Command not found.";
@@ -297,6 +307,7 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
       // For other input, just return it to the terminal.
       // this.handexTerm.handleCharacter(character);
       this.terminalWrite(character);
+      this.setHeroRunAction();
     }
     return charDuration.durationMilliseconds;
   }
@@ -345,6 +356,30 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
     this.adapterRef.current?.prompt();
   }
 
+  setHeroRunAction = () => {
+    // Clear any existing timeout to reset the timer
+    if (this.heroRunTimeoutId) {
+      clearTimeout(this.heroRunTimeoutId);
+      this.heroRunTimeoutId = null;
+    }
+
+    // Set the hero to run
+    this.setState({ heroAction: 'Run' });
+
+    // Set a timeout to stop the hero from running after 1000ms
+    this.heroRunTimeoutId = window.setTimeout(() => {
+      this.setState({ heroAction: 'Idle' });
+      this.heroRunTimeoutId = null; // Clear the timeout ID
+    }, 1000);
+  }
+
+  setHeroAction = (newAction: ActionType) => {
+    this.setState({ heroAction: newAction });
+  }
+  setZombie4Action = (newAction: ActionType) => {
+    this.setState({ zombie4Action: newAction });
+  }
+
   handleTimerStatusChange(isActive: boolean) {
     console.log('handleTimerStatusChange', isActive);
     this.setState({ isActive });
@@ -383,6 +418,8 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
           canvasHeight={this.canvasHeight}
           canvasWidth="800"
           isInPhraseMode={this.state.isInPhraseMode}
+          heroAction={this.state.heroAction}
+          zombie4Action={this.state.zombie4Action}
         />
 
         <NextCharsDisplay

@@ -2,42 +2,50 @@ import React from 'react';
 import { Zombie4 } from './Zombie4';
 import { Hero } from './Hero';
 import { CharacterActionComponent } from './CharacterActionComponent';
-import { ActionType } from './ActionTypes';
+import { ActionType } from './types/ActionTypes';
+import { Position } from './types/Position';
 
 interface ITerminalGameProps {
   canvasHeight: string
   canvasWidth: string
   isInPhraseMode: boolean
+  heroAction: ActionType
+  zombie4Action: ActionType
 }
 
 interface ITerminalGameState {
   heroAction: ActionType;
-  heroPosition: { leftX: number; topY: number };
+  heroPosition: Position;
   zombieAction: ActionType;
-  zombie4Position: { leftX: number; topY: number };
-  context: CanvasRenderingContext2D | null
+  zombie4Position: Position;
+  context: CanvasRenderingContext2D | null;
+  idleStartTime: number | null; // in milliseconds
 }
 
 export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalGameState> {
   private canvasRef = React.createRef<HTMLCanvasElement>();
-
-  private zombie4?: Zombie4;
+  private gameTime: number = 0;
+  private zombie4: Zombie4 | null = null;
   private hero: Hero | null = null;
   private animationFrameIndex?: number;
   private animationCount: number = 0;
   public context: CanvasRenderingContext2D | null = null;
+  // private lastLogTime: number = 0;
+  // private nextIdleTime: number = 7000; // Next time to switch to Idle
+  // private nextRunTime: number = 0; // Next time to switch back to Run
 
-  private drawHero?: (context: CanvasRenderingContext2D, position: { leftX: number, topY: number }) => void;
-  private drawZombie4?: (context: CanvasRenderingContext2D, position: { leftX: number, topY: number }) => void;
+  private drawHero?: (position: Position) => void;
+  private drawZombie4?: (position: Position) => void;
 
   constructor(props: ITerminalGameProps) {
     super(props);
     this.state = {
-      heroAction: 'Run',
+      heroAction: props.heroAction,
       heroPosition: { leftX: 75, topY: 20 },
-      zombieAction: 'Walk',
+      zombieAction: props.zombie4Action,
       zombie4Position: { leftX: 30, topY: 0 },
-      context: null as CanvasRenderingContext2D | null
+      context: null as CanvasRenderingContext2D | null,
+      idleStartTime: null,
     };
   }
 
@@ -45,20 +53,12 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
     this.setupCanvas();
   }
 
-  componentDidUpdate(prevProps: Readonly<ITerminalGameProps>): void {
-    if (!prevProps.isInPhraseMode !== this.props.isInPhraseMode) {
-      const canvas = this.canvasRef.current;
-      if (!canvas) return;
-      const context = canvas.getContext('2d');
-      if (!(context instanceof CanvasRenderingContext2D)) {
-        console.error("Obtained context is not a CanvasRenderingContext2D instance.");
-        return;
-      }
-      this.startAnimationLoop(context);
+  componentWillUnmount(): void {
+    if (this.animationFrameIndex) {
+      cancelAnimationFrame(this.animationFrameIndex);
     }
-    if (prevProps.isInPhraseMode && !this.props.isInPhraseMode) {
-      this.stopAnimationLoop();
-    }
+
+    this.stopAnimationLoop();
   }
 
   setupCanvas() {
@@ -68,8 +68,8 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
       if (context instanceof CanvasRenderingContext2D) {
         // Set the context in the state instead of a class property
         this.setState({ context: context });
-        this.hero = new Hero(context, this.state.heroAction);
-        this.zombie4 = new Zombie4(context, this.state.zombieAction);
+        this.hero = new Hero(context, this.state.heroAction, this.state.heroPosition);
+        this.zombie4 = new Zombie4(context, this.state.zombieAction, this.state.zombie4Position);
         // No need to pass context to startAnimationLoop, as it will use the context from the state
         this.startAnimationLoop(context);
       } else {
@@ -84,44 +84,41 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
     // console.log("startAnimationLoop", this.state.context instanceof CanvasRenderingContext2D);
 
     // Use an arrow function to maintain the correct 'this' context
-    const loop = () => {
+    const loop = (timestamp: number) => {
 
-      if (!this.state.context) {
-        console.error("Context is not available");
-        return; // Exit the loop if the context is not available
-      }
-
-      if (!this.state.context.canvas) {
-        console.error("Canvas is not available");
-        return; // Exit the loop if the canvas is not available
+      if (!this.gameTime) {
+        this.gameTime = timestamp; // Initialize gameTime on the first animation frame
       }
 
-      if (!this.zombie4) {
-        console.error("zombie4 is not available");
-        return; // Exit the loop if zombie4 is not available
-      }
-      if (!this.hero) {
-        console.error("hero is not available");
-        return; // Exit the loop if hero is not available
-      }
+      // const deltaTime = timestamp - this.gameTime;
+      this.gameTime = timestamp; // Update gameTime for the next frame
+
+      // if (this.state.heroAction === 'Run' && timestamp >= this.nextIdleTime) {
+      //   // Switch to Idle after 5 seconds
+      //   this.setState({ heroAction: 'Idle' });
+      //   console.log("heroAction", this.state.heroAction, "gameTime", this.gameTime, "timestamp", timestamp, "nextIdleTime", this.nextIdleTime);
+      //   this.nextRunTime = timestamp + 2000; // Set the next time to switch back to Run
+      // } else if (this.state.heroAction === 'Idle' && timestamp >= this.nextRunTime) {
+      //   // Switch back to Run after 2 seconds of being Idle
+      //   this.setState({ heroAction: 'Run' });
+      //   console.log("heroAction", this.state.heroAction, "gameTime", this.gameTime, "timestamp", timestamp, "nextIdleTime", this.nextIdleTime);
+      //   this.nextIdleTime = timestamp + 5000; // Set the next time to switch to Idle
+      //   this.nextRunTime = 0; // Reset nextRunTime
+      // }
 
       this.state.context?.clearRect(0, 0, context?.canvas.width, context?.canvas.height);
 
       if (this.drawHero) {
-        this.drawHero(this.state.context, this.state.heroPosition);
+        this.drawHero(this.state.heroPosition);
       }
       if (this.drawZombie4) {
-        this.drawZombie4(this.state.context, this.state.zombie4Position);
+        this.drawZombie4(this.state.zombie4Position);
       }
 
-      this.animationCount = this.animationCount < 200 
-        ? this.animationCount + 1 
+      this.animationCount = this.animationCount < 200
+        ? this.animationCount + 1
         : 0;
-      if (this.animationCount % 1000 === 0) this.setState(
-        { heroAction: this.state.heroAction === 'Run' ? 'Walk' : 'Run' }
-      );
 
-      // console.log("animationCount: ", this.animationCount);
       // Save the request ID to be able to cancel it
       this.animationFrameIndex = requestAnimationFrame(loop);
     };
@@ -140,6 +137,7 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
 
   // Additional methods for calculating WPM, updating the progress bar, etc.
   render() {
+    // console.log('TerminalGame render, heroAction prop:', this.props.heroAction, 'this.state.heroAction:', this.state.heroAction);
     return (
       <>
         <canvas
@@ -149,7 +147,8 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
         </canvas>
         {this.hero &&
           <CharacterActionComponent
-            currentActionType={this.state.heroAction}
+            currentActionType={this.props.heroAction}
+            name= "hero"
             baseCharacter={this.hero}
             position={this.state.heroPosition}
             onPositionChange={
@@ -162,7 +161,8 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
         }
         {this.zombie4 &&
           <CharacterActionComponent
-            currentActionType={this.state.zombieAction}
+            currentActionType={this.props.zombie4Action}
+            name="zombie4"
             baseCharacter={this.zombie4}
             position={this.state.zombie4Position}
             onPositionChange={
