@@ -243,6 +243,16 @@ export class XtermAdapter extends React.Component<IXtermAdapterProps, IXtermAdap
     }
   }
 
+  public getTerminalSize(): { width: number; height: number } | undefined {
+    if (this.terminalElementRef.current) {
+      return {
+        width: this.terminalElementRef.current.clientWidth,
+        height: this.terminalElementRef.current.clientHeight,
+      };
+    }
+    return undefined;
+  }
+
   public increaseFontSize() {
     this.currentFontSize += 1;
     this.terminal.options.fontSize = this.currentFontSize;

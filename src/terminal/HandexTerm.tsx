@@ -25,6 +25,7 @@ export interface IHandexTermState {
   commandLine: string;
   heroAction: ActionType;
   zombie4Action: ActionType;
+  terminalSize: { width: number; height: number } | undefined;
 }
 
 
@@ -52,16 +53,28 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
       isActive: false,
       commandLine: '',
       heroAction: 'Idle',
-      zombie4Action: 'Walk'
+      zombie4Action: 'Walk',
+      terminalSize: undefined
     }
     this.loadDebugValue();
   }
 
   componentWillUnmount(): void {
-    if(this.heroRunTimeoutId) {
+    if (this.heroRunTimeoutId) {
       clearTimeout(this.heroRunTimeoutId);
     }
   }
+
+  componentDidMount(): void {
+    if (this.adapterRef.current) {
+      const size = this.adapterRef.current.getTerminalSize();
+      if (size) {
+        this.setState({ terminalSize: size });
+      }
+      console.log("didMount terminalSize", this.state.terminalSize);
+    }
+  }
+
   public handleCommand(command: string): string {
     let status = 404;
     let response = "Command not found.";
@@ -405,6 +418,10 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
   }
 
   public render() {
+    const { terminalSize } = this.state;
+    const canvasWidth = terminalSize ? `${terminalSize.width}px` : "800";
+    const canvasHeight = terminalSize ? `${terminalSize.height}px` : "100";
+
     return (
       <>
         <Output
@@ -416,7 +433,7 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
         <TerminalGame
           ref={this.terminalGameRef}
           canvasHeight={this.canvasHeight}
-          canvasWidth="800"
+          canvasWidth={canvasWidth} // Use the width from terminalSize if available
           isInPhraseMode={this.state.isInPhraseMode}
           heroAction={this.state.heroAction}
           zombie4Action={this.state.zombie4Action}

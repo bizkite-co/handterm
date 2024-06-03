@@ -1,3 +1,5 @@
+import { FramePostion } from "../types/Position";
+
 function assert(condition: any, message: string): asserts condition {
   if (!condition) {
     throw new Error(`Assertion failed: ${message}`);
@@ -9,14 +11,14 @@ export class Sprite {
     public frameCount: number;
     private frameWidth: number;
     private frameHeight: number;
-    private frameSequence?: { leftX: number; topY: number }[];
+    private frameSequence?: FramePostion[];
 
     constructor(
         imagePath: string,
         frameCount: number,
         frameWidth?: number,
         frameHeight?: number,
-        frameSequence?: { leftX: number; topY: number }[]
+        frameSequence?: FramePostion[]
     ) {
         this.image = new Image();
         this.image.onload = () => {
@@ -65,7 +67,7 @@ export class Sprite {
                 frameLeftX = frameCoords.leftX;
                 frameTopY = frameCoords.topY;
             } else {
-                console.log("No frameCoords found for frameIndex:", frameIndex, leftX, topY, this.image);
+                console.log("No frameCoords found for frameIndex:", frameIndex, this.frameSequence);
             }
         } else {
             // Calculate frame position for strip-style sprites
