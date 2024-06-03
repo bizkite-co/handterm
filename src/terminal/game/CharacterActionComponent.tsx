@@ -2,12 +2,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ActionType } from './types/ActionTypes';
 import { BaseCharacter } from './BaseCharacter';
-import { Position } from './types/Position';
+import { SpritePostion } from './types/Position';
 
 
 interface ICharacterActionComponentProps {
   onReady: (
-    draw: (position: Position) => void,
+    draw: (position: SpritePostion) => void,
     setFrameIndex: React.Dispatch<React.SetStateAction<number>>
   ) => void;
   baseCharacter: BaseCharacter;
@@ -96,7 +96,7 @@ export const CharacterActionComponent: React.FC<ICharacterActionComponentProps> 
   // Draw the character with the current frame index
   useEffect(() => {
     const drawWithCurrentFrameIndex = (
-      position: Position
+      position: SpritePostion
     ) => {
       props.baseCharacter.draw(frameIndex, position);
     };

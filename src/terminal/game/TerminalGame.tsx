@@ -3,7 +3,7 @@ import { Zombie4 } from './Zombie4';
 import { Hero } from './Hero';
 import { CharacterActionComponent } from './CharacterActionComponent';
 import { ActionType } from './types/ActionTypes';
-import { Position } from './types/Position';
+import { SpritePostion } from './types/Position';
 
 interface ITerminalGameProps {
   canvasHeight: string
@@ -15,9 +15,9 @@ interface ITerminalGameProps {
 
 interface ITerminalGameState {
   heroAction: ActionType;
-  heroPosition: Position;
+  heroPosition: SpritePostion;
   zombieAction: ActionType;
-  zombie4Position: Position;
+  zombie4Position: SpritePostion;
   context: CanvasRenderingContext2D | null;
   idleStartTime: number | null; // in milliseconds
 }
@@ -34,16 +34,16 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
   // private nextIdleTime: number = 7000; // Next time to switch to Idle
   // private nextRunTime: number = 0; // Next time to switch back to Run
 
-  private drawHero?: (position: Position) => void;
-  private drawZombie4?: (position: Position) => void;
+  private drawHero?: (position: SpritePostion) => void;
+  private drawZombie4?: (position: SpritePostion) => void;
 
   constructor(props: ITerminalGameProps) {
     super(props);
     this.state = {
       heroAction: props.heroAction,
-      heroPosition: { leftX: 75, topY: 20 },
+      heroPosition: { leftX: 75, topY: 30 },
       zombieAction: props.zombie4Action,
-      zombie4Position: { leftX: 30, topY: 0 },
+      zombie4Position: { leftX: -70, topY: 0 },
       context: null as CanvasRenderingContext2D | null,
       idleStartTime: null,
     };

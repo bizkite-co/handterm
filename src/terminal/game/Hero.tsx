@@ -2,10 +2,10 @@
 
 import { BaseCharacter } from "./BaseCharacter";
 import { ActionType, HeroActions } from "./types/ActionTypes";
-import { Position } from "./types/Position";
+import { SpritePostion } from "./types/Position";
 
 export class Hero extends BaseCharacter {
-  constructor(context: CanvasRenderingContext2D, actionType: ActionType, position: Position) {
+  constructor(context: CanvasRenderingContext2D, actionType: ActionType, position: SpritePostion) {
     super(context, HeroActions, actionType, {position});
   }
 

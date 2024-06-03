@@ -3,10 +3,10 @@ import { Sprite } from './sprites/Sprite';
 import { SpriteAnimation } from './types/SpriteTypes';
 import { Action, ActionType } from './types/ActionTypes';
 import { SpriteManager } from './sprites/SpriteManager';
-import { Motion, Position } from './types/Position';
+import { Motion, SpritePostion } from './types/Position';
 
 interface BaseCharacterProps {
-  position: Position 
+  position: SpritePostion 
 }
 
 interface BaseCharacterState {
@@ -86,7 +86,7 @@ export class BaseCharacter extends React.Component<BaseCharacterProps, BaseChara
     }
   }
 
-  public draw(frameIndex: number, position: Position) {
+  public draw(frameIndex: number, position: SpritePostion) {
     const sprite = this.sprites[this.currentActionType];
     if (sprite) {
       sprite.draw(
