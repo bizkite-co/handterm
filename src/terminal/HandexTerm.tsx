@@ -420,7 +420,8 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
   public render() {
     const { terminalSize } = this.state;
     const canvasWidth = terminalSize ? `${terminalSize.width}px` : "800";
-    const canvasHeight = terminalSize ? `${terminalSize.height}px` : "100";
+    // canvas height does not need to match terminal height
+    const canvasHeight = "100";
 
     return (
       <>
@@ -432,7 +433,7 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
         />
         <TerminalGame
           ref={this.terminalGameRef}
-          canvasHeight={this.canvasHeight}
+          canvasHeight={canvasHeight}
           canvasWidth={canvasWidth} // Use the width from terminalSize if available
           isInPhraseMode={this.state.isInPhraseMode}
           heroAction={this.state.heroAction}
