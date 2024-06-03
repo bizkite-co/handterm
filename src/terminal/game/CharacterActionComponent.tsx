@@ -76,7 +76,7 @@ export const CharacterActionComponent: React.FC<ICharacterActionComponentProps> 
           let newIndex = (prevIndex + 1) % frameCount;
           return newIndex;
         });
-        if (frameIndex > sprite.frameCount) {
+        if (sprite && sprite.frameCount && frameIndex > sprite.frameCount) {
           console.log("Frame index out of bounds:", frameIndex, sprite.frameCount);
           // setFrameIndex(0);
         }

@@ -70,8 +70,8 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
       const size = this.adapterRef.current.getTerminalSize();
       if (size) {
         this.setState({ terminalSize: size });
+        console.log("didMount terminalSize", size);
       }
-      console.log("didMount terminalSize", this.state.terminalSize);
     }
   }
 
