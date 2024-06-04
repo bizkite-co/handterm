@@ -32,7 +32,8 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
   private hero: Hero | null = null;
   private animationFrameIndex?: number;
   public context: CanvasRenderingContext2D | null = null;
-  private bgImage = new Image();
+  private foregroundBuildings = new Image();
+  private backgroundBuildings = new Image();
   private heroPositionX = this.props.canvasWidth * 0.4;
   // private lastLogTime: number = 0;
   // private nextIdleTime: number = 7000; // Next time to switch to Idle
@@ -59,6 +60,8 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
   }
 
   componentDidMount() {
+    this.foregroundBuildings.src = '/images/parallax-industrial-pack/parallax-industrial-pack/layers/skill-desc_0000_foreground.png' + '?t=' + new Date().getTime();
+    this.backgroundBuildings.src = '/images/parallax-industrial-pack/parallax-industrial-pack/layers/skill-desc_0001_buildings.png' + '?t=' + new Date().getTime();
     const canvas = this.canvasRef.current;
     if (canvas) {
       const context = canvas.getContext('2d');
@@ -96,17 +99,16 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
         this.setState({ context: context });
 
         // Load background images
-        this.bgImage.onload = () => {
+        this.foregroundBuildings.onload = () => {
 
 
           // No need to pass context to startAnimationLoop, as it will use the context from the state
           this.startAnimationLoop(context);
         };
-        this.bgImage.onerror = (e) => {
+        this.foregroundBuildings.onerror = (e) => {
           console.error("Error loading image:", e);
         }
 
-        this.bgImage.src = '/images/parallax-industrial-pack/parallax-industrial-pack/layers/skill-desc_0000_foreground.png' + '?t=' + new Date().getTime();
 
       } else {
         console.error("Obtained context is not a CanvasRenderingContext2D instance.");
@@ -137,7 +139,7 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
 
       // Update the background position
       this.updateBackgroundPosition(this.state.backgroundOffsetX + heroDx);
-      if(this.zombie4) this.zombie4.position.leftX -= heroDx;
+      if (this.zombie4) this.zombie4.position.leftX -= heroDx;
     } else {
       // Update the hero's position normally
       this.setState({ heroPosition: { ...this.state.heroPosition, leftX: newHeroPositionX } });
@@ -150,24 +152,47 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
 
   drawBackground(context: CanvasRenderingContext2D) {
     context.globalAlpha = 0.6; // Set to desired transparency level (0 to 1)
-    // Assuming you have a backgroundImage and a backgroundOffsetX state
-    const pattern = context.createPattern(this.bgImage, 'repeat');
-    if (pattern) {
-      context.fillStyle = pattern;
-      context.save();
-      const offsetX = -this.state.backgroundOffsetX % this.bgImage.width;
-      context.translate(offsetX, 0);
-      // Draw the pattern twice if near the edge to cover the entire canvas plus extra space
-      context.fillRect(offsetX, 0, this.props.canvasWidth - offsetX, this.props.canvasHeight);
-      context.fillRect(this.bgImage.width + offsetX, 0, this.props.canvasWidth - offsetX, this.props.canvasHeight);
-      context.restore();
-    } else {
-      // Handle the null pattern case, perhaps by filling a solid color or logging an error
-      context.fillStyle = 'grey'; // Fallback color
-      context.fillRect(0, 0, this.props.canvasWidth, this.props.canvasHeight);
+
+    // Define the desired height of the foreground buildings
+    const foregroundBuildingScale = 0.6;
+    const backgroundBuildingsScale = 0.8;
+    const backgroundMotionScale = 0.1;
+
+    const foregroundBuildingHeight = this.props.canvasHeight * foregroundBuildingScale;
+
+    // Calculate the scaled width that maintains the aspect ratio
+    const scaledWidth = this.foregroundBuildings.width * foregroundBuildingScale;
+
+    // Calculate how many times the image should be drawn to cover the canvas width
+    const numImages = Math.ceil(this.props.canvasWidth / scaledWidth) + 1;
+
+    // Calculate the offset for when the image scrolls
+    const offsetX = -this.state.backgroundOffsetX % scaledWidth;
+
+    context.save(); // Save the current context state
+
+    // Draw the scaled image multiple times to cover the canvas width
+    for (let i = 0; i < numImages; i++) {
+      context.drawImage(
+        this.backgroundBuildings,
+        0,0,
+        this.backgroundBuildings.width, this.backgroundBuildings.height,
+        offsetX * backgroundBuildingsScale + (i * scaledWidth), 0,
+        scaledWidth, this.props.canvasHeight
+      )
+      context.drawImage(
+        this.foregroundBuildings,
+        0, 0, // source X, Y
+        this.foregroundBuildings.width, this.foregroundBuildings.height, // source width and height
+        offsetX + (i * scaledWidth), this.props.canvasHeight - foregroundBuildingHeight, // destination X, Y
+        scaledWidth, foregroundBuildingHeight // destination width and height
+      );
     }
+
+    context.restore(); // Restore the context state
     context.globalAlpha = 1; // Set to desired transparency level (0 to 1)
   }
+
   updateZombiesPosition() {
     if (!this.zombie4) return;
     // Assuming you store zombies in an array and each zombie has a position
