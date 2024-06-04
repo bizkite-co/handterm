@@ -1,6 +1,6 @@
 // SpriteTypes.ts
 
-import { SpritePostion } from "./Position";
+import { SpritePosition } from "./Position";
 
 
 export type SpriteAnimation = {
@@ -9,5 +9,5 @@ export type SpriteAnimation = {
   frameCount: number;
   frameWidth: number;
   frameHeight: number;
-  framePositions?: SpritePostion[];
+  framePositions?: SpritePosition[];
 };

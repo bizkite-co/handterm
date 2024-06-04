@@ -1,4 +1,4 @@
-export type SpritePostion = {
+export type SpritePosition = {
     leftX: number,
     topY: number
 }

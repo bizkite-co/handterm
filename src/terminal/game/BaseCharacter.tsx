@@ -3,14 +3,13 @@ import { Sprite } from './sprites/Sprite';
 import { SpriteAnimation } from './types/SpriteTypes';
 import { Action, ActionType } from './types/ActionTypes';
 import { SpriteManager } from './sprites/SpriteManager';
-import { Motion, SpritePostion } from './types/Position';
+import { Motion, SpritePosition as SpritePosition } from './types/Position';
 
 interface BaseCharacterProps {
-  position: SpritePostion 
 }
 
 interface BaseCharacterState {
-  
+
 }
 export class BaseCharacter extends React.Component<BaseCharacterProps, BaseCharacterState> {
   public context: CanvasRenderingContext2D;
@@ -19,16 +18,21 @@ export class BaseCharacter extends React.Component<BaseCharacterProps, BaseChara
   protected sprite: Sprite;
   public currentActionType: ActionType;
   protected frameIndex: number = 0;
-  private lastFrameTime: number = 0;
-  private frameDelay: number = 500;
+  private lastFrameTime: number = Date.now();
+  private frameDelay: number = 150;
   protected velocity: Motion = { dx: 1, dy: 0 };
   protected spriteManager = new SpriteManager();
+  private animationFrameId: number | null = null;
+  private position: SpritePosition;
+  public name: string; 
 
   constructor(
-    context: CanvasRenderingContext2D, 
+    context: CanvasRenderingContext2D,
     actions: Record<ActionType, Action>,
     actionType: ActionType,
-    props: BaseCharacterProps
+    position: SpritePosition,
+    name: string,
+    props: BaseCharacterProps = {}
   ) {
     super(props);
     this.currentActionType = actionType;
@@ -36,6 +40,8 @@ export class BaseCharacter extends React.Component<BaseCharacterProps, BaseChara
     this.sprite = this.sprites[actionType];
     this.actions = actions;
     this.loadActions(actions);
+    this.name = name;
+    this.position = position; 
   }
 
   public async loadSprite(actionKey: ActionType, animationData: SpriteAnimation) {
@@ -60,7 +66,7 @@ export class BaseCharacter extends React.Component<BaseCharacterProps, BaseChara
     this.sprite = this.sprites[newActionType];
   }
 
-  public getCurrentActionType(): ActionType{
+  public getCurrentActionType(): ActionType {
     // Assuming currentAction is of type Action and has a key property
     return this.currentActionType;
   }
@@ -69,24 +75,54 @@ export class BaseCharacter extends React.Component<BaseCharacterProps, BaseChara
     return this.actions[this.currentActionType];
   }
 
-  public getSprite() : Sprite {
+  public getSprite(): Sprite {
     // Just return the current sprite
     let spriteFromSprites = this.sprites[this.currentActionType];
     return spriteFromSprites;
   }
 
-  public animate(timestamp: number) {
-    this.sprite = this.sprites[this.currentActionType];
-    if (this.sprite && timestamp - this.lastFrameTime > this.frameDelay) {
-      // Update the frame index
-      console.log("Animating: ", this.currentActionType, this.frameIndex);
-      this.frameIndex = this.sprite.updateFrameIndex(this.frameIndex, timestamp, this.lastFrameTime, this.frameDelay);
+  public updatePositionAndAnimate(callback: (newPosition: SpritePosition) => void, canvasWidth: number) {
+    const animate = () => {
+      const now = Date.now();
+      const elapsed = now - this.lastFrameTime;
+      // Update position based on the current action's dx and dy
+      const currentAction = this.getCurrentAction();
+      this.position.leftX = this.position.leftX > canvasWidth 
+        ? 0 
+        : this.position.leftX + (currentAction.dx / 4);
+      this.position.topY += currentAction.dy;
 
-      this.lastFrameTime = timestamp;
+      if (elapsed > this.frameDelay) {
+        const sprite = this.getSprite();
+        if (sprite && sprite.frameCount) {
+          this.frameIndex = (this.frameIndex + 1) % sprite.frameCount;
+        }
+
+        // Update lastFrameTime only when a new frame is drawn
+        this.lastFrameTime = now;
+      }
+
+      // Inform the parent component of the position update
+      callback(this.position);
+
+      // Draw the character at the new position with the current frameIndex
+      this.draw(this.frameIndex, this.position);
+
+      // Continue the animation loop
+      this.animationFrameId = requestAnimationFrame(animate);
+    };
+
+    // Initialize the animation loop
+    this.animationFrameId = requestAnimationFrame(animate);
+  }
+
+  public stopAnimation() {
+    if (this.animationFrameId !== null) {
+      cancelAnimationFrame(this.animationFrameId);
     }
   }
 
-  public draw(frameIndex: number, position: SpritePostion) {
+  public draw(frameIndex: number, position: SpritePosition) {
     const sprite = this.sprites[this.currentActionType];
     if (sprite) {
       sprite.draw(

@@ -3,11 +3,11 @@ import { Zombie4 } from './Zombie4';
 import { Hero } from './Hero';
 import { CharacterActionComponent } from './CharacterActionComponent';
 import { ActionType } from './types/ActionTypes';
-import { SpritePostion } from './types/Position';
+import { SpritePosition } from './types/Position';
 
 interface ITerminalGameProps {
-  canvasHeight: string
-  canvasWidth: string
+  canvasHeight: number
+  canvasWidth: number
   isInPhraseMode: boolean
   heroAction: ActionType
   zombie4Action: ActionType
@@ -15,11 +15,14 @@ interface ITerminalGameProps {
 
 interface ITerminalGameState {
   heroAction: ActionType;
-  heroPosition: SpritePostion;
+  heroPosition: SpritePosition;
+  heroReady: boolean;
   zombieAction: ActionType;
-  zombie4Position: SpritePostion;
+  zombie4Position: SpritePosition;
+  zombie4Ready: boolean;
   context: CanvasRenderingContext2D | null;
   idleStartTime: number | null; // in milliseconds
+  backgroundOffsetX: number;
 }
 
 export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalGameState> {
@@ -28,29 +31,45 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
   private zombie4: Zombie4 | null = null;
   private hero: Hero | null = null;
   private animationFrameIndex?: number;
-  private animationCount: number = 0;
   public context: CanvasRenderingContext2D | null = null;
+  private bgImage = new Image();
   // private lastLogTime: number = 0;
   // private nextIdleTime: number = 7000; // Next time to switch to Idle
   // private nextRunTime: number = 0; // Next time to switch back to Run
 
-  private drawHero?: (position: SpritePostion) => void;
-  private drawZombie4?: (position: SpritePostion) => void;
+  private drawHero?: (position: SpritePosition) => void;
+  private drawZombie4?: (position: SpritePosition) => void;
 
   constructor(props: ITerminalGameProps) {
     super(props);
     this.state = {
       heroAction: props.heroAction,
-      heroPosition: { leftX: 75, topY: 30 },
+      heroPosition: { leftX: 175, topY: 30 },
+      heroReady: false,
       zombieAction: props.zombie4Action,
       zombie4Position: { leftX: -70, topY: 0 },
+      zombie4Ready: false,
       context: null as CanvasRenderingContext2D | null,
       idleStartTime: null,
+      backgroundOffsetX: 0,
+
     };
   }
 
   componentDidMount() {
-    this.setupCanvas();
+    const canvas = this.canvasRef.current;
+    if (canvas) {
+      const context = canvas.getContext('2d');
+      if (context) {
+          this.hero = new Hero(
+            context, this.state.heroAction, this.state.heroPosition
+          );
+          this.zombie4 = new Zombie4(
+            context, this.state.zombieAction, this.state.zombie4Position
+          );
+        this.setupCanvas();
+      }
+    }
   }
 
   componentWillUnmount(): void {
@@ -61,6 +80,11 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
     this.stopAnimationLoop();
   }
 
+  // Call this method to update the background position
+  updateBackgroundPosition(newOffsetX: number) {
+    this.setState({ backgroundOffsetX: newOffsetX });
+  }
+
   setupCanvas() {
     const canvas = this.canvasRef.current;
     if (canvas) {
@@ -68,10 +92,20 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
       if (context instanceof CanvasRenderingContext2D) {
         // Set the context in the state instead of a class property
         this.setState({ context: context });
-        this.hero = new Hero(context, this.state.heroAction, this.state.heroPosition);
-        this.zombie4 = new Zombie4(context, this.state.zombieAction, this.state.zombie4Position);
-        // No need to pass context to startAnimationLoop, as it will use the context from the state
-        this.startAnimationLoop(context);
+
+        // Load background images
+        this.bgImage.onload = () => {
+
+
+          // No need to pass context to startAnimationLoop, as it will use the context from the state
+          this.startAnimationLoop(context);
+        };
+        this.bgImage.onerror = (e) => {
+          console.error("Error loading image:", e);
+        }
+
+        this.bgImage.src = '/images/parallax-industrial-pack/parallax-industrial-pack/layers/skill-desc_0000_foreground.png' + '?t=' + new Date().getTime();
+
       } else {
         console.error("Obtained context is not a CanvasRenderingContext2D instance.");
       }
@@ -81,32 +115,30 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
   }
 
   startAnimationLoop(context: CanvasRenderingContext2D) {
-    // console.log("startAnimationLoop", this.state.context instanceof CanvasRenderingContext2D);
-
-    // Use an arrow function to maintain the correct 'this' context
     const loop = (timestamp: number) => {
-
       if (!this.gameTime) {
         this.gameTime = timestamp; // Initialize gameTime on the first animation frame
       }
 
-      // const deltaTime = timestamp - this.gameTime;
       this.gameTime = timestamp; // Update gameTime for the next frame
 
-      // if (this.state.heroAction === 'Run' && timestamp >= this.nextIdleTime) {
-      //   // Switch to Idle after 5 seconds
-      //   this.setState({ heroAction: 'Idle' });
-      //   console.log("heroAction", this.state.heroAction, "gameTime", this.gameTime, "timestamp", timestamp, "nextIdleTime", this.nextIdleTime);
-      //   this.nextRunTime = timestamp + 2000; // Set the next time to switch back to Run
-      // } else if (this.state.heroAction === 'Idle' && timestamp >= this.nextRunTime) {
-      //   // Switch back to Run after 2 seconds of being Idle
-      //   this.setState({ heroAction: 'Run' });
-      //   console.log("heroAction", this.state.heroAction, "gameTime", this.gameTime, "timestamp", timestamp, "nextIdleTime", this.nextIdleTime);
-      //   this.nextIdleTime = timestamp + 5000; // Set the next time to switch to Idle
-      //   this.nextRunTime = 0; // Reset nextRunTime
-      // }
+      context.clearRect(0, 0, context.canvas.width, context.canvas.height);
 
-      this.state.context?.clearRect(0, 0, context?.canvas.width, context?.canvas.height);
+      context.globalAlpha = 0.6; // Set to desired transparency level (0 to 1)
+      const pattern = context.createPattern(this.bgImage, 'repeat');
+      if (pattern) {
+        context.fillStyle = pattern;
+        // Fill the entire canvas with the pattern
+        context.fillRect(
+          0,
+          0,
+          context.canvas.width,
+          context.canvas.height * 0.9
+        );
+      }
+
+      // Reset globalAlpha if other drawings should not be affected
+      context.globalAlpha = 1.0;
 
       if (this.drawHero) {
         this.drawHero(this.state.heroPosition);
@@ -115,10 +147,6 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
         this.drawZombie4(this.state.zombie4Position);
       }
 
-      this.animationCount = this.animationCount < 200
-        ? this.animationCount + 1
-        : 0;
-
       // Save the request ID to be able to cancel it
       this.animationFrameIndex = requestAnimationFrame(loop);
     };
@@ -126,7 +154,12 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
     // Start the animation loop
     this.animationFrameIndex = requestAnimationFrame(loop);
   }
-
+  // Call this method when both characters are ready to draw
+  maybeStartAnimationLoop() {
+    if (this.state.context && this.state.heroReady && this.state.zombie4Ready) {
+      this.startAnimationLoop(this.state.context);
+    }
+  }
   stopAnimationLoop() {
     if (this.animationFrameIndex) {
       cancelAnimationFrame(this.animationFrameIndex);
@@ -137,7 +170,6 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
 
   // Additional methods for calculating WPM, updating the progress bar, etc.
   render() {
-    // console.log('TerminalGame render, heroAction prop:', this.props.heroAction, 'this.state.heroAction:', this.state.heroAction);
     return (
       <>
         <canvas
@@ -148,29 +180,25 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
         {this.hero &&
           <CharacterActionComponent
             currentActionType={this.props.heroAction}
-            name= "hero"
+            name="hero"
+            canvasWidth={this.props.canvasWidth}
             baseCharacter={this.hero}
             position={this.state.heroPosition}
             onPositionChange={
               (newPosition) => this.setState({ heroPosition: newPosition })
             }
-            onReady={(draw) => {
-              this.drawHero = draw;
-            }}
           />
         }
         {this.zombie4 &&
           <CharacterActionComponent
             currentActionType={this.props.zombie4Action}
             name="zombie4"
+            canvasWidth={this.props.canvasWidth}
             baseCharacter={this.zombie4}
             position={this.state.zombie4Position}
             onPositionChange={
               (newPosition) => this.setState({ zombie4Position: newPosition })
             }
-            onReady={(draw) => {
-              this.drawZombie4 = draw;
-            }}
           />
         }
       </>
