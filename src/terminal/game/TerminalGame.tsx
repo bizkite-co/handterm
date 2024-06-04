@@ -155,8 +155,9 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
 
     // Define the desired height of the foreground buildings
     const foregroundBuildingScale = 0.6;
-    const backgroundBuildingsScale = 0.8;
-    const backgroundMotionScale = 0.1;
+    const backgroundBuildingsScale = 0.9;
+    const backgroundBuildingsHeight = this.props.canvasHeight * backgroundBuildingsScale;
+    const backgroundMotionScale = 0.6;
 
     const foregroundBuildingHeight = this.props.canvasHeight * foregroundBuildingScale;
 
@@ -177,7 +178,8 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
         this.backgroundBuildings,
         0,0,
         this.backgroundBuildings.width, this.backgroundBuildings.height,
-        offsetX * backgroundBuildingsScale + (i * scaledWidth), 0,
+        offsetX * backgroundMotionScale + (i * scaledWidth),
+        this.props.canvasHeight - backgroundBuildingsHeight,
         scaledWidth, this.props.canvasHeight
       )
       context.drawImage(
