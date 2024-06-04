@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { TouchEventHandler } from 'react';
 import { Zombie4 } from './Zombie4';
 import { Hero } from './Hero';
 import { CharacterActionComponent } from './CharacterActionComponent';
@@ -11,6 +11,9 @@ interface ITerminalGameProps {
   isInPhraseMode: boolean
   heroAction: ActionType
   zombie4Action: ActionType
+  onTouchStart: TouchEventHandler<HTMLDivElement>;
+  onTouchEnd: TouchEventHandler<HTMLDivElement>;
+  onTouchMove: TouchEventHandler<HTMLDivElement>;
 }
 
 interface ITerminalGameState {
@@ -34,6 +37,7 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
   public context: CanvasRenderingContext2D | null = null;
   private foregroundBuildings = new Image();
   private backgroundBuildings = new Image();
+  private farBuildings = new Image();
   private heroPositionX = this.props.canvasWidth * 0.2;
 
   // private lastLogTime: number = 0;
@@ -63,6 +67,7 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
   componentDidMount() {
     this.foregroundBuildings.src = '/images/parallax-industrial-pack/parallax-industrial-pack/layers/skill-desc_0000_foreground.png' + '?t=' + new Date().getTime();
     this.backgroundBuildings.src = '/images/parallax-industrial-pack/parallax-industrial-pack/layers/skill-desc_0001_buildings.png' + '?t=' + new Date().getTime();
+    this.farBuildings.src = '/images/parallax-industrial-pack/parallax-industrial-pack/layers/skill-desc_0002_far-buildings.png' + '?t=' + new Date().getTime();
     const canvas = this.canvasRef.current;
     if (canvas) {
       const context = canvas.getContext('2d');
@@ -153,8 +158,14 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
 
   drawBackground(context: CanvasRenderingContext2D) {
 
-    context.globalAlpha = 0.8; // Set to desired transparency level (0 to 1)
+    context.globalAlpha = 1; // Set to desired transparency level (0 to 1)
 
+    this.drawParallaxLayer(
+      context,
+      this.farBuildings, // the image for the background layer
+      0.8, // scale for the background buildings
+      0.4 // rate of movement relative to the foreground
+    );
     this.drawParallaxLayer(
       context,
       this.backgroundBuildings, // the image for the background layer
@@ -183,7 +194,7 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
     const offsetX = -(this.state.backgroundOffsetX * movementRate) % scaledWidth;
 
     context.save(); // Save the current context state
-    context.globalAlpha = scale === 0.8 ? 0.5 : 0.6; // Adjust transparency for effect if desired
+    // context.globalAlpha = scale === 0.8 ? 0.5 : 0.6; // Adjust transparency for effect if desired
 
     // Draw the scaled image multiple times to cover the canvas width
     for (let i = 0; i < numImages; i++) {

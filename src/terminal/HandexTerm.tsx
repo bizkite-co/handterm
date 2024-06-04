@@ -26,7 +26,7 @@ export interface IHandexTermState {
   heroAction: ActionType;
   zombie4Action: ActionType;
   terminalSize: { width: number; height: number } | undefined;
-  terminalFontSize: number ;
+  terminalFontSize: number;
 }
 
 
@@ -43,6 +43,8 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
   private isDebug: boolean = false;
   canvasHeight: number = 100;
   private heroRunTimeoutId: number | null = null;
+  private lastTouchDistance: number | null = null;
+  private currentFontSize: number = 17;
 
   updateTerminalFontSize(newSize: number) {
     this.setState({ terminalFontSize: newSize });
@@ -62,6 +64,7 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
       terminalFontSize: 17
     }
     this.loadDebugValue();
+    this.loadFontSize();
   }
 
   componentWillUnmount(): void {
@@ -410,16 +413,71 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
     this.adapterRef.current?.terminalWrite(data);
   }
 
-  private handleTouchStart: TouchEventHandler<HTMLDivElement> = (event: React.TouchEvent<HTMLDivElement>) => {
-    this.adapterRef.current?.handleTouchStart(event);
+  private loadFontSize(): void {
+    let getFontSize: string = localStorage.getItem('terminalFontSize') || this.currentFontSize.toString();
+    const fontSize = (getFontSize && getFontSize == 'NaN') ? this.currentFontSize : parseInt(getFontSize);
+
+    console.log("loadFontSize", fontSize);
+    if (fontSize) {
+      this.currentFontSize = fontSize;
+      document.documentElement.style.setProperty('--terminal-font-size', `${this.currentFontSize}px`);
+      // if (this.terminalElement) {
+
+      //   this.terminalElement.style.fontSize = `${this.currentFontSize}px`;
+      // } else {
+      //   console.error('XtermAdapter - terminalElement is NULL');
+      // }
+      // this.terminal.options.fontSize = this.currentFontSize;
+    }
+  }
+  public handleTouchStart: TouchEventHandler<HTMLDivElement> = (event: React.TouchEvent<HTMLDivElement>) => {
+    setTimeout(() => {
+      // this.terminalElement.focus();
+    }, 500)
+    if (event.touches.length === 2) {
+
+      // event.preventDefault();
+      this.lastTouchDistance = this.getDistanceBetweenTouches(event.touches);
+    }
   }
 
-  private handleTouchEnd: TouchEventHandler<HTMLDivElement> = (event: React.TouchEvent<HTMLDivElement>) => {
-    this.adapterRef.current?.handleTouchEnd(event);
+  public handleTouchMove: TouchEventHandler<HTMLDivElement> = (event: React.TouchEvent<HTMLDivElement>) => {
+    if (event.touches.length === 2) {
+      // event.preventDefault();
+      const currentDistance = this.getDistanceBetweenTouches(event.touches);
+      if (this.lastTouchDistance) {
+        const scaleFactor = currentDistance / this.lastTouchDistance;
+        this.currentFontSize *= scaleFactor;
+        // TODO: Figure out how to resize fonts now with REact.
+        document.documentElement.style.setProperty('--terminal-font-size', `${this.currentFontSize}pt`);
+        this.lastTouchDistance = currentDistance;
+        // this.terminal.options.fontSize = this.currentFontSize;
+        // this.terminal.refresh(0, this.terminal.rows - 1); // Refresh the terminal display
+      }
+    }
   }
 
-  private handleTouchMove: TouchEventHandler<HTMLDivElement> = (event: React.TouchEvent<HTMLDivElement>) => {
-    this.adapterRef.current?.handleTouchMove(event);
+  public increaseFontSize() {
+    this.currentFontSize += 1;
+    // this.terminal.options.fontSize = this.currentFontSize;
+    // this.terminal.refresh(0, this.terminal.rows - 1);
+    localStorage.setItem('terminalFontSize', `${this.currentFontSize}`);
+  }
+
+  public handleTouchEnd: TouchEventHandler<HTMLDivElement> = () => {
+
+    localStorage.setItem('terminalFontSize', `${this.currentFontSize}`);
+    console.log('SET terminalFontSize', this.currentFontSize);
+    this.lastTouchDistance = null;
+  }
+
+  private getDistanceBetweenTouches(touches: React.TouchList): number {
+    const touch1 = touches[0];
+    const touch2 = touches[1];
+    return Math.sqrt(
+      Math.pow(touch2.pageX - touch1.pageX, 2) +
+      Math.pow(touch2.pageY - touch1.pageY, 2),
+    );
   }
 
   public render() {
@@ -442,6 +500,9 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
           isInPhraseMode={this.state.isInPhraseMode}
           heroAction={this.state.heroAction}
           zombie4Action={this.state.zombie4Action}
+          onTouchMove={this.handleTouchMove}
+          onTouchStart={this.handleTouchStart}
+          onTouchEnd={this.handleTouchEnd}
         />
 
         <NextCharsDisplay
@@ -456,8 +517,11 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
           ref={this.adapterRef}
           terminalElement={this.terminalElementRef.current}
           terminalElementRef={this.terminalElementRef}
+          terminalFontSize={this.currentFontSize}
           onAddCharacter={this.handleCharacter.bind(this)}
-          updateFontSize={this.updateTerminalFontSize.bind(this)}
+          onTouchStart={this.handleTouchStart}
+          onTouchMove={this.handleTouchMove}
+          onTouchEnd={this.handleTouchEnd}
         />
       </>
     )

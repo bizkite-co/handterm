@@ -12,15 +12,15 @@ interface IXtermAdapterProps {
   terminalElement: HTMLElement | null;
   terminalElementRef: React.RefObject<HTMLElement>;
   onAddCharacter: (character: string) => void;
-  updateFontSize: (newFontSize: number) => void;
+  onTouchStart: TouchEventHandler<HTMLDivElement>;
+  onTouchEnd: TouchEventHandler<HTMLDivElement>;
+  onTouchMove: TouchEventHandler<HTMLDivElement>;
+  terminalFontSize: number;
 }
 
 export class XtermAdapter extends React.Component<IXtermAdapterProps, IXtermAdapterState> {
   private terminal: Terminal;
-  private terminalElement: HTMLElement | null = null;
   private terminalElementRef: React.RefObject<HTMLElement>;
-  private lastTouchDistance: number | null = null;
-  private currentFontSize: number = 17;
   private videoElementRef: React.RefObject<HTMLVideoElement> = React.createRef();
   private promptDelimiter: string = '$';
   private promptLength: number = 0;
@@ -40,7 +40,8 @@ export class XtermAdapter extends React.Component<IXtermAdapterProps, IXtermAdap
     this.terminal = new Terminal({
       fontFamily: '"Fira Code", Menlo, "DejaVu Sans Mono", "Lucida Console", monospace',
       cursorBlink: true,
-      cursorStyle: 'block'
+      cursorStyle: 'block',
+      fontSize: this.props.terminalFontSize
     });
   }
 
@@ -48,7 +49,6 @@ export class XtermAdapter extends React.Component<IXtermAdapterProps, IXtermAdap
     const { terminalElementRef } = this.props;
     if (terminalElementRef?.current) {
       this.terminalElementRef = terminalElementRef;
-      this.terminalElement = terminalElementRef.current
       this.terminal.open(terminalElementRef.current);
       this.terminal.loadAddon(this.fitAddon);
       this.fitAddon.fit();
@@ -97,7 +97,6 @@ export class XtermAdapter extends React.Component<IXtermAdapterProps, IXtermAdap
     })
     // this.loadCommandHistory();
     this.setViewPortOpacity();
-    this.loadFontSize();
     this.terminal.focus();
     this.prompt();
     if (this.videoElementRef.current) {
@@ -173,21 +172,6 @@ export class XtermAdapter extends React.Component<IXtermAdapterProps, IXtermAdap
     // const terminal = document.getElementById('terminal') as HTMLDivElement;
   }
 
-  private loadFontSize(): void {
-    const fontSize = localStorage.getItem('terminalFontSize');
-    if (fontSize) {
-      this.currentFontSize = parseInt(fontSize);
-      this.props.updateFontSize(this.currentFontSize);
-      document.documentElement.style.setProperty('--terminal-font-size', `${this.currentFontSize}px`);
-      if (this.terminalElement) {
-
-        this.terminalElement.style.fontSize = `${this.currentFontSize}px`;
-      } else {
-        console.error('XtermAdapter - terminalElement is NULL');
-      }
-      this.terminal.options.fontSize = this.currentFontSize;
-    }
-  }
 
   public toggleVideo(): boolean {
     this.isShowVideo = !this.isShowVideo;
@@ -218,32 +202,6 @@ export class XtermAdapter extends React.Component<IXtermAdapterProps, IXtermAdap
     // this.promptLength = this.terminal.buffer.active.cursorX;
   }
 
-  public handleTouchStart: TouchEventHandler<HTMLDivElement> = (event: React.TouchEvent<HTMLDivElement>) => {
-    setTimeout(() => {
-      // this.terminalElement.focus();
-    }, 500)
-    if (event.touches.length === 2) {
-
-      // event.preventDefault();
-      this.lastTouchDistance = this.getDistanceBetweenTouches(event.touches);
-    }
-  }
-
-  public handleTouchMove: TouchEventHandler<HTMLDivElement> = (event: React.TouchEvent<HTMLDivElement>) => {
-    if (event.touches.length === 2) {
-      // event.preventDefault();
-      const currentDistance = this.getDistanceBetweenTouches(event.touches);
-      if (this.lastTouchDistance) {
-        const scaleFactor = currentDistance / this.lastTouchDistance;
-        this.currentFontSize *= scaleFactor;
-        // TODO: Figure out how to resize fonts now with REact.
-        document.documentElement.style.setProperty('--terminal-font-size', `${this.currentFontSize}px`);
-        this.lastTouchDistance = currentDistance;
-        this.terminal.options.fontSize = this.currentFontSize;
-        this.terminal.refresh(0, this.terminal.rows - 1); // Refresh the terminal display
-      }
-    }
-  }
 
   public getTerminalSize(): { width: number; height: number } | undefined {
     if (this.terminalElementRef.current) {
@@ -255,29 +213,6 @@ export class XtermAdapter extends React.Component<IXtermAdapterProps, IXtermAdap
     return undefined;
   }
 
-  public increaseFontSize() {
-    this.currentFontSize += 1;
-    this.terminal.options.fontSize = this.currentFontSize;
-    this.terminal.refresh(0, this.terminal.rows - 1);
-    localStorage.setItem('terminalFontSize', `${this.currentFontSize}`);
-  }
-
-  public handleTouchEnd: TouchEventHandler<HTMLDivElement> = () => {
-
-    localStorage.setItem('terminalFontSize', `${this.currentFontSize}`);
-    console.log('SET terminalFontSize', this.currentFontSize);
-    this.lastTouchDistance = null;
-  }
-
-  private getDistanceBetweenTouches(touches: React.TouchList): number {
-    const touch1 = touches[0];
-    const touch2 = touches[1];
-    return Math.sqrt(
-      Math.pow(touch2.pageX - touch1.pageX, 2) +
-      Math.pow(touch2.pageY - touch1.pageY, 2),
-    );
-  }
-
   render() {
     // Use state and refs in your render method
     return (
@@ -286,9 +221,6 @@ export class XtermAdapter extends React.Component<IXtermAdapterProps, IXtermAdap
           ref={this.terminalElementRef as React.RefObject<HTMLDivElement>}
           id={TerminalCssClasses.Terminal}
           className={TerminalCssClasses.Terminal}
-          onTouchStart={this.handleTouchStart}
-          onTouchMove={this.handleTouchMove}
-          onTouchEnd={this.handleTouchEnd}
         />
         <video
           ref={this.videoElementRef as React.RefObject<HTMLVideoElement>}
