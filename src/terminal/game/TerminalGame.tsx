@@ -2,7 +2,7 @@ import React from 'react';
 import { Zombie4 } from './Zombie4';
 import { Hero } from './Hero';
 import { CharacterActionComponent } from './CharacterActionComponent';
-import { ActionType } from './types/ActionTypes';
+import { ActionType, Action } from './types/ActionTypes';
 import { SpritePosition } from './types/Position';
 
 interface ITerminalGameProps {
@@ -39,6 +39,7 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
 
   private drawHero?: (position: SpritePosition) => void;
   private drawZombie4?: (position: SpritePosition) => void;
+  isInScrollMode: boolean = false;
 
   constructor(props: ITerminalGameProps) {
     super(props);
@@ -61,12 +62,12 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
     if (canvas) {
       const context = canvas.getContext('2d');
       if (context) {
-          this.hero = new Hero(
-            context, this.state.heroAction, this.state.heroPosition
-          );
-          this.zombie4 = new Zombie4(
-            context, this.state.zombieAction, this.state.zombie4Position
-          );
+        this.hero = new Hero(
+          context, this.state.heroAction, this.state.heroPosition
+        );
+        this.zombie4 = new Zombie4(
+          context, this.state.zombieAction, this.state.zombie4Position
+        );
         this.setupCanvas();
       }
     }
@@ -114,6 +115,64 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
     }
   }
 
+  // In TerminalGame.tsx or where you manage the game state
+  updateCharacterAndBackground() {
+    const canvasCenterX = this.props.canvasWidth / 2;
+    const characterReachThreshold = canvasCenterX; // Character stays in the middle
+
+    if (!this.hero) return;
+    // Get the current horizontal movement from the hero's currentAction state
+    const heroDx = this.hero.getCurrentAction().dx; // Assuming this.state.heroAction.dx exists
+
+    // Update character position as usual
+    const newHeroPositionX = this.state.heroPosition.leftX + heroDx;
+
+    // Check if the hero reaches the threshold
+
+    if (newHeroPositionX >= characterReachThreshold) {
+      this.isInScrollMode = true;
+      // Stop the hero's horizontal movement at the threshold
+      this.setState({ heroPosition: { ...this.state.heroPosition, leftX: characterReachThreshold } });
+
+      // Update the background position
+      this.updateBackgroundPosition(this.state.backgroundOffsetX + heroDx);
+    } else {
+      // Update the hero's position normally
+      this.setState({ heroPosition: { ...this.state.heroPosition, leftX: newHeroPositionX } });
+    }
+
+    // Update zombie positions relative to the backgroundOffsetX
+    // Assuming you have a method to update zombies
+    // this.updateZombiesPosition();
+  }
+
+  drawBackground(context: CanvasRenderingContext2D) {
+    context.globalAlpha = 0.6; // Set to desired transparency level (0 to 1)
+    // Assuming you have a backgroundImage and a backgroundOffsetX state
+    const pattern = context.createPattern(this.bgImage, 'repeat');
+    if (pattern) {
+      context.fillStyle = pattern;
+      context.save();
+      context.translate(-this.state.backgroundOffsetX % this.bgImage.width, 0);
+      // Draw the background here
+      context.fillRect(0, 0, this.props.canvasWidth, this.props.canvasHeight);
+      // context.translate(this.state.backgroundOffsetX, 0); // Reset translation
+      context.restore();
+    } else {
+      // Handle the null pattern case, perhaps by filling a solid color or logging an error
+      context.fillStyle = 'grey'; // Fallback color
+      context.fillRect(0, 0, this.props.canvasWidth, this.props.canvasHeight);
+    }
+    context.globalAlpha = 1; // Set to desired transparency level (0 to 1)
+  }
+  updateZombiesPosition() {
+    if (!this.zombie4) return;
+    // Assuming you store zombies in an array and each zombie has a position
+    // Adjust zombie position based on the backgroundOffsetX
+    const newZombiePosX = this.zombie4.position.leftX + this.state.backgroundOffsetX;
+    // Update the zombie's position state or directly pass it to the draw method
+    // this.zombie4.updatePositionAndAnimate(() => {}, this.props.canvasWidth);
+  }
   startAnimationLoop(context: CanvasRenderingContext2D) {
     const loop = (timestamp: number) => {
       if (!this.gameTime) {
@@ -122,20 +181,11 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
 
       this.gameTime = timestamp; // Update gameTime for the next frame
 
+      this.updateCharacterAndBackground();
+
       context.clearRect(0, 0, context.canvas.width, context.canvas.height);
 
-      context.globalAlpha = 0.6; // Set to desired transparency level (0 to 1)
-      const pattern = context.createPattern(this.bgImage, 'repeat');
-      if (pattern) {
-        context.fillStyle = pattern;
-        // Fill the entire canvas with the pattern
-        context.fillRect(
-          0,
-          0,
-          context.canvas.width,
-          context.canvas.height * 0.9
-        );
-      }
+      this.drawBackground(context);
 
       // Reset globalAlpha if other drawings should not be affected
       context.globalAlpha = 1.0;
@@ -187,6 +237,7 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
             onPositionChange={
               (newPosition) => this.setState({ heroPosition: newPosition })
             }
+            isInScrollMode={this.isInScrollMode}
           />
         }
         {this.zombie4 &&
@@ -199,6 +250,7 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
             onPositionChange={
               (newPosition) => this.setState({ zombie4Position: newPosition })
             }
+            isInScrollMode={this.isInScrollMode}
           />
         }
       </>

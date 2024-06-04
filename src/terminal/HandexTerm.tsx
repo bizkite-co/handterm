@@ -419,9 +419,9 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
 
   public render() {
     const { terminalSize } = this.state;
-    const canvasWidth = terminalSize ? `${terminalSize.width}px` : "800";
+    const canvasWidth = terminalSize ? terminalSize.width : 800;
     // canvas height does not need to match terminal height
-    const canvasHeight = "100";
+    const canvasHeight = 100;
 
     return (
       <>

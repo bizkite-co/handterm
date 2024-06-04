@@ -23,8 +23,8 @@ export class BaseCharacter extends React.Component<BaseCharacterProps, BaseChara
   protected velocity: Motion = { dx: 1, dy: 0 };
   protected spriteManager = new SpriteManager();
   private animationFrameId: number | null = null;
-  private position: SpritePosition;
-  public name: string; 
+  public position: SpritePosition;
+  public name: string;
 
   constructor(
     context: CanvasRenderingContext2D,
@@ -41,7 +41,7 @@ export class BaseCharacter extends React.Component<BaseCharacterProps, BaseChara
     this.actions = actions;
     this.loadActions(actions);
     this.name = name;
-    this.position = position; 
+    this.position = position;
   }
 
   public async loadSprite(actionKey: ActionType, animationData: SpriteAnimation) {
@@ -81,16 +81,21 @@ export class BaseCharacter extends React.Component<BaseCharacterProps, BaseChara
     return spriteFromSprites;
   }
 
-  public updatePositionAndAnimate(callback: (newPosition: SpritePosition) => void, canvasWidth: number) {
+  public updatePositionAndAnimate(callback: (newPosition: SpritePosition) => void, canvasWidth: number, isInScrollMode: boolean) {
     const animate = () => {
       const now = Date.now();
       const elapsed = now - this.lastFrameTime;
-      // Update position based on the current action's dx and dy
-      const currentAction = this.getCurrentAction();
-      this.position.leftX = this.position.leftX > canvasWidth 
-        ? 0 
-        : this.position.leftX + (currentAction.dx / 4);
-      this.position.topY += currentAction.dy;
+      if (!isInScrollMode) {
+        // Update position based on the current action's dx and dy
+        const currentAction = this.getCurrentAction();
+        this.position.leftX = this.position.leftX > canvasWidth
+          ? -30
+          : this.position.leftX + (currentAction.dx / 4);
+        this.position.topY += currentAction.dy;
+
+        // Inform the parent component of the position update
+        callback(this.position);
+      }
 
       if (elapsed > this.frameDelay) {
         const sprite = this.getSprite();
@@ -102,8 +107,6 @@ export class BaseCharacter extends React.Component<BaseCharacterProps, BaseChara
         this.lastFrameTime = now;
       }
 
-      // Inform the parent component of the position update
-      callback(this.position);
 
       // Draw the character at the new position with the current frameIndex
       this.draw(this.frameIndex, this.position);

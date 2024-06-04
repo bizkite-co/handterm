@@ -11,6 +11,7 @@ interface ICharacterActionComponentProps {
   name: string;
   canvasWidth: number;
   onPositionChange: (newPosition: SpritePosition) => void;
+  isInScrollMode: boolean;
 };
 
 export const CharacterActionComponent: React.FC<ICharacterActionComponentProps> = (
@@ -23,7 +24,7 @@ export const CharacterActionComponent: React.FC<ICharacterActionComponentProps> 
     props.baseCharacter.setCurrentActionType(props.currentActionType);
 
     // Start the animation loop and handle position updates
-    props.baseCharacter.updatePositionAndAnimate(props.onPositionChange, props.canvasWidth);
+    props.baseCharacter.updatePositionAndAnimate(props.onPositionChange, props.canvasWidth, props.isInScrollMode);
 
     // Specify how to clean up after this effect
     return () => {
