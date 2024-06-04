@@ -2,7 +2,7 @@ import React from 'react';
 import { Zombie4 } from './Zombie4';
 import { Hero } from './Hero';
 import { CharacterActionComponent } from './CharacterActionComponent';
-import { ActionType, Action } from './types/ActionTypes';
+import { ActionType } from './types/ActionTypes';
 import { SpritePosition } from './types/Position';
 
 interface ITerminalGameProps {
@@ -169,7 +169,7 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
     if (!this.zombie4) return;
     // Assuming you store zombies in an array and each zombie has a position
     // Adjust zombie position based on the backgroundOffsetX
-    const newZombiePosX = this.zombie4.position.leftX + this.state.backgroundOffsetX;
+    // const newZombiePosX = this.zombie4.position.leftX + this.state.backgroundOffsetX;
     // Update the zombie's position state or directly pass it to the draw method
     // this.zombie4.updatePositionAndAnimate(() => {}, this.props.canvasWidth);
   }
