@@ -33,22 +33,23 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
   private animationFrameIndex?: number;
   public context: CanvasRenderingContext2D | null = null;
   private bgImage = new Image();
+  private heroPositionX = this.props.canvasWidth * 0.4;
   // private lastLogTime: number = 0;
   // private nextIdleTime: number = 7000; // Next time to switch to Idle
   // private nextRunTime: number = 0; // Next time to switch back to Run
 
   private drawHero?: (position: SpritePosition) => void;
   private drawZombie4?: (position: SpritePosition) => void;
-  isInScrollMode: boolean = false;
+  isInScrollMode: boolean = true;
 
   constructor(props: ITerminalGameProps) {
     super(props);
     this.state = {
       heroAction: props.heroAction,
-      heroPosition: { leftX: 175, topY: 30 },
+      heroPosition: { leftX: this.heroPositionX, topY: 30 },
       heroReady: false,
       zombieAction: props.zombie4Action,
-      zombie4Position: { leftX: -70, topY: 0 },
+      zombie4Position: { leftX: -50, topY: 0 },
       zombie4Ready: false,
       context: null as CanvasRenderingContext2D | null,
       idleStartTime: null,
@@ -117,12 +118,12 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
 
   // In TerminalGame.tsx or where you manage the game state
   updateCharacterAndBackground() {
-    const canvasCenterX = this.props.canvasWidth / 2;
+    const canvasCenterX = this.heroPositionX;
     const characterReachThreshold = canvasCenterX; // Character stays in the middle
 
     if (!this.hero) return;
     // Get the current horizontal movement from the hero's currentAction state
-    const heroDx = this.hero.getCurrentAction().dx; // Assuming this.state.heroAction.dx exists
+    const heroDx = this.hero.getCurrentAction().dx / 4; // Assuming this.state.heroAction.dx exists
 
     // Update character position as usual
     const newHeroPositionX = this.state.heroPosition.leftX + heroDx;
@@ -136,6 +137,7 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
 
       // Update the background position
       this.updateBackgroundPosition(this.state.backgroundOffsetX + heroDx);
+      if(this.zombie4) this.zombie4.position.leftX -= heroDx;
     } else {
       // Update the hero's position normally
       this.setState({ heroPosition: { ...this.state.heroPosition, leftX: newHeroPositionX } });
