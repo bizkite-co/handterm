@@ -12,6 +12,7 @@ interface IXtermAdapterProps {
   terminalElement: HTMLElement | null;
   terminalElementRef: React.RefObject<HTMLElement>;
   onAddCharacter: (character: string) => void;
+  updateFontSize: (newFontSize: number) => void;
 }
 
 export class XtermAdapter extends React.Component<IXtermAdapterProps, IXtermAdapterState> {
@@ -176,12 +177,13 @@ export class XtermAdapter extends React.Component<IXtermAdapterProps, IXtermAdap
     const fontSize = localStorage.getItem('terminalFontSize');
     if (fontSize) {
       this.currentFontSize = parseInt(fontSize);
+      this.props.updateFontSize(this.currentFontSize);
       document.documentElement.style.setProperty('--terminal-font-size', `${this.currentFontSize}px`);
       if (this.terminalElement) {
 
         this.terminalElement.style.fontSize = `${this.currentFontSize}px`;
       } else {
-        console.error('XtermAdapter:211 - terminalElement is NULL');
+        console.error('XtermAdapter - terminalElement is NULL');
       }
       this.terminal.options.fontSize = this.currentFontSize;
     }

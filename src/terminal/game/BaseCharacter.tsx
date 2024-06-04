@@ -86,7 +86,6 @@ export class BaseCharacter extends React.Component<BaseCharacterProps, BaseChara
       const now = Date.now();
       const elapsed = now - this.lastFrameTime;
       if (!isInScrollMode || this.name !== "Hero") {
-        console.log("isInScrollMode", isInScrollMode, this.name);
         // Update position based on the current action's dx and dy
         const currentAction = this.getCurrentAction();
         this.position.leftX = this.position.leftX > canvasWidth

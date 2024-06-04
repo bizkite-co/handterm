@@ -34,7 +34,8 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
   public context: CanvasRenderingContext2D | null = null;
   private foregroundBuildings = new Image();
   private backgroundBuildings = new Image();
-  private heroPositionX = this.props.canvasWidth * 0.4;
+  private heroPositionX = this.props.canvasWidth * 0.2;
+
   // private lastLogTime: number = 0;
   // private nextIdleTime: number = 7000; // Next time to switch to Idle
   // private nextRunTime: number = 0; // Next time to switch back to Run
@@ -151,48 +152,51 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
   }
 
   drawBackground(context: CanvasRenderingContext2D) {
-    context.globalAlpha = 0.6; // Set to desired transparency level (0 to 1)
 
-    // Define the desired height of the foreground buildings
-    const foregroundBuildingScale = 0.6;
-    const backgroundBuildingsScale = 0.9;
-    const backgroundBuildingsHeight = this.props.canvasHeight * backgroundBuildingsScale;
-    const backgroundMotionScale = 0.6;
+    context.globalAlpha = 0.8; // Set to desired transparency level (0 to 1)
 
-    const foregroundBuildingHeight = this.props.canvasHeight * foregroundBuildingScale;
+    this.drawParallaxLayer(
+      context,
+      this.backgroundBuildings, // the image for the background layer
+      0.8, // scale for the background buildings
+      0.6 // rate of movement relative to the foreground
+    );
 
-    // Calculate the scaled width that maintains the aspect ratio
-    const scaledWidth = this.foregroundBuildings.width * foregroundBuildingScale;
+    // Draw foreground buildings on top of the background buildings
+    this.drawParallaxLayer(
+      context,
+      this.foregroundBuildings, // the image for the foreground layer
+      0.6, // scale for the foreground buildings
+      1 // rate of movement (1 to move at the same rate as the scrolling offset)
+    );
+    context.globalAlpha = 1; // Set to desired transparency level (0 to 1)
+  }
+
+  drawParallaxLayer(context: CanvasRenderingContext2D, image: HTMLImageElement, scale: number, movementRate: number) {
+    const layerHeight = this.props.canvasHeight * scale;
+    const scaledWidth = image.width * scale;
 
     // Calculate how many times the image should be drawn to cover the canvas width
     const numImages = Math.ceil(this.props.canvasWidth / scaledWidth) + 1;
 
     // Calculate the offset for when the image scrolls
-    const offsetX = -this.state.backgroundOffsetX % scaledWidth;
+    const offsetX = -(this.state.backgroundOffsetX * movementRate) % scaledWidth;
 
     context.save(); // Save the current context state
+    context.globalAlpha = scale === 0.8 ? 0.5 : 0.6; // Adjust transparency for effect if desired
 
     // Draw the scaled image multiple times to cover the canvas width
     for (let i = 0; i < numImages; i++) {
       context.drawImage(
-        this.backgroundBuildings,
-        0,0,
-        this.backgroundBuildings.width, this.backgroundBuildings.height,
-        offsetX * backgroundMotionScale + (i * scaledWidth),
-        this.props.canvasHeight - backgroundBuildingsHeight,
-        scaledWidth, this.props.canvasHeight
-      )
-      context.drawImage(
-        this.foregroundBuildings,
+        image,
         0, 0, // source X, Y
-        this.foregroundBuildings.width, this.foregroundBuildings.height, // source width and height
-        offsetX + (i * scaledWidth), this.props.canvasHeight - foregroundBuildingHeight, // destination X, Y
-        scaledWidth, foregroundBuildingHeight // destination width and height
+        image.width, image.height, // source width and height
+        offsetX + (i * scaledWidth), this.props.canvasHeight - layerHeight, // destination X, Y
+        scaledWidth, layerHeight // destination width and height
       );
     }
 
     context.restore(); // Restore the context state
-    context.globalAlpha = 1; // Set to desired transparency level (0 to 1)
   }
 
   updateZombiesPosition() {

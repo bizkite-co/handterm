@@ -26,6 +26,7 @@ export interface IHandexTermState {
   heroAction: ActionType;
   zombie4Action: ActionType;
   terminalSize: { width: number; height: number } | undefined;
+  terminalFontSize: number ;
 }
 
 
@@ -40,9 +41,12 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
   private wpmCalculator: IWPMCalculator = new WPMCalculator();
   private static readonly commandHistoryLimit = 100;
   private isDebug: boolean = false;
-  canvasHeight: string = '100px';
+  canvasHeight: number = 100;
   private heroRunTimeoutId: number | null = null;
 
+  updateTerminalFontSize(newSize: number) {
+    this.setState({ terminalFontSize: newSize });
+  }
 
   constructor(IHandexTermProps: IHandexTermProps) {
     super(IHandexTermProps);
@@ -54,7 +58,8 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
       commandLine: '',
       heroAction: 'Idle',
       zombie4Action: 'Walk',
-      terminalSize: undefined
+      terminalSize: undefined,
+      terminalFontSize: 17
     }
     this.loadDebugValue();
   }
@@ -421,7 +426,6 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
     const { terminalSize } = this.state;
     const canvasWidth = terminalSize ? terminalSize.width : 800;
     // canvas height does not need to match terminal height
-    const canvasHeight = 100;
 
     return (
       <>
@@ -433,7 +437,7 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
         />
         <TerminalGame
           ref={this.terminalGameRef}
-          canvasHeight={canvasHeight}
+          canvasHeight={this.canvasHeight}
           canvasWidth={canvasWidth} // Use the width from terminalSize if available
           isInPhraseMode={this.state.isInPhraseMode}
           heroAction={this.state.heroAction}
@@ -453,6 +457,7 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
           terminalElement={this.terminalElementRef.current}
           terminalElementRef={this.terminalElementRef}
           onAddCharacter={this.handleCharacter.bind(this)}
+          updateFontSize={this.updateTerminalFontSize.bind(this)}
         />
       </>
     )
