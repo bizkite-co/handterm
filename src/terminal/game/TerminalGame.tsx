@@ -153,10 +153,11 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
     if (pattern) {
       context.fillStyle = pattern;
       context.save();
-      context.translate(-this.state.backgroundOffsetX % this.bgImage.width, 0);
-      // Draw the background here
-      context.fillRect(0, 0, this.props.canvasWidth, this.props.canvasHeight);
-      // context.translate(this.state.backgroundOffsetX, 0); // Reset translation
+      const offsetX = -this.state.backgroundOffsetX % this.bgImage.width;
+      context.translate(offsetX, 0);
+      // Draw the pattern twice if near the edge to cover the entire canvas plus extra space
+      context.fillRect(offsetX, 0, this.props.canvasWidth - offsetX, this.props.canvasHeight);
+      context.fillRect(this.bgImage.width + offsetX, 0, this.props.canvasWidth - offsetX, this.props.canvasHeight);
       context.restore();
     } else {
       // Handle the null pattern case, perhaps by filling a solid color or logging an error
