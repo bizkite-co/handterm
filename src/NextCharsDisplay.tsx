@@ -1,8 +1,8 @@
-import {  spaceDisplayChar, CharTime } from "./types/Types.js";
+import { spaceDisplayChar, CharTime } from "./types/Types.js";
 import { createElement } from "./utils/dom.js";
 import { TerminalCssClasses } from "./terminal/TerminalTypes.js";
 
-import React, { createRef } from 'react';
+import React, { createRef, useRef } from 'react';
 import { createRoot, Root } from 'react-dom/client'; // Import createRoot
 import Timer from './Timer.js'; // Import the React component
 import ErrorDisplay from "./ErrorDisplay";
@@ -28,9 +28,8 @@ interface NextCharsDisplayState {
 
 export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, NextCharsDisplayState> {
 
-
-    private _nextChars: HTMLElement;
-    private _nextCharsRate: HTMLDivElement;
+    private _nextCharsRef: React.RefObject<any>;
+    private _nextCharsRateRef: React.RefObject<any>;
 
     private _chordImageHolder: HTMLElement;
     private _svgCharacter: HTMLElement;
@@ -62,8 +61,8 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
         super(props);
         this._errorDisplayRef = createRef();
         this.voiceSynth = window.speechSynthesis as SpeechSynthesis;
-        this._nextChars = document.getElementById(TerminalCssClasses.NextChars) as HTMLElement;
-        this._nextCharsRate = document.getElementById(TerminalCssClasses.NextCharsRate) as HTMLDivElement;
+        this._nextCharsRef = React.createRef();
+        this._nextCharsRateRef = React.createRef();
         this._wpm = createElement('div', TerminalCssClasses.WPM) as HTMLSpanElement;
         this._charTimes = createElement('div', TerminalCssClasses.CharTimes);
         this._chordImageHolder = document.querySelector(`#${TerminalCssClasses.ChordImageHolder}`) as HTMLElement;
@@ -167,7 +166,7 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
         if (this._timerRef.current) {
             this._timerRef.current.reset();
         }
-        if (this._nextChars) this._nextChars.innerText = this.state.phrase.value;
+        if (this._nextCharsRef.current) this._nextCharsRef.current.innerText = this.state.phrase.value;
         if (this._testArea) {
             this._testArea.style.border = "2px solid lightgray";
             this._testArea.disabled = false;
@@ -176,24 +175,28 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
         }
     }
 
-    set wpm(wpm: HTMLSpanElement) {
-        this._wpm = wpm;
-    }
-    get phrase(): Phrase {
-        return this.state.phrase;
-    }
-    public get nextChars(): HTMLElement {
-        return this._nextChars;
-    }
-    public get nextCharsRate(): HTMLElement {
-        return this._nextCharsRate;
-    }
-
     reset(): void {
         this.state.phrase = new Phrase('');
         this.setNext('');
-        this._nextChars.hidden = true;
+        if(this._nextCharsRef) this._nextCharsRef.current.hidden = true;
     }
+
+    public get nextChars(): HTMLElement {
+        return this._nextCharsRef.current;
+    }
+
+    set wpm(wpm: HTMLSpanElement) {
+        this._wpm = wpm;
+    }
+
+    get phrase(): Phrase {
+        return this.state.phrase;
+    }
+
+    public get nextCharsRate(): HTMLElement {
+        return this._nextCharsRateRef.current;
+    }
+
 
     set phrase(phrase: HTMLInputElement) {
         this.state.phrase = new Phrase(phrase.value);
@@ -423,7 +426,7 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
                 {/* ...other components */}
                 <ErrorDisplay
                     isVisible={this.state.mismatchedIsVisible}
-                    ref={this._errorDisplayRef}
+                    ref={this._errorDisplayRef.current}
                     svgCharacter={this._svgCharacter}
                     chordImageHolder={this._chordImageHolder}
                     mismatchedChar={this.state.mismatchedChar}
@@ -432,6 +435,8 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
                 <Timer
                     ref={this._timerRef}
                 />
+                <div id={TerminalCssClasses.NextChars} ref={this._nextCharsRef}></div>
+                <div id={TerminalCssClasses.NextCharsRate} ref={this._nextCharsRateRef}></div>
                 <pre id={TerminalCssClasses.NextChars}>
                     {this.state.nextChars}
                 </pre>
