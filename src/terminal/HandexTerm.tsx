@@ -1,5 +1,5 @@
 // HandexTerm.ts
-import { LogKeys, TimeHTML, CharDuration, CharWPM } from './TerminalTypes';
+import { LogKeys, TimeHTML, CharDuration, CharWPM, TerminalCssClasses } from './TerminalTypes';
 import { IWPMCalculator, WPMCalculator } from './WPMCalculator';
 import { IPersistence, LocalStoragePersistence } from './Persistence';
 import { createHTMLElementFromHTML } from '../utils/dom';
@@ -67,7 +67,7 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
     this.loadFontSize();
   }
 
-  componentWillUnmount(): void {
+  componentWillUnmount (): void {
     if (this.heroRunTimeoutId) {
       clearTimeout(this.heroRunTimeoutId);
     }
@@ -156,7 +156,6 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
     const command = args[0]; // The first element is the command
 
     // Now you can handle the command and options
-
 
     // Based on the command, you can switch and call different functions
     switch (command) {
@@ -291,8 +290,7 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
     this._commandHistory = [];
   }
 
-
-  public handleCharacter(character: string) {
+  public handleCharacter = (character: string) => {
     const charDuration: CharDuration = this.wpmCalculator.addKeystroke(character);
     const wpm = this.wpmCalculator.getWPM(charDuration);
     if (this.isDebug) console.log('wpm', wpm);
@@ -301,12 +299,10 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
       this.setState({ isInPhraseMode: false, commandLine: '' });
       this.adapterRef.current?.terminalReset();
       this.adapterRef.current?.prompt();
-
     }
 
     if (character.charCodeAt(0) === 4) { // Ctrl+D
       console.log('Ctrl+D pressed');
-
       // this.increaseFontSize();
     }
 
@@ -475,7 +471,6 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
   }
 
   public handleTouchEnd: TouchEventHandler<HTMLDivElement> = () => {
-
     localStorage.setItem('terminalFontSize', `${this.currentFontSize}`);
     console.log('SET terminalFontSize', this.currentFontSize);
     this.lastTouchDistance = null;
@@ -487,12 +482,28 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
     if (div) {
       div.addEventListener('touchmove', this.handleTouchMove, { passive: false });
     }
+    const output = window.document.getElementById(TerminalCssClasses.Output);
+    if (output) {
+      output.addEventListener('touchmove', this.handleTouchMove, { passive: false });
+    }
+    const terminal = document.getElementById(TerminalCssClasses.Terminal);
+    if (terminal) {
+      terminal.addEventListener('touchmove', this.handleTouchMove, { passive: false });
+    }
   }
 
   removeTouchListeners() {
     const div = this.terminalElementRef.current;
     if (div) {
       div.removeEventListener('touchmove', this.handleTouchMove);
+    }
+    const output = window.document.getElementById(TerminalCssClasses.Output);
+    if (output) {
+      output.removeEventListener('touchmove', this.handleTouchMove);
+    }
+    const terminal = document.getElementById(TerminalCssClasses.Terminal);
+    if (terminal) {
+      terminal.removeEventListener('touchmove', this.handleTouchMove);
     }
   }
 
@@ -527,7 +538,6 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
           onTouchStart={this.handleTouchStart}
           onTouchEnd={this.handleTouchEnd}
         />
-
         <NextCharsDisplay
           ref={this.nextCharsDisplayRef}
           onTimerStatusChange={this.handleTimerStatusChange}
@@ -541,7 +551,7 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
           terminalElement={this.terminalElementRef.current}
           terminalElementRef={this.terminalElementRef}
           terminalFontSize={this.currentFontSize}
-          onAddCharacter={this.handleCharacter.bind(this)}
+          onAddCharacter={this.handleCharacter}
           onTouchStart={this.handleTouchStart}
           onTouchEnd={this.handleTouchEnd}
         />

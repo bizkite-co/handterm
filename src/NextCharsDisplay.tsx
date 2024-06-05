@@ -2,7 +2,7 @@ import { spaceDisplayChar, CharTime } from "./types/Types.js";
 import { createElement } from "./utils/dom.js";
 import { TerminalCssClasses } from "./terminal/TerminalTypes.js";
 
-import React, { createRef, useRef } from 'react';
+import React, { createRef } from 'react';
 import { createRoot, Root } from 'react-dom/client'; // Import createRoot
 import Timer from './Timer.js'; // Import the React component
 import ErrorDisplay from "./ErrorDisplay";
@@ -28,10 +28,10 @@ interface NextCharsDisplayState {
 
 export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, NextCharsDisplayState> {
 
-    private _nextCharsRef: React.RefObject<any>;
-    private _nextCharsRateRef: React.RefObject<any>;
+    private _nextCharsRef: React.RefObject<HTMLDivElement>;
+    private _nextCharsRateRef: React.RefObject<HTMLDivElement>;
 
-    private _chordImageHolder: HTMLElement;
+    private _chordImageHolderRef: React.RefObject<HTMLDivElement>;
     private _svgCharacter: HTMLElement;
     private _testArea: HTMLTextAreaElement;
     private _timerRoot: HTMLElement | null = null;
@@ -40,7 +40,7 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
     private voiceSynth: SpeechSynthesis;
     private _charTimeArray: CharTime[] = [];
     private _charTimes: HTMLElement;
-    private _wpm: HTMLSpanElement;
+    private _wpmRef: React.RefObject<any>;
     private _centiSecond: number = 0;
     public isTestMode: boolean;
 
@@ -59,13 +59,13 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
 
     constructor(props: NextCharsDisplayProps) {
         super(props);
-        this._errorDisplayRef = createRef();
+        this._errorDisplayRef = createRef<HTMLDivElement>();
         this.voiceSynth = window.speechSynthesis as SpeechSynthesis;
-        this._nextCharsRef = React.createRef();
-        this._nextCharsRateRef = React.createRef();
-        this._wpm = createElement('div', TerminalCssClasses.WPM) as HTMLSpanElement;
+        this._nextCharsRef = React.createRef<HTMLDivElement>();
+        this._nextCharsRateRef = React.createRef<HTMLDivElement>();
+        this._wpmRef = React.createRef();
         this._charTimes = createElement('div', TerminalCssClasses.CharTimes);
-        this._chordImageHolder = document.querySelector(`#${TerminalCssClasses.ChordImageHolder}`) as HTMLElement;
+        this._chordImageHolderRef = React.createRef<HTMLDivElement>();
         this._svgCharacter = createElement('img', TerminalCssClasses.SvgCharacter);
         this._testArea = (document.getElementById(TerminalCssClasses.TestArea) as HTMLTextAreaElement);
         this.isTestMode = localStorage.getItem('testMode') == 'true';
@@ -131,7 +131,12 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
 
     handleSuccess = () => {
         // Call hideError on the ErrorDisplay ref
-        this._errorDisplayRef.current.hideError();
+        if(this._errorDisplayRef.current){
+            this._errorDisplayRef.current.hideError();
+        }
+        else{
+            console.error("ErrorDisplay ref not found");
+        }
         // TODO: Do we need to pass the WPM back? If so, remove this hardcoded abomination.
         this.props.onPhraseSuccess(this.state.phrase.value, 35);
     };
@@ -178,22 +183,22 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
     reset(): void {
         this.state.phrase = new Phrase('');
         this.setNext('');
-        if(this._nextCharsRef) this._nextCharsRef.current.hidden = true;
+        if(this._nextCharsRef?.current) this._nextCharsRef.current.hidden = true;
     }
 
-    public get nextChars(): HTMLElement {
-        return this._nextCharsRef.current;
+    public get nextChars(): HTMLElement | null {
+        return this._nextCharsRef?.current;
     }
 
     set wpm(wpm: HTMLSpanElement) {
-        this._wpm = wpm;
+        if(this._wpmRef.current)this._wpmRef.current.innerText = wpm;
     }
 
     get phrase(): Phrase {
         return this.state.phrase;
     }
 
-    public get nextCharsRate(): HTMLElement {
+    public get nextCharsRate(): HTMLElement | null {
         return this._nextCharsRateRef.current;
     }
 
@@ -246,7 +251,7 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
 
         if (nextChordHTML) {
             nextChordHTML.classList.add("next");
-            if (this._chordImageHolder) this._chordImageHolder.replaceChildren(nextChordHTML);
+            if (this._chordImageHolderRef.current) this._chordImageHolderRef.current.replaceChildren(nextChordHTML);
         }
 
         // Set the next character in the SVG element
@@ -261,7 +266,7 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
         if (this._svgCharacter && !this.isTestMode) {
             this._svgCharacter.hidden = false;
         }
-        this._wpm.innerText = this.getWpm();
+        if(this._wpmRef.current) this._wpmRef.current.innerText = this.getWpm();
         return nextChordHTML;
     };
 
@@ -291,7 +296,7 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
         if (stringBeingTested.length === 0) {
             // stop timer
             if (this._testArea) this._testArea.style.border = "";
-            const chordImageHolderChild = this._chordImageHolder?.firstChild as HTMLImageElement;
+            const chordImageHolderChild = this._chordImageHolderRef.current?.firstChild as HTMLImageElement;
             if (chordImageHolderChild) chordImageHolderChild.hidden = true;
             this.cancelTimer();
             return;
@@ -426,9 +431,9 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
                 {/* ...other components */}
                 <ErrorDisplay
                     isVisible={this.state.mismatchedIsVisible}
-                    ref={this._errorDisplayRef.current}
+                    ref={this._errorDisplayRef}
                     svgCharacter={this._svgCharacter}
-                    chordImageHolder={this._chordImageHolder}
+                    chordImageHolder={this._chordImageHolderRef.current}
                     mismatchedChar={this.state.mismatchedChar}
                     mismatchedCharCode={this.state.mismatchedCharCode}
                 />
@@ -437,6 +442,7 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
                 />
                 <div id={TerminalCssClasses.NextChars} ref={this._nextCharsRef}></div>
                 <div id={TerminalCssClasses.NextCharsRate} ref={this._nextCharsRateRef}></div>
+                <span id={TerminalCssClasses.WPM} ref={this._wpmRef}></span>
                 <pre id={TerminalCssClasses.NextChars}>
                     {this.state.nextChars}
                 </pre>

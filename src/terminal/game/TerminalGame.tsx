@@ -1,7 +1,7 @@
 import React, { TouchEventHandler } from 'react';
 import { Zombie4 } from './Zombie4';
 import { Hero } from './Hero';
-import { CharacterActionComponent } from './CharacterActionComponent';
+import { CharacterActionFC } from './CharacterActionFC';
 import { ActionType } from './types/ActionTypes';
 import { SpritePosition } from './types/Position';
 
@@ -302,7 +302,7 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
           height={this.props.canvasHeight}>
         </canvas>
         {this.hero &&
-          <CharacterActionComponent
+          <CharacterActionFC
             currentActionType={this.props.heroAction}
             name="hero"
             canvasWidth={this.props.canvasWidth}
@@ -315,7 +315,7 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
           />
         }
         {this.zombie4 &&
-          <CharacterActionComponent
+          <CharacterActionFC
             currentActionType={this.props.zombie4Action}
             name="zombie4"
             canvasWidth={this.props.canvasWidth}

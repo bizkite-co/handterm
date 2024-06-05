@@ -90,7 +90,6 @@ export class XtermAdapter extends React.Component<IXtermAdapterProps, IXtermAdap
       console.error('terminalElementRef.current is NULL');
     }
     this.terminal.onData(this.onDataHandler.bind(this));
-    // this.terminal.onKey(this.onKeyHandler.bind(this));
     this.terminal.onCursorMove(() => {
       // console.log('Cursor moved', this.terminal.buffer.active.cursorX, this.terminal.buffer.active.cursorY);
     })

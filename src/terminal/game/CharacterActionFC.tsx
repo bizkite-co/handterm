@@ -14,7 +14,7 @@ interface ICharacterActionComponentProps {
   isInScrollMode: boolean;
 };
 
-export const CharacterActionComponent: React.FC<ICharacterActionComponentProps> = (
+export const CharacterActionFC: React.FC<ICharacterActionComponentProps> = (
   props: ICharacterActionComponentProps
 ) => {
   // Start or restart the animation when the action type changes
