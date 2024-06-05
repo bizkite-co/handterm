@@ -324,6 +324,7 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
         return;
       }
       this.setState({ commandLine: command });
+      this.setHeroRunAction();
     } else {
       // For other input, just return it to the terminal.
       // this.handexTerm.handleCharacter(character);
@@ -374,6 +375,7 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
   handlePhraseSuccess(phrase: string, wpm: number) {
     console.log('XtermAdapter onPhraseSuccess', phrase, wpm);
     this.setState(prevState => ({ outputElements: [...prevState.outputElements, wpm.toString() + ":" + phrase] }));
+    this.setZombie4Action('Die');
     this.adapterRef.current?.prompt();
   }
 

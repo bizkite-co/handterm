@@ -209,6 +209,28 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
 
     context.restore(); // Restore the context state
   }
+  checkProximityAndSetAction() {
+    // Constants to define "near"
+    const ATTACK_THRESHOLD = 100; // pixels or appropriate unit for your game
+
+    if (!this.hero || !this.zombie4) return;
+
+    // Calculate the distance between the hero and zombie4
+    const distance = this.state.heroPosition.leftX - this.state.zombie4Position.leftX;
+
+    // If zombie4 is near the Hero, set its current action to Attack
+    if (0 < distance && distance < ATTACK_THRESHOLD) {
+
+      // Assuming zombie4 has a method to update its action
+      this.zombie4.setCurrentActionType('Attack'); // Replace 'Attack' with actual ActionType for attacking
+    } else {
+      // Otherwise, set it back to whatever action it should be doing when not attacking
+      this.zombie4.setCurrentActionType('Walk'); // Replace 'Walk' with actual ActionType for walking
+    }
+
+    // Update the state or force a re-render if necessary, depending on how your animation loop is set up
+    // this.setState({ ... }); or this.forceUpdate();
+  }
 
   updateZombiesPosition() {
     if (!this.zombie4) return;
@@ -244,6 +266,7 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
 
       // Save the request ID to be able to cancel it
       this.animationFrameIndex = requestAnimationFrame(loop);
+      this.checkProximityAndSetAction();
     };
 
     // Start the animation loop
