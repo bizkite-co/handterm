@@ -6,7 +6,6 @@ export interface OutputProps {
     elements: React.ReactNode[];
     onTouchStart: TouchEventHandler<HTMLDivElement>;
     onTouchEnd: TouchEventHandler<HTMLDivElement>;
-    onTouchMove: TouchEventHandler<HTMLDivElement>;
 }
 
 export const Output: React.FC<OutputProps> = ({ elements, ...props }) => {
@@ -15,7 +14,6 @@ export const Output: React.FC<OutputProps> = ({ elements, ...props }) => {
             id={TerminalCssClasses.Output}
             className={TerminalCssClasses.Output}
             onTouchStart={props.onTouchStart}
-            onTouchMove={props.onTouchMove}
             onTouchEnd={props.onTouchEnd}
         >
             {elements.map((element, index) => {

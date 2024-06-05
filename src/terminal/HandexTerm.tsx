@@ -71,6 +71,7 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
     if (this.heroRunTimeoutId) {
       clearTimeout(this.heroRunTimeoutId);
     }
+    this.removeTouchListeners();
   }
 
   componentDidMount(): void {
@@ -81,6 +82,7 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
         console.log("didMount terminalSize", size);
       }
     }
+    this.addTouchListeners();
   }
 
   public handleCommand(command: string): string {
@@ -96,6 +98,9 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
       this.clearCommandHistory();
       this.adapterRef.current?.prompt();
       return '';
+    }
+    if(command === 'kill') {
+      this.setZombie4Action('Die');
     }
     if (command === 'play') {
       status = 200;
@@ -367,15 +372,16 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
     }
   }
 
-  setNewPhrase(phrase: string) {
+  setNewPhrase = (phrase: string) => {
     // Write phrase to output.
     this.setState(prevState => ({ outputElements: [...prevState.outputElements, phrase] }));
   }
 
-  handlePhraseSuccess(phrase: string, wpm: number) {
+  handlePhraseSuccess = (phrase: string, wpm: number) => {
     console.log('XtermAdapter onPhraseSuccess', phrase, wpm);
     this.setState(prevState => ({ outputElements: [...prevState.outputElements, wpm.toString() + ":" + phrase] }));
     this.setZombie4Action('Die');
+    console.log('XtermAdapter onPhraseSuccess, setZombie4Action Die', phrase, wpm);
     this.adapterRef.current?.prompt();
   }
 
@@ -399,6 +405,7 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
   setHeroAction = (newAction: ActionType) => {
     this.setState({ heroAction: newAction });
   }
+
   setZombie4Action = (newAction: ActionType) => {
     this.setState({ zombie4Action: newAction });
   }
@@ -439,17 +446,18 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
     if (event.touches.length === 2) {
 
       // event.preventDefault();
-      this.lastTouchDistance = this.getDistanceBetweenTouches(event.touches);
+      this.lastTouchDistance = this.getDistanceBetweenTouches(event.touches as unknown as TouchList);
     }
   }
 
-  public handleTouchMove: TouchEventHandler<HTMLDivElement> = (event: React.TouchEvent<HTMLDivElement>) => {
+  public handleTouchMove = (event: TouchEvent) => {
     if (event.touches.length === 2) {
-      // event.preventDefault();
+      event.preventDefault();
       const currentDistance = this.getDistanceBetweenTouches(event.touches);
       if (this.lastTouchDistance) {
         const scaleFactor = currentDistance / this.lastTouchDistance;
         this.currentFontSize *= scaleFactor;
+        console.log('currentFontSize', this.currentFontSize);
         // TODO: Figure out how to resize fonts now with REact.
         document.documentElement.style.setProperty('--terminal-font-size', `${this.currentFontSize}pt`);
         this.lastTouchDistance = currentDistance;
@@ -473,7 +481,22 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
     this.lastTouchDistance = null;
   }
 
-  private getDistanceBetweenTouches(touches: React.TouchList): number {
+  addTouchListeners() {
+    // Assuming 'terminalElementRef' points to the div you want to attach the event
+    const div = this.terminalElementRef.current;
+    if (div) {
+      div.addEventListener('touchmove', this.handleTouchMove, { passive: false });
+    }
+  }
+
+  removeTouchListeners() {
+    const div = this.terminalElementRef.current;
+    if (div) {
+      div.removeEventListener('touchmove', this.handleTouchMove);
+    }
+  }
+
+  private getDistanceBetweenTouches(touches: TouchList): number {
     const touch1 = touches[0];
     const touch2 = touches[1];
     return Math.sqrt(
@@ -493,7 +516,6 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
           elements={this.state.outputElements}
           onTouchStart={this.handleTouchStart}
           onTouchEnd={this.handleTouchEnd}
-          onTouchMove={this.handleTouchMove}
         />
         <TerminalGame
           ref={this.terminalGameRef}
@@ -502,7 +524,6 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
           isInPhraseMode={this.state.isInPhraseMode}
           heroAction={this.state.heroAction}
           zombie4Action={this.state.zombie4Action}
-          onTouchMove={this.handleTouchMove}
           onTouchStart={this.handleTouchStart}
           onTouchEnd={this.handleTouchEnd}
         />
@@ -522,7 +543,6 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
           terminalFontSize={this.currentFontSize}
           onAddCharacter={this.handleCharacter.bind(this)}
           onTouchStart={this.handleTouchStart}
-          onTouchMove={this.handleTouchMove}
           onTouchEnd={this.handleTouchEnd}
         />
       </>

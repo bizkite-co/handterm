@@ -14,7 +14,6 @@ interface IXtermAdapterProps {
   onAddCharacter: (character: string) => void;
   onTouchStart: TouchEventHandler<HTMLDivElement>;
   onTouchEnd: TouchEventHandler<HTMLDivElement>;
-  onTouchMove: TouchEventHandler<HTMLDivElement>;
   terminalFontSize: number;
 }
 

@@ -133,6 +133,8 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
     handleSuccess = () => {
         // Call hideError on the ErrorDisplay ref
         this._errorDisplayRef.current.hideError();
+        // TODO: Do we need to pass the WPM back? If so, remove this hardcoded abomination.
+        this.props.onPhraseSuccess(this.state.phrase.value, 35);
     };
 
     mountTimer() {
@@ -347,6 +349,9 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
                     `charTimerSession_${(new Date).toISOString()}`,
                     JSON.stringify(this._charTimeArray)
                 );
+            // TODO: I could probably move this whole if code block into this function.
+            this.handleSuccess();
+
             // this._timer.success();
             return;
         }

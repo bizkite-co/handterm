@@ -13,7 +13,6 @@ interface ITerminalGameProps {
   zombie4Action: ActionType
   onTouchStart: TouchEventHandler<HTMLDivElement>;
   onTouchEnd: TouchEventHandler<HTMLDivElement>;
-  onTouchMove: TouchEventHandler<HTMLDivElement>;
 }
 
 interface ITerminalGameState {
@@ -284,6 +283,13 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
       this.animationFrameIndex = undefined;
       console.log("stopAnimationLoop");
     }
+  }
+
+  handleHeroPositionChange = (newPosition: SpritePosition) => {
+    this.setState({ heroPosition: newPosition });
+  };
+  handleZombie4PositionChange = (newPosition: SpritePosition) => {
+    this.setState({ zombie4Position: newPosition });
   }
 
   // Additional methods for calculating WPM, updating the progress bar, etc.
