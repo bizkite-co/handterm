@@ -176,18 +176,24 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
     this.drawParallaxLayer(
       context,
       this.foregroundBuildings, // the image for the foreground layer
-      0.6, // scale for the foreground buildings
+      0.5, // scale for the foreground buildings
       1 // rate of movement (1 to move at the same rate as the scrolling offset)
     );
     context.globalAlpha = 1; // Set to desired transparency level (0 to 1)
   }
 
   drawParallaxLayer(context: CanvasRenderingContext2D, image: HTMLImageElement, scale: number, movementRate: number) {
+    if(image.width === 0) {
+      console.error("image.width === 0", image.src);
+    }
+
     const layerHeight = this.props.canvasHeight * scale;
-    const scaledWidth = image.width * scale;
+    const scaledWidth = Math.max(1, image.width * scale);
+
 
     // Calculate how many times the image should be drawn to cover the canvas width
     const numImages = Math.ceil(this.props.canvasWidth / scaledWidth) + 1;
+
 
     // Calculate the offset for when the image scrolls
     const offsetX = -(this.state.backgroundOffsetX * movementRate) % scaledWidth;
