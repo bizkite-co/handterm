@@ -67,7 +67,7 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
     this.loadFontSize();
   }
 
-  componentWillUnmount (): void {
+  componentWillUnmount(): void {
     if (this.heroRunTimeoutId) {
       clearTimeout(this.heroRunTimeoutId);
     }
@@ -82,6 +82,8 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
         console.log("didMount terminalSize", size);
       }
     }
+    window.scrollTo(0, document.body.scrollHeight);
+
     this.addTouchListeners();
   }
 
@@ -99,8 +101,10 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
       this.adapterRef.current?.prompt();
       return '';
     }
-    if(command === 'kill') {
-      this.setZombie4Action('Die');
+    if (command === 'kill') {
+      if(!this.terminalGameRef.current) return '';
+      this.terminalGameRef.current.setZombie4Action('Die');
+      console.log("Set zombie4 action to die");
     }
     if (command === 'play') {
       status = 200;
@@ -236,6 +240,7 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
     const commandTime = new Date();
     const timeCode = this.createTimeCode(commandTime).join(':');
     let commandText = this.createCommandRecord(command, commandTime);
+    // TODO: Render this with JSX instead.
     const commandElement = createHTMLElementFromHTML(commandText);
     let commandResponseElement = document.createElement('div');
     commandResponseElement.dataset.status = status.toString();
@@ -312,7 +317,7 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
       let command = this.adapterRef.current?.getCurrentCommand() ?? '';
       this.terminalReset();
       this.handleCommand(command);
-      // TODO: A bunch of phrase command stuff should be omoved from NextCharsDisplay to here, such as phrase generation.
+      // TODO: A bunch of phrase command stuff should be moved from NextCharsDisplay to here, such as phrase generation.
     } else if (this.state.isInPhraseMode) {
       // # IN PHRASE MODE
       // this.handexTerm.handleCharacter(character);
@@ -522,7 +527,7 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
     // canvas height does not need to match terminal height
 
     return (
-      <>
+      <div className="terminal-container">
         <Output
           elements={this.state.outputElements}
           onTouchStart={this.handleTouchStart}
@@ -555,7 +560,7 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
           onTouchStart={this.handleTouchStart}
           onTouchEnd={this.handleTouchEnd}
         />
-      </>
+      </div>
     )
   }
 }

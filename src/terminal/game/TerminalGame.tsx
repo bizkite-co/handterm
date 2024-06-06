@@ -237,14 +237,11 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
     // this.setState({ ... }); or this.forceUpdate();
   }
 
-  updateZombiesPosition() {
-    if (!this.zombie4) return;
-    // Assuming you store zombies in an array and each zombie has a position
-    // Adjust zombie position based on the backgroundOffsetX
-    // const newZombiePosX = this.zombie4.position.leftX + this.state.backgroundOffsetX;
-    // Update the zombie's position state or directly pass it to the draw method
-    // this.zombie4.updatePositionAndAnimate(() => {}, this.props.canvasWidth);
+  setZombie4Action(action: ActionType) {
+    if(!this.zombie4) return;
+    this.zombie4.setCurrentActionType(action);
   }
+
   startAnimationLoop(context: CanvasRenderingContext2D) {
     const loop = (timestamp: number) => {
       if (!this.gameTime) {

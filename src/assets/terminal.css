@@ -20,6 +20,13 @@ body {
     font-family: var(--terminal-font-family);
 }
 
+.terminal-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end; /* Aligns children (HandexTerm) to the bottom */
+  height: 100vh; /* Full height of the viewport */
+}
+
 .chord-navigation {
 
     img {

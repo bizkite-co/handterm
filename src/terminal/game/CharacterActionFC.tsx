@@ -20,8 +20,6 @@ export const CharacterActionFC: React.FC<ICharacterActionComponentProps> = (
   // Start or restart the animation when the action type changes
   // In CharacterActionComponent.tsx
   useEffect(() => {
-    // Set the current action type
-    props.baseCharacter.setCurrentActionType(props.currentActionType);
 
     // Start the animation loop and handle position updates
     props.baseCharacter.updatePositionAndAnimate(props.onPositionChange, props.canvasWidth, props.isInScrollMode);
