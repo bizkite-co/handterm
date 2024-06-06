@@ -230,7 +230,9 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
       this.zombie4.setCurrentActionType('Attack'); // Replace 'Attack' with actual ActionType for attacking
     } else {
       // Otherwise, set it back to whatever action it should be doing when not attacking
-      this.zombie4.setCurrentActionType('Walk'); // Replace 'Walk' with actual ActionType for walking
+      if(this.zombie4.getCurrentActionType() === 'Attack') {
+        this.zombie4.setCurrentActionType('Walk'); // Replace 'Walk' with actual ActionType for walking
+      }
     }
 
     // Update the state or force a re-render if necessary, depending on how your animation loop is set up

@@ -103,7 +103,7 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
     }
     if (command === 'kill') {
       if(!this.terminalGameRef.current) return '';
-      this.terminalGameRef.current.setZombie4Action('Die');
+      this.terminalGameRef.current.setZombie4Action('Death');
       console.log("Set zombie4 action to die");
     }
     if (command === 'play') {
@@ -381,9 +381,9 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
   handlePhraseSuccess = (phrase: string, wpm: number) => {
     console.log('XtermAdapter onPhraseSuccess', phrase, wpm);
     this.setState(prevState => ({ outputElements: [...prevState.outputElements, wpm.toString() + ":" + phrase] }));
-    this.setZombie4Action('Die');
-    console.log('XtermAdapter onPhraseSuccess, setZombie4Action Die', phrase, wpm);
-    this.adapterRef.current?.prompt();
+    this.setZombie4Action('Death');
+    console.log('XtermAdapter onPhraseSuccess, setZombie4Action Death', phrase, wpm);
+    // this.adapterRef.current?.prompt();
   }
 
   setHeroRunAction = () => {

@@ -1,10 +1,11 @@
 // SpriteTypes.ts
 
+import { ActionType } from "./ActionTypes";
 import { SpritePosition } from "./Position";
 
 
 export type SpriteAnimation = {
-  name: string;
+  name: ActionType;
   imagePath: string;
   frameCount: number;
   frameWidth: number;

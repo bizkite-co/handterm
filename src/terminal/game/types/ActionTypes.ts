@@ -1,7 +1,7 @@
 // ActionTypes.ts
 import { SpriteAnimation } from './SpriteTypes';
 import { HeroAnimations } from '../characters/hero/HeroAnimations';
-import { Zombie4Animations } from '../characters/zombie4/Zobie4Animations';
+import { Zombie4Animations } from '../characters/zombie4/Zombie4Animations';
 
 export type Action = {
   animation: SpriteAnimation;
@@ -16,7 +16,7 @@ const ActionType = {
   Walk: 'Walk',
   Jump: 'Jump',
   Attack: 'Attack',
-  Die: 'Die',
+  Death: 'Death',
   Hurt: 'Hurt',
 } as const;
 
@@ -53,8 +53,8 @@ export const HeroActions: Record<ActionType, Action> = {
     dy: 0,
     continueous: false
   },
-  Die: {
-    animation: HeroAnimations.Die,
+  Death: {
+    animation: HeroAnimations.Death,
     dx: 0,
     dy: 0,
     continueous: false
@@ -88,6 +88,12 @@ export const Zombie4Actions: Record<string, Action> = {
   },
   Hurt: {
       animation: Zombie4Animations.Hurt, // HeroWalkAnimation is imported from HeroAnimations.ts
+      dx: 0,
+      dy: 0,
+      continueous: false,
+  },
+  Death: {
+      animation: Zombie4Animations.Death, // HeroWalkAnimation is imported from HeroAnimations.ts
       dx: 0,
       dy: 0,
       continueous: false,

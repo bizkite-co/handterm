@@ -64,7 +64,7 @@ export const HeroAnimations = {
             { leftX: 150, topY: 0 },
         ],
     } as SpriteAnimation,
-    Die: {
+    Death: {
         imagePath: '/images/Adventurer/Adventurer-1.5/adventurer-v1.5-Sheet.png',
         frameCount: 4,
         frameWidth: 50,
