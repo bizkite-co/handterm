@@ -443,8 +443,6 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
                 <div id={TerminalCssClasses.NextChars} ref={this._nextCharsRef}></div>
                 <div id={TerminalCssClasses.NextCharsRate} ref={this._nextCharsRateRef}></div>
                 <span id={TerminalCssClasses.WPM} ref={this._wpmRef}></span>
-                <img id={TerminalCssClasses.SvgCharacter} ref={this._svgCharacter} ></img>
-                <div id={TerminalCssClasses.ChordImageHolder} ref={this._chordImageHolderRef}></div>
                 <pre id={TerminalCssClasses.NextChars}>
                     {this.state.nextChars}
                 </pre>
