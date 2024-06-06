@@ -113,7 +113,7 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
     if (command === 'phrase' || command.startsWith('phrase ')) {
       status = 200;
       response = "Type the phrase as fast as you can."
-      this.setState({ isInPhraseMode: true });
+      this.setState({ isInPhraseMode: true, commandLine: command });
     }
     if (command.startsWith('video --')) {
       status = 200;
@@ -130,7 +130,6 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
 
       return "video";
     }
-
 
     if (this.nextCharsDisplayRef.current) this.nextCharsDisplayRef.current.cancelTimer();
     if (this.state.isInPhraseMode) {
@@ -153,6 +152,51 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
     }
     let commandResponse = this.saveCommandResponseHistory(command, response, status); // Save updated history to localStorage
     return commandResponse;
+  }
+
+  public handleCharacter = (character: string) => {
+    const charDuration: CharDuration = this.wpmCalculator.addKeystroke(character);
+    const wpm = this.wpmCalculator.getWPM(charDuration);
+    if (this.isDebug) console.log('wpm', wpm);
+    if (character.charCodeAt(0) === 3) { // Ctrl+C
+      console.log('Ctrl+C pressed');
+      this.setState({ isInPhraseMode: false, commandLine: '' });
+      this.adapterRef.current?.terminalReset();
+      this.adapterRef.current?.prompt();
+    }
+
+    if (character.charCodeAt(0) === 4) { // Ctrl+D
+      console.log('Ctrl+D pressed');
+      // this.increaseFontSize();
+    }
+
+    if (character.charCodeAt(0) === 13) { // Enter key
+      // Process the command before clearing the terminal
+      // TODO: cancel timer
+      let command = this.adapterRef.current?.getCurrentCommand() ?? '';
+      this.terminalReset();
+      this.handleCommand(command);
+      // TODO: A bunch of phrase command stuff should be moved from NextCharsDisplay to here, such as phrase generation.
+    } else if (this.state.isInPhraseMode) {
+      // # IN PHRASE MODE
+      // this.handexTerm.handleCharacter(character);
+      this.terminalWrite(character);
+      let command = this.adapterRef.current?.getCurrentCommand() + character;
+
+      if (command.length === 0) {
+        if (this.nextCharsDisplayRef.current)
+          this.nextCharsDisplayRef.current.resetTimer();
+        return;
+      }
+      this.setState({ commandLine: command });
+      this.setHeroRunAction();
+    } else {
+      // For other input, just return it to the terminal.
+      // this.handexTerm.handleCharacter(character);
+      this.terminalWrite(character);
+      this.setHeroRunAction();
+    }
+    return charDuration.durationMilliseconds;
   }
 
   parseCommand(input: string): void {
@@ -293,51 +337,6 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
       localStorage.removeItem(key); // Clear localStorage.length
     }
     this._commandHistory = [];
-  }
-
-  public handleCharacter = (character: string) => {
-    const charDuration: CharDuration = this.wpmCalculator.addKeystroke(character);
-    const wpm = this.wpmCalculator.getWPM(charDuration);
-    if (this.isDebug) console.log('wpm', wpm);
-    if (character.charCodeAt(0) === 3) { // Ctrl+C
-      console.log('Ctrl+C pressed');
-      this.setState({ isInPhraseMode: false, commandLine: '' });
-      this.adapterRef.current?.terminalReset();
-      this.adapterRef.current?.prompt();
-    }
-
-    if (character.charCodeAt(0) === 4) { // Ctrl+D
-      console.log('Ctrl+D pressed');
-      // this.increaseFontSize();
-    }
-
-    if (character.charCodeAt(0) === 13) { // Enter key
-      // Process the command before clearing the terminal
-      // TODO: cancel timer
-      let command = this.adapterRef.current?.getCurrentCommand() ?? '';
-      this.terminalReset();
-      this.handleCommand(command);
-      // TODO: A bunch of phrase command stuff should be moved from NextCharsDisplay to here, such as phrase generation.
-    } else if (this.state.isInPhraseMode) {
-      // # IN PHRASE MODE
-      // this.handexTerm.handleCharacter(character);
-      this.terminalWrite(character);
-      let command = this.adapterRef.current?.getCurrentCommand() + character;
-
-      if (command.length === 0) {
-        if (this.nextCharsDisplayRef.current)
-          this.nextCharsDisplayRef.current.resetTimer();
-        return;
-      }
-      this.setState({ commandLine: command });
-      this.setHeroRunAction();
-    } else {
-      // For other input, just return it to the terminal.
-      // this.handexTerm.handleCharacter(character);
-      this.terminalWrite(character);
-      this.setHeroRunAction();
-    }
-    return charDuration.durationMilliseconds;
   }
 
   createCommandRecord(command: string, commandTime: Date): string {

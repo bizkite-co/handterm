@@ -4,7 +4,7 @@ export default class Phrases {
         { name: "asdf", phrase: "asdf sad dad daf fas fad das dad sas" },
         { name: "jkl;", phrase: "jill kill jelly lilly jolly jill" },
         {
-            name: "hello-world", phrase: "Hello, World!"
+            name: "hello", phrase: "Hello, World!"
         },
         {
             name: "mr-jock", phrase: "Mr. Jock, TV quiz PhD., bags few lynx."

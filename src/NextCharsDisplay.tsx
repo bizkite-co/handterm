@@ -82,7 +82,9 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
     componentDidUpdate(prevProps: NextCharsDisplayProps) {
         if (this.props.isInPhraseMode !== prevProps.isInPhraseMode) {
             if (this.props.isInPhraseMode) {
-                this.setNewPhrase();
+                const cmd = this.props.commandLine;
+                const phrase = cmd.replace("phrase ", "");
+                this.setNewPhrase(phrase);
             }
         }
         // Check if the commandLine prop has changed
@@ -102,9 +104,14 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
     
 
     setNewPhrase = (phraseName?: string) => {
-        const newPhrase = phraseName && Phrases.getPhrase(phraseName) ? Phrases.getPhrase(phraseName) : Phrases.getRandomPhrase();
+        const newPhrase 
+            = phraseName && Phrases.getPhrase(phraseName) 
+            ? Phrases.getPhrase(phraseName) 
+            : Phrases.getRandomPhrase();
+
+        // this.phrase = new Phrase(newPhrase);
         this.setState({ phrase: new Phrase(newPhrase), nextChars: this.getNextCharacters(newPhrase), nextCharsIsVisible: true });
-        // this.props.onNewPhrase(newPhrase); 
+        this.props.onNewPhrase(newPhrase); 
     }
 
     showError = (char: string, charCode: string) => {

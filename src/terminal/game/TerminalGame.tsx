@@ -242,6 +242,7 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
   setZombie4Action(action: ActionType) {
     if(!this.zombie4) return;
     this.zombie4.setCurrentActionType(action);
+    console.log("setZombie4Action", action);
   }
 
   startAnimationLoop(context: CanvasRenderingContext2D) {
