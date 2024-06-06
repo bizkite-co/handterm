@@ -32,15 +32,15 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
     private _nextCharsRateRef: React.RefObject<HTMLDivElement>;
 
     private _chordImageHolderRef: React.RefObject<HTMLDivElement>;
-    private _svgCharacter: HTMLElement;
+    private _svgCharacter: React.RefObject<HTMLImageElement>;
     private _testArea: HTMLTextAreaElement;
     private _timerRoot: HTMLElement | null = null;
     private _timerRef: React.RefObject<any>;
     private timerComponentRoot: Root | null = null
     private voiceSynth: SpeechSynthesis;
     private _charTimeArray: CharTime[] = [];
-    private _charTimes: HTMLElement;
-    private _wpmRef: React.RefObject<any>;
+    private _charTimes: React.RefObject<HTMLDivElement>;
+    private _wpmRef: React.RefObject<HTMLSpanElement>;
     private _centiSecond: number = 0;
     public isTestMode: boolean;
 
@@ -64,9 +64,9 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
         this._nextCharsRef = React.createRef<HTMLDivElement>();
         this._nextCharsRateRef = React.createRef<HTMLDivElement>();
         this._wpmRef = React.createRef();
-        this._charTimes = createElement('div', TerminalCssClasses.CharTimes);
+        this._charTimes = React.createRef<HTMLDivElement>();
         this._chordImageHolderRef = React.createRef<HTMLDivElement>();
-        this._svgCharacter = createElement('img', TerminalCssClasses.SvgCharacter);
+        this._svgCharacter = React.createRef<HTMLImageElement>();
         this._testArea = (document.getElementById(TerminalCssClasses.TestArea) as HTMLTextAreaElement);
         this.isTestMode = localStorage.getItem('testMode') == 'true';
         this._timerRef = createRef();
@@ -190,8 +190,8 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
         return this._nextCharsRef?.current;
     }
 
-    set wpm(wpm: HTMLSpanElement) {
-        if(this._wpmRef.current)this._wpmRef.current.innerText = wpm;
+    set wpm(wpm: string) {
+        if(this._wpmRef.current) this._wpmRef.current.innerText = wpm;
     }
 
     get phrase(): Phrase {
@@ -255,16 +255,16 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
         }
 
         // Set the next character in the SVG element
-        if (this._svgCharacter && nextChordHTML) {
+        if (this._svgCharacter.current && nextChordHTML) {
             const nameAttribute = nextChordHTML.getAttribute("name");
             if (nameAttribute) {
-                this._svgCharacter.innerHTML = nameAttribute
+                this._svgCharacter.current.innerHTML = nameAttribute
                     .replace("Space", spaceDisplayChar)
                     .replace("tab", "↹");
             }
         }
-        if (this._svgCharacter && !this.isTestMode) {
-            this._svgCharacter.hidden = false;
+        if (this._svgCharacter.current && !this.isTestMode) {
+            this._svgCharacter.current.hidden = false;
         }
         if(this._wpmRef.current) this._wpmRef.current.innerText = this.getWpm();
         return nextChordHTML;
@@ -277,8 +277,8 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
             this._testArea.style.border = "";
         }
         this._charTimeArray = [];
-        if (this.wpm) this.wpm.innerText = '0';
-        if (this._charTimes) this._charTimes.innerHTML = '';
+        if (this.wpm) this.wpm = '0';
+        if (this._charTimes.current) this._charTimes.current.innerHTML = '';
         // clear error class from all chords
         this.setNext('');
     }
@@ -351,7 +351,7 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
                 charTimeList += `<li>${x.char.replace(' ', spaceDisplayChar)}: ${x.duration}</li>`;
             });
 
-            if (this._charTimes) this._charTimes.innerHTML = charTimeList;
+            if (this._charTimes.current) this._charTimes.current.innerHTML = charTimeList;
             localStorage
                 .setItem(
                     `charTimerSession_${(new Date).toISOString()}`,
@@ -432,7 +432,7 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
                 <ErrorDisplay
                     isVisible={this.state.mismatchedIsVisible}
                     ref={this._errorDisplayRef}
-                    svgCharacter={this._svgCharacter}
+                    svgCharacter={this._svgCharacter.current}
                     chordImageHolder={this._chordImageHolderRef.current}
                     mismatchedChar={this.state.mismatchedChar}
                     mismatchedCharCode={this.state.mismatchedCharCode}
@@ -443,6 +443,8 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
                 <div id={TerminalCssClasses.NextChars} ref={this._nextCharsRef}></div>
                 <div id={TerminalCssClasses.NextCharsRate} ref={this._nextCharsRateRef}></div>
                 <span id={TerminalCssClasses.WPM} ref={this._wpmRef}></span>
+                <img id={TerminalCssClasses.SvgCharacter} ref={this._svgCharacter} ></img>
+                <div id={TerminalCssClasses.ChordImageHolder} ref={this._chordImageHolderRef}></div>
                 <pre id={TerminalCssClasses.NextChars}>
                     {this.state.nextChars}
                 </pre>

@@ -1,8 +1,8 @@
 import { useState, useImperativeHandle, forwardRef } from 'react';
 
 interface ErrorDisplayProps {
-  svgCharacter: HTMLElement;
-  chordImageHolder: HTMLElement | null;
+  svgCharacter: HTMLImageElement | null;
+  chordImageHolder: HTMLDivElement | null;
   mismatchedChar: string;
   mismatchedCharCode: string;
   isVisible: boolean;
