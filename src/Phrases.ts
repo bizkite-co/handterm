@@ -62,9 +62,12 @@ export default class Phrases {
     public static getPhrase(key: string): string {
         const phrase = this.phrases.find(x => x.name == key);
         if (!phrase) {
-            throw new Error("Phrase not found: " + key);
+            console.error("Phrase not found: " + key);
         }
-        return phrase.phrase;
+        else {
+            return phrase.phrase;
+        }
+        return this.phrases[0].phrase;
     }
 
     public static getRandomPhrase(): string {

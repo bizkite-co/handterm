@@ -64,7 +64,7 @@ export class BaseCharacter extends React.Component<BaseCharacterProps, BaseChara
 
     // Update the current sprite to match the new action
     this.sprite = this.sprites[newActionType];
-    if(this.name === "Zombie4" && this.sprite?.image) console.log("Character", this.name, "set current action type to", newActionType, "Sprite", this.sprite.image.src);
+    if(this.name === "Hero" && this.sprite?.image) console.log("Character", this.name, "set current action type to", newActionType, "Sprite", this.sprite.image.src);
   }
 
   public getCurrentActionType(): ActionType {

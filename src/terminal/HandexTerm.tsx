@@ -394,12 +394,13 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
 
     // Set the hero to run
     this.setState({ heroAction: 'Run' });
-
+    console.log("Set hero to run");
     // Set a timeout to stop the hero from running after 1000ms
     this.heroRunTimeoutId = window.setTimeout(() => {
       this.setState({ heroAction: 'Idle' });
+      console.log("Set hero to idle");
       this.heroRunTimeoutId = null; // Clear the timeout ID
-    }, 1000);
+    }, 800);
   }
 
   setHeroAction = (newAction: ActionType) => {
