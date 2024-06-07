@@ -36,12 +36,11 @@ const Timer = forwardRef((_props: any, ref: any) => {
     setIsActive(false);
     const finalCentiSecond = centiSecond;
     setCentiSecond(0);
-    console.log('Timer reset from:', finalCentiSecond); // This will still log the old value due to the asynchronous nature of setState
     return finalCentiSecond;
   };
 
   const success = () => {
-    console.log("Timer Success");
+    console.info("Timer Success");
     setCentiSecond(0);
     setIsActive(false);
   };

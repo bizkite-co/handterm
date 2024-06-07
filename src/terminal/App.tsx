@@ -1,5 +1,5 @@
 // App.tsx
-import React from 'react';
+import React, { useEffect } from 'react';
 import { HandexTerm } from './HandexTerm';
 import SpriteManagerContext from './SpriteManagerContext';
 import { SpriteManager } from './game/sprites/SpriteManager';
@@ -7,21 +7,40 @@ import { SpriteManager } from './game/sprites/SpriteManager';
 
 const spriteManager = new SpriteManager();
 
-class App extends React.Component {
-  terminalElementRef = React.createRef<HTMLDivElement>();
+const App = () => {
+  const containerRef = React.createRef<HTMLDivElement>();
+  const [containerWidth, setContainerWidth] = React.useState<number>(0);
 
-  constructor(props: any) {
-    super(props);
+  useEffect(() => {
+    const w = getContainerWidth();
+    console.log(`containerWidth: ${w}`);
+    setContainerWidth(w);
+  }, [])
+
+  const getContainerWidth = () => {
+    return containerRef.current?.clientWidth ?? 0
   }
 
-  render() {
-    return (
-      <SpriteManagerContext.Provider value={spriteManager}>
-        <HandexTerm 
+  useEffect(() => {
+    const handleResize = () => {
+      const w = getContainerWidth();
+      console.log(`containerWidth: ${w}`);
+      setContainerWidth(w);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  })
+
+  return (
+    <SpriteManagerContext.Provider value={spriteManager}>
+      <div ref={containerRef}>
+        <HandexTerm
+          terminalWidth={containerWidth}
         />
-      </SpriteManagerContext.Provider>
-    );
-  }
-}
+      </div>
+    </SpriteManagerContext.Provider>
+  );
+};
 
 export default App;

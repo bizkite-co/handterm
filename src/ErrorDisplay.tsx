@@ -15,7 +15,6 @@ const ErrorDisplay = forwardRef((props: ErrorDisplayProps, ref) => {
 
   const showError = () => {
     setErrorCount(prevCount => prevCount + 1);
-    // console.log("ErrorDisplay isVisible", isVisible, mismatchedChar, mismatchedCharCode, errorCount);
   };
 
   const hideError = () => {

@@ -37,7 +37,7 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
   private foregroundBuildings = new Image();
   private backgroundBuildings = new Image();
   private farBuildings = new Image();
-  private heroPositionX = this.props.canvasWidth * 0.2;
+  private heroXPercent: number = 0.3;
 
   // private lastLogTime: number = 0;
   // private nextIdleTime: number = 7000; // Next time to switch to Idle
@@ -51,7 +51,7 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
     super(props);
     this.state = {
       heroAction: props.heroAction,
-      heroPosition: { leftX: this.heroPositionX, topY: 30 },
+      heroPosition: { leftX: props.canvasWidth * this.heroXPercent, topY: 30 },
       heroReady: false,
       zombieAction: props.zombie4Action,
       zombie4Position: { leftX: -50, topY: 0 },
@@ -59,11 +59,11 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
       context: null as CanvasRenderingContext2D | null,
       idleStartTime: null,
       backgroundOffsetX: 0,
-
     };
   }
 
   componentDidMount() {
+    console.log("Hero x: ", this.state.heroPosition, " Canvas width: ", this.props.canvasWidth);
     this.foregroundBuildings.src = '/images/parallax-industrial-pack/parallax-industrial-pack/layers/skill-desc_0000_foreground.png' + '?t=' + new Date().getTime();
     this.backgroundBuildings.src = '/images/parallax-industrial-pack/parallax-industrial-pack/layers/skill-desc_0001_buildings.png' + '?t=' + new Date().getTime();
     this.farBuildings.src = '/images/parallax-industrial-pack/parallax-industrial-pack/layers/skill-desc_0002_far-buildings.png' + '?t=' + new Date().getTime();
@@ -125,7 +125,7 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
 
   // In TerminalGame.tsx or where you manage the game state
   updateCharacterAndBackground() {
-    const canvasCenterX = this.heroPositionX;
+    const canvasCenterX = this.props.canvasWidth / 2;
     const characterReachThreshold = canvasCenterX; // Character stays in the middle
 
     if (!this.hero) return;
@@ -242,7 +242,6 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
   setZombie4Action(action: ActionType) {
     if(!this.zombie4) return;
     this.zombie4.setCurrentActionType(action);
-    console.log("setZombie4Action", action);
   }
 
   startAnimationLoop(context: CanvasRenderingContext2D) {

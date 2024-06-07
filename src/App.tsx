@@ -49,7 +49,6 @@ export function Child() {
   let inputRef = React.useRef<HTMLInputElement>(null);
 
   function onInputHandler(): void {
-    console.log("App.tsx: ", inputRef.current?.value);
   }
 
   return (

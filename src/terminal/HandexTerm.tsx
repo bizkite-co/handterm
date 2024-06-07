@@ -10,17 +10,20 @@ import { Output } from '../terminal/Output';
 import { TerminalGame } from './game/TerminalGame';
 import ReactDOMServer from 'react-dom/server';
 import { ActionType } from './game/types/ActionTypes';
+import Phrases from '../Phrases';
+import { Phrase } from '../Phrase';
 
 
 export interface IHandexTermProps {
   // Define the interface for your HandexTerm logic
-
+  terminalWidth: number;
 }
 
 export interface IHandexTermState {
   // Define the interface for your HandexTerm state
   outputElements: React.ReactNode[];
   isInPhraseMode: boolean;
+  phrase: string;
   isActive: boolean;
   commandLine: string;
   heroAction: ActionType;
@@ -56,6 +59,7 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
     this.state = {
       outputElements: this.getCommandHistory(),
       isInPhraseMode: false,
+      phrase: '', // Initial value
       isActive: false,
       commandLine: '',
       heroAction: 'Idle',
@@ -79,7 +83,6 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
       const size = this.adapterRef.current.getTerminalSize();
       if (size) {
         this.setState({ terminalSize: size });
-        console.log("didMount terminalSize", size);
       }
     }
     window.scrollTo(0, document.body.scrollHeight);
@@ -102,9 +105,8 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
       return '';
     }
     if (command === 'kill') {
-      if(!this.terminalGameRef.current) return '';
+      if (!this.terminalGameRef.current) return '';
       this.terminalGameRef.current.setZombie4Action('Death');
-      console.log("Set zombie4 action to die");
     }
     if (command === 'play') {
       status = 200;
@@ -113,7 +115,7 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
     if (command === 'phrase' || command.startsWith('phrase ')) {
       status = 200;
       response = "Type the phrase as fast as you can."
-      this.setState({ isInPhraseMode: true, commandLine: command });
+      this.setNewPhrase(command);
     }
     if (command.startsWith('video --')) {
       status = 200;
@@ -125,8 +127,6 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
       }
       this.adapterRef.current?.toggleVideo();
       this.handleCommand(command + ' --' + this.adapterRef.current?.isShowVideo);
-      // TODO: handle toggle video 
-      // this.outputElement.appendChild(result);
 
       return "video";
     }
@@ -182,13 +182,18 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
       // this.handexTerm.handleCharacter(character);
       this.terminalWrite(character);
       let command = this.adapterRef.current?.getCurrentCommand() + character;
-
+      
       if (command.length === 0) {
         if (this.nextCharsDisplayRef.current)
           this.nextCharsDisplayRef.current.resetTimer();
         return;
-      }
-      this.setState({ commandLine: command });
+        }
+
+      const nextChars = this.nextCharsDisplayRef.current?.getNextCharacters(command) ?? '';
+      this.setState({ 
+        commandLine: command, 
+        phrase: nextChars,
+      });
       this.setHeroRunAction();
     } else {
       // For other input, just return it to the terminal.
@@ -197,6 +202,22 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
       this.setHeroRunAction();
     }
     return charDuration.durationMilliseconds;
+  }
+
+  setNewPhrase = (phraseName: string) => {
+    phraseName = phraseName.replace('phrase ', '');
+    const newPhrase
+      = phraseName && phraseName != "" && Phrases.getPhrase(phraseName)
+        ? Phrases.getPhrase(phraseName)
+        : Phrases.getRandomPhrase();
+
+    // this.phrase = new Phrase(newPhrase);
+    this.setState({
+      isInPhraseMode: true,
+      phrase: newPhrase,
+    });
+
+    // this.props.onNewPhrase(newPhrase); 
   }
 
   parseCommand(input: string): void {
@@ -293,7 +314,6 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
 
     // Only keep the latest this.commandHistoryLimit number of commands
     const wpms = this.wpmCalculator.getWPMs();
-    console.log("WPMs:", wpms);
     let wpmSum = this.wpmCalculator.saveKeystrokes(timeCode);
     this.wpmCalculator.clearKeystrokes();
     commandResponseElement.innerHTML = commandResponseElement.innerHTML.replace(/{{wpm}}/g, ('_____' + wpmSum.toFixed(0)).slice(-4));
@@ -372,16 +392,14 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
     }
   }
 
-  setNewPhrase = (phrase: string) => {
-    // Write phrase to output.
-    this.setState(prevState => ({ outputElements: [...prevState.outputElements, phrase] }));
-  }
+  // setNewPhrase = (phrase: string) => {
+  //   // Write phrase to output.
+  //   this.setState(prevState => ({ outputElements: [...prevState.outputElements, phrase] }));
+  // }
 
   handlePhraseSuccess = (phrase: string, wpm: number) => {
-    console.log('XtermAdapter onPhraseSuccess', phrase, wpm);
     this.setState(prevState => ({ outputElements: [...prevState.outputElements, wpm.toString() + ":" + phrase] }));
     this.setZombie4Action('Death');
-    console.log('XtermAdapter onPhraseSuccess, setZombie4Action Death', phrase, wpm);
     // this.adapterRef.current?.prompt();
   }
 
@@ -394,11 +412,9 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
 
     // Set the hero to run
     this.setState({ heroAction: 'Run' });
-    console.log("Set hero to run");
     // Set a timeout to stop the hero from running after 1000ms
     this.heroRunTimeoutId = window.setTimeout(() => {
       this.setState({ heroAction: 'Idle' });
-      console.log("Set hero to idle");
       this.heroRunTimeoutId = null; // Clear the timeout ID
     }, 800);
   }
@@ -412,7 +428,6 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
   }
 
   handleTimerStatusChange(isActive: boolean) {
-    console.log('handleTimerStatusChange', isActive);
     this.setState({ isActive });
   }
 
@@ -523,6 +538,7 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
 
   public render() {
     const { terminalSize } = this.state;
+    // TODO: Make better terminal width matcher.
     const canvasWidth = terminalSize ? terminalSize.width : 800;
     // canvas height does not need to match terminal height
 
@@ -548,7 +564,7 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
           onTimerStatusChange={this.handleTimerStatusChange}
           commandLine={this.state.commandLine}
           isInPhraseMode={this.state.isInPhraseMode}
-          onNewPhrase={this.setNewPhrase}
+          newPhrase={this.state.phrase}
           onPhraseSuccess={this.handlePhraseSuccess}
         />
         <XtermAdapter

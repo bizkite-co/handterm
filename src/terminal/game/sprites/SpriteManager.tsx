@@ -32,7 +32,7 @@ export class SpriteManager {
                 // Cleanup: Remove both event listeners
                 image.removeEventListener('load', onLoad);
                 image.removeEventListener('error', onError);
-                console.log('Image failed to load: ' + image.src);
+                console.error('Image failed to load: ' + image.src);
                 // reject(new Error(`Image failed to load: ${image.src}`));
             };
 

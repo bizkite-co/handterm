@@ -31,7 +31,7 @@ export class Sprite {
             }
         };
         this.image.onerror = () => {
-            console.log('Image failed to load: ' + imagePath);
+            console.error('Image failed to load: ' + imagePath);
         }
         this.image.src = imagePath;
         this.frameCount = frameCount;
@@ -67,14 +67,13 @@ export class Sprite {
                 frameLeftX = frameCoords.leftX;
                 frameTopY = frameCoords.topY;
             } else {
-                console.log("No frameCoords found for frameIndex:", frameIndex, this.frameSequence);
+                console.error("No frameCoords found for frameIndex:", frameIndex, this.frameSequence);
             }
         } else {
             // Calculate frame position for strip-style sprites
             frameLeftX = this.frameWidth * frameIndex;
             frameTopY = 0;
         }
-        // console.log(`Drawing frameIndex: ${frameIndex} at frameLeftX:`, frameLeftX, "frameTopY:", frameTopY);
         context.drawImage(
             this.image,
             frameLeftX, frameTopY, // source x, y
