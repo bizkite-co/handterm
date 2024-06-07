@@ -77,6 +77,13 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
     this.removeTouchListeners();
   }
 
+  handlePhraseComplete = () => {
+    this.setState({
+      isInPhraseMode: false,
+      phrase: ''
+    });
+  }
+
   componentDidMount(): void {
     if (this.adapterRef.current) {
       const size = this.adapterRef.current.getTerminalSize();
@@ -107,6 +114,7 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
     if (command === 'kill') {
       if (!this.terminalGameRef.current) return '';
       this.terminalGameRef.current.setZombie4ToDeathThenResetPosition();
+      this.terminalGameRef.current.completeGame();
     }
     if (command === 'play') {
       status = 200;
@@ -182,16 +190,16 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
       // this.handexTerm.handleCharacter(character);
       this.terminalWrite(character);
       let command = this.adapterRef.current?.getCurrentCommand() + character;
-      
+
       if (command.length === 0) {
         if (this.nextCharsDisplayRef.current)
           this.nextCharsDisplayRef.current.resetTimer();
         return;
-        }
+      }
 
       const nextChars = this.nextCharsDisplayRef.current?.getNextCharacters(command) ?? '';
-      this.setState({ 
-        commandLine: command, 
+      this.setState({
+        commandLine: command,
         phrase: nextChars,
       });
       this.setHeroRunAction();
@@ -398,10 +406,16 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
   // }
 
   handlePhraseSuccess = (phrase: string, wpm: number) => {
-    this.setState(prevState => ({ outputElements: [...prevState.outputElements, wpm.toString() + ":" + phrase] }));
+    this.setState(
+      prevState => ({ 
+        outputElements: [
+          ...prevState.outputElements, 
+          wpm.toString() + ":" + phrase
+        ] 
+      })
+    );
 
-
-    this.terminalGameRef.current?.setZombie4ToDeathThenResetPosition();
+    this.terminalGameRef.current?.completeGame();
     // this.adapterRef.current?.prompt();
   }
 

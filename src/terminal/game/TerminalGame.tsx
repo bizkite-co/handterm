@@ -25,6 +25,8 @@ interface ITerminalGameState {
   context: CanvasRenderingContext2D | null;
   idleStartTime: number | null; // in milliseconds
   backgroundOffsetX: number;
+  isPhraseComplete: boolean;
+  textScrollX: number;
 }
 
 export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalGameState> {
@@ -42,6 +44,9 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
   private drawZombie4?: (position: SpritePosition) => void;
   isInScrollMode: boolean = true;
   zombie4DeathTimeout: NodeJS.Timeout | null = null;
+  // Add a new field for the text animation
+  private textScrollX: number = this.props.canvasWidth; // Start offscreen to the right
+  private textToScroll: string = "Terminal Velocity!";
 
   getInitstate(props: ITerminalGameProps): ITerminalGameState {
     return {
@@ -54,6 +59,8 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
       context: null as CanvasRenderingContext2D | null,
       idleStartTime: null,
       backgroundOffsetX: 0,
+      isPhraseComplete: false,
+      textScrollX: this.props.canvasWidth
     };
   }
 
@@ -113,8 +120,6 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
 
         // Load background images
         this.foregroundBuildings.onload = () => {
-
-
           // No need to pass context to startAnimationLoop, as it will use the context from the state
           this.startAnimationLoop(context);
         };
@@ -130,6 +135,30 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
     }
   }
 
+  drawScrollingText(context: CanvasRenderingContext2D) {
+    context.font = 'italic 60px Arial'; // Customize as needed
+    context.fillStyle = 'lightgreen'; // Text color
+    context.fillText(this.textToScroll, this.textScrollX, 85); // Adjust Y coordinate as needed
+
+    // Update the X position for the next frame
+    this.textScrollX -= 5; // Adjust speed as needed
+
+    // Reset text position if it's fully offscreen to the left
+    if (this.textScrollX < -context.measureText(this.textToScroll).width) {
+      this.textScrollX = this.props.canvasWidth;
+    }
+  }
+
+  // Call this method when the game is completed
+  public completeGame() {
+    this.setZombie4ToDeathThenResetPosition();
+    this.textScrollX = this.props.canvasWidth; // Reset scroll position
+    this.setState({ 
+      isPhraseComplete: true, 
+      textScrollX: this.props.canvasWidth
+    });
+  }
+
   public setZombie4ToDeathThenResetPosition = (): void => {
     // Set the zombie action to 'Death'
     if (this.zombie4DeathTimeout) {
@@ -138,19 +167,17 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
     }
 
     this.setZombie4Action('Death');
-    console.log("setZombie4ToDeathThenResetPosition", this.state.zombieAction);
     // After three seconds, reset the position
     this.zombie4DeathTimeout = setTimeout(() => {
-      this.setState(prevState => ({
-        zombie4Position: {
-          ...prevState.zombie4Position,
-          leftX: -70
-        }
-      }));
+      this.setState({
+        zombie4Position: { ...this.state.zombie4Position, leftX: -70 },
+        isPhraseComplete: false,
+        textScrollX: this.props.canvasWidth
+      });
       // Optionally reset the action if needed
       this.setZombie4Action('Walk'); // Or the default action you want to set
       this.zombie4DeathTimeout = null;
-    }, 3000);
+    }, 4000);
   };
 
   // In TerminalGame.tsx or where you manage the game state
@@ -246,7 +273,8 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
   }
   checkProximityAndSetAction() {
     // Constants to define "near"
-    const ATTACK_THRESHOLD = 100; // pixels or appropriate unit for your game
+    // TODO: Sprite image widths seem to be off by about 150.
+    const ATTACK_THRESHOLD = 250; // pixels or appropriate unit for your game
 
     if (!this.hero || !this.zombie4) return;
 
@@ -254,7 +282,7 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
     const distance = this.state.heroPosition.leftX - this.state.zombie4Position.leftX;
 
     // If zombie4 is near the Hero, set its current action to Attack
-    if (0 < distance && distance < ATTACK_THRESHOLD) {
+    if (150 < distance && distance < ATTACK_THRESHOLD) {
 
       // Assuming zombie4 has a method to update its action
       this.zombie4.setCurrentActionType('Attack'); // Replace 'Attack' with actual ActionType for attacking
@@ -287,7 +315,9 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
       context.clearRect(0, 0, context.canvas.width, context.canvas.height);
 
       this.drawBackground(context);
-
+      if (this.state.isPhraseComplete) {
+        this.drawScrollingText(context);
+      }
       // Reset globalAlpha if other drawings should not be affected
       context.globalAlpha = 1.0;
 
@@ -323,6 +353,7 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
   handleHeroPositionChange = (newPosition: SpritePosition) => {
     this.setState({ heroPosition: newPosition });
   };
+
   handleZombie4PositionChange = (newPosition: SpritePosition) => {
     this.setState({ zombie4Position: newPosition });
   }
