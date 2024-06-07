@@ -4,9 +4,7 @@ var openDb = indexedDB.open('Terminal', 1);
 
 // Create the schema
 openDb.onupgradeneeded = function() {
-    var db = openDb.result;
-    var store = db.createObjectStore('WpmStore', {keyPath: 'id'});
-    var index = store.createIndex('CharacterIndex', ['character']);
+
 };
 
 openDb.onsuccess = function() {
