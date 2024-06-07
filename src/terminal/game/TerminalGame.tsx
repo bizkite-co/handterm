@@ -170,10 +170,11 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
     // After three seconds, reset the position
     this.zombie4DeathTimeout = setTimeout(() => {
       this.setState({
-        zombie4Position: { ...this.state.zombie4Position, leftX: -70 },
+        zombie4Position: { topY: 0, leftX: -70 },
         isPhraseComplete: false,
         textScrollX: this.props.canvasWidth
       });
+      this.zombie4?.setCurrentPositionX(-70);
       // Optionally reset the action if needed
       this.setZombie4Action('Walk'); // Or the default action you want to set
       this.zombie4DeathTimeout = null;

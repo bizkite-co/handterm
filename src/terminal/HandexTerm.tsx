@@ -432,6 +432,7 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
     this.heroRunTimeoutId = window.setTimeout(() => {
       this.setState({ heroAction: 'Idle' });
       this.heroRunTimeoutId = null; // Clear the timeout ID
+
     }, 800);
   }
 

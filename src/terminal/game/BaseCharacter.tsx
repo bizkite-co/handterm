@@ -66,6 +66,10 @@ export class BaseCharacter extends React.Component<BaseCharacterProps, BaseChara
     this.sprite = this.sprites[newActionType];
   }
 
+  public setCurrentPositionX(newPositionX: number) {
+    this.position.leftX = newPositionX
+  }
+
   public getCurrentActionType(): ActionType {
     // Assuming currentAction is of type Action and has a key property
     return this.currentActionType;
