@@ -106,7 +106,7 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
     }
     if (command === 'kill') {
       if (!this.terminalGameRef.current) return '';
-      this.terminalGameRef.current.setZombie4Action('Death');
+      this.terminalGameRef.current.setZombie4ToDeathThenResetPosition();
     }
     if (command === 'play') {
       status = 200;

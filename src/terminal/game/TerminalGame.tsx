@@ -93,6 +93,9 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
     }
 
     this.stopAnimationLoop();
+    if (this.zombie4DeathTimeout) {
+      clearTimeout(this.zombie4DeathTimeout);
+    }
   }
 
   // Call this method to update the background position
@@ -135,13 +138,13 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
     }
 
     this.setZombie4Action('Death');
-    console.log("setZombie4ToDeathThenResetPosition", this.state.zombieAction); 
+    console.log("setZombie4ToDeathThenResetPosition", this.state.zombieAction);
     // After three seconds, reset the position
     this.zombie4DeathTimeout = setTimeout(() => {
       this.setState(prevState => ({
-        zombie4Position: { 
-          ...prevState.zombie4Position, 
-          leftX: -70 
+        zombie4Position: {
+          ...prevState.zombie4Position,
+          leftX: -70
         }
       }));
       // Optionally reset the action if needed
@@ -152,7 +155,7 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
 
   // In TerminalGame.tsx or where you manage the game state
   updateCharacterAndBackground() {
-    const canvasCenterX = this.props.canvasWidth / 2;
+    const canvasCenterX = this.props.canvasWidth * this.heroXPercent;
     const characterReachThreshold = canvasCenterX; // Character stays in the middle
 
     if (!this.hero) return;
@@ -160,7 +163,7 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
     const heroDx = this.hero.getCurrentAction().dx / 4; // Assuming this.state.heroAction.dx exists
 
     // Update character position as usual
-    const newHeroPositionX = this.state.heroPosition.leftX + heroDx;
+    const newHeroPositionX = canvasCenterX;
 
     // Check if the hero reaches the threshold
 
@@ -210,7 +213,7 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
   }
 
   drawParallaxLayer(context: CanvasRenderingContext2D, image: HTMLImageElement, scale: number, movementRate: number) {
-    if(image.width === 0) {
+    if (image.width === 0) {
       console.error("image.width === 0", image.src);
     }
 
@@ -257,7 +260,7 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
       this.zombie4.setCurrentActionType('Attack'); // Replace 'Attack' with actual ActionType for attacking
     } else {
       // Otherwise, set it back to whatever action it should be doing when not attacking
-      if(this.zombie4.getCurrentActionType() === 'Attack') {
+      if (this.zombie4.getCurrentActionType() === 'Attack') {
         this.zombie4.setCurrentActionType('Walk'); // Replace 'Walk' with actual ActionType for walking
       }
     }
@@ -267,7 +270,7 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
   }
 
   setZombie4Action(action: ActionType) {
-    if(!this.zombie4) return;
+    if (!this.zombie4) return;
     this.zombie4.setCurrentActionType(action);
   }
 

@@ -21,7 +21,7 @@ export const CharacterActionFC: React.FC<ICharacterActionComponentProps> = (
   // In CharacterActionComponent.tsx
   useEffect(() => {
     // Set the current action type
-    props.baseCharacter.setCurrentActionType(props.currentActionType);
+    if(props.name.toLocaleLowerCase() === 'hero') props.baseCharacter.setCurrentActionType(props.currentActionType);
 
     // Start the animation loop and handle position updates
     props.baseCharacter.updatePositionAndAnimate(props.onPositionChange, props.canvasWidth, props.isInScrollMode);
