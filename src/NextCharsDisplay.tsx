@@ -426,7 +426,6 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
     }
 
     render() {
-        console.log("Render newPhrase", this.props.newPhrase);
         return (
             <div hidden={!this.props.isInPhraseMode}>
                 {/* ...other components */}

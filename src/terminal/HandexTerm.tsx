@@ -92,6 +92,7 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
   public handleCommand(command: string): string {
     let status = 404;
     let response = "Command not found.";
+    this.terminalGameRef.current?.resetGame();
     if (this.state.isInPhraseMode) {
       response = "";
     }
@@ -398,7 +399,9 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
 
   handlePhraseSuccess = (phrase: string, wpm: number) => {
     this.setState(prevState => ({ outputElements: [...prevState.outputElements, wpm.toString() + ":" + phrase] }));
-    this.setZombie4Action('Death');
+
+
+    this.terminalGameRef.current?.setZombie4ToDeathThenResetPosition();
     // this.adapterRef.current?.prompt();
   }
 

@@ -58,9 +58,10 @@ export class BaseCharacter extends React.Component<BaseCharacterProps, BaseChara
   }
 
   public setCurrentActionType(newActionType: ActionType) {
+    if(this.currentActionType === newActionType) return
     // Update the current action
     this.currentActionType = newActionType;
-
+    this.frameIndex = 0
     // Update the current sprite to match the new action
     this.sprite = this.sprites[newActionType];
   }
@@ -106,7 +107,6 @@ export class BaseCharacter extends React.Component<BaseCharacterProps, BaseChara
         this.lastFrameTime = now;
       }
 
-
       // Draw the character at the new position with the current frameIndex
       this.draw(this.frameIndex, this.position);
 
@@ -133,9 +133,7 @@ export class BaseCharacter extends React.Component<BaseCharacterProps, BaseChara
         position.leftX,
         position.topY,
         2
-      ); // Example scale factor
+      ); 
     }
   }
-
-  // ...other methods and logic for BaseCharacter
 }

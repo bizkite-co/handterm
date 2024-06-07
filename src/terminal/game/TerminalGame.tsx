@@ -38,18 +38,13 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
   private backgroundBuildings = new Image();
   private farBuildings = new Image();
   private heroXPercent: number = 0.3;
-
-  // private lastLogTime: number = 0;
-  // private nextIdleTime: number = 7000; // Next time to switch to Idle
-  // private nextRunTime: number = 0; // Next time to switch back to Run
-
   private drawHero?: (position: SpritePosition) => void;
   private drawZombie4?: (position: SpritePosition) => void;
   isInScrollMode: boolean = true;
+  zombie4DeathTimeout: NodeJS.Timeout | null = null;
 
-  constructor(props: ITerminalGameProps) {
-    super(props);
-    this.state = {
+  getInitstate(props: ITerminalGameProps): ITerminalGameState {
+    return {
       heroAction: props.heroAction,
       heroPosition: { leftX: props.canvasWidth * this.heroXPercent, topY: 30 },
       heroReady: false,
@@ -60,6 +55,16 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
       idleStartTime: null,
       backgroundOffsetX: 0,
     };
+  }
+
+  public resetGame(): void {
+    // TODO: Handle addListeners or subscrition before resetting state.
+    // this.setState(this.getInitstate(this.props));
+  }
+
+  constructor(props: ITerminalGameProps) {
+    super(props);
+    this.state = this.getInitstate(props);
   }
 
   componentDidMount() {
@@ -114,7 +119,6 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
           console.error("Error loading image:", e);
         }
 
-
       } else {
         console.error("Obtained context is not a CanvasRenderingContext2D instance.");
       }
@@ -122,6 +126,29 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
       console.error("Failed to get canvas element.");
     }
   }
+
+  public setZombie4ToDeathThenResetPosition = (): void => {
+    // Set the zombie action to 'Death'
+    if (this.zombie4DeathTimeout) {
+      clearTimeout(this.zombie4DeathTimeout);
+      this.zombie4DeathTimeout = null;
+    }
+
+    this.setZombie4Action('Death');
+    console.log("setZombie4ToDeathThenResetPosition", this.state.zombieAction); 
+    // After three seconds, reset the position
+    this.zombie4DeathTimeout = setTimeout(() => {
+      this.setState(prevState => ({
+        zombie4Position: { 
+          ...prevState.zombie4Position, 
+          leftX: -70 
+        }
+      }));
+      // Optionally reset the action if needed
+      this.setZombie4Action('Walk'); // Or the default action you want to set
+      this.zombie4DeathTimeout = null;
+    }, 3000);
+  };
 
   // In TerminalGame.tsx or where you manage the game state
   updateCharacterAndBackground() {
