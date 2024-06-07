@@ -11,7 +11,6 @@ import { TerminalGame } from './game/TerminalGame';
 import ReactDOMServer from 'react-dom/server';
 import { ActionType } from './game/types/ActionTypes';
 import Phrases from '../Phrases';
-import { Phrase } from '../Phrase';
 
 
 export interface IHandexTermProps {
