@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { ActionType } from './types/ActionTypes';
-import { BaseCharacter } from './BaseCharacter';
+import { BaseCharacter } from '../game/BaseCharacter';
 
 import { SpritePosition } from './types/Position';
 

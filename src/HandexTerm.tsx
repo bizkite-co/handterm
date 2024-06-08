@@ -1,16 +1,16 @@
 // HandexTerm.ts
-import { LogKeys, TimeHTML, CharDuration, CharWPM, TerminalCssClasses } from './TerminalTypes';
+import { LogKeys, TimeHTML, CharDuration, CharWPM, TerminalCssClasses } from './types/TerminalTypes';
 import { IWPMCalculator, WPMCalculator } from './WPMCalculator';
 import { IPersistence, LocalStoragePersistence } from './Persistence';
-import { createHTMLElementFromHTML } from '../utils/dom';
+import { createHTMLElementFromHTML } from './utils/dom';
 import React, { TouchEventHandler } from 'react';
 import { XtermAdapter } from './XtermAdapter';
-import { NextCharsDisplay } from '../NextCharsDisplay';
-import { Output } from '../terminal/Output';
+import { NextCharsDisplay } from './NextCharsDisplay';
+import { Output } from './Output';
 import { TerminalGame } from './game/TerminalGame';
 import ReactDOMServer from 'react-dom/server';
 import { ActionType } from './game/types/ActionTypes';
-import Phrases from '../Phrases';
+import Phrases from './Phrases';
 
 
 export interface IHandexTermProps {

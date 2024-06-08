@@ -1,4 +1,4 @@
-import { TerminalCssClasses } from "./terminal/TerminalTypes.js";
+import { TerminalCssClasses } from "./types/TerminalTypes.js";
 import { CharTime} from "./types/Types.js";
 
 

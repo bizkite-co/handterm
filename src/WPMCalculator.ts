@@ -1,4 +1,4 @@
-import { CharDuration, LogKeys, TimeCode, CharWPM } from './TerminalTypes';
+import { CharDuration, LogKeys, TimeCode, CharWPM } from './types/TerminalTypes';
 export interface IWPMCalculator {
     previousTimestamp: number;
     addKeystroke(character: string): CharDuration;

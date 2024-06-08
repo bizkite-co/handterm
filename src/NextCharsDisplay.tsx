@@ -1,5 +1,5 @@
 import { spaceDisplayChar, CharTime } from "./types/Types.js";
-import { TerminalCssClasses } from "./terminal/TerminalTypes.js";
+import { TerminalCssClasses } from "./types/TerminalTypes.js";
 
 import React, { createRef } from 'react';
 import { createRoot, Root } from 'react-dom/client'; // Import createRoot

@@ -1,62 +1,46 @@
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
-import React from 'react'
+// App.tsx
+import React, { useEffect } from 'react';
+import { HandexTerm } from './HandexTerm';
+import SpriteManagerContext from './game/SpriteManagerContext';
+import { SpriteManager } from './game/sprites/SpriteManager';
+// App.tsx
 
-export default function App() {
+const spriteManager = new SpriteManager();
 
-  return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <IncrementButton />
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-      <Parent />
-    </>
-  )
-}
+const App = () => {
+  const containerRef = React.createRef<HTMLDivElement>();
+  const [containerWidth, setContainerWidth] = React.useState<number>(0);
 
-function Parent() {
-  return <Child />;
-}
+  useEffect(() => {
+    const w = getContainerWidth();
+    console.log(`containerWidth: ${w}`);
+    setContainerWidth(w);
+  }, [])
 
-function IncrementButton() {
-  const [count, setCount] = React.useState(0);
-  return (
-    <button 
-      onClick={() => setCount((count) => count + 1)}>
-      count is {count}
-    </button>
-  )
-}
-
-export function Child() {
-  let modeName: String = "child test";
-  let inputRef = React.useRef<HTMLInputElement>(null);
-
-  function onInputHandler(): void {
+  const getContainerWidth = () => {
+    return containerRef.current?.clientWidth ?? 0
   }
 
+  useEffect(() => {
+    const handleResize = () => {
+      const w = getContainerWidth();
+      console.log(`containerWidth: ${w}`);
+      setContainerWidth(w);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  })
+
   return (
-    <div>
-      <label htmlFor="testMode">{modeName}</label>
-      <input
-        ref={inputRef}
-        onInput={onInputHandler} />
-    </div>
-  )
-}
+    <SpriteManagerContext.Provider value={spriteManager}>
+      <div ref={containerRef}>
+        <HandexTerm
+          terminalWidth={containerWidth}
+        />
+      </div>
+    </SpriteManagerContext.Provider>
+  );
+};
+
+export default App;

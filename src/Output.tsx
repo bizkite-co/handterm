@@ -1,5 +1,5 @@
 import React, { TouchEventHandler } from "react";
-import { TerminalCssClasses } from "./TerminalTypes";
+import { TerminalCssClasses } from "./types/TerminalTypes";
 
 
 export interface OutputProps {

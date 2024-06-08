@@ -7,31 +7,31 @@ export default class Phrases {
             name: "hello", phrase: "Hello, World!"
         },
         {
-            name: "mr-jock", phrase: "Mr. Jock, TV quiz PhD., bags few lynx."
+            name: "mr", phrase: "Mr. Jock, TV quiz PhD., bags few lynx."
         },
         {
-            name: "watch-jeopardy", phrase: "Watch \"Jeopardy!\", Alex Trebek's fun TV"
+            name: "watch", phrase: "Watch \"Jeopardy!\", Alex Trebek's fun TV"
         },
         {
             name: "pack", phrase: "Pack my box with five dozen liquor jugs."
         },
         {
-            name: "handex1", phrase: "Type anywhere with this one-handed keyboard. Stop sitting down to type. Stop looking down to send messages."
+            name: "h1", phrase: "Type anywhere with this one-handed keyboard. Stop sitting down to type. Stop looking down to send messages."
         },
         {
-            name: "handex2", phrase: "Built to the shape of your finger actions, this device will eliminate your need to reposition your fingers while typeing."
+            name: "h2", phrase: "Built to the shape of your finger actions, this device will eliminate your need to reposition your fingers while typeing."
         },
         {
-            name: "handex3", phrase: "Use the same keyboard, designed for your hand, everywhere. You never have to learn a new one. The natural motions of your fingers compose the characters."
+            name: "h3", phrase: "Use the same keyboard, designed for your hand, everywhere. You never have to learn a new one. The natural motions of your fingers compose the characters."
         },
         {
-            name: "handex4", phrase: "It's build around your hand, so you don't have to reorient your finger placement on a board. Repositioning your fingers on a board is the biggest hurdle of typing-training, so don't do it."
+            name: "h4", phrase: "It's build around your hand, so you don't have to reorient your finger placement on a board. Repositioning your fingers on a board is the biggest hurdle of typing-training, so don't do it."
         },
         {
-            name: "handex5", phrase: "Handex is built around your finger movements, so you'll never have to reposition your fingers to find a key. Even unusual keys, such `\\`, `~`, `|`, `^`, `&` are easy to type."
+            name: "h5", phrase: "Handex is built around your finger movements, so you'll never have to reposition your fingers to find a key. Even unusual keys, such `\\`, `~`, `|`, `^`, `&` are easy to type."
         },
         {
-            name: "handex6", phrase: "Handex liberates you from the key-board-shackle problem. 151 keys are currently available and more are coming."
+            name: "h6", phrase: "Handex liberates you from the key-board-shackle problem. 151 keys are currently available and more are coming."
         },
         {
             name: "k=7", phrase: "k=7; l=8; m=$((k + l)); n=$((k > l ? k : l)); echo \"Max: $n\"; grep 'Max' <<< \"Max: $n\" || echo \"No match found\" > /dev/null; echo \"Sum: $(($m))\""

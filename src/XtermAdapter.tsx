@@ -1,8 +1,8 @@
 // XtermAdapter.ts
 import { Terminal } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
-import { TerminalCssClasses } from './TerminalTypes';
-import { IWebCam, WebCam } from '../utils/WebCam';
+import { TerminalCssClasses } from './types/TerminalTypes';
+import { IWebCam, WebCam } from './utils/WebCam';
 import React, { TouchEventHandler } from 'react';
 
 interface IXtermAdapterState {
