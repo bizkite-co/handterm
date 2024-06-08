@@ -27,7 +27,6 @@ export class WebCam {
             );
         }
         else {
-            // document.querySelector("div.content").appendChild(APP.chordSection);
             console.log("this.preview.srcObject:", this.preview.srcObject, "setOn:", setOn);
             if (this.preview.srcObject) {
                 const tracks = (this.preview.srcObject as MediaStream).getTracks();
@@ -37,7 +36,5 @@ export class WebCam {
             this.preview.srcObject = null;
         }
         this.preview.hidden = !setOn;
-        // APP.phrase.classList.toggle('phrase-over-video', setOn);
-        // APP.chordSection.classList.toggle('chord-section-over-video', setOn);
     }
 }
