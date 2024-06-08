@@ -125,17 +125,16 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
       response = "Type the phrase as fast as you can."
       this.setNewPhrase(command);
     }
-    if (command.startsWith('video --')) {
+    if (command.startsWith('video')) {
       status = 200;
-      if (command === 'video --true') {
+      const isOn = this.adapterRef.current?.toggleVideo();
+      if (isOn) {
         response = "Starting video camera..."
       }
       else {
         response = "Stopping video camera..."
       }
-      this.adapterRef.current?.toggleVideo();
-      this.handleCommand(command + ' --' + this.adapterRef.current?.isShowVideo);
-
+      // this.handleCommand(command + ' --' + this.adapterRef.current?.isShowVideo);
       return "video";
     }
 

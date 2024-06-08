@@ -28,7 +28,7 @@ export class WebCam {
         }
         else {
             // document.querySelector("div.content").appendChild(APP.chordSection);
-            console.log("this.preview.srcObject:", this.preview.srcObject);
+            console.log("this.preview.srcObject:", this.preview.srcObject, "setOn:", setOn);
             if (this.preview.srcObject) {
                 const tracks = (this.preview.srcObject as MediaStream).getTracks();
                 tracks.forEach(track => track.stop());
