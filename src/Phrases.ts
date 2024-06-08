@@ -69,7 +69,9 @@ export default class Phrases {
         }
         return this.phrases[0].phrase;
     }
-
+    public static getPhrases(): string[] {
+        return Phrases.phrases.map(x => x.name);
+    }
     public static getRandomPhrase(): string {
         const phrasesLength = this.phrases.length;
         const randomKey = Math.floor(Math.random() * phrasesLength);

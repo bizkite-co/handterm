@@ -116,6 +116,12 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
       this.terminalGameRef.current.setZombie4ToDeathThenResetPosition();
       this.terminalGameRef.current.completeGame();
     }
+    if (command === 'ls phrases'){
+      status = 200;
+      const phrases = Phrases.getPhrases();
+      response = phrases.join('<br/>');
+      // return response;
+    }
     if (command === 'play') {
       status = 200;
       response = "Would you like to play a game?"
