@@ -2,10 +2,8 @@ import { spaceDisplayChar, CharTime } from "./types/Types.js";
 import { TerminalCssClasses } from "./types/TerminalTypes.js";
 
 import React, { createRef } from 'react';
-import { createRoot, Root } from 'react-dom/client'; // Import createRoot
 import Timer from './Timer.js'; // Import the React component
 import ErrorDisplay from "./ErrorDisplay";
-// import Phrases from './Phrases';
 import { Phrase } from "./Phrase";
 
 interface NextCharsDisplayProps {
@@ -32,15 +30,11 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
 
     private _chordImageHolderRef: React.RefObject<HTMLDivElement>;
     private _svgCharacter: React.RefObject<HTMLImageElement>;
-    private _testArea: HTMLTextAreaElement;
-    private _timerRoot: HTMLElement | null = null;
     private _timerRef: React.RefObject<any>;
-    private timerComponentRoot: Root | null = null
     private voiceSynth: SpeechSynthesis;
     private _charTimeArray: CharTime[] = [];
     private _charTimes: React.RefObject<HTMLDivElement>;
     private _wpmRef: React.RefObject<HTMLSpanElement>;
-    private _centiSecond: number = 0;
     public isTestMode: boolean;
 
     state = {
@@ -66,14 +60,12 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
         this._charTimes = React.createRef<HTMLDivElement>();
         this._chordImageHolderRef = React.createRef<HTMLDivElement>();
         this._svgCharacter = React.createRef<HTMLImageElement>();
-        this._testArea = (document.getElementById(TerminalCssClasses.TestArea) as HTMLTextAreaElement);
         this.isTestMode = localStorage.getItem('testMode') == 'true';
         this._timerRef = createRef();
         // this._timer = new Timer();
     }
 
     componentDidMount() {
-        this.mountTimer();
         if(this.props.isInPhraseMode) {
             this.setState({
                 phrase: new Phrase(this.props.newPhrase)
@@ -141,15 +133,6 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
         this.props.onPhraseSuccess(this.state.phrase.value, 35);
     };
 
-    mountTimer() {
-        this._timerRoot = document.getElementById('timer-root');
-        if (this._timerRoot) {
-            if (!this.timerComponentRoot) {
-                this.timerComponentRoot = createRoot(this._timerRoot); // Create a root
-            }
-            this.timerComponentRoot.render(<Timer ref={this._timerRef} />); // Render the Timer component with the ref
-        }
-    }
 
     stopTimer() {
         if (this._timerRef.current) {
@@ -172,12 +155,6 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
             this._timerRef.current.reset();
         }
         if (this._nextCharsRef.current) this._nextCharsRef.current.innerText = this.state.phrase.value;
-        if (this._testArea) {
-            this._testArea.style.border = "2px solid lightgray";
-            this._testArea.disabled = false;
-            this._testArea.value = '';
-            this._testArea.focus();
-        }
     }
 
     reset(): void {
@@ -217,22 +194,6 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
         return nextChars || stringBeingTested.substring(nextIndex, nextIndex + this._nextCharsLength);
     }
 
-    /**
-     * Calculates the words per minute (WPM) based on the text typed in the test area.
-     *
-     * @return {string} The calculated words per minute as a string with two decimal places.
-     */
-    getWpm(): string {
-        if (!this._testArea) return "0";
-        if (this._testArea.value.length < 2) {
-            return "0";
-        }
-
-        const words = this._testArea.value.length / 5;
-        const result = (words / (this._centiSecond / 100 / 60) + 0.000001).toFixed(2);
-        return result;
-    }
-
     private setNext = (testPhrase: string): HTMLElement | null => {
         // TODO: figure out why setNextCharsDisplay is also calling getFirstNonMatchingChar and see if we can do it all at once.
         const nextIndex = this.getFirstNonMatchingChar(testPhrase);
@@ -266,16 +227,10 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
         if (this._svgCharacter.current && !this.isTestMode) {
             this._svgCharacter.current.hidden = false;
         }
-        if(this._wpmRef.current) this._wpmRef.current.innerText = this.getWpm();
         return nextChordHTML;
     };
 
     cancel = () => {
-        if (this._testArea) {
-            this._testArea.value = '';
-            this._testArea.focus();
-            this._testArea.style.border = "";
-        }
         this._charTimeArray = [];
         if (this.wpm) this.wpm = '0';
         if (this._charTimes.current) this._charTimes.current.innerHTML = '';
@@ -295,7 +250,6 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
         // TODO: de-overlap this and comparePhrase
         if (stringBeingTested.length === 0) {
             // stop timer
-            if (this._testArea) this._testArea.style.border = "";
             const chordImageHolderChild = this._chordImageHolderRef.current?.firstChild as HTMLImageElement;
             if (chordImageHolderChild) chordImageHolderChild.hidden = true;
             this.cancelTimer();
