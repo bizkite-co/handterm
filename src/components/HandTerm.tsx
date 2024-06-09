@@ -11,7 +11,7 @@ import { TerminalGame } from '../game/TerminalGame';
 import ReactDOMServer from 'react-dom/server';
 import { ActionType } from '../game/types/ActionTypes';
 import Phrases from '../utils/Phrases';
-
+import { IWebCam, WebCam } from '../utils/WebCam';
 
 export interface IHandexTermProps {
   // Define the interface for your HandexTerm logic
@@ -41,12 +41,15 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
   private _persistence: IPersistence;
   private _commandHistory: string[] = [];
   private wpmCalculator: IWPMCalculator = new WPMCalculator();
+  private videoElementRef: React.RefObject<HTMLVideoElement> = React.createRef();
+  private webCam: IWebCam | null = null;
   private static readonly commandHistoryLimit = 100;
   private isDebug: boolean = false;
   canvasHeight: number = 100;
   private heroRunTimeoutId: number | null = null;
   private lastTouchDistance: number | null = null;
   private currentFontSize: number = 17;
+  isShowVideo: any;
 
   updateTerminalFontSize(newSize: number) {
     this.setState({ terminalFontSize: newSize });
@@ -78,6 +81,10 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
       }
     }
     window.scrollTo(0, document.body.scrollHeight);
+
+    if (this.videoElementRef.current) {
+      this.webCam = new WebCam(this.videoElementRef.current);
+    }
 
     this.addTouchListeners();
   }
@@ -133,7 +140,7 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
     }
     if (command.startsWith('video')) {
       status = 200;
-      const isOn = this.adapterRef.current?.toggleVideo();
+      const isOn = this.toggleVideo();
       if (isOn) {
         response = "Starting video camera..."
       }
@@ -553,6 +560,13 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
     );
   }
 
+
+  public toggleVideo(): boolean {
+    this.isShowVideo = !this.isShowVideo;
+    this.webCam?.toggleVideo(this.isShowVideo);
+    return this.isShowVideo;
+  }
+
   public render() {
     const { terminalSize } = this.state;
     // TODO: Make better terminal width matcher.
@@ -595,6 +609,11 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
           onTouchEnd={this.handleTouchEnd}
         />
         {/* </React.StrictMode> */}
+        <video
+          ref={this.videoElementRef as React.RefObject<HTMLVideoElement>}
+          id="terminal-video"
+          hidden={!this.isShowVideo}
+        ></video>
       </div>
     )
   }

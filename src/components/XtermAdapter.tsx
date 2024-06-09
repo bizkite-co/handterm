@@ -2,7 +2,6 @@
 import { Terminal } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
 import { TerminalCssClasses } from '../types/TerminalTypes';
-import { IWebCam, WebCam } from '../utils/WebCam';
 import React, { TouchEventHandler } from 'react';
 
 interface IXtermAdapterState {
@@ -20,10 +19,8 @@ interface IXtermAdapterProps {
 export class XtermAdapter extends React.Component<IXtermAdapterProps, IXtermAdapterState> {
   private terminal: Terminal;
   private terminalElementRef: React.RefObject<HTMLElement>;
-  private videoElementRef: React.RefObject<HTMLVideoElement> = React.createRef();
   private promptDelimiter: string = '$';
   private promptLength: number = 0;
-  private webCam: IWebCam | null = null;
   public isShowVideo: boolean = false;
   private fitAddon = new FitAddon();
   private isDebug: boolean = false;
@@ -89,9 +86,6 @@ export class XtermAdapter extends React.Component<IXtermAdapterProps, IXtermAdap
     this.setViewPortOpacity();
     this.terminal.focus();
     this.prompt();
-    if (this.videoElementRef.current) {
-      this.webCam = new WebCam(this.videoElementRef.current);
-    }
     window.addEventListener('resize', this.handleResize);
   }
 
@@ -170,12 +164,6 @@ export class XtermAdapter extends React.Component<IXtermAdapterProps, IXtermAdap
     viewPort.style.opacity = "0.0";
   }
 
-  public toggleVideo(): boolean {
-    this.isShowVideo = !this.isShowVideo;
-    this.webCam?.toggleVideo(this.isShowVideo);
-    return this.isShowVideo;
-  }
-
   public getCurrentCommand(): string {
     const buffer = this.terminal.buffer.active;
     // Assuming the command prompt starts at the top of the terminal (line 0)
@@ -218,11 +206,6 @@ export class XtermAdapter extends React.Component<IXtermAdapterProps, IXtermAdap
           id={TerminalCssClasses.Terminal}
           className={TerminalCssClasses.Terminal}
         />
-        <video
-          ref={this.videoElementRef as React.RefObject<HTMLVideoElement>}
-          id="terminal-video"
-          hidden={!this.isShowVideo}
-        ></video>
       </>
     );
   }
