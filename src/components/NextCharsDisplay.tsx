@@ -1,10 +1,10 @@
-import { spaceDisplayChar, CharTime } from "./types/Types.js";
-import { TerminalCssClasses } from "./types/TerminalTypes.js";
+import { spaceDisplayChar, CharTime } from "../types/Types.js";
+import { TerminalCssClasses } from "../types/TerminalTypes.js";
 
 import React, { createRef } from 'react';
 import Timer from './Timer.js'; // Import the React component
 import ErrorDisplay from "./ErrorDisplay";
-import { Phrase } from "./Phrase";
+import { Phrase } from "../utils/Phrase.js";
 
 interface NextCharsDisplayProps {
     commandLine: string;

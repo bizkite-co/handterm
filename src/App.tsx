@@ -1,6 +1,6 @@
 // App.tsx
 import React, { useEffect } from 'react';
-import { HandexTerm } from './HandexTerm';
+import { HandexTerm } from './components/HandTerm';
 import SpriteManagerContext from './game/SpriteManagerContext';
 import { SpriteManager } from './game/sprites/SpriteManager';
 // App.tsx

@@ -1,16 +1,16 @@
 // HandexTerm.ts
-import { LogKeys, TimeHTML, CharDuration, CharWPM, TerminalCssClasses } from './types/TerminalTypes';
-import { IWPMCalculator, WPMCalculator } from './WPMCalculator';
-import { IPersistence, LocalStoragePersistence } from './Persistence';
-import { createHTMLElementFromHTML } from './utils/dom';
+import { LogKeys, TimeHTML, CharDuration, CharWPM, TerminalCssClasses } from '../types/TerminalTypes';
+import { IWPMCalculator, WPMCalculator } from '../utils/WPMCalculator';
+import { IPersistence, LocalStoragePersistence } from '../Persistence';
+import { createHTMLElementFromHTML } from '../utils/dom';
 import React, { TouchEventHandler } from 'react';
 import { XtermAdapter } from './XtermAdapter';
 import { NextCharsDisplay } from './NextCharsDisplay';
 import { Output } from './Output';
-import { TerminalGame } from './game/TerminalGame';
+import { TerminalGame } from '../game/TerminalGame';
 import ReactDOMServer from 'react-dom/server';
-import { ActionType } from './game/types/ActionTypes';
-import Phrases from './Phrases';
+import { ActionType } from '../game/types/ActionTypes';
+import Phrases from '../utils/Phrases';
 
 
 export interface IHandexTermProps {
@@ -70,6 +70,18 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
     this.loadFontSize();
   }
 
+  componentDidMount(): void {
+    if (this.adapterRef.current) {
+      const size = this.adapterRef.current.getTerminalSize();
+      if (size) {
+        this.setState({ terminalSize: size });
+      }
+    }
+    window.scrollTo(0, document.body.scrollHeight);
+
+    this.addTouchListeners();
+  }
+
   componentWillUnmount(): void {
     if (this.heroRunTimeoutId) {
       clearTimeout(this.heroRunTimeoutId);
@@ -82,18 +94,6 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
       isInPhraseMode: false,
       phrase: ''
     });
-  }
-
-  componentDidMount(): void {
-    if (this.adapterRef.current) {
-      const size = this.adapterRef.current.getTerminalSize();
-      if (size) {
-        this.setState({ terminalSize: size });
-      }
-    }
-    window.scrollTo(0, document.body.scrollHeight);
-
-    this.addTouchListeners();
   }
 
   public handleCommand(command: string): string {
@@ -180,7 +180,7 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
 
     if (character.charCodeAt(0) === 4) { // Ctrl+D
       console.log('Ctrl+D pressed');
-      // this.increaseFontSize();
+      this.increaseFontSize();
     }
 
     if (character.charCodeAt(0) === 13) { // Enter key
@@ -192,7 +192,6 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
       // TODO: A bunch of phrase command stuff should be moved from NextCharsDisplay to here, such as phrase generation.
     } else if (this.state.isInPhraseMode) {
       // # IN PHRASE MODE
-      // this.handexTerm.handleCharacter(character);
       this.terminalWrite(character);
       let command = this.adapterRef.current?.getCurrentCommand() + character;
 
@@ -210,7 +209,6 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
       this.setHeroRunAction();
     } else {
       // For other input, just return it to the terminal.
-      // this.handexTerm.handleCharacter(character);
       this.terminalWrite(character);
       this.setHeroRunAction();
     }
@@ -405,10 +403,6 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
     }
   }
 
-  // setNewPhrase = (phrase: string) => {
-  //   // Write phrase to output.
-  //   this.setState(prevState => ({ outputElements: [...prevState.outputElements, phrase] }));
-  // }
 
   handlePhraseSuccess = (phrase: string, wpm: number) => {
     this.setState(
@@ -510,6 +504,7 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
     // this.terminal.options.fontSize = this.currentFontSize;
     // this.terminal.refresh(0, this.terminal.rows - 1);
     localStorage.setItem('terminalFontSize', `${this.currentFontSize}`);
+    console.log('INCREASE terminalFontSize', this.currentFontSize);
   }
 
   public handleTouchEnd: TouchEventHandler<HTMLDivElement> = () => {
@@ -589,6 +584,7 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
           newPhrase={this.state.phrase}
           onPhraseSuccess={this.handlePhraseSuccess}
         />
+        {/* <React.StrictMode> */}
         <XtermAdapter
           ref={this.adapterRef}
           terminalElement={this.terminalElementRef.current}
@@ -598,6 +594,7 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
           onTouchStart={this.handleTouchStart}
           onTouchEnd={this.handleTouchEnd}
         />
+        {/* </React.StrictMode> */}
       </div>
     )
   }

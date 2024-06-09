@@ -1,8 +1,8 @@
 // XtermAdapter.ts
 import { Terminal } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
-import { TerminalCssClasses } from './types/TerminalTypes';
-import { IWebCam, WebCam } from './utils/WebCam';
+import { TerminalCssClasses } from '../types/TerminalTypes';
+import { IWebCam, WebCam } from '../utils/WebCam';
 import React, { TouchEventHandler } from 'react';
 
 interface IXtermAdapterState {
@@ -27,21 +27,22 @@ export class XtermAdapter extends React.Component<IXtermAdapterProps, IXtermAdap
   public isShowVideo: boolean = false;
   private fitAddon = new FitAddon();
   private isDebug: boolean = false;
+  private onDataDisposable: import("@xterm/xterm").IDisposable | null = null;
 
-  constructor(props: IXtermAdapterProps ) {
+  constructor(props: IXtermAdapterProps) {
     super(props);
     const { terminalElementRef } = props;
     this.terminalElementRef = terminalElementRef;
     this.state = {
     }
-    // this.videoElement = this.createVideoElement();
-    // this.terminalElement.prepend(this.videoElement);
     this.terminal = new Terminal({
       fontFamily: '"Fira Code", Menlo, "DejaVu Sans Mono", "Lucida Console", monospace',
       cursorBlink: true,
       cursorStyle: 'block',
+      cursorInactiveStyle: 'outline',
       fontSize: this.props.terminalFontSize
     });
+    this.onDataHandler = this.onDataHandler.bind(this);
   }
 
   initializeTerminal() {
@@ -64,19 +65,10 @@ export class XtermAdapter extends React.Component<IXtermAdapterProps, IXtermAdap
     this.terminal.write(data);
   }
 
-
-  componentDidUpdate(prevProps: Readonly<IXtermAdapterProps> ): void {
-    if (prevProps.terminalElementRef?.current !== this.props.terminalElementRef?.current) {
-      this.initializeTerminal();
-    }
-  }
-  componentWillUnmount(): void {
-    window.removeEventListener('resize', this.handleResize);
-  }
   getTerminalText(): string {
     return this.getCurrentCommand();
   }
-  
+
   handleResize = () => {
     // Assuming fitAddon is stored as a class member
     console.log('handleResize');
@@ -89,9 +81,9 @@ export class XtermAdapter extends React.Component<IXtermAdapterProps, IXtermAdap
     } else {
       console.error('terminalElementRef.current is NULL');
     }
-    this.terminal.onData(this.onDataHandler.bind(this));
+    this.onDataDisposable = this.terminal.onData(this.onDataHandler);
     this.terminal.onCursorMove(() => {
-
+      // console.log('cursor move', this.terminal.buffer);
     })
     // this.loadCommandHistory();
     this.setViewPortOpacity();
@@ -103,6 +95,19 @@ export class XtermAdapter extends React.Component<IXtermAdapterProps, IXtermAdap
     window.addEventListener('resize', this.handleResize);
   }
 
+  // componentDidUpdate(prevProps: Readonly<IXtermAdapterProps>): void {
+  //   if (prevProps.terminalElementRef?.current !== this.props.terminalElementRef?.current) {
+  //     this.initializeTerminal();
+  //   }
+  // }
+
+  componentWillUnmount(): void {
+    if(this.onDataDisposable) {
+      this.onDataDisposable.dispose();
+    }
+    window.removeEventListener('resize', this.handleResize);
+  }
+
   setCursorMode(terminal: Terminal) {
     terminal.options.cursorBlink = true;
     terminal.options.cursorStyle = 'block';
@@ -112,7 +117,7 @@ export class XtermAdapter extends React.Component<IXtermAdapterProps, IXtermAdap
   handleBackSpaceAndNavigation(data: string): boolean {
     let result = false;
     if (data.charCodeAt(0) === 127) {
-      if(this.isDebug) console.log('Backspace pressed', this.terminal.buffer.active.cursorX, this.terminal.buffer.active.cursorY);
+      if (this.isDebug) console.log('Backspace pressed', this.terminal.buffer.active.cursorX, this.terminal.buffer.active.cursorY);
       if (this.isCursorOnPrompt()) return true;
       this.terminal.write('\x1b[D\x1b[P');
       result = true;
@@ -129,7 +134,7 @@ export class XtermAdapter extends React.Component<IXtermAdapterProps, IXtermAdap
   onDataHandler(data: string): void {
     // TODO: Move business logic to HandexTerm and just leave `@xterm/xterm.js` handling features in here.
     const charCodes = data.split('').map(char => char.charCodeAt(0)).join(',');
-    if(this.isDebug) {
+    if (this.isDebug) {
       console.info('onDataHandler', data, charCodes, this.terminal.buffer.active.cursorX, this.terminal.buffer.active.cursorY);
     }
     // Set the cursor mode on the terminal
@@ -143,9 +148,7 @@ export class XtermAdapter extends React.Component<IXtermAdapterProps, IXtermAdap
           if (data.charCodeAt(2) === 72) { // HOME
             console.log('Home pressed');
             // TODO: Handle Home key
-            // while(this.terminal.buffer.active.cursorX > this.promptLength) {
-            //   this.terminal.write('\x1b[D');
-            // }
+            this.terminal.write(`\x1b[${this.promptLength + 1}G`);
             return;
           }
         }
@@ -162,14 +165,10 @@ export class XtermAdapter extends React.Component<IXtermAdapterProps, IXtermAdap
     this.props.onAddCharacter(data);
   }
 
-
   private setViewPortOpacity(): void {
     const viewPort = document.getElementsByClassName('xterm-viewport')[0] as HTMLDivElement;
     viewPort.style.opacity = "0.0";
-    // const xtermScreen = document.getElementsByClassName('xterm-screen')[0] as HTMLDivElement;
-    // const terminal = document.getElementById('terminal') as HTMLDivElement;
   }
-
 
   public toggleVideo(): boolean {
     this.isShowVideo = !this.isShowVideo;
@@ -199,7 +198,6 @@ export class XtermAdapter extends React.Component<IXtermAdapterProps, IXtermAdap
     this.terminal.write(promptText);
     // this.promptLength = this.terminal.buffer.active.cursorX;
   }
-
 
   public getTerminalSize(): { width: number; height: number } | undefined {
     if (this.terminalElementRef.current) {
