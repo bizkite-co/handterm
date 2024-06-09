@@ -108,6 +108,7 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
   }
 
   public handleCommand(command: string): string {
+
     let status = 404;
     let response = "Command not found.";
     this.terminalGameRef.current?.resetGame();
