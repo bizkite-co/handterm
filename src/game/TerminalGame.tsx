@@ -4,6 +4,7 @@ import { Hero } from './Hero';
 import { CharacterActionFC } from './CharacterActionFC';
 import { ActionType } from './types/ActionTypes';
 import { SpritePosition } from './types/Position';
+import { Level } from './Level';
 
 interface ITerminalGameProps {
   canvasHeight: number
@@ -16,6 +17,7 @@ interface ITerminalGameProps {
 }
 
 interface ITerminalGameState {
+  currentLevel: number;
   heroAction: ActionType;
   heroPosition: SpritePosition;
   heroReady: boolean;
@@ -50,6 +52,7 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
 
   getInitState(props: ITerminalGameProps): ITerminalGameState {
     return {
+      currentLevel: 0,
       heroAction: props.heroAction,
       heroPosition: { leftX: props.canvasWidth * this.heroXPercent, topY: 30 },
       heroReady: false,
@@ -67,6 +70,10 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
   public resetGame(): void {
     // TODO: Handle addListeners or subscrition before resetting state.
     // this.setState(this.getInitstate(this.props));
+  }
+
+  changeLevel = (newLevel: number) => {
+    this.setState({ currentLevel: newLevel });
   }
 
   constructor(props: ITerminalGameProps) {
@@ -363,6 +370,13 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
   render() {
     return (
       <>
+        <Level 
+          level={this.state.currentLevel}
+          canvasWidth={this.props.canvasWidth}
+          canvasHeight={this.props.canvasHeight} 
+          backgroundOffsetX={this.state.backgroundOffsetX}
+          canvasRef={this.canvasRef}
+          />
         <canvas
           ref={this.canvasRef}
           width={this.props.canvasWidth}
