@@ -126,7 +126,9 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
     if (command === 'ls phrases'){
       status = 200;
       const phrases = Phrases.getPhrases();
-      response = phrases.join('<br/>');
+      response = '<div class="phrase-names"><div class="phrase-name">' 
+        + phrases.join('</div><div class="phrase-name">') + 
+        '</div></div>';
       // return response;
     }
     if (command === 'play') {

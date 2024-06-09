@@ -49,7 +49,7 @@ export default class Phrases {
             name: "list", phrase: "List.map(fun i -> i + 1)[1;2;3]"
         },
         {
-            name: "arr=(1 2 3)", phrase: "arr=(1 2 3); sum=0; for i in \"${arr[@]}\"; do sum=$(($sum + i)); done; echo \"Sum: $sum\"; [[ $sum -lt 10 ]] && echo \"$sum < 10\" || echo \"$sum >= 10\""
+            name: "arr", phrase: "arr=(1 2 3); sum=0; for i in \"${arr[@]}\"; do sum=$(($sum + i)); done; echo \"Sum: $sum\"; [[ $sum -lt 10 ]] && echo \"$sum < 10\" || echo \"$sum >= 10\""
         },
         {
             name: "f()", phrase: "f() { return $(($1 & $2)); }; f 4 5; echo \"Bitwise AND: $?\""

@@ -42,7 +42,14 @@ body {
         clear: both;
     }
 }
-
+.phrase-names {
+    text-align: left;
+}
+.phrase-name {
+    display: inline-block;
+    width: auto;
+    margin: 0 10px 10px 0;
+}
 .key-container {
     float: left;
     flex-direction: column;
