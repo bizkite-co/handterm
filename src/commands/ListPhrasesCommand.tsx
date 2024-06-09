@@ -8,6 +8,7 @@ const ListPhrasesCommand: ICommand = {
     'easy': 'List only easy phrases',
   }, 
   execute: (args: string[]) => {
+    console.log('ListPhrasesCommand called with args:', args);
     // Command logic here
     return 'Phrases listed.';
   },
