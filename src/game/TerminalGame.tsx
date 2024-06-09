@@ -48,7 +48,7 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
   private textScrollX: number = this.props.canvasWidth; // Start offscreen to the right
   private textToScroll: string = "Terminal Velocity!";
 
-  getInitstate(props: ITerminalGameProps): ITerminalGameState {
+  getInitState(props: ITerminalGameProps): ITerminalGameState {
     return {
       heroAction: props.heroAction,
       heroPosition: { leftX: props.canvasWidth * this.heroXPercent, topY: 30 },
@@ -71,7 +71,7 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
 
   constructor(props: ITerminalGameProps) {
     super(props);
-    this.state = this.getInitstate(props);
+    this.state = this.getInitState(props);
   }
 
   componentDidMount() {
@@ -178,7 +178,7 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
       // Optionally reset the action if needed
       this.setZombie4Action('Walk'); // Or the default action you want to set
       this.zombie4DeathTimeout = null;
-    }, 4000);
+    }, 5000);
   };
 
   // In TerminalGame.tsx or where you manage the game state
