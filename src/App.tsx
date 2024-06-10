@@ -13,7 +13,6 @@ const App = () => {
 
   useEffect(() => {
     const w = getContainerWidth();
-    console.log(`containerWidth: ${w}`);
     setContainerWidth(w);
   }, [])
 
@@ -24,7 +23,6 @@ const App = () => {
   useEffect(() => {
     const handleResize = () => {
       const w = getContainerWidth();
-      console.log(`containerWidth: ${w}`);
       setContainerWidth(w);
     };
 

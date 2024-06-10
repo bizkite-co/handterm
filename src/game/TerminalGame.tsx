@@ -80,7 +80,6 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
   }
 
   componentDidMount() {
-    console.log("Hero x: ", this.state.heroPosition, " Canvas width: ", this.props.canvasWidth);
     const canvas = this.canvasRef.current;
     this.setParallaxLayers();
     if (canvas) {
@@ -282,6 +281,7 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
     } else {
       this.setState({ heroPosition: { ...this.state.heroPosition, leftX: newHeroPositionX } });
     }
+    console.log("reached", newBackgroundOffsetX);
   }
 
   startAnimationLoop(context: CanvasRenderingContext2D) {

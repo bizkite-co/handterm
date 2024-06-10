@@ -79,7 +79,6 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
                 const cmd = this.props.commandLine;
                 const phrase = cmd.replace("phrase ", "");
                 // this.setNewPhrase(phrase);
-                console.log("Did Update isInPhraseMode: ", phrase)
                 this.setState({
                     phrase: new Phrase(this.props.newPhrase)
                 })
@@ -262,7 +261,7 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
         ) {
             // if (this._testArea) this._testArea.style.border = "4px solid #FFF3";
             this.hideError();
-            console.log("Can we remove this if block?")
+
             // TODO: This should update the actual display
             // TODO: Make sure why nextChars is already updated here and remove this if condition or update it.
             // this.state.nextChars = this.getNextCharacters(inputString, this.state.phrase.value);
