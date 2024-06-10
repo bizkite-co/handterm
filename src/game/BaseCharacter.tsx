@@ -130,6 +130,7 @@ export class BaseCharacter extends React.Component<BaseCharacterProps, BaseChara
 
   public draw(frameIndex: number, position: SpritePosition) {
     const sprite = this.sprites[this.currentActionType];
+    // this.context.clearRect(position.leftX + 30, position.topY, 44, 80);
     if (sprite) {
       sprite.draw(
         this.context,
