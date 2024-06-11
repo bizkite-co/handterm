@@ -14,6 +14,14 @@ Robust, expert-level React implementation. Prefer functional components and othe
 
 * Include background on why each React best practice is chosen and why it might be important.
 
+## Game Play
+
+* [ ] If players test high WPM on the basics, they progress past basic training.
+    * [ ] If they do a random word asdfjkl;, for instance, they don't have to do home row training.
+    * [ ] This should work as a game logic simplifier, not complexifier. Only do it if there's an easy way.
+    * [ ] This might reduce the need for logins and complex progress tracking. Just use fast-basics testing to retest everyone on the basics anyway.
+* [ ] Tutorial mode could start with `asdf` and SVGs, maybe.
+
 ## Needed Tests
 
 * Typing ASCII shows up in the terminal when it is in focus.
