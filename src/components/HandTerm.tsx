@@ -12,6 +12,7 @@ import ReactDOMServer from 'react-dom/server';
 import { ActionType } from '../game/types/ActionTypes';
 import Phrases from '../utils/Phrases';
 import { IWebCam, WebCam } from '../utils/WebCam';
+import { getLevelCount } from '../game/Level';
 
 export interface IHandexTermProps {
   // Define the interface for your HandexTerm logic
@@ -130,6 +131,13 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
         + phrases.join('</div><div class="phrase-name">') + 
         '</div></div>';
       // return response;
+    }
+    if(command === 'level'){
+      if(!this.terminalGameRef.current) return '';
+      let nextLevel = this.terminalGameRef.current.getLevel() + 1;
+      if(nextLevel > getLevelCount()) nextLevel = 1;
+      console.log("nextLevel", nextLevel);
+      this.terminalGameRef.current?.setLevel(nextLevel);
     }
     if (command === 'play') {
       status = 200;

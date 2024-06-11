@@ -20,7 +20,7 @@ export class SpriteManager {
     }
 
     private waitForManagerImageLoad(image: HTMLImageElement): Promise<void> {
-        return new Promise((resolve) => {
+        return new Promise((resolve, reject) => {
             const onLoad = () => {
                 // Cleanup: Remove both event listeners
                 image.removeEventListener('load', onLoad);
@@ -33,7 +33,7 @@ export class SpriteManager {
                 image.removeEventListener('load', onLoad);
                 image.removeEventListener('error', onError);
                 console.error('Image failed to load: ' + image.src);
-                // reject(new Error(`Image failed to load: ${image.src}`));
+                reject(new Error(`Image failed to load: ${image.src}`)); // Reject the promise on error
             };
 
             // Attach the event listeners

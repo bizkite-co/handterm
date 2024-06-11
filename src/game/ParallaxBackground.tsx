@@ -73,38 +73,53 @@ export const ParallaxBackground: React.FC<ParallaxBackgroundProps> = ({ layers, 
     const [loadedImages, setLoadedImages] = useState<Map<string, HTMLImageElement>>(new Map());
 
     useEffect(() => {
-        // Load the images when the layers change
+        const abortController = new AbortController(); // Create an abort controller for cleanup
+        const signal = abortController.signal;
+
         layers.forEach(layer => {
             if (!loadedImages.has(layer.imageSrc)) {
                 const image = new Image();
                 image.src = layer.imageSrc;
-                image.onload = () => {
-                    setLoadedImages(prevLoadedImages => {
-                        const updatedLoadedImages = new Map(prevLoadedImages);
-                        updatedLoadedImages.set(layer.imageSrc, image);
-                        return updatedLoadedImages;
-                    });
+
+                const onLoad = () => {
+                    if (!signal.aborted) { // Only proceed if the effect has not been aborted
+                        setLoadedImages(prevLoadedImages => {
+                            const updatedLoadedImages = new Map(prevLoadedImages);
+                            updatedLoadedImages.set(layer.imageSrc, image);
+                            return updatedLoadedImages;
+                        });
+                    }
                 };
+
+                image.onload = onLoad;
+                // Add an event listener for aborting the image loading
+                signal.addEventListener('abort', () => {
+                    image.onload = null; // Unset the onload handler if the effect is being cleaned up
+                });
             }
         });
+
+        // Cleanup function to abort loading if the component unmounts or layers change
+        return () => {
+            abortController.abort();
+        };
     }, [layers]);
 
-    // useEffect(() => {
-    //     const canvas = canvasRef.current;
-    //     const context = canvas?.getContext('2d');
-    //     if (context) {
-    //         // Clear the canvas before drawing the new frame
-    //         context.clearRect(0, 0, canvasWidth, canvasHeight);
+    useEffect(() => {
+        const canvas = canvasRef.current;
+        const context = canvas?.getContext('2d');
+        if (context) {
+            // Clear the canvas before drawing the new frame
 
-    //         // Draw each layer
-    //         layers.forEach(layer => {
-    //             const image = loadedImages.get(layer.imageSrc);
-    //             if (image) {
-    //                 drawParallaxLayer(context, layer, offset, canvasWidth, canvasHeight, image)
-    //             }
-    //         });
-    //     }
-    // }, [layers, offset, canvasWidth, canvasHeight, canvasRef]);
+            // Draw each layer
+            layers.forEach(layer => {
+                const image = loadedImages.get(layer.imageSrc);
+                if (image) {
+                    drawParallaxLayer(context, layer, offset, canvasWidth, canvasHeight, image)
+                }
+            });
+        }
+    }, [layers, offset, canvasWidth, canvasHeight, canvasRef]);
 
     // The canvas is rendered by the parent component (TerminalGame)
     return null;

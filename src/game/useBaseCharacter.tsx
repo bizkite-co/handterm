@@ -1,3 +1,5 @@
+// useBaseCharacter.tsx
+
 import { useEffect, useRef, useState } from 'react';
 import { Sprite } from './sprites/Sprite';
 import { SpriteAnimation } from './types/SpriteTypes';
@@ -15,7 +17,6 @@ interface BaseCharacterProps {
 export const useBaseCharacter = (props: BaseCharacterProps) => {
   const [, setSprite] = useState<Sprite | null>(null);
   const spriteManager = new SpriteManager();
-  const animationFrameId = useRef<number | null>(null);
   const previousActionTypeRef = useRef<ActionType>(props.currentActionType);
   const frameIndexRef = useRef<number>(0);
   const spritesRef = useRef<Record<ActionType, Sprite | undefined>>({} as Record<ActionType, Sprite | undefined>);
@@ -32,6 +33,29 @@ export const useBaseCharacter = (props: BaseCharacterProps) => {
     }
   };
 
+  const draw = (
+    context: CanvasRenderingContext2D, 
+    position: SpritePosition, 
+    scale: number | null
+  ) =>{
+    const sprite = spritesRef.current[props.currentActionType];
+    const action = props.actions[props.currentActionType];
+    const newX = position.leftX + action.dx;
+    incrementFrameIndex();
+    // if(props.name.toLocaleLowerCase() === 'zombie4') console.log("zombie4", frameIndexRef.current)
+    if (sprite) {
+      sprite.draw(
+        context,
+        frameIndexRef.current,
+        newX,
+        position.topY,
+        scale ?? props.scale
+      );
+
+    }
+    return { newX};
+  }
+
   const loadActions = () => {
     Object.entries(props.actions).forEach(([actionKey, actionData]) => {
       loadSprite(actionKey as ActionType, actionData.animation);
@@ -40,16 +64,12 @@ export const useBaseCharacter = (props: BaseCharacterProps) => {
 
   useEffect(() => {
     loadActions();
-    // Assuming you need to handle animation
-    // startAnimation();
-    return () => {
-      if (animationFrameId.current !== null) {
-        cancelAnimationFrame(animationFrameId.current);
-      }
-    };
+
     // Did-mount and will-unmount only
     // TODO: Clean up animation frame, etc.
+    return () => {
 
+    };
   }, []);
 
   useEffect(() => {
@@ -113,24 +133,6 @@ export const useBaseCharacter = (props: BaseCharacterProps) => {
     }
   };
 
-  const draw = (
-    context: CanvasRenderingContext2D, 
-    position: SpritePosition, 
-    scale: number | null
-  ) =>{
-    const sprite = spritesRef.current[props.currentActionType];
-    incrementFrameIndex();
-    // if(props.name.toLocaleLowerCase() === 'zombie4') console.log("zombie4", frameIndexRef.current)
-    if (sprite) {
-      sprite.draw(
-        context,
-        frameIndexRef.current,
-        position.leftX,
-        position.topY,
-        scale ?? props.scale
-      );
-    }
-  }
 
   return {
     draw

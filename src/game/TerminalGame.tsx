@@ -37,7 +37,9 @@ interface ITerminalGameState {
 interface CharacterRefMethods {
   getCurrentSprite: () => Sprite | null;
   getActions: () => Record<ActionType, Action>;
-  draw: (context: CanvasRenderingContext2D, position: SpritePosition) => void;
+  draw: (context: CanvasRenderingContext2D, position: SpritePosition) => {
+    position: SpritePosition;
+  };
 }
 
 export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalGameState> {
@@ -74,6 +76,12 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
     };
   }
 
+  public getLevel = () => {
+    return this.state.currentLevel;
+  }
+  public setLevel = (newLevel: number) => {
+    this.setState({ currentLevel: newLevel });
+  }
   public resetGame(): void {
     // TODO: Handle addListeners or subscrition before resetting state.
     // this.setState(this.getInitstate(this.props));
@@ -232,6 +240,7 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
     const canvasCenterX = this.props.canvasWidth * this.heroXPercent;
     const characterReachThreshold = canvasCenterX;
 
+    let heroResult = {};
     // const heroDx
     //   = this.heroActions
     //     ? this.heroActions[this.state.heroAction].dx / 4
@@ -264,17 +273,18 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
       this.setState({ heroPosition: { ...this.state.heroPosition, leftX: newHeroPositionX } });
     }
     if (this.heroRef.current && _context) {
-      this.heroRef.current.draw(_context, this.state.heroPosition);
+      heroResult = this.heroRef.current.draw(_context, this.state.heroPosition);
     }
     if (this.zombie4Ref.current && _context) {
       this.zombie4Ref.current.draw(_context, this.state.zombie4Position);
     }
-
+    return heroResult;
   }
 
   startAnimationLoop(context: CanvasRenderingContext2D) {
-    const frameDelay = 100; // Delay in milliseconds (100ms for 10 FPS)
+    const frameDelay = 150; // Delay in milliseconds (100ms for 10 FPS)
     let lastFrameTime = 0; // Time at which the last frame was processed
+    let newX = 0;
 
     const loop = (timestamp: number) => {
       if (!this.gameTime) {
@@ -291,13 +301,13 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
 
         // Get the parallax layers for the current level
 
-        const layers = this.state.layers;
         // Draw the parallax background layers
-        // context.save();
-        layers.forEach(layer => {
+        // context.clearRect(0, 0, this.props.canvasWidth, this.props.canvasHeight);
+        context.save();
+        
+        this.state.layers.forEach(layer => {
           drawParallaxLayer(context, layer, this.state.backgroundOffsetX, this.props.canvasWidth, this.props.canvasHeight, this.image);
         });
-        // context.restore();
 
         if (this.state.isPhraseComplete) {
           this.drawScrollingText(context);
@@ -305,13 +315,15 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
         // Reset globalAlpha if other drawings should not be affected
         context.globalAlpha = 1.0;
 
-        this.updateCharacterAndBackground(context);
+        newX = this.updateCharacterAndBackground(context);
+        this.setState({ backgroundOffsetX: newX });
+        context.restore();
 
         // Save the request ID to be able to cancel it
         this.checkProximityAndSetAction();
-      };
-
+        };
       this.animationFrameIndex = requestAnimationFrame(loop);
+
     };
 
     // Start the animation loop
