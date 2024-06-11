@@ -1,5 +1,7 @@
-import { BaseCharacter } from './BaseCharacter';
-import { ActionType, Zombie4Actions } from './types/ActionTypes';
+import { useBaseCharacter } from './useBaseCharacter';
+import { Zombie4Actions } from './types/ActionTypes';
+import { ICharacterProps } from './ICharacterProps';
+import { forwardRef, useImperativeHandle } from 'react';
 import { SpritePosition } from './types/Position';
 
 // * Idle - 5 frames
@@ -10,10 +12,19 @@ import { SpritePosition } from './types/Position';
 // * Spawn - 10 frames
 // There are 6 animations. All frames are on a 62x62 "canvas."
 
-export class Zombie4 extends BaseCharacter {
-  constructor(context: CanvasRenderingContext2D, actionType: ActionType, position: SpritePosition) {
-    super(context, Zombie4Actions, actionType, position, "Zombie4");
-    // Load sprites for different animations
+export const Zombie4 = forwardRef((props: ICharacterProps, ref) => {
 
-  }
-}
+  // Use the custom hook for shared logic with BaseCharacter
+  const { draw } = useBaseCharacter({
+    actions: Zombie4Actions,
+    currentActionType: props.currentActionType, // Replace with actual default action
+    name: 'Zombie4',
+    scale: props.scale,
+  });
+
+  useImperativeHandle(ref, () => ({
+    draw
+  }));
+
+  return null;
+});

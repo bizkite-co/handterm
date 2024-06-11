@@ -27,7 +27,7 @@ export const getParallaxLayers = (level: number): IParallaxLayer[] => {
     // Add more levels as needed
   ];
 
-  // console.log('getParallaxLayers called with level:', level);
+  console.log('getParallaxLayers called with level:', level);
   // Ensure the level index is within bounds, defaulting to level 1 if out of bounds
   const levelIndex = level - 1; // Adjust for zero-based index
   return layers[levelIndex] || layers[0];

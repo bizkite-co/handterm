@@ -1,5 +1,5 @@
 // ParallaxBackground.tsx
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 
 export interface IParallaxLayer {
     imageSrc: string;
@@ -20,10 +20,11 @@ export const drawParallaxLayer = (
     layer: IParallaxLayer,
     offset: number,
     canvasWidth: number,
-    canvasHeight: number
+    canvasHeight: number,
+    image: HTMLImageElement
 ) => {
     const { imageSrc, scale, movementRate } = layer;
-    const image = new Image();
+    // const image = new Image();
     image.src = imageSrc;
 
     // Wait for the image to load before drawing
@@ -69,19 +70,41 @@ export const drawParallaxLayer = (
 };
 
 export const ParallaxBackground: React.FC<ParallaxBackgroundProps> = ({ layers, offset, canvasWidth, canvasHeight, canvasRef }) => {
+    const [loadedImages, setLoadedImages] = useState<Map<string, HTMLImageElement>>(new Map());
 
     useEffect(() => {
-        const canvas = canvasRef.current;
-        const context = canvas?.getContext('2d');
-        if (context) {
-            // Clear the canvas before drawing the new frame
-            context.clearRect(0, 0, canvasWidth, canvasHeight);
+        // Load the images when the layers change
+        layers.forEach(layer => {
+            if (!loadedImages.has(layer.imageSrc)) {
+                const image = new Image();
+                image.src = layer.imageSrc;
+                image.onload = () => {
+                    setLoadedImages(prevLoadedImages => {
+                        const updatedLoadedImages = new Map(prevLoadedImages);
+                        updatedLoadedImages.set(layer.imageSrc, image);
+                        return updatedLoadedImages;
+                    });
+                };
+            }
+        });
+    }, [layers]);
 
-            // Draw each layer
-            layers.forEach(layer => drawParallaxLayer(context, layer, offset, canvasWidth, canvasHeight));
-        }
-        // console.log('ParallaxBackground rendered', layers, offset, canvasWidth, canvasHeight, canvasRef);
-    }, [layers, offset, canvasWidth, canvasHeight, canvasRef]);
+    // useEffect(() => {
+    //     const canvas = canvasRef.current;
+    //     const context = canvas?.getContext('2d');
+    //     if (context) {
+    //         // Clear the canvas before drawing the new frame
+    //         context.clearRect(0, 0, canvasWidth, canvasHeight);
+
+    //         // Draw each layer
+    //         layers.forEach(layer => {
+    //             const image = loadedImages.get(layer.imageSrc);
+    //             if (image) {
+    //                 drawParallaxLayer(context, layer, offset, canvasWidth, canvasHeight, image)
+    //             }
+    //         });
+    //     }
+    // }, [layers, offset, canvasWidth, canvasHeight, canvasRef]);
 
     // The canvas is rendered by the parent component (TerminalGame)
     return null;

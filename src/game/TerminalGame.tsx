@@ -1,11 +1,12 @@
+// TerminalGame.ts
 import React, { TouchEventHandler } from 'react';
 import { Zombie4 } from './Zombie4';
 import { Hero } from './Hero';
-import { CharacterActionFC } from './CharacterActionFC';
-import { ActionType } from './types/ActionTypes';
+import { Action, ActionType } from './types/ActionTypes';
 import { SpritePosition } from './types/Position';
 import { getParallaxLayers, Level } from './Level';
 import { drawParallaxLayer, IParallaxLayer } from './ParallaxBackground';
+import { Sprite } from './sprites/Sprite';
 
 interface ITerminalGameProps {
   canvasHeight: number
@@ -22,7 +23,7 @@ interface ITerminalGameState {
   heroAction: ActionType;
   heroPosition: SpritePosition;
   heroReady: boolean;
-  zombieAction: ActionType;
+  zombie4Action: ActionType;
   zombie4Position: SpritePosition;
   zombie4Ready: boolean;
   context: CanvasRenderingContext2D | null;
@@ -33,28 +34,36 @@ interface ITerminalGameState {
   layers: IParallaxLayer[];
 }
 
+interface CharacterRefMethods {
+  getCurrentSprite: () => Sprite | null;
+  getActions: () => Record<ActionType, Action>;
+  draw: (context: CanvasRenderingContext2D, position: SpritePosition) => void;
+}
+
 export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalGameState> {
+
   private canvasRef = React.createRef<HTMLCanvasElement>();
   private gameTime: number = 0;
-  private zombie4: Zombie4 | null = null;
-  private hero: Hero | null = null;
   private animationFrameIndex?: number;
   public context: CanvasRenderingContext2D | null = null;
-  private heroXPercent: number = 0.3;
+  private heroXPercent: number = 0.23;
   isInScrollMode: boolean = true;
   zombie4DeathTimeout: NodeJS.Timeout | null = null;
   // Add a new field for the text animation
   private textScrollX: number = this.props.canvasWidth; // Start offscreen to the right
   private textToScroll: string = "Terminal Velocity!";
+  private heroRef = React.createRef<CharacterRefMethods>();
+  private zombie4Ref = React.createRef<CharacterRefMethods>();
+  private image = new Image();
 
   getInitState(props: ITerminalGameProps): ITerminalGameState {
     return {
-      currentLevel: 0,
+      currentLevel: 1,
       heroAction: props.heroAction,
       heroPosition: { leftX: props.canvasWidth * this.heroXPercent, topY: 30 },
       heroReady: false,
-      zombieAction: props.zombie4Action,
-      zombie4Position: { leftX: -50, topY: 0 },
+      zombie4Action: props.zombie4Action,
+      zombie4Position: { leftX: 50, topY: 0 },
       zombie4Ready: false,
       context: null as CanvasRenderingContext2D | null,
       idleStartTime: null,
@@ -85,24 +94,23 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
     if (canvas) {
       const context = canvas.getContext('2d');
       if (context) {
-        this.hero = new Hero(
-          context, this.state.heroAction, this.state.heroPosition
-        );
-        this.zombie4 = new Zombie4(
-          context, this.state.zombieAction, this.state.zombie4Position
-        );
         this.setupCanvas();
       }
     }
   }
 
+
   componentDidUpdate(
-    _prevProps: Readonly<ITerminalGameProps>, 
-    prevState: Readonly<ITerminalGameState>, 
+    _prevProps: Readonly<ITerminalGameProps>,
+    prevState: Readonly<ITerminalGameState>,
     _snapshot?: any
   ): void {
     if (this.state.currentLevel !== prevState.currentLevel) {
       this.setParallaxLayers();
+    }
+    // Ensure no animation loop is already running
+    if (!this.animationFrameIndex) {
+      this.startAnimationLoop(this.state.context!);
     }
   }
 
@@ -179,7 +187,7 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
         isPhraseComplete: false,
         textScrollX: this.props.canvasWidth
       });
-      this.zombie4?.setCurrentPositionX(-70);
+
       // Optionally reset the action if needed
       this.setZombie4Action('Walk'); // Or the default action you want to set
       this.zombie4DeathTimeout = null;
@@ -187,44 +195,10 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
   };
 
 
-  // drawParallaxLayer(context: CanvasRenderingContext2D, image: HTMLImageElement, scale: number, movementRate: number) {
-  //   if (image.width === 0) {
-  //     console.error("image.width === 0", image.src);
-  //   }
-
-  //   const layerHeight = this.props.canvasHeight * scale;
-  //   const scaledWidth = Math.max(1, image.width * scale);
-
-
-  //   // Calculate how many times the image should be drawn to cover the canvas width
-  //   const numImages = Math.ceil(this.props.canvasWidth / scaledWidth) + 1;
-
-
-  //   // Calculate the offset for when the image scrolls
-  //   const offsetX = -(this.state.backgroundOffsetX * movementRate) % scaledWidth;
-
-  //   context.save(); // Save the current context state
-  //   // context.globalAlpha = scale === 0.8 ? 0.5 : 0.6; // Adjust transparency for effect if desired
-
-  //   // Draw the scaled image multiple times to cover the canvas width
-  //   for (let i = 0; i < numImages; i++) {
-  //     context.drawImage(
-  //       image,
-  //       0, 0, // source X, Y
-  //       image.width, image.height, // source width and height
-  //       offsetX + (i * scaledWidth), this.props.canvasHeight - layerHeight, // destination X, Y
-  //       scaledWidth, layerHeight // destination width and height
-  //     );
-  //   }
-
-  //   context.restore(); // Restore the context state
-  // }
   checkProximityAndSetAction() {
     // Constants to define "near"
     // TODO: Sprite image widths seem to be off by about 150.
     const ATTACK_THRESHOLD = 250; // pixels or appropriate unit for your game
-
-    if (!this.hero || !this.zombie4) return;
 
     // Calculate the distance between the hero and zombie4
     const distance = this.state.heroPosition.leftX - this.state.zombie4Position.leftX;
@@ -233,11 +207,11 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
     if (150 < distance && distance < ATTACK_THRESHOLD) {
 
       // Assuming zombie4 has a method to update its action
-      this.zombie4.setCurrentActionType('Attack'); // Replace 'Attack' with actual ActionType for attacking
+      this.setZombie4Action('Attack'); // Replace 'Attack' with actual ActionType for attacking
     } else {
       // Otherwise, set it back to whatever action it should be doing when not attacking
-      if (this.zombie4.getCurrentActionType() === 'Attack') {
-        this.zombie4.setCurrentActionType('Walk'); // Replace 'Walk' with actual ActionType for walking
+      if (this.state.zombie4Action === 'Attack') {
+        this.setZombie4Action('Walk'); // Replace 'Walk' with actual ActionType for walking
       }
     }
 
@@ -246,19 +220,22 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
   }
 
   setZombie4Action(action: ActionType) {
-    if (!this.zombie4) return;
-    this.zombie4.setCurrentActionType(action);
+    this.setState({ zombie4Action: action });
   }
+
   setParallaxLayers() {
     const layers = getParallaxLayers(this.state.currentLevel);
     this.setState({ layers });
   }
-  updateCharacterAndBackground() {
+
+  updateCharacterAndBackground(_context: CanvasRenderingContext2D) {
     const canvasCenterX = this.props.canvasWidth * this.heroXPercent;
     const characterReachThreshold = canvasCenterX;
 
-    if (!this.hero) return;
-    const heroDx = this.hero.getCurrentAction().dx / 4;
+    // const heroDx
+    //   = this.heroActions
+    //     ? this.heroActions[this.state.heroAction].dx / 4
+    //     : 0;
 
     let newBackgroundOffsetX = this.state.backgroundOffsetX;
 
@@ -270,51 +247,71 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
       this.isInScrollMode = true;
 
       // Update the background offset
-      newBackgroundOffsetX += heroDx;
+      // newBackgroundOffsetX += heroDx;
 
       this.setState({
         heroPosition: { ...this.state.heroPosition, leftX: characterReachThreshold },
         backgroundOffsetX: newBackgroundOffsetX, // Update background offset state
       });
 
-      if (this.zombie4) this.zombie4.position.leftX -= heroDx;
+      // this.updateBackgroundPosition(this.state.backgroundOffsetX + heroDx);
+      // if (this.zombie4Actions) {
+      //   const newX = this.state.zombie4Position.leftX - heroDx;
+      //   this.setState({ zombie4Position: { ...this.state.zombie4Position, leftX: newX } });
+      // }
+
     } else {
       this.setState({ heroPosition: { ...this.state.heroPosition, leftX: newHeroPositionX } });
     }
-    console.log("reached", newBackgroundOffsetX);
+    if (this.heroRef.current && _context) {
+      this.heroRef.current.draw(_context, this.state.heroPosition);
+    }
+    if (this.zombie4Ref.current && _context) {
+      this.zombie4Ref.current.draw(_context, this.state.zombie4Position);
+    }
+
   }
 
   startAnimationLoop(context: CanvasRenderingContext2D) {
+    const frameDelay = 100; // Delay in milliseconds (100ms for 10 FPS)
+    let lastFrameTime = 0; // Time at which the last frame was processed
+
     const loop = (timestamp: number) => {
       if (!this.gameTime) {
         this.gameTime = timestamp; // Initialize gameTime on the first animation frame
+        lastFrameTime = timestamp; // Initialize lastFrameTime on the first frame
       }
 
-      this.gameTime = timestamp; // Update gameTime for the next frame
+      // Calculate the time elapsed since the last frame
+      const timeElapsed = timestamp - lastFrameTime;
 
-      context.clearRect(0, 0, context.canvas.width, context.canvas.height);
+      if (timeElapsed >= frameDelay) {
+        // Update lastFrameTime to the current timestamp
+        lastFrameTime = timestamp - (timeElapsed % frameDelay);
 
-      this.updateCharacterAndBackground();
-      // Get the parallax layers for the current level
+        // Get the parallax layers for the current level
 
-      const layers = this.state.layers;
-      // context.clearRect(0, 0, context.canvas.width, context.canvas.height);
-      // Draw the parallax background layers
-      context.save();
-      layers.forEach(layer => {
-        drawParallaxLayer(context, layer, this.state.backgroundOffsetX, this.props.canvasWidth, this.props.canvasHeight);
-      });
-      context.restore();
+        const layers = this.state.layers;
+        // Draw the parallax background layers
+        // context.save();
+        layers.forEach(layer => {
+          drawParallaxLayer(context, layer, this.state.backgroundOffsetX, this.props.canvasWidth, this.props.canvasHeight, this.image);
+        });
+        // context.restore();
 
-      if (this.state.isPhraseComplete) {
-        this.drawScrollingText(context);
-      }
-      // Reset globalAlpha if other drawings should not be affected
-      context.globalAlpha = 1.0;
+        if (this.state.isPhraseComplete) {
+          this.drawScrollingText(context);
+        }
+        // Reset globalAlpha if other drawings should not be affected
+        context.globalAlpha = 1.0;
 
-      // Save the request ID to be able to cancel it
+        this.updateCharacterAndBackground(context);
+
+        // Save the request ID to be able to cancel it
+        this.checkProximityAndSetAction();
+      };
+
       this.animationFrameIndex = requestAnimationFrame(loop);
-      this.checkProximityAndSetAction();
     };
 
     // Start the animation loop
@@ -359,32 +356,16 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
           backgroundOffsetX={this.state.backgroundOffsetX}
           canvasRef={this.canvasRef}
         />
-        {this.hero &&
-          <CharacterActionFC
-            currentActionType={this.props.heroAction}
-            name="hero"
-            canvasWidth={this.props.canvasWidth}
-            baseCharacter={this.hero}
-            position={this.state.heroPosition}
-            onPositionChange={
-              (newPosition) => this.setState({ heroPosition: newPosition })
-            }
-            isInScrollMode={this.isInScrollMode}
-          />
-        }
-        {this.zombie4 &&
-          <CharacterActionFC
-            currentActionType={this.props.zombie4Action}
-            name="zombie4"
-            canvasWidth={this.props.canvasWidth}
-            baseCharacter={this.zombie4}
-            position={this.state.zombie4Position}
-            onPositionChange={
-              (newPosition) => this.setState({ zombie4Position: newPosition })
-            }
-            isInScrollMode={this.isInScrollMode}
-          />
-        }
+        <Hero
+          ref={this.heroRef}
+          currentActionType='Idle'
+          scale={2}
+        />
+        <Zombie4
+          ref={this.zombie4Ref}
+          currentActionType='Walk'
+          scale={2}
+        />
       </>
     );
   }

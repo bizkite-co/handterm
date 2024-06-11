@@ -1,13 +1,24 @@
 // Hero.tsx
 
-import { BaseCharacter } from "./BaseCharacter";
-import { ActionType, HeroActions } from "./types/ActionTypes";
+import { useBaseCharacter } from "./useBaseCharacter";
+import { HeroActions } from "./types/ActionTypes";
+import { ICharacterProps } from "./ICharacterProps";
+import { forwardRef, useImperativeHandle } from "react";
 import { SpritePosition } from "./types/Position";
 
-export class Hero extends BaseCharacter {
-  constructor(context: CanvasRenderingContext2D, actionType: ActionType, position: SpritePosition) {
-    super(context, HeroActions, actionType, position, "Hero");
-  }
+export const Hero = forwardRef((props: ICharacterProps, ref) => {
 
-  // Remove the override of animate as it's no longer needed.
-}
+  // Use the custom hook for shared logic with BaseCharacter
+  const { draw } = useBaseCharacter({
+    actions: HeroActions,
+    currentActionType: props.currentActionType, // Replace with actual default action
+    name: 'Hero',
+    scale: props.scale,
+  });
+
+  useImperativeHandle(ref, () => ({
+    draw
+  }));
+
+  return null;
+});
