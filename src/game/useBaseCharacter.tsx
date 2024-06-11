@@ -37,7 +37,7 @@ export const useBaseCharacter = (props: BaseCharacterProps) => {
     context: CanvasRenderingContext2D, 
     position: SpritePosition, 
     scale: number | null
-  ) =>{
+  ): number => {
     const sprite = spritesRef.current[props.currentActionType];
     const action = props.actions[props.currentActionType];
     const newX = position.leftX + action.dx;
@@ -53,7 +53,7 @@ export const useBaseCharacter = (props: BaseCharacterProps) => {
       );
 
     }
-    return { newX};
+    return action.dx;
   }
 
   const loadActions = () => {

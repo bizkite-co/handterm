@@ -27,6 +27,7 @@ interface ITerminalGameState {
   zombie4Position: SpritePosition;
   zombie4Ready: boolean;
   context: CanvasRenderingContext2D | null;
+  contextBackground: CanvasRenderingContext2D | null;
   idleStartTime: number | null; // in milliseconds
   backgroundOffsetX: number;
   isPhraseComplete: boolean;
@@ -38,13 +39,14 @@ interface CharacterRefMethods {
   getCurrentSprite: () => Sprite | null;
   getActions: () => Record<ActionType, Action>;
   draw: (context: CanvasRenderingContext2D, position: SpritePosition) => {
-    position: SpritePosition;
+    dx: number;
   };
 }
 
 export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalGameState> {
 
   private canvasRef = React.createRef<HTMLCanvasElement>();
+  private canvasBackgroundRef = React.createRef<HTMLCanvasElement>();
   private gameTime: number = 0;
   private animationFrameIndex?: number;
   public context: CanvasRenderingContext2D | null = null;
@@ -68,6 +70,7 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
       zombie4Position: { leftX: 50, topY: 0 },
       zombie4Ready: false,
       context: null as CanvasRenderingContext2D | null,
+      contextBackground: null as CanvasRenderingContext2D | null,
       idleStartTime: null,
       backgroundOffsetX: 0,
       isPhraseComplete: false,
@@ -97,12 +100,14 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
   }
 
   componentDidMount() {
+    const canvasBackground = this.canvasBackgroundRef.current;
     const canvas = this.canvasRef.current;
     this.setParallaxLayers();
-    if (canvas) {
+    if (canvas && canvasBackground) {
       const context = canvas.getContext('2d');
-      if (context) {
-        this.setupCanvas();
+      const contextBackground = canvasBackground.getContext('2d');
+      if (context && contextBackground) {
+        this.setupCanvas(context.canvas, contextBackground.canvas);
       }
     }
   }
@@ -118,7 +123,7 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
     }
     // Ensure no animation loop is already running
     if (!this.animationFrameIndex) {
-      this.startAnimationLoop(this.state.context!);
+      this.startAnimationLoop(this.state.context!, this.state.contextBackground!);
     }
   }
 
@@ -138,13 +143,16 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
     this.setState({ backgroundOffsetX: newOffsetX });
   }
 
-  setupCanvas() {
-    const canvas = this.canvasRef.current;
-    if (canvas) {
+  setupCanvas(canvas: HTMLCanvasElement, canvasBackground: HTMLCanvasElement) {
+    if (canvas && canvasBackground) {
       const context = canvas.getContext('2d');
-      if (context instanceof CanvasRenderingContext2D) {
+      const contextBackground = canvasBackground.getContext('2d');
+      if (
+        context instanceof CanvasRenderingContext2D
+        && contextBackground instanceof CanvasRenderingContext2D
+      ) {
         // Set the context in the state instead of a class property
-        this.setState({ context: context });
+        this.setState({ context: context, contextBackground: contextBackground });
 
         // Load background images
 
@@ -236,11 +244,11 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
     this.setState({ layers });
   }
 
-  updateCharacterAndBackground(_context: CanvasRenderingContext2D) {
+  updateCharacterAndBackground = (_context: CanvasRenderingContext2D, heroDx: number): number => {
     const canvasCenterX = this.props.canvasWidth * this.heroXPercent;
     const characterReachThreshold = canvasCenterX;
 
-    let heroResult = {};
+    let heroResult = 0;
     // const heroDx
     //   = this.heroActions
     //     ? this.heroActions[this.state.heroAction].dx / 4
@@ -263,17 +271,16 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
         backgroundOffsetX: newBackgroundOffsetX, // Update background offset state
       });
 
-      // this.updateBackgroundPosition(this.state.backgroundOffsetX + heroDx);
-      // if (this.zombie4Actions) {
-      //   const newX = this.state.zombie4Position.leftX - heroDx;
-      //   this.setState({ zombie4Position: { ...this.state.zombie4Position, leftX: newX } });
-      // }
+      this.updateBackgroundPosition(this.state.backgroundOffsetX + heroDx);
+      const newX = this.state.zombie4Position.leftX - heroDx;
+      this.setState({ zombie4Position: { ...this.state.zombie4Position, leftX: newX } });
 
     } else {
       this.setState({ heroPosition: { ...this.state.heroPosition, leftX: newHeroPositionX } });
     }
+    _context.clearRect(0, 0, this.props.canvasWidth, this.props.canvasHeight);
     if (this.heroRef.current && _context) {
-      heroResult = this.heroRef.current.draw(_context, this.state.heroPosition);
+      heroResult = this.heroRef.current.draw(_context, this.state.heroPosition).dx;
     }
     if (this.zombie4Ref.current && _context) {
       this.zombie4Ref.current.draw(_context, this.state.zombie4Position);
@@ -281,47 +288,42 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
     return heroResult;
   }
 
-  startAnimationLoop(context: CanvasRenderingContext2D) {
+  startAnimationLoop(context: CanvasRenderingContext2D, contextBackground: CanvasRenderingContext2D) {
     const frameDelay = 150; // Delay in milliseconds (100ms for 10 FPS)
-    let lastFrameTime = 0; // Time at which the last frame was processed
+    let lastFrameTime = performance.now(); // use performance.now() for higher accuracy
+
     let newX = 0;
 
     const loop = (timestamp: number) => {
-      if (!this.gameTime) {
-        this.gameTime = timestamp; // Initialize gameTime on the first animation frame
-        lastFrameTime = timestamp; // Initialize lastFrameTime on the first frame
-      }
+      const now = performance.now();
+      const deltaTime = now - lastFrameTime;
 
-      // Calculate the time elapsed since the last frame
-      const timeElapsed = timestamp - lastFrameTime;
-
-      if (timeElapsed >= frameDelay) {
-        // Update lastFrameTime to the current timestamp
-        lastFrameTime = timestamp - (timeElapsed % frameDelay);
+      if (deltaTime >= frameDelay) { // Control the frame rate
+        lastFrameTime = now - (deltaTime % frameDelay);
 
         // Get the parallax layers for the current level
 
         // Draw the parallax background layers
         // context.clearRect(0, 0, this.props.canvasWidth, this.props.canvasHeight);
         context.save();
-        
+
         this.state.layers.forEach(layer => {
-          drawParallaxLayer(context, layer, this.state.backgroundOffsetX, this.props.canvasWidth, this.props.canvasHeight, this.image);
+          drawParallaxLayer(contextBackground, layer, this.state.backgroundOffsetX, this.props.canvasWidth, this.props.canvasHeight, this.image);
         });
 
         if (this.state.isPhraseComplete) {
           this.drawScrollingText(context);
         }
+        context.restore();
         // Reset globalAlpha if other drawings should not be affected
         context.globalAlpha = 1.0;
 
-        newX = this.updateCharacterAndBackground(context);
+        newX = this.updateCharacterAndBackground(context, newX);
         this.setState({ backgroundOffsetX: newX });
-        context.restore();
 
         // Save the request ID to be able to cancel it
-        this.checkProximityAndSetAction();
-        };
+        // this.checkProximityAndSetAction();
+      };
       this.animationFrameIndex = requestAnimationFrame(loop);
 
     };
@@ -332,8 +334,8 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
 
   // Call this method when both characters are ready to draw
   maybeStartAnimationLoop() {
-    if (this.state.context && this.state.heroReady && this.state.zombie4Ready) {
-      this.startAnimationLoop(this.state.context);
+    if (this.state.context && this.state.contextBackground) {
+      this.startAnimationLoop(this.state.context, this.state.contextBackground);
     }
   }
   stopAnimationLoop() {
@@ -356,11 +358,20 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
   render() {
     return (
       <>
-        <canvas
-          ref={this.canvasRef}
-          width={this.props.canvasWidth}
-          height={this.props.canvasHeight}>
-        </canvas>
+        <div style={{ position: "relative" }}>
+          <canvas
+            style={{ position: "absolute", top: 0, left: 0, zIndex: -1 }}
+            ref={this.canvasBackgroundRef}
+            width={this.props.canvasWidth}
+            height={this.props.canvasHeight}>
+          </canvas>
+          <canvas
+            style={{ position: "absolute", top: 0, left: 0 }}
+            ref={this.canvasRef}
+            width={this.props.canvasWidth}
+            height={this.props.canvasHeight}>
+          </canvas>
+        </div>
         <Level
           level={this.state.currentLevel}
           canvasWidth={this.props.canvasWidth}

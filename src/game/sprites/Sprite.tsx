@@ -52,13 +52,13 @@ export class Sprite {
         }
     }
 
-    public draw(
+    public draw = (
         context: CanvasRenderingContext2D, 
         frameIndex: number, 
         leftX: number, 
         topY: number, 
         scale: number = 1.5
-    ) {
+    ) => {
         let frameLeftX = 0, frameTopY = 0;
         if (this.frameSequence) {
             // Use the frame sequence if provided
