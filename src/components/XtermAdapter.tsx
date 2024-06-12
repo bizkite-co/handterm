@@ -37,6 +37,7 @@ export class XtermAdapter extends React.Component<IXtermAdapterProps, IXtermAdap
       cursorBlink: true,
       cursorStyle: 'block',
       cursorInactiveStyle: 'outline',
+      rows: 8,
       fontSize: this.props.terminalFontSize
     });
     this.onDataHandler = this.onDataHandler.bind(this);

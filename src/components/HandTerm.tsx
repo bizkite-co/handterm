@@ -109,6 +109,7 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
     let status = 404;
     let response = "Command not found.";
     this.terminalGameRef.current?.resetGame();
+    window.scrollTo(0, document.body.scrollHeight);
     if (this.state.isInPhraseMode) {
       response = "";
     }
@@ -140,7 +141,7 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
       const matchResult = command.match(/\d+/g);
       if (matchResult) {
         nextLevel = parseInt(matchResult[0] ?? '1');
-        if(nextLevel > getLevelCount()) nextLevel = getLevelCount();
+        if (nextLevel > getLevelCount()) nextLevel = getLevelCount();
       }
       if (nextLevel > getLevelCount()) nextLevel = 1;
       if (nextLevel < 1) nextLevel = 1;
