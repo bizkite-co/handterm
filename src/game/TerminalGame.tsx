@@ -4,9 +4,9 @@ import { Zombie4 } from './Zombie4';
 import { Hero } from './Hero';
 import { Action, ActionType } from './types/ActionTypes';
 import { SpritePosition } from './types/Position';
-import { getParallaxLayers, Level } from './Level';
-import { drawParallaxLayer, IParallaxLayer } from './ParallaxBackground';
+import { layers } from './Level';
 import { Sprite } from './sprites/Sprite';
+import { IParallaxLayer, ParallaxLayer } from './ParallaxLayer';
 
 interface ITerminalGameProps {
   canvasHeight: number
@@ -44,7 +44,6 @@ interface ICharacterRefMethods {
 export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalGameState> {
 
   private canvasRef = React.createRef<HTMLCanvasElement>();
-  private canvasBackgroundRef = React.createRef<HTMLCanvasElement>();
   private gameTime: number = 0;
   private animationFrameIndex?: number;
   public context: CanvasRenderingContext2D | null = null;
@@ -73,7 +72,7 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
       backgroundOffsetX: 0,
       isPhraseComplete: false,
       textScrollX: this.props.canvasWidth,
-      layers: []
+      layers: layers[0]
     };
   }
 
@@ -81,7 +80,11 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
     return this.state.currentLevel;
   }
   public setLevel = (newLevel: number) => {
-    this.setState({ currentLevel: newLevel });
+    const newLayers = layers[newLevel - 1];
+    this.setState({ 
+      currentLevel: newLevel, 
+      layers: newLayers 
+    });
   }
   public resetGame(): void {
     // TODO: Handle addListeners or subscrition before resetting state.
@@ -98,14 +101,11 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
   }
 
   componentDidMount() {
-    const canvasBackground = this.canvasBackgroundRef.current;
     const canvas = this.canvasRef.current;
-    this.setParallaxLayers();
-    if (canvas && canvasBackground) {
+    if (canvas) {
       const context = canvas.getContext('2d');
-      const contextBackground = canvasBackground.getContext('2d');
-      if (context && contextBackground) {
-        this.setupCanvas(context.canvas, contextBackground.canvas);
+      if (context) {
+        this.setupCanvas(context.canvas);
       }
     }
   }
@@ -117,7 +117,7 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
     _snapshot?: any
   ): void {
     if (this.state.currentLevel !== prevState.currentLevel) {
-      this.setParallaxLayers();
+
     }
     // Ensure no animation loop is already running
     if (!this.animationFrameIndex) {
@@ -142,16 +142,14 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
     // console.log("backgroundOffsetX: ", this.state.backgroundOffsetX, "newOffsetX: ", newOffsetX);
   }
 
-  setupCanvas(canvas: HTMLCanvasElement, canvasBackground: HTMLCanvasElement) {
-    if (canvas && canvasBackground) {
+  setupCanvas(canvas: HTMLCanvasElement) {
+    if (canvas) {
       const context = canvas.getContext('2d');
-      const contextBackground = canvasBackground.getContext('2d');
       if (
         context instanceof CanvasRenderingContext2D
-        && contextBackground instanceof CanvasRenderingContext2D
       ) {
         // Set the context in the state instead of a class property
-        this.setState({ context: context, contextBackground: contextBackground });
+        this.setState({ context: context });
 
         // Load background images
 
@@ -238,10 +236,6 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
     this.setState({ zombie4ActionType: action });
   }
 
-  setParallaxLayers() {
-    const layers = getParallaxLayers(this.state.currentLevel);
-    this.setState({ layers });
-  }
 
   updateCharacterAndBackground = (_context: CanvasRenderingContext2D, heroDx: number): number => {
     const canvasCenterX = this.props.canvasWidth * this.heroXPercent;
@@ -300,18 +294,18 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
 
         // Draw the parallax background layers
         // context.clearRect(0, 0, this.props.canvasWidth, this.props.canvasHeight);
-        context.save();
+        // context.save();
 
-        this.state.layers.forEach(layer => {
-          drawParallaxLayer(contextBackground, layer, this.state.backgroundOffsetX, this.props.canvasWidth, this.props.canvasHeight, this.image);
-        });
+        // this.state.layers.forEach(layer => {
+        //   drawParallaxLayer(contextBackground, layer, this.state.backgroundOffsetX, this.props.canvasWidth, this.props.canvasHeight, this.image);
+        // });
 
         if (this.state.isPhraseComplete) {
           this.drawScrollingText(context);
         }
-        context.restore();
+        // context.restore();
         // Reset globalAlpha if other drawings should not be affected
-        context.globalAlpha = 1.0;
+        // context.globalAlpha = 1.0;
 
         newX = this.updateCharacterAndBackground(context, newX);
         this.setState({ backgroundOffsetX: newX });
@@ -353,37 +347,34 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
   render() {
     return (
       <>
-        <div style={{ position: "relative" }}>
+        <div style={{ position: "relative", height: this.props.canvasHeight }}>
+          <div className="parallax-background">
+            {this.state.layers.map((layer, index) => (
+              <ParallaxLayer
+                key={index}
+                layer={layer}
+                offset={this.state.backgroundOffsetX}
+                canvasHeight={this.props.canvasHeight}
+              />
+            ))}
+          </div>
           <canvas
-            style={{ position: "absolute", top: 0, left: 0, zIndex: -1 }}
-            ref={this.canvasBackgroundRef}
-            width={this.props.canvasWidth}
-            height={this.props.canvasHeight}>
-          </canvas>
-          <canvas
-            style={{ position: "absolute", top: 0, left: 0 }}
+            style={{ position: "absolute", top: 0, left: 0, zIndex: 2 }}
             ref={this.canvasRef}
             width={this.props.canvasWidth}
             height={this.props.canvasHeight}>
           </canvas>
+          <Hero
+            ref={this.heroRef}
+            currentActionType={this.props.heroActionType}
+            scale={2}
+          />
+          <Zombie4
+            ref={this.zombie4Ref}
+            currentActionType={this.props.zombie4ActionType}
+            scale={2}
+          />
         </div>
-        <Level
-          level={this.state.currentLevel}
-          canvasWidth={this.props.canvasWidth}
-          canvasHeight={this.props.canvasHeight}
-          backgroundOffsetX={this.state.backgroundOffsetX}
-          canvasRef={this.canvasRef}
-        />
-        <Hero
-          ref={this.heroRef}
-          currentActionType={this.props.heroActionType}
-          scale={2}
-        />
-        <Zombie4
-          ref={this.zombie4Ref}
-          currentActionType={this.props.zombie4ActionType}
-          scale={2}
-        />
       </>
     );
   }

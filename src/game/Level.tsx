@@ -1,6 +1,6 @@
 // Level.tsx
 import React from 'react';
-import { ParallaxBackground, IParallaxLayer } from './ParallaxBackground';
+import { IParallaxLayer } from './ParallaxLayer';
 
 interface ILevelProps {
   level: number;
@@ -26,35 +26,7 @@ export const layers: IParallaxLayer[][] = [
   // Add more levels as needed
 ];
 
-export const getParallaxLayers = (level: number): IParallaxLayer[] => {
-  console.log('getParallaxLayers called with level:', level);
-  // Ensure the level index is within bounds, defaulting to level 1 if out of bounds
-  const levelIndex = level - 1; // Adjust for zero-based index
-  return layers[levelIndex] || layers[0];
-};
 
 export const getLevelCount = (): number => {
   return layers.length;
 }
-
-export const Level: React.FC<ILevelProps> = ({ level, backgroundOffsetX, canvasWidth, canvasHeight, canvasRef }) => {
-  const layers = React.useMemo(() => {
-
-    // Function to get parallax layers based on the level
-    // Use getParallaxLayers to get the layers for the current level
-    return getParallaxLayers(level);
-  }, [level]);
-
-  return (
-    <>
-      <ParallaxBackground
-        layers={layers}
-        offset={backgroundOffsetX}
-        canvasWidth={canvasWidth}
-        canvasHeight={canvasHeight}
-        canvasRef={canvasRef}
-      />
-      {/* Render your characters and other level elements here */}
-    </>
-  );
-};

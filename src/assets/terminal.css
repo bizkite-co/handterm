@@ -27,6 +27,18 @@ body {
   height: 100vh; /* Full height of the viewport */
 }
 
+.parallax-background {
+  position: relative;
+  overflow: hidden;
+  height: 100px; /* Example height, adjust as needed */
+}
+
+.parallax-layer {
+  position: absolute;
+  height: 100px;
+  width: 100%;
+}
+
 .chord-navigation {
 
     img {
