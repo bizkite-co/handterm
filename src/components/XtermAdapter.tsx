@@ -88,6 +88,7 @@ export class XtermAdapter extends React.Component<IXtermAdapterProps, IXtermAdap
     this.terminal.focus();
     this.prompt();
     window.addEventListener('resize', this.handleResize);
+    window.scrollTo(0, window.innerHeight);
   }
 
   // componentDidUpdate(prevProps: Readonly<IXtermAdapterProps>): void {
@@ -97,7 +98,7 @@ export class XtermAdapter extends React.Component<IXtermAdapterProps, IXtermAdap
   // }
 
   componentWillUnmount(): void {
-    if(this.onDataDisposable) {
+    if (this.onDataDisposable) {
       this.onDataDisposable.dispose();
     }
     window.removeEventListener('resize', this.handleResize);

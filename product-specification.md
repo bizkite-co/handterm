@@ -21,6 +21,11 @@ Robust, expert-level React implementation. Prefer functional components and othe
     * [ ] This should work as a game logic simplifier, not complexifier. Only do it if there's an easy way.
     * [ ] This might reduce the need for logins and complex progress tracking. Just use fast-basics testing to retest everyone on the basics anyway.
 * [ ] Tutorial mode could start with `asdf` and SVGs, maybe.
+    * [ ] "Press the Handex thumb-tip for a tutorial"
+    * [ ] Show "f" and "backspace" SVGs and explain that the thumb-tip is "Enter" and the thumb-grasp is "Spacebar".
+    * [ ] Give a short display of the SVG hand syntax.
+    * [ ] Show the `fdsa` SVGs.
+    * [ ] Show the `jkl;` SVGs.
 
 ## Needed Tests
 
@@ -29,3 +34,9 @@ Robust, expert-level React implementation. Prefer functional components and othe
 * The zombie walks to the right and attacks the hero when he gets close.
 * Typing `ls phrases` displays a list of phrases that the typist can be tested against.
 * `ChordImageHolder` displays a valid hand-chord SVG when the user types the wrong character.
+
+## Current Issues
+
+* [ ] Can't resize canvas.
+* [ ] Doesn't scroll to bottom.
+* [ ] 

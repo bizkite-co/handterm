@@ -14,6 +14,7 @@ export const layers: IParallaxLayer[][] = [
     { imageSrc: '/images/cyberpunk-street-files/cyberpunk-street-files/PNG/layers/foreground.png', scale: 1, movementRate: 1 },
   ],
   [
+    { imageSrc: '/images/post_soviet_city_parallax/post_soviet_city_parallax/layer_1_ground.png', scale: 0.8, movementRate: 1 },
     { imageSrc: '/images/post_soviet_city_parallax/post_soviet_city_parallax/layer_2_stars.png', scale: 0.8, movementRate: 0.0 },
     { imageSrc: '/images/post_soviet_city_parallax/post_soviet_city_parallax/layer_3_moon.png', scale: 0.8, movementRate: 0.0 },
     { imageSrc: '/images/post_soviet_city_parallax/post_soviet_city_parallax/layer_4_clouds_1.png', scale: 0.8, movementRate: 0.2 },

@@ -7,6 +7,7 @@ import { SpritePosition } from './types/Position';
 import { layers } from './Level';
 import { Sprite } from './sprites/Sprite';
 import { IParallaxLayer, ParallaxLayer } from './ParallaxLayer';
+import { TerminalCssClasses } from '../types/TerminalTypes';
 
 interface ITerminalGameProps {
   canvasHeight: number
@@ -334,7 +335,9 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
   render() {
     return (
       <>
-        <div style={{ position: "relative", height: this.props.canvasHeight }}>
+        <div 
+          id={TerminalCssClasses.TerminalGame}
+          style={{ position: "relative", height: this.props.canvasHeight }}>
           <div className="parallax-background">
             {this.state.layers.map((layer, index) => (
               <ParallaxLayer

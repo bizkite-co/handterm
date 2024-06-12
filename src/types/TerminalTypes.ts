@@ -4,6 +4,7 @@ export const TerminalCssClasses = {
     Line: 'terminal-line',
     Output: 'terminal-output',
     Input: 'terminal-input',
+    TerminalGame: 'terminal-game',
     Prompt: 'prompt',
     Head: 'head',
     Tail: 'tail',

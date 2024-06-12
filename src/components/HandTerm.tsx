@@ -30,6 +30,7 @@ export interface IHandexTermState {
   zombie4Action: ActionType;
   terminalSize: { width: number; height: number } | undefined;
   terminalFontSize: number;
+  canvasHeight: number;
 }
 
 
@@ -44,9 +45,8 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
   private wpmCalculator: IWPMCalculator = new WPMCalculator();
   private videoElementRef: React.RefObject<HTMLVideoElement> = React.createRef();
   private webCam: IWebCam | null = null;
-  private static readonly commandHistoryLimit = 100;
+  private static readonly commandHistoryLimit = 120;
   private isDebug: boolean = false;
-  canvasHeight: number = 100;
   private heroRunTimeoutId: number | null = null;
   private heroSummersaultTimeoutId: number | null = null;
   private lastTouchDistance: number | null = null;
@@ -60,6 +60,7 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
   constructor(IHandexTermProps: IHandexTermProps) {
     super(IHandexTermProps);
     this._persistence = new LocalStoragePersistence();
+    const initialCanvasHeight = localStorage.getItem('canvasHeight') || '100';
     this.state = {
       outputElements: this.getCommandHistory(),
       isInPhraseMode: false,
@@ -69,7 +70,8 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
       heroAction: 'Idle',
       zombie4Action: 'Walk',
       terminalSize: undefined,
-      terminalFontSize: 17
+      terminalFontSize: 17,
+      canvasHeight: parseInt(initialCanvasHeight),
     }
     this.loadDebugValue();
     this.loadFontSize();
@@ -526,7 +528,8 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
       // this.terminal.options.fontSize = this.currentFontSize;
     }
   }
-  public handleTouchStart: TouchEventHandler<HTMLDivElement> = (event: React.TouchEvent<HTMLDivElement>) => {
+
+  public handleTouchStart: TouchEventHandler<HTMLElement> = (event: React.TouchEvent<HTMLElement>) => {
     setTimeout(() => {
       // this.terminalElement.focus();
     }, 500)
@@ -537,12 +540,35 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
     }
   }
 
+  // private handleTouchStart = (event: TouchEvent) => {
+  //   setTimeout(() => {
+  //     // this.terminalElement.focus();
+  //   }, 500);
+
+  //   if (event.touches.length === 2) {
+  //     // event.preventDefault();
+  //     const touchList = event.touches as unknown as TouchList;
+  //     this.lastTouchDistance = this.getDistanceBetweenTouches(touchList);
+  //   }
+  // };
+
   public handleTouchMove = (event: TouchEvent) => {
     if (event.touches.length === 2) {
       event.preventDefault();
+
       const currentDistance = this.getDistanceBetweenTouches(event.touches);
-      if (this.lastTouchDistance) {
+      if (this.lastTouchDistance && this.lastTouchDistance > 0) {
+        const eventTarget = event.target as HTMLElement;
         const scaleFactor = currentDistance / this.lastTouchDistance;
+        if (eventTarget && eventTarget.nodeName === 'CANVAS') {
+          this.setState((prevState) => {
+            return {
+              canvasHeight: prevState.canvasHeight * scaleFactor
+            }
+          })
+          console.log('canvasHeight', this.state.canvasHeight);
+          return;
+        }
         this.currentFontSize *= scaleFactor;
         console.log('currentFontSize', this.currentFontSize);
         // TODO: Figure out how to resize fonts now with REact.
@@ -570,10 +596,6 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
 
   addTouchListeners() {
     // Assuming 'terminalElementRef' points to the div you want to attach the event
-    const div = this.terminalElementRef.current;
-    if (div) {
-      div.addEventListener('touchmove', this.handleTouchMove, { passive: false });
-    }
     const output = window.document.getElementById(TerminalCssClasses.Output);
     if (output) {
       output.addEventListener('touchmove', this.handleTouchMove, { passive: false });
@@ -582,6 +604,12 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
     if (terminal) {
       terminal.addEventListener('touchmove', this.handleTouchMove, { passive: false });
     }
+    const game = window.document.getElementById(TerminalCssClasses.TerminalGame);
+    if (game) {
+      // game.addEventListener('touchstart', this.handleTouchStart );
+      game.addEventListener('touchmove', this.handleTouchMove, { passive: false });
+    }
+
   }
 
   removeTouchListeners() {
@@ -596,6 +624,10 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
     const terminal = document.getElementById(TerminalCssClasses.Terminal);
     if (terminal) {
       terminal.removeEventListener('touchmove', this.handleTouchMove);
+    }
+    const game = window.document.getElementById(TerminalCssClasses.TerminalGame);
+    if (game) {
+      game.removeEventListener('touchmove', this.handleTouchMove);
     }
   }
 
@@ -630,7 +662,7 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
         />
         <TerminalGame
           ref={this.terminalGameRef}
-          canvasHeight={this.canvasHeight}
+          canvasHeight={this.state.canvasHeight}
           canvasWidth={canvasWidth} // Use the width from terminalSize if available
           isInPhraseMode={this.state.isInPhraseMode}
           heroActionType={this.state.heroAction}
