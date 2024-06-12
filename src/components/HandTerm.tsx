@@ -133,10 +133,15 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
         '</div></div>';
       // return response;
     }
-    if (command === 'level') {
+    if (command.startsWith('level')) {
+
       if (!this.terminalGameRef.current) return '';
       let nextLevel = this.terminalGameRef.current.getLevel() + 1;
-      if (nextLevel > getLevelCount()) nextLevel = 1;
+      const matchResult = command.match(/\d+/g);
+      if (matchResult) {
+        nextLevel = parseInt(matchResult[0] ?? '1');
+      }
+      if (nextLevel > getLevelCount()) nextLevel = getLevelCount();
       console.log("nextLevel", nextLevel);
       this.terminalGameRef.current?.setLevel(nextLevel);
     }
