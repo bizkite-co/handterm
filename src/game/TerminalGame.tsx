@@ -44,7 +44,6 @@ interface ICharacterRefMethods {
 export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalGameState> {
 
   private canvasRef = React.createRef<HTMLCanvasElement>();
-  private gameTime: number = 0;
   private animationFrameIndex?: number;
   public context: CanvasRenderingContext2D | null = null;
   private heroXPercent: number = 0.23;
@@ -55,7 +54,6 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
   private textToScroll: string = "Terminal Velocity!";
   private heroRef = React.createRef<ICharacterRefMethods>();
   private zombie4Ref = React.createRef<ICharacterRefMethods>();
-  private image = new Image();
 
   getInitState(props: ITerminalGameProps): ITerminalGameState {
     return {
@@ -121,7 +119,7 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
     }
     // Ensure no animation loop is already running
     if (!this.animationFrameIndex) {
-      this.startAnimationLoop(this.state.context!, this.state.contextBackground!);
+      this.startAnimationLoop(this.state.context!);
     }
   }
 
@@ -243,7 +241,6 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
     if (this.heroRef.current && _context) {
       // The draw method returns the dx, which we can use to update the background position
       heroDx = this.heroRef.current.draw(_context, this.state.heroPosition);
-      console.log("Hero result:", heroDx);
     }
 
     // Draw and move the zombie
@@ -281,15 +278,11 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
     return heroDx;
   }
 
-  startAnimationLoop(context: CanvasRenderingContext2D, contextBackground: CanvasRenderingContext2D) {
+  startAnimationLoop(context: CanvasRenderingContext2D) {
     const frameDelay = 150; // Delay in milliseconds (100ms for 10 FPS)
     let lastFrameTime = performance.now(); // use performance.now() for higher accuracy
 
-    // Initialize newX outside the loop so its value persists across frames
-    let newX = this.state.backgroundOffsetX;
-
-
-    const loop = (timestamp: number) => {
+    const loop = () => {
       const now = performance.now();
       const deltaTime = now - lastFrameTime;
 
@@ -302,7 +295,7 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
           this.drawScrollingText(context);
         }
 
-        newX = this.updateCharacterAndBackgroundPostion(context);
+        this.updateCharacterAndBackgroundPostion(context);
 
         // Save the request ID to be able to cancel it
         this.checkProximityAndSetAction();
@@ -318,7 +311,7 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
   // Call this method when both characters are ready to draw
   maybeStartAnimationLoop() {
     if (this.state.context && this.state.contextBackground) {
-      this.startAnimationLoop(this.state.context, this.state.contextBackground);
+      this.startAnimationLoop(this.state.context);
     }
   }
   stopAnimationLoop() {
