@@ -32,9 +32,9 @@ export class WPMCalculator implements IWPMCalculator {
     addKeystroke(character: string): CharDuration {
         let charDur: CharDuration = { character, durationMilliseconds: 0 };
         if (this.previousTimestamp > 0) {
-            charDur.durationMilliseconds = Date.now() - this.previousTimestamp;
+            charDur.durationMilliseconds = performance.now() - this.previousTimestamp;
         }
-        this.previousTimestamp = Date.now();
+        this.previousTimestamp = performance.now();
         // Record the keystroke with the current timestamp
         this.keystrokes.push(charDur);
         return charDur;

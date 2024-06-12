@@ -10,7 +10,7 @@ interface ILevelProps {
   canvasRef: React.RefObject<HTMLCanvasElement>;
 }
 
-const layers: IParallaxLayer[][] = [
+export const layers: IParallaxLayer[][] = [
   // Level 1 layers
   [
     { imageSrc: '/images/parallax-industrial-pack/parallax-industrial-pack/layers/skill-desc_0002_far-buildings.png', scale: 0.8, movementRate: 0.4 },
@@ -27,7 +27,6 @@ const layers: IParallaxLayer[][] = [
 ];
 
 export const getParallaxLayers = (level: number): IParallaxLayer[] => {
-
   console.log('getParallaxLayers called with level:', level);
   // Ensure the level index is within bounds, defaulting to level 1 if out of bounds
   const levelIndex = level - 1; // Adjust for zero-based index
