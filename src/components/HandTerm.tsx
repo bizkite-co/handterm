@@ -48,6 +48,7 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
   private isDebug: boolean = false;
   canvasHeight: number = 100;
   private heroRunTimeoutId: number | null = null;
+  private heroSummersaultTimeoutId: number | null = null;
   private lastTouchDistance: number | null = null;
   private currentFontSize: number = 17;
   isShowVideo: any;
@@ -124,18 +125,18 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
       this.terminalGameRef.current.setZombie4ToDeathThenResetPosition();
       this.terminalGameRef.current.completeGame();
     }
-    if (command === 'ls phrases'){
+    if (command === 'ls phrases') {
       status = 200;
       const phrases = Phrases.getPhrases();
-      response = '<div class="phrase-names"><div class="phrase-name">' 
-        + phrases.join('</div><div class="phrase-name">') + 
+      response = '<div class="phrase-names"><div class="phrase-name">'
+        + phrases.join('</div><div class="phrase-name">') +
         '</div></div>';
       // return response;
     }
-    if(command === 'level'){
-      if(!this.terminalGameRef.current) return '';
+    if (command === 'level') {
+      if (!this.terminalGameRef.current) return '';
       let nextLevel = this.terminalGameRef.current.getLevel() + 1;
-      if(nextLevel > getLevelCount()) nextLevel = 1;
+      if (nextLevel > getLevelCount()) nextLevel = 1;
       console.log("nextLevel", nextLevel);
       this.terminalGameRef.current?.setLevel(nextLevel);
     }
@@ -223,11 +224,23 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
         commandLine: command,
         phrase: nextChars,
       });
-      this.setHeroRunAction();
+      if ([',', '.', '!', '?'].includes(character) || /[0-9]/.test(character)) {
+        this.setHeroSummersaultAction();
+        console.log('Set hero to summersault');
+      }
+      else {
+        this.setHeroRunAction();
+      }
     } else {
       // For other input, just return it to the terminal.
       this.terminalWrite(character);
-      this.setHeroRunAction();
+      if ([',', '.', '!', '?'].includes(character) || /[0-9]/.test(character)) {
+        this.setHeroSummersaultAction();
+        console.log('Set hero to summersault');
+      }
+      else {
+        this.setHeroRunAction();
+      }
     }
     return charDuration.durationMilliseconds;
   }
@@ -423,11 +436,11 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
 
   handlePhraseSuccess = (phrase: string, wpm: number) => {
     this.setState(
-      prevState => ({ 
+      prevState => ({
         outputElements: [
-          ...prevState.outputElements, 
+          ...prevState.outputElements,
           wpm.toString() + ":" + phrase
-        ] 
+        ]
       })
     );
 
@@ -448,6 +461,23 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
     this.heroRunTimeoutId = window.setTimeout(() => {
       this.setState({ heroAction: 'Idle' });
       this.heroRunTimeoutId = null; // Clear the timeout ID
+
+    }, 800);
+  }
+
+  setHeroSummersaultAction = () => {
+    // Clear any existing timeout to reset the timer
+    if (this.heroSummersaultTimeoutId) {
+      clearTimeout(this.heroSummersaultTimeoutId);
+      this.heroSummersaultTimeoutId = null;
+    }
+
+    // Set the hero to run
+    this.setState({ heroAction: 'Summersault' });
+    // Set a timeout to stop the hero from running after 1000ms
+    this.heroSummersaultTimeoutId = window.setTimeout(() => {
+      this.setState({ heroAction: 'Idle' });
+      this.heroSummersaultTimeoutId = null; // Clear the timeout ID
 
     }, 800);
   }

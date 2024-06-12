@@ -52,6 +52,18 @@ export const HeroAnimations = {
             { leftX: 150, topY: 0 },
         ],
     } as SpriteAnimation,
+    Summersault: {
+        imagePath: '/images/Adventurer/Adventurer-1.5/adventurer-v1.5-Sheet.png',
+        frameCount: 4,
+        frameWidth: 50,
+        frameHeight: 37,
+        framePositions: [
+            { leftX: 200, topY: 74 },
+            { leftX: 250, topY: 74 },
+            { leftX: 300, topY: 74 },
+            { leftX: 0, topY: 106 },
+        ],
+    } as SpriteAnimation,
     Hurt: {
         imagePath: '/images/Adventurer/Adventurer-1.5/adventurer-v1.5-Sheet.png',
         frameCount: 4,

@@ -16,6 +16,7 @@ const ActionType = {
   Walk: 'Walk',
   Jump: 'Jump',
   Attack: 'Attack',
+  Summersault: 'Summersault',
   Death: 'Death',
   Hurt: 'Hurt',
 } as const;
@@ -51,6 +52,12 @@ export const HeroActions: Record<ActionType, Action> = {
     animation: HeroAnimations.Attack,
     dx: 0,
     dy: 0,
+    continueous: false
+  },
+  Summersault: {
+    animation: HeroAnimations.Summersault,
+    dx: 3,
+    dy: 1,
     continueous: false
   },
   Death: {
