@@ -76,8 +76,6 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
     componentDidUpdate(prevProps: NextCharsDisplayProps) {
         if (this.props.isInPhraseMode !== prevProps.isInPhraseMode) {
             if (this.props.isInPhraseMode) {
-                const cmd = this.props.commandLine;
-                const phrase = cmd.replace("phrase ", "");
                 // this.setNewPhrase(phrase);
                 this.setState({
                     phrase: new Phrase(this.props.newPhrase)

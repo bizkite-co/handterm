@@ -4,7 +4,6 @@ import { useBaseCharacter } from "./useBaseCharacter";
 import { HeroActions } from "./types/ActionTypes";
 import { ICharacterProps } from "./ICharacterProps";
 import { forwardRef, useImperativeHandle } from "react";
-import { SpritePosition } from "./types/Position";
 
 export const Hero = forwardRef((props: ICharacterProps, ref) => {
 

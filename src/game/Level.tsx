@@ -1,14 +1,5 @@
 // Level.tsx
-import React from 'react';
 import { IParallaxLayer } from './ParallaxLayer';
-
-interface ILevelProps {
-  level: number;
-  backgroundOffsetX: number;
-  canvasWidth: number;
-  canvasHeight: number;
-  canvasRef: React.RefObject<HTMLCanvasElement>;
-}
 
 export const layers: IParallaxLayer[][] = [
   // Level 1 layers

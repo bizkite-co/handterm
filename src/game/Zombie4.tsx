@@ -2,7 +2,6 @@ import { useBaseCharacter } from './useBaseCharacter';
 import { Zombie4Actions } from './types/ActionTypes';
 import { ICharacterProps } from './ICharacterProps';
 import { forwardRef, useImperativeHandle } from 'react';
-import { SpritePosition } from './types/Position';
 
 // * Idle - 5 frames
 // * Walk - 13 frames
