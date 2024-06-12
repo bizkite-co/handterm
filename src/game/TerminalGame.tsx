@@ -12,18 +12,18 @@ interface ITerminalGameProps {
   canvasHeight: number
   canvasWidth: number
   isInPhraseMode: boolean
-  heroAction: ActionType
-  zombie4Action: ActionType
+  heroActionType: ActionType
+  zombie4ActionType: ActionType
   onTouchStart: TouchEventHandler<HTMLDivElement>;
   onTouchEnd: TouchEventHandler<HTMLDivElement>;
 }
 
 interface ITerminalGameState {
   currentLevel: number;
-  heroAction: ActionType;
+  heroActionType: ActionType;
   heroPosition: SpritePosition;
   heroReady: boolean;
-  zombie4Action: ActionType;
+  zombie4ActionType: ActionType;
   zombie4Position: SpritePosition;
   zombie4Ready: boolean;
   context: CanvasRenderingContext2D | null;
@@ -35,12 +35,10 @@ interface ITerminalGameState {
   layers: IParallaxLayer[];
 }
 
-interface CharacterRefMethods {
+interface ICharacterRefMethods {
   getCurrentSprite: () => Sprite | null;
   getActions: () => Record<ActionType, Action>;
-  draw: (context: CanvasRenderingContext2D, position: SpritePosition) => {
-    dx: number;
-  };
+  draw: (context: CanvasRenderingContext2D, position: SpritePosition) => number;
 }
 
 export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalGameState> {
@@ -56,17 +54,17 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
   // Add a new field for the text animation
   private textScrollX: number = this.props.canvasWidth; // Start offscreen to the right
   private textToScroll: string = "Terminal Velocity!";
-  private heroRef = React.createRef<CharacterRefMethods>();
-  private zombie4Ref = React.createRef<CharacterRefMethods>();
+  private heroRef = React.createRef<ICharacterRefMethods>();
+  private zombie4Ref = React.createRef<ICharacterRefMethods>();
   private image = new Image();
 
   getInitState(props: ITerminalGameProps): ITerminalGameState {
     return {
       currentLevel: 1,
-      heroAction: props.heroAction,
+      heroActionType: props.heroActionType,
       heroPosition: { leftX: props.canvasWidth * this.heroXPercent, topY: 30 },
       heroReady: false,
-      zombie4Action: props.zombie4Action,
+      zombie4ActionType: props.zombie4ActionType,
       zombie4Position: { leftX: 50, topY: 0 },
       zombie4Ready: false,
       context: null as CanvasRenderingContext2D | null,
@@ -141,6 +139,7 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
   // Call this method to update the background position
   updateBackgroundPosition(newOffsetX: number) {
     this.setState({ backgroundOffsetX: newOffsetX });
+    // console.log("backgroundOffsetX: ", this.state.backgroundOffsetX, "newOffsetX: ", newOffsetX);
   }
 
   setupCanvas(canvas: HTMLCanvasElement, canvasBackground: HTMLCanvasElement) {
@@ -226,7 +225,7 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
       this.setZombie4Action('Attack'); // Replace 'Attack' with actual ActionType for attacking
     } else {
       // Otherwise, set it back to whatever action it should be doing when not attacking
-      if (this.state.zombie4Action === 'Attack') {
+      if (this.state.zombie4ActionType === 'Attack') {
         this.setZombie4Action('Walk'); // Replace 'Walk' with actual ActionType for walking
       }
     }
@@ -236,7 +235,7 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
   }
 
   setZombie4Action(action: ActionType) {
-    this.setState({ zombie4Action: action });
+    this.setState({ zombie4ActionType: action });
   }
 
   setParallaxLayers() {
@@ -249,12 +248,8 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
     const characterReachThreshold = canvasCenterX;
 
     let heroResult = 0;
-    // const heroDx
-    //   = this.heroActions
-    //     ? this.heroActions[this.state.heroAction].dx / 4
-    //     : 0;
 
-    let newBackgroundOffsetX = this.state.backgroundOffsetX;
+    let newBackgroundOffsetX = this.state.backgroundOffsetX ?? 0;
 
     // Update character position as usual
     const newHeroPositionX = canvasCenterX;
@@ -264,7 +259,7 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
       this.isInScrollMode = true;
 
       // Update the background offset
-      // newBackgroundOffsetX += heroDx;
+      newBackgroundOffsetX += heroDx;
 
       this.setState({
         heroPosition: { ...this.state.heroPosition, leftX: characterReachThreshold },
@@ -280,7 +275,7 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
     }
     _context.clearRect(0, 0, this.props.canvasWidth, this.props.canvasHeight);
     if (this.heroRef.current && _context) {
-      heroResult = this.heroRef.current.draw(_context, this.state.heroPosition).dx;
+      heroResult = this.heroRef.current.draw(_context, this.state.heroPosition);
     }
     if (this.zombie4Ref.current && _context) {
       this.zombie4Ref.current.draw(_context, this.state.zombie4Position);
@@ -381,12 +376,12 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
         />
         <Hero
           ref={this.heroRef}
-          currentActionType='Idle'
+          currentActionType={this.props.heroActionType}
           scale={2}
         />
         <Zombie4
           ref={this.zombie4Ref}
-          currentActionType='Walk'
+          currentActionType={this.props.zombie4ActionType}
           scale={2}
         />
       </>

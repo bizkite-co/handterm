@@ -595,8 +595,8 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
           canvasHeight={this.canvasHeight}
           canvasWidth={canvasWidth} // Use the width from terminalSize if available
           isInPhraseMode={this.state.isInPhraseMode}
-          heroAction={this.state.heroAction}
-          zombie4Action={this.state.zombie4Action}
+          heroActionType={this.state.heroAction}
+          zombie4ActionType={this.state.zombie4Action}
           onTouchStart={this.handleTouchStart}
           onTouchEnd={this.handleTouchEnd}
         />
