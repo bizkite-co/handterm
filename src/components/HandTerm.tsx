@@ -140,8 +140,10 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
       const matchResult = command.match(/\d+/g);
       if (matchResult) {
         nextLevel = parseInt(matchResult[0] ?? '1');
+        if(nextLevel > getLevelCount()) nextLevel = getLevelCount();
       }
-      if (nextLevel > getLevelCount()) nextLevel = getLevelCount();
+      if (nextLevel > getLevelCount()) nextLevel = 1;
+      if (nextLevel < 1) nextLevel = 1;
       console.log("nextLevel", nextLevel);
       this.terminalGameRef.current?.setLevel(nextLevel);
     }
