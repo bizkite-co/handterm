@@ -81,9 +81,9 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
   }
   public setLevel = (newLevel: number) => {
     const newLayers = layers[newLevel - 1];
-    this.setState({ 
-      currentLevel: newLevel, 
-      layers: newLayers 
+    this.setState({
+      currentLevel: newLevel,
+      layers: newLayers
     });
   }
   public resetGame(): void {
@@ -136,11 +136,6 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
     }
   }
 
-  // Call this method to update the background position
-  updateBackgroundPosition(newOffsetX: number) {
-    this.setState({ backgroundOffsetX: newOffsetX });
-    // console.log("backgroundOffsetX: ", this.state.backgroundOffsetX, "newOffsetX: ", newOffsetX);
-  }
 
   setupCanvas(canvas: HTMLCanvasElement) {
     if (canvas) {
@@ -237,51 +232,62 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
   }
 
 
-  updateCharacterAndBackground = (_context: CanvasRenderingContext2D, heroDx: number): number => {
+  updateCharacterAndBackgroundPostion = (_context: CanvasRenderingContext2D): number => {
     const canvasCenterX = this.props.canvasWidth * this.heroXPercent;
     const characterReachThreshold = canvasCenterX;
 
-    let heroResult = 0;
+    // Clear the canvas for new drawing
+    _context.clearRect(0, 0, this.props.canvasWidth, this.props.canvasHeight);
 
-    let newBackgroundOffsetX = this.state.backgroundOffsetX ?? 0;
+    let heroDx = 0;
+    if (this.heroRef.current && _context) {
+      // The draw method returns the dx, which we can use to update the background position
+      heroDx = this.heroRef.current.draw(_context, this.state.heroPosition);
+      console.log("Hero result:", heroDx);
+    }
 
-    // Update character position as usual
-    const newHeroPositionX = canvasCenterX;
+    // Draw and move the zombie
+    if (this.zombie4Ref.current && _context) {
+      const zombie4Dx = this.zombie4Ref.current.draw(_context, this.state.zombie4Position);
+      this.setState((prevState) => {
+        return { zombie4Position: {
+           ...prevState.zombie4Position, leftX: prevState.zombie4Position.leftX + zombie4Dx } };
+      })
+    }
 
-    // Check if the hero reaches the threshold
-    if (newHeroPositionX >= characterReachThreshold) {
-      this.isInScrollMode = true;
+    // Determine if we need to scroll the background
+    if (this.isInScrollMode && heroDx !== 0) {
+      // Calculate the new background offset
+      // const newBackgroundOffsetX = this.state.backgroundOffsetX + heroDx;
 
-      // Update the background offset
-      newBackgroundOffsetX += heroDx;
-
-      this.setState({
-        heroPosition: { ...this.state.heroPosition, leftX: characterReachThreshold },
-        backgroundOffsetX: newBackgroundOffsetX, // Update background offset state
+      // Update the state with the new background offset
+      this.setState((prevState) => {
+        return { backgroundOffsetX: prevState.backgroundOffsetX + heroDx };
       });
 
-      this.updateBackgroundPosition(this.state.backgroundOffsetX + heroDx);
-      const newX = this.state.zombie4Position.leftX - heroDx;
-      this.setState({ zombie4Position: { ...this.state.zombie4Position, leftX: newX } });
+      // If the hero is currently beyond the threshold, update its position to the threshold
+      if (this.state.heroPosition.leftX >= characterReachThreshold) {
+        this.setState({
+          heroPosition: { ...this.state.heroPosition, leftX: characterReachThreshold },
+        });
+      }
 
-    } else {
-      this.setState({ heroPosition: { ...this.state.heroPosition, leftX: newHeroPositionX } });
+      // Update the zombie's position based on the hero's dx value
+      const newZombie4PositionX = this.state.zombie4Position.leftX - heroDx;
+      this.setState({
+        zombie4Position: { ...this.state.zombie4Position, leftX: newZombie4PositionX },
+      });
     }
-    _context.clearRect(0, 0, this.props.canvasWidth, this.props.canvasHeight);
-    if (this.heroRef.current && _context) {
-      heroResult = this.heroRef.current.draw(_context, this.state.heroPosition);
-    }
-    if (this.zombie4Ref.current && _context) {
-      this.zombie4Ref.current.draw(_context, this.state.zombie4Position);
-    }
-    return heroResult;
+    return heroDx;
   }
 
   startAnimationLoop(context: CanvasRenderingContext2D, contextBackground: CanvasRenderingContext2D) {
     const frameDelay = 150; // Delay in milliseconds (100ms for 10 FPS)
     let lastFrameTime = performance.now(); // use performance.now() for higher accuracy
 
-    let newX = 0;
+    // Initialize newX outside the loop so its value persists across frames
+    let newX = this.state.backgroundOffsetX;
+
 
     const loop = (timestamp: number) => {
       const now = performance.now();
@@ -292,26 +298,14 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
 
         // Get the parallax layers for the current level
 
-        // Draw the parallax background layers
-        // context.clearRect(0, 0, this.props.canvasWidth, this.props.canvasHeight);
-        // context.save();
-
-        // this.state.layers.forEach(layer => {
-        //   drawParallaxLayer(contextBackground, layer, this.state.backgroundOffsetX, this.props.canvasWidth, this.props.canvasHeight, this.image);
-        // });
-
         if (this.state.isPhraseComplete) {
           this.drawScrollingText(context);
         }
-        // context.restore();
-        // Reset globalAlpha if other drawings should not be affected
-        // context.globalAlpha = 1.0;
 
-        newX = this.updateCharacterAndBackground(context, newX);
-        this.setState({ backgroundOffsetX: newX });
+        newX = this.updateCharacterAndBackgroundPostion(context);
 
         // Save the request ID to be able to cancel it
-        // this.checkProximityAndSetAction();
+        this.checkProximityAndSetAction();
       };
       this.animationFrameIndex = requestAnimationFrame(loop);
 
