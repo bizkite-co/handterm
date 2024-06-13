@@ -62,7 +62,7 @@ export default class Phrases {
     public static getPhrase(key: string): string {
         const phrase = this.phrases.find(x => x.name == key);
         if (!phrase) {
-            console.error("Phrase not found: " + key);
+            if (key) console.error("Phrase not found: " + key);
         }
         else {
             return phrase.phrase;

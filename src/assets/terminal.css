@@ -24,7 +24,6 @@ body {
   display: flex;
   flex-direction: column;
   justify-content: flex-end; /* Aligns children (HandexTerm) to the bottom */
-  height: 100vh; /* Full height of the viewport */
 }
 
 .parallax-background {
