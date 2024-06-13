@@ -444,7 +444,6 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
     }
   }
 
-
   handlePhraseSuccess = (phrase: string, wpm: number) => {
     this.setState(
       prevState => ({

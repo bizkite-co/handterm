@@ -1,9 +1,9 @@
-import { ClearCommand } from "./useClearCommand";
+import { useClearCommand } from "./useClearCommand";
 import { HelpCommand } from "./HelpCommand";
 import { ListPhrasesCommand } from "./ListPhrasesCommand";
 import { commandRegistry } from "./commandRegistry";
 
-commandRegistry.register(ClearCommand);
+commandRegistry.register(useClearCommand);
 commandRegistry.register(HelpCommand);
 commandRegistry.register(ListPhrasesCommand);
 commandRegistry.register({

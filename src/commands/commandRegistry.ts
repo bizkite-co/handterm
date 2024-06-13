@@ -1,10 +1,19 @@
 import { ICommand } from './ICommand';
+import { CommandHooks } from './commandHooks';
 
 class CommandRegistry {
     private commands: Record<string, ICommand> = {};
+    private hooks: CommandHooks = {};
 
     register(command: ICommand) {
         this.commands[command.name] = command;
+        if (command.hook) {
+            this.hooks[command.name] = command.hook;
+        }
+    }
+
+    getCommandHook(name: string) {
+        return this.hooks[name];
     }
 
     getCommand(name: string): ICommand | undefined {
