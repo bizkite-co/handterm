@@ -85,6 +85,12 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
       layers: newLayers
     });
   }
+
+  public levelUp = (setLevel: number | null = null) => {
+    let nextLevel = setLevel || this.getLevel() + 1;
+    this.setLevel(nextLevel);
+  }
+
   public resetGame(): void {
     // TODO: Handle addListeners or subscrition before resetting state.
     // this.setState(this.getInitstate(this.props));
@@ -248,8 +254,11 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
     if (this.zombie4Ref.current && _context) {
       const zombie4Dx = this.zombie4Ref.current.draw(_context, this.state.zombie4Position);
       this.setState((prevState) => {
-        return { zombie4Position: {
-           ...prevState.zombie4Position, leftX: prevState.zombie4Position.leftX + zombie4Dx } };
+        return {
+          zombie4Position: {
+            ...prevState.zombie4Position, leftX: prevState.zombie4Position.leftX + zombie4Dx
+          }
+        };
       })
     }
 
@@ -335,7 +344,7 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
   render() {
     return (
       <>
-        <div 
+        <div
           id={TerminalCssClasses.TerminalGame}
           style={{ position: "relative", height: this.props.canvasHeight }}>
           <div className="parallax-background">
@@ -357,12 +366,12 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
           <Hero
             ref={this.heroRef}
             currentActionType={this.props.heroActionType}
-            scale={2}
+            scale={1.95}
           />
           <Zombie4
             ref={this.zombie4Ref}
             currentActionType={this.props.zombie4ActionType}
-            scale={2}
+            scale={1.90}
           />
         </div>
       </>

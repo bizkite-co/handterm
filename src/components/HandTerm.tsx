@@ -476,7 +476,10 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     );
 
     this.terminalGameRef.current?.completeGame();
-    // this.adapterRef.current?.prompt();
+    this.adapterRef.current?.terminalReset();
+    this.adapterRef.current?.prompt();
+    this.terminalGameRef.current?.levelUp();
+    this.setNewPhrase('');
   }
 
   setHeroRunAction = () => {
