@@ -3,7 +3,7 @@ import { LogKeys, TimeHTML, CharDuration, CharWPM, TerminalCssClasses } from '..
 import { IWPMCalculator, WPMCalculator } from '../utils/WPMCalculator';
 import { IPersistence, LocalStoragePersistence } from '../Persistence';
 import { createHTMLElementFromHTML } from '../utils/dom';
-import React, { TouchEventHandler } from 'react';
+import React, { ContextType, TouchEventHandler } from 'react';
 import { XtermAdapter } from './XtermAdapter';
 import { NextCharsDisplay } from './NextCharsDisplay';
 import { Output } from './Output';
@@ -13,6 +13,7 @@ import { ActionType } from '../game/types/ActionTypes';
 import Phrases from '../utils/Phrases';
 import { IWebCam, WebCam } from '../utils/WebCam';
 import { getLevelCount } from '../game/Level';
+import { CommandContext } from '../commands/CommandContext';
 
 export interface IHandexTermProps {
   // Define the interface for your HandexTerm logic
@@ -34,9 +35,13 @@ export interface IHandexTermState {
 }
 
 
-export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermState> {
+class HandexTerm extends React.Component<IHandexTermProps, IHandexTermState> {
+ // Declare the context property with the type of your CommandContext
+  static contextType = CommandContext;
+  // TypeScript will now understand that this.context is of the type of your CommandContext
+  declare context: ContextType<typeof CommandContext>;
   // Implement the interface methods
-  terminalElementRef = React.createRef<HTMLDivElement>();
+  private terminalElementRef = React.createRef<HTMLDivElement>();
   private adapterRef = React.createRef<XtermAdapter>();
   private nextCharsDisplayRef: React.RefObject<NextCharsDisplay> = React.createRef();
   private terminalGameRef = React.createRef<TerminalGame>();
@@ -107,7 +112,11 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
     });
   }
 
-  public handleCommand(command: string): string {
+  public handleCommand = (command: string) => {
+    if(this.context) {
+      const output = this.context.executeCommand(command);
+      console.log('Command output', output);
+    }
 
     let status = 404;
     let response = "Command not found.";
@@ -122,10 +131,10 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
       status = 200;
       this.clearCommandHistory();
       this.adapterRef.current?.prompt();
-      return '';
+      return;
     }
     if (command === 'kill') {
-      if (!this.terminalGameRef.current) return '';
+      if (!this.terminalGameRef.current) return;
       this.terminalGameRef.current.setZombie4ToDeathThenResetPosition();
       this.terminalGameRef.current.completeGame();
     }
@@ -139,7 +148,7 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
     }
     if (command.startsWith('level')) {
 
-      if (!this.terminalGameRef.current) return '';
+      if (!this.terminalGameRef.current) return;
       let nextLevel = this.terminalGameRef.current.getLevel() + 1;
       const matchResult = command.match(/\d+/g);
       if (matchResult) {
@@ -170,7 +179,6 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
         response = "Stopping video camera..."
       }
       // this.handleCommand(command + ' --' + this.adapterRef.current?.isShowVideo);
-      return "video";
     }
 
     if (this.nextCharsDisplayRef.current) this.nextCharsDisplayRef.current.cancelTimer();
@@ -181,19 +189,19 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
     // TODO: reset timer
     // Write the new prompt after clearing
     this.adapterRef.current?.prompt();
-    if (command === '') return "no-op";
+    if (command === '') return;
     if (command.startsWith('debug')) {
       let isDebug = command.includes('--true') || command.includes('-t');
       this.toggleIsDebug(isDebug);
-      return "debug";
+      return;
     }
 
     // Truncate the history if it's too long before saving
     if (this._commandHistory.length > HandexTerm.commandHistoryLimit) {
       this._commandHistory.shift(); // Remove the oldest command
     }
-    let commandResponse = this.saveCommandResponseHistory(command, response, status); // Save updated history to localStorage
-    return commandResponse;
+    this.saveCommandResponseHistory(command, response, status); // Save updated history to localStorage
+    return ;
   }
 
   public handleCharacter = (character: string) => {
@@ -641,7 +649,7 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
   }
 
 
-  public toggleVideo(): boolean {
+  public toggleVideo = (): boolean => {
     this.isShowVideo = !this.isShowVideo;
     this.webCam?.toggleVideo(this.isShowVideo);
     return this.isShowVideo;
@@ -649,52 +657,62 @@ export class HandexTerm extends React.Component<IHandexTermProps, IHandexTermSta
 
   public render() {
     const { terminalSize } = this.state;
-    // TODO: Make better terminal width matcher.
     const canvasWidth = terminalSize ? terminalSize.width : 800;
     // canvas height does not need to match terminal height
 
     return (
-      <div className="terminal-container">
-        <Output
-          elements={this.state.outputElements}
-          onTouchStart={this.handleTouchStart}
-          onTouchEnd={this.handleTouchEnd}
-        />
-        <TerminalGame
-          ref={this.terminalGameRef}
-          canvasHeight={this.state.canvasHeight}
-          canvasWidth={canvasWidth} // Use the width from terminalSize if available
-          isInPhraseMode={this.state.isInPhraseMode}
-          heroActionType={this.state.heroAction}
-          zombie4ActionType={this.state.zombie4Action}
-          onTouchStart={this.handleTouchStart}
-          onTouchEnd={this.handleTouchEnd}
-        />
-        <NextCharsDisplay
-          ref={this.nextCharsDisplayRef}
-          onTimerStatusChange={this.handleTimerStatusChange}
-          commandLine={this.state.commandLine}
-          isInPhraseMode={this.state.isInPhraseMode}
-          newPhrase={this.state.phrase}
-          onPhraseSuccess={this.handlePhraseSuccess}
-        />
-        {/* <React.StrictMode> */}
-        <XtermAdapter
-          ref={this.adapterRef}
-          terminalElement={this.terminalElementRef.current}
-          terminalElementRef={this.terminalElementRef}
-          terminalFontSize={this.currentFontSize}
-          onAddCharacter={this.handleCharacter}
-          onTouchStart={this.handleTouchStart}
-          onTouchEnd={this.handleTouchEnd}
-        />
-        {/* </React.StrictMode> */}
-        <video
-          ref={this.videoElementRef as React.RefObject<HTMLVideoElement>}
-          id="terminal-video"
-          hidden={!this.isShowVideo}
-        ></video>
-      </div>
+      <CommandContext.Consumer>
+        {(context) => {
+          this.context = context;
+
+          return (
+            <div className="terminal-container">
+              <Output
+                elements={this.state.outputElements}
+                onTouchStart={this.handleTouchStart}
+                onTouchEnd={this.handleTouchEnd}
+              />
+              <TerminalGame
+                ref={this.terminalGameRef}
+                canvasHeight={this.state.canvasHeight}
+                canvasWidth={canvasWidth} // Use the width from terminalSize if available
+                isInPhraseMode={this.state.isInPhraseMode}
+                heroActionType={this.state.heroAction}
+                zombie4ActionType={this.state.zombie4Action}
+                onTouchStart={this.handleTouchStart}
+                onTouchEnd={this.handleTouchEnd}
+              />
+              <NextCharsDisplay
+                ref={this.nextCharsDisplayRef}
+                onTimerStatusChange={this.handleTimerStatusChange}
+                commandLine={this.state.commandLine}
+                isInPhraseMode={this.state.isInPhraseMode}
+                newPhrase={this.state.phrase}
+                onPhraseSuccess={this.handlePhraseSuccess}
+              />
+              <XtermAdapter
+                ref={this.adapterRef}
+                terminalElement={this.terminalElementRef.current}
+                terminalElementRef={this.terminalElementRef}
+                terminalFontSize={this.currentFontSize}
+                onAddCharacter={this.handleCharacter}
+                onTouchStart={this.handleTouchStart}
+                onTouchEnd={this.handleTouchEnd}
+              />
+              <video
+                ref={this.videoElementRef as React.RefObject<HTMLVideoElement>}
+                id="terminal-video"
+                hidden={!this.isShowVideo}
+              ></video>
+            </div>
+
+          );
+        }}
+      </CommandContext.Consumer>
     )
   }
 }
+
+HandexTerm.contextType = CommandContext;
+
+export default HandexTerm;

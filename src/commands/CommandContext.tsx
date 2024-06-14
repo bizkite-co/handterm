@@ -2,11 +2,9 @@
 import React from 'react';
 
 export interface ICommandContext {
-  commandHistory: string[]; // Assuming commandHistory is an array of strings
-  videoRef: React.RefObject<HTMLVideoElement>;
-  setCommand: React.Dispatch<React.SetStateAction<string[]>>;
-
-  // Add other references and state setters as needed
+  commandHistory: string[];
+  setCommandHistory: React.Dispatch<React.SetStateAction<string[]>>;
+  executeCommand: (commandName: string, args?: string[], switches?: Record<string, boolean | string>) => string;
 }
 
 // Create the context with a default value

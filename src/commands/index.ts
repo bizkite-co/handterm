@@ -1,4 +1,4 @@
-import { useClearCommand } from "./useClearCommand";
+import { useClearCommand } from "./clearCommand";
 import { HelpCommand } from "./HelpCommand";
 import { ListPhrasesCommand } from "./ListPhrasesCommand";
 import { commandRegistry } from "./commandRegistry";

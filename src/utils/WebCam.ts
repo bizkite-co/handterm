@@ -1,4 +1,4 @@
-
+// src/utils/WebCam.ts
 export interface IWebCam {
     toggleVideo(setOn: boolean): void;
 }

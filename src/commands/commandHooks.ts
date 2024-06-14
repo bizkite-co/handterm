@@ -1,7 +1,7 @@
 // commandHooks.ts
 import { useVideoCommand } from './useVideoCommand';
 import { ICommandContext } from './CommandContext';
-import { useClearCommand } from './useClearCommand';
+import { useClearCommand } from './clearCommand';
 
 // Define a type that maps command hook names to their functions
 export type CommandHooks = {
