@@ -6,7 +6,6 @@ import { CommandProvider } from './commands/CommandProvider';
 const App = () => {
   const containerRef = React.createRef<HTMLDivElement>();
   const [containerWidth, setContainerWidth] = React.useState<number>(0);
-  const terminalRef = useRef<HTMLDivElement>(null); // Assuming you have a ref to your terminal element
   const handexTermRef = useRef<HandexTerm>(null);
 
   useEffect(() => {
