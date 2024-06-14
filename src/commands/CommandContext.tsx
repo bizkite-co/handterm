@@ -3,7 +3,6 @@ import React from 'react';
 
 export interface ICommandContext {
   commandHistory: string[];
-  setCommandHistory: React.Dispatch<React.SetStateAction<string[]>>;
   appendToOutput: (element: React.ReactNode) => void;
   clearOuput: () => void;
   executeCommand: (

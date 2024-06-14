@@ -1,6 +1,5 @@
 import HandTerm from '../components/HandTerm';
 import Phrases from '../utils/Phrases';
-import { ICommandContext } from './CommandContext';
 import { ICommand } from './ICommand';
 
 export const ListPhrasesCommand: ICommand = {
@@ -17,13 +16,13 @@ export const ListPhrasesCommand: ICommand = {
     _switches?: Record<string, boolean | string>,
     _handTerm?: HandTerm 
   ) => {
-    if (!_commandName) {
+    if (!_handTerm) {
       return 'No command context available.';
     }
     // Logic to clear the command history from localStorage
     // Logic to clear the command history from context (state)
     const phrases = Phrases.getPhrases().join('\n');
-    console.log("ListPhrasesCommand context", _handTerm);
+    _handTerm?.saveCommandResponseHistory(_commandName, phrases, 200);
     return phrases;
   }
 };

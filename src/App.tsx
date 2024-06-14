@@ -19,7 +19,10 @@ const App = () => {
         handexTermRef.current.adapterRef.current.terminalRef.current &&
         handexTermRef.current.adapterRef.current.terminalRef.current
       ) {
+          event.stopPropagation();
           handexTermRef.current.adapterRef.current.terminalRef.current.focus();
+          // type a character to trigger the focus event
+          // handexTermRef.current.adapterRef.current.terminalWrite('a');
       }
     };
 

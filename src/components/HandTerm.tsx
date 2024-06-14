@@ -89,7 +89,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     this.loadFontSize();
   }
 
-  componentDidUpdate(prevProps: Readonly<IHandTermProps>, prevState: Readonly<IHandTermState>, snapshot?: any): void {
+  componentDidUpdate(_prevProps: Readonly<IHandTermProps>, _prevState: Readonly<IHandTermState>, _snapshot?: any): void {
     if(this.adapterRef.current){
       this.adapterRef.current.scrollBottom();
       this.adapterRef.current.focusTerminal();
@@ -368,7 +368,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     }));
   }
 
-  private saveCommandResponseHistory(command: string, response: string, status: number): string {
+  public saveCommandResponseHistory(command: string, response: string, status: number): string {
     const commandTime = new Date();
     const timeCode = this.createTimeCode(commandTime).join(':');
     let commandText = this.createCommandRecord(command, commandTime);
@@ -389,13 +389,11 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
 
     if (!this._commandHistory) { this._commandHistory = []; }
     const commandResponse = commandResponseElement.outerHTML;
-    this._commandHistory.push(commandResponse);
     const characterAverages = this.averageWpmByCharacter(wpms.charWpms.filter(wpm => wpm.durationMilliseconds > 1));
     const slowestCharacters = this.WpmsToHTML(characterAverages.sort((a, b) => a.wpm - b.wpm).slice(0, 3), "slow-chars");
-    this._commandHistory.push(slowestCharacters.toString());
 
-    this.setState(prevState => ({ outputElements: [...prevState.outputElements, commandResponse] }));
-    this.setState(prevState => ({ outputElements: [...prevState.outputElements, slowestCharacters] }));
+    this.writeOutput(commandResponse)
+    this.writeOutput(slowestCharacters.toString())
 
     const slowestCharactersHTML = ReactDOMServer.renderToStaticMarkup(slowestCharacters);
 
@@ -404,6 +402,12 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     this._persistence.setItem(`${LogKeys.Command}_${timeCode}`, commandResponseElement.outerHTML);
 
     return commandResponse;
+  }
+
+  writeOutput(output: string){
+    this._commandHistory?.push(output);
+    this.setState(prevState => ({ outputElements: [...prevState.outputElements, output] }));
+
   }
 
   clearCommandHistory(): void {
@@ -423,6 +427,8 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       localStorage.removeItem(key); // Clear localStorage.length
     }
     this._commandHistory = [];
+    this.setState({ outputElements: [] });
+    this.adapterRef.current?.terminalReset();
   }
 
   createCommandRecord(command: string, commandTime: Date): string {
