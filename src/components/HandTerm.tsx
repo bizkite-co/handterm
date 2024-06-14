@@ -392,10 +392,11 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     const characterAverages = this.averageWpmByCharacter(wpms.charWpms.filter(wpm => wpm.durationMilliseconds > 1));
     const slowestCharacters = this.WpmsToHTML(characterAverages.sort((a, b) => a.wpm - b.wpm).slice(0, 3), "slow-chars");
 
-    this.writeOutput(commandResponse)
-    this.writeOutput(slowestCharacters.toString())
-
     const slowestCharactersHTML = ReactDOMServer.renderToStaticMarkup(slowestCharacters);
+
+    this.writeOutput(commandResponse)
+    this.writeOutput(slowestCharactersHTML)
+
 
     // Now you can append slowestCharactersHTML as a string to your element's innerHTML
     commandResponseElement.innerHTML += slowestCharactersHTML;
@@ -407,7 +408,6 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
   writeOutput(output: string){
     this._commandHistory?.push(output);
     this.setState(prevState => ({ outputElements: [...prevState.outputElements, output] }));
-
   }
 
   clearCommandHistory(): void {
