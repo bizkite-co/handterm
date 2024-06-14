@@ -1,12 +1,12 @@
 // App.tsx
 import React, { useEffect, useRef } from 'react';
-import HandexTerm from './components/HandTerm';
+import HandTerm from './components/HandTerm';
 import { CommandProvider } from './commands/CommandProvider';
 
 const App = () => {
   const containerRef = React.createRef<HTMLDivElement>();
   const [containerWidth, setContainerWidth] = React.useState<number>(0);
-  const handexTermRef = useRef<HandexTerm>(null);
+  const handexTermRef = useRef<HandTerm>(null);
 
   useEffect(() => {
     const w = getContainerWidth();
@@ -17,11 +17,9 @@ const App = () => {
         handexTermRef.current &&
         handexTermRef.current.adapterRef.current &&
         handexTermRef.current.adapterRef.current.terminalRef.current &&
-        !handexTermRef.current.adapterRef.current.terminalRef.current.contains(event.target as Node)
+        handexTermRef.current.adapterRef.current.terminalRef.current
       ) {
           handexTermRef.current.adapterRef.current.terminalRef.current.focus();
-          console.log('clicked outside of terminal to focus');
-
       }
     };
 
@@ -49,9 +47,9 @@ const App = () => {
   })
 
   return (
-    <CommandProvider >
+    <CommandProvider handTermRef={handexTermRef}>
       <div ref={containerRef}>
-        <HandexTerm
+        <HandTerm
           ref={handexTermRef}
           terminalWidth={containerWidth}
         />

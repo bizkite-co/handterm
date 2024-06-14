@@ -51,6 +51,7 @@ export class XtermAdapter extends React.Component<IXtermAdapterProps, IXtermAdap
       this.terminal.loadAddon(this.fitAddon);
       this.fitAddon.fit();
       this.terminal.write('\x1b[4h');
+      this.focusTerminal();
       // Other terminal initialization code...
     }
   }
@@ -95,14 +96,21 @@ export class XtermAdapter extends React.Component<IXtermAdapterProps, IXtermAdap
     this.terminal.focus();
     this.prompt();
     window.addEventListener('resize', this.handleResize);
+    this.scrollBottom()
+    this.focusTerminal();
+  }
+
+  scrollBottom = () => {
     window.scrollTo(0, window.innerHeight);
   }
 
-  // componentDidUpdate(prevProps: Readonly<IXtermAdapterProps>): void {
-  //   if (prevProps.terminalElementRef?.current !== this.props.terminalElementRef?.current) {
-  //     this.initializeTerminal();
-  //   }
-  // }
+  componentDidUpdate(_prevProps: Readonly<IXtermAdapterProps>): void {
+    // if (_prevProps.terminalElementRef?.current !== this.props.terminalElementRef?.current) {
+    //   this.initializeTerminal();
+    // }
+    this.focusTerminal();
+    this.scrollBottom();
+  }
 
   componentWillUnmount(): void {
     if (this.onDataDisposable) {

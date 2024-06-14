@@ -15,12 +15,12 @@ import { IWebCam, WebCam } from '../utils/WebCam';
 import { getLevelCount } from '../game/Level';
 import { CommandContext } from '../commands/CommandContext';
 
-export interface IHandexTermProps {
+export interface IHandTermProps {
   // Define the interface for your HandexTerm logic
   terminalWidth: number;
 }
 
-export interface IHandexTermState {
+export interface IHandTermState {
   // Define the interface for your HandexTerm state
   outputElements: React.ReactNode[];
   isInPhraseMode: boolean;
@@ -35,7 +35,7 @@ export interface IHandexTermState {
 }
 
 
-class HandexTerm extends React.Component<IHandexTermProps, IHandexTermState> {
+class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
  // Declare the context property with the type of your CommandContext
   static contextType = CommandContext;
   // TypeScript will now understand that this.context is of the type of your CommandContext
@@ -57,6 +57,7 @@ class HandexTerm extends React.Component<IHandexTermProps, IHandexTermState> {
   private lastTouchDistance: number | null = null;
   private currentFontSize: number = 17;
   isShowVideo: any;
+  outputRef = React.createRef<HTMLDivElement>();
 
   updateTerminalFontSize(newSize: number) {
     this.setState({ terminalFontSize: newSize });
@@ -68,7 +69,7 @@ class HandexTerm extends React.Component<IHandexTermProps, IHandexTermState> {
     }
   }
 
-  constructor(IHandexTermProps: IHandexTermProps) {
+  constructor(IHandexTermProps: IHandTermProps) {
     super(IHandexTermProps);
     this._persistence = new LocalStoragePersistence();
     const initialCanvasHeight = localStorage.getItem('canvasHeight') || '100';
@@ -88,6 +89,13 @@ class HandexTerm extends React.Component<IHandexTermProps, IHandexTermState> {
     this.loadFontSize();
   }
 
+  componentDidUpdate(prevProps: Readonly<IHandTermProps>, prevState: Readonly<IHandTermState>, snapshot?: any): void {
+    if(this.adapterRef.current){
+      this.adapterRef.current.scrollBottom();
+      this.adapterRef.current.focusTerminal();
+    }
+  }
+
   componentDidMount(): void {
     if (this.adapterRef.current) {
       const size = this.adapterRef.current.getTerminalSize();
@@ -95,7 +103,7 @@ class HandexTerm extends React.Component<IHandexTermProps, IHandexTermState> {
         this.setState({ terminalSize: size });
       }
     }
-    window.scrollTo(0, document.body.scrollHeight);
+    window.scrollTo(0, window.outerHeight + 100);
 
     if (this.videoElementRef.current) {
       this.webCam = new WebCam(this.videoElementRef.current);
@@ -120,7 +128,14 @@ class HandexTerm extends React.Component<IHandexTermProps, IHandexTermState> {
 
   public handleCommand = (command: string) => {
     if(this.context) {
-      const output = this.context.executeCommand(command);
+      const args = [''];
+      const switchs = {}
+      const output = this.context
+        .executeCommand(
+          command, 
+          args, 
+          switchs,
+        );
       console.log('Command output', output);
     }
 
@@ -131,26 +146,12 @@ class HandexTerm extends React.Component<IHandexTermProps, IHandexTermState> {
     if (this.state.isInPhraseMode) {
       response = "";
     }
-    this.setState({ outputElements: [], isInPhraseMode: false, commandLine: '' });
+    this.setState({ isInPhraseMode: false, commandLine: '' });
 
-    if (command === 'clear') {
-      status = 200;
-      this.clearCommandHistory();
-      this.adapterRef.current?.prompt();
-      return;
-    }
     if (command === 'kill') {
       if (!this.terminalGameRef.current) return;
       this.terminalGameRef.current.setZombie4ToDeathThenResetPosition();
       this.terminalGameRef.current.completeGame();
-    }
-    if (command === 'ls phrases') {
-      status = 200;
-      const phrases = Phrases.getPhrases();
-      response = '<div class="phrase-names"><div class="phrase-name">'
-        + phrases.join('</div><div class="phrase-name">') +
-        '</div></div>';
-      // return response;
     }
     if (command.startsWith('level')) {
 
@@ -203,7 +204,7 @@ class HandexTerm extends React.Component<IHandexTermProps, IHandexTermState> {
     }
 
     // Truncate the history if it's too long before saving
-    if (this._commandHistory.length > HandexTerm.commandHistoryLimit) {
+    if (this._commandHistory.length > HandTerm.commandHistoryLimit) {
       this._commandHistory.shift(); // Remove the oldest command
     }
     this.saveCommandResponseHistory(command, response, status); // Save updated history to localStorage
@@ -403,7 +404,6 @@ class HandexTerm extends React.Component<IHandexTermProps, IHandexTermState> {
     this._persistence.setItem(`${LogKeys.Command}_${timeCode}`, commandResponseElement.outerHTML);
 
     return commandResponse;
-
   }
 
   clearCommandHistory(): void {
@@ -674,6 +674,7 @@ class HandexTerm extends React.Component<IHandexTermProps, IHandexTermState> {
           return (
             <div className="terminal-container">
               <Output
+                ref={this.outputRef}
                 elements={this.state.outputElements}
                 onTouchStart={this.handleTouchStart}
                 onTouchEnd={this.handleTouchEnd}
@@ -719,6 +720,6 @@ class HandexTerm extends React.Component<IHandexTermProps, IHandexTermState> {
   }
 }
 
-HandexTerm.contextType = CommandContext;
+HandTerm.contextType = CommandContext;
 
-export default HandexTerm;
+export default HandTerm;

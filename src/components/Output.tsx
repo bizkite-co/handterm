@@ -1,6 +1,7 @@
+// src/components/Output.tsx
+
 import React, { TouchEventHandler } from "react";
 import { TerminalCssClasses } from "../types/TerminalTypes";
-
 
 export interface OutputProps {
     elements: React.ReactNode[];
@@ -8,23 +9,22 @@ export interface OutputProps {
     onTouchEnd: TouchEventHandler<HTMLDivElement>;
 }
 
-export const Output: React.FC<OutputProps> = ({ elements, ...props }) => {
+export const Output = React.forwardRef<HTMLDivElement, OutputProps>(({ elements, onTouchStart, onTouchEnd }, ref) => {
     return (
         <div
             id={TerminalCssClasses.Output}
             className={TerminalCssClasses.Output}
-            onTouchStart={props.onTouchStart}
-            onTouchEnd={props.onTouchEnd}
+            onTouchStart={onTouchStart}
+            onTouchEnd={onTouchEnd}
+            ref={ref}
         >
             {elements.map((element, index) => {
                 if (typeof element === 'string') {
-                    // Only use dangerouslySetInnerHTML for string values
                     return <div key={index} dangerouslySetInnerHTML={{ __html: element }} />;
                 } else {
-                    // For non-string ReactNode elements, render them directly
                     return <div key={index}>{element}</div>;
                 }
             })}
         </div>
     );
-};
+});
