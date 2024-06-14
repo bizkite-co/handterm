@@ -1,5 +1,10 @@
 import HandTerm from "../components/HandTerm";
 
+export interface ICommandResponse {
+    status: number;
+    message: string;
+}
+
 export interface ICommand {
     name: string;
     description: string;
@@ -9,5 +14,5 @@ export interface ICommand {
         args?: string[], 
         switches?: Record<string, boolean | string>,
         handTerm?: HandTerm
-    ) => string;
+    ) => ICommandResponse;
 }

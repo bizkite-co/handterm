@@ -136,7 +136,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
           args, 
           switchs,
         );
-      console.log('Command output', output);
+      if(output.status === 200) return;
     }
 
     let status = 404;
@@ -429,6 +429,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     this._commandHistory = [];
     this.setState({ outputElements: [] });
     this.adapterRef.current?.terminalReset();
+    this.adapterRef.current?.prompt();
   }
 
   createCommandRecord(command: string, commandTime: Date): string {

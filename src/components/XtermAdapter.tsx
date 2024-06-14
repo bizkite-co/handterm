@@ -58,13 +58,12 @@ export class XtermAdapter extends React.Component<IXtermAdapterProps, IXtermAdap
 
   public focusTerminal() {
     // Logic to focus the terminal goes here
-    if (this.terminalRef.current) {
-      this.terminalRef.current.focus();
-    }
+    this.terminal.focus();
   }
 
   terminalReset(): void {
     this.terminal.reset();
+    // this.prompt();
   }
 
   terminalWrite(data: string): void {

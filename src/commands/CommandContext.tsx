@@ -1,5 +1,6 @@
 // CommandContext.tsx
 import React from 'react';
+import { ICommandResponse } from './ICommand';
 
 export interface ICommandContext {
   commandHistory: string[];
@@ -9,7 +10,7 @@ export interface ICommandContext {
     commandName: string, 
     args?: string[], 
     switches?: Record<string, boolean | string>,
-  ) => string;
+  ) => ICommandResponse;
 }
 
 // Create the context with a default value

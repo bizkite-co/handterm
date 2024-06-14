@@ -11,18 +11,26 @@ const App = () => {
   useEffect(() => {
     const w = getContainerWidth();
     setContainerWidth(w);
-   const handleClickOutsideTerminal = (event: MouseEvent) => {
+    const handleClickOutsideTerminal = (event: MouseEvent) => {
       // Check if the click is outside of the terminal area
-     if (
+      if (
         handexTermRef.current &&
         handexTermRef.current.adapterRef.current &&
         handexTermRef.current.adapterRef.current.terminalRef.current &&
         handexTermRef.current.adapterRef.current.terminalRef.current
       ) {
-          event.stopPropagation();
-          handexTermRef.current.adapterRef.current.terminalRef.current.focus();
-          // type a character to trigger the focus event
-          // handexTermRef.current.adapterRef.current.terminalWrite('a');
+        event.stopPropagation();
+        handexTermRef.current.adapterRef.current.focusTerminal();
+        setTimeout(() => {
+          if (
+            handexTermRef.current &&
+            handexTermRef.current.adapterRef.current &&
+            handexTermRef.current.adapterRef.current.terminalRef.current &&
+            handexTermRef.current.adapterRef.current.terminalRef.current
+          ) handexTermRef.current.adapterRef.current.focusTerminal();
+        }, 1000);
+        // type a character to trigger the focus event
+        // handexTermRef.current.adapterRef.current.terminalWrite('a');
       }
     };
 

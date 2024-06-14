@@ -18,14 +18,14 @@ export const CommandProvider: React.FC<CommandProviderProps> = (props: CommandPr
     const handTerm = props.handTermRef.current;
     if (!handTerm) {
       console.error('CommandProvider: handTermRef.current is NULL');
-      return 'CommandProvider: handTermRef.current is NULL';
+      return {status: 404, message: 'CommandProvider: handTermRef.current is NULL'};
     }
     const command = commandRegistry.getCommand(commandName);
     if (command) {
       // Execute the command and return the result
-      return command.execute(commandName, args, switches, handTerm);
+      return {status: 200, message: command.execute(commandName, args, switches, handTerm).message };
     }
-    return `CommandProvider: Command not found: ${commandName}`;
+    return { status: 404, message: `CommandProvider: Command not found: ${commandName}`};
   }, []);
 
   const appendToOutput = useCallback((element: React.ReactNode) => {
