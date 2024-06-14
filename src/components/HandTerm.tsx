@@ -42,7 +42,7 @@ class HandexTerm extends React.Component<IHandexTermProps, IHandexTermState> {
   declare context: ContextType<typeof CommandContext>;
   // Implement the interface methods
   private terminalElementRef = React.createRef<HTMLDivElement>();
-  private adapterRef = React.createRef<XtermAdapter>();
+  public adapterRef = React.createRef<XtermAdapter>();
   private nextCharsDisplayRef: React.RefObject<NextCharsDisplay> = React.createRef();
   private terminalGameRef = React.createRef<TerminalGame>();
   private _persistence: IPersistence;
@@ -60,6 +60,12 @@ class HandexTerm extends React.Component<IHandexTermProps, IHandexTermState> {
 
   updateTerminalFontSize(newSize: number) {
     this.setState({ terminalFontSize: newSize });
+  }
+
+  public focusTerminal() {
+    if (this.adapterRef.current) {
+      this.adapterRef.current.focusTerminal();
+    }
   }
 
   constructor(IHandexTermProps: IHandexTermProps) {

@@ -1,4 +1,5 @@
 import Phrases from '../utils/Phrases';
+import { ICommandContext } from './CommandContext';
 import { ICommand } from './ICommand';
 
 export const ListPhrasesCommand: ICommand = {
@@ -9,11 +10,13 @@ export const ListPhrasesCommand: ICommand = {
     'random': 'List a random phrase',
     'easy': 'List only easy phrases',
   },
-  execute: (args: string[]) => {
-    console.log('ListPhrasesCommand called with args:', args);
-    // Command logic here
-    const phrases = Phrases.getPhrases();
-    const response = phrases.join('<br/>');
-    return response;
-  },
+  execute: (_commandName: string, _args?: string[], _switches?: Record<string, boolean | string>, context?: ICommandContext) => {
+    if (!context) {
+      return 'No command context available.';
+    }
+    // Logic to clear the command history from localStorage
+    // Logic to clear the command history from context (state)
+    context.setCommandHistory([Phrases.getPhrases().join('\n')]);
+    return 'Command history cleared.';
+  }
 };

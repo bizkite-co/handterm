@@ -1,13 +1,8 @@
-import { useClearCommand } from "./clearCommand";
-import { HelpCommand } from "./HelpCommand";
-import { ListPhrasesCommand } from "./ListPhrasesCommand";
-import { commandRegistry } from "./commandRegistry";
+// src/commands/index.ts
 
-commandRegistry.register(useClearCommand);
-commandRegistry.register(HelpCommand);
+import { commandRegistry } from './commandRegistry';
+import { clearCommand } from './clearCommand';
+import { ListPhrasesCommand } from "./ListPhrasesCommand";
+
+commandRegistry.register(clearCommand);
 commandRegistry.register(ListPhrasesCommand);
-commandRegistry.register({
-    name: "video",
-    description: "Toggle the video camera",
-    hook: 'useVideoCommand'
-})

@@ -18,7 +18,7 @@ interface IXtermAdapterProps {
 
 export class XtermAdapter extends React.Component<IXtermAdapterProps, IXtermAdapterState> {
   private terminal: Terminal;
-  private terminalElementRef: React.RefObject<HTMLElement>;
+  public terminalRef: React.RefObject<HTMLElement>;
   private promptDelimiter: string = '$';
   private promptLength: number = 0;
   public isShowVideo: boolean = false;
@@ -29,7 +29,7 @@ export class XtermAdapter extends React.Component<IXtermAdapterProps, IXtermAdap
   constructor(props: IXtermAdapterProps) {
     super(props);
     const { terminalElementRef } = props;
-    this.terminalElementRef = terminalElementRef;
+    this.terminalRef = terminalElementRef;
     this.state = {
     }
     this.terminal = new Terminal({
@@ -46,12 +46,19 @@ export class XtermAdapter extends React.Component<IXtermAdapterProps, IXtermAdap
   initializeTerminal() {
     const { terminalElementRef } = this.props;
     if (terminalElementRef?.current) {
-      this.terminalElementRef = terminalElementRef;
+      this.terminalRef = terminalElementRef;
       this.terminal.open(terminalElementRef.current);
       this.terminal.loadAddon(this.fitAddon);
       this.fitAddon.fit();
       this.terminal.write('\x1b[4h');
       // Other terminal initialization code...
+    }
+  }
+
+  public focusTerminal() {
+    // Logic to focus the terminal goes here
+    if (this.terminalRef.current) {
+      this.terminalRef.current.focus();
     }
   }
 
@@ -190,10 +197,10 @@ export class XtermAdapter extends React.Component<IXtermAdapterProps, IXtermAdap
   }
 
   public getTerminalSize(): { width: number; height: number } | undefined {
-    if (this.terminalElementRef.current) {
+    if (this.terminalRef.current) {
       return {
-        width: this.terminalElementRef.current.clientWidth,
-        height: this.terminalElementRef.current.clientHeight,
+        width: this.terminalRef.current.clientWidth,
+        height: this.terminalRef.current.clientHeight,
       };
     }
     return undefined;
@@ -204,7 +211,7 @@ export class XtermAdapter extends React.Component<IXtermAdapterProps, IXtermAdap
     return (
       <>
         <div
-          ref={this.terminalElementRef as React.RefObject<HTMLDivElement>}
+          ref={this.terminalRef as React.RefObject<HTMLDivElement>}
           id={TerminalCssClasses.Terminal}
           className={TerminalCssClasses.Terminal}
         />

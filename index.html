@@ -12,7 +12,7 @@
 </head>
 
 <body>
-  <svg xmlns="http://www.w3.org/2000/svg" id="terminal-nav-svg" style="display: none" 
+  <svg xmlns="http://www.w3.org/2000/svg" id="terminal-nav-svg" style="display: none"
     hidden="hidden">
     <defs>
       <polygon id="start" points="1,1 6,5 1,9" fill="#0F0F" z-index="1010" />
@@ -28,5 +28,19 @@
   <div id="root"></div>
   <script type="module" src="/src/main.tsx"></script>
 </body>
+<script>
+  document.addEventListener('DOMContentLoaded', (event) => {
+    const rootElement = document.getElementById('root');
+
+    document.body.addEventListener('click', (e) => {
+      // Check if the click is outside of the terminal area
+      if (e.target === rootElement || rootElement.contains(e.target)) {
+        return; // Do nothing if the click is inside the div#root
+      }
+      // Focus the terminal if the click is outside div#root
+      rootElement.focus();
+    });
+  });
+</script>
 
 </html>

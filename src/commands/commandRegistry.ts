@@ -1,3 +1,5 @@
+// src/commands/commandRegistry.ts
+
 import { ICommand } from './ICommand';
 
 class CommandRegistry {
