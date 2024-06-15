@@ -33,7 +33,6 @@ export interface IHandTermState {
   canvasHeight: number;
 }
 
-
 class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
  // Declare the context property with the type of your CommandContext
   static contextType = CommandContext;
@@ -706,6 +705,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
                 onTouchStart={this.handleTouchStart}
                 onTouchEnd={this.handleTouchEnd}
               />
+              {/* TODO: Move this into JSX in the WebCam component */}
               <video
                 ref={this.videoElementRef as React.RefObject<HTMLVideoElement>}
                 id="terminal-video"
