@@ -1,4 +1,4 @@
-import { spaceDisplayChar, CharTime } from "../types/Types.js";
+import { spaceDisplayChar } from "../types/Types.js";
 import { TerminalCssClasses } from "../types/TerminalTypes.js";
 
 import React, { createRef } from 'react';
@@ -11,7 +11,7 @@ interface NextCharsDisplayProps {
     onTimerStatusChange: (isActive: boolean) => void;
     isInPhraseMode: boolean;
     newPhrase: string;
-    onPhraseSuccess: (phrase: string, wpm: number) => void;
+    onPhraseSuccess: (phrase: string) => void;
 }
 interface NextCharsDisplayState {
     isActive: boolean;
@@ -32,8 +32,6 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
     private _svgCharacter: React.RefObject<HTMLImageElement>;
     private _timerRef: React.RefObject<any>;
     private voiceSynth: SpeechSynthesis;
-    private _charTimeArray: CharTime[] = [];
-    private _charTimes: React.RefObject<HTMLDivElement>;
     private _wpmRef: React.RefObject<HTMLSpanElement>;
     public isTestMode: boolean;
 
@@ -57,19 +55,19 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
         this._nextCharsRef = React.createRef<HTMLPreElement>();
         this._nextCharsRateRef = React.createRef<HTMLDivElement>();
         this._wpmRef = React.createRef();
-        this._charTimes = React.createRef<HTMLDivElement>();
         this._chordImageHolderRef = React.createRef<HTMLDivElement>();
         this._svgCharacter = React.createRef<HTMLImageElement>();
         this.isTestMode = localStorage.getItem('testMode') == 'true';
         this._timerRef = createRef();
-        // this._timer = new Timer();
     }
 
     componentDidMount() {
-        if(this.props.isInPhraseMode) {
+        if (this.props.isInPhraseMode) {
             this.setState({
                 phrase: new Phrase(this.props.newPhrase)
             })
+            console.log("componentDidMount newPhrase", this.props.newPhrase);
+            console.log("componentDidMount newPhrase", this.state.phrase);
         }
     }
 
@@ -80,6 +78,7 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
                 this.setState({
                     phrase: new Phrase(this.props.newPhrase)
                 })
+                console.log("componentDidUpdate newPhrase", this.state.phrase.value);
             }
         }
         // Check if the commandLine prop has changed
@@ -95,14 +94,14 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
     handleCommandLineChange(newCommandLine: string) {
         this.testInput(newCommandLine);
     }
-    
+
 
     showError = (char: string, charCode: string) => {
         this.setState({
             mismatchedChar: char,
             mismatchedCharCode: charCode,
             mismatchedIsVisible: true
-            
+
         })
         // Call showError on the ErrorDisplay ref
         if (this._errorDisplayRef.current) this._errorDisplayRef.current.showError();
@@ -119,15 +118,23 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
     };
 
     handleSuccess = () => {
+        this.setState(
+            {
+                isActive: false,
+                mismatchedChar: '',
+                mismatchedCharCode: '',
+                mismatchedIsVisible: false,
+                nextChars: '',
+            });
         // Call hideError on the ErrorDisplay ref
-        if(this._errorDisplayRef.current){
+        if (this._errorDisplayRef.current) {
             this._errorDisplayRef.current.hideError();
         }
-        else{
+        else {
             console.error("ErrorDisplay ref not found");
         }
         // TODO: Do we need to pass the WPM back? If so, remove this hardcoded abomination.
-        this.props.onPhraseSuccess(this.state.phrase.value, 35);
+        this.props.onPhraseSuccess(this.state.phrase.value);
     };
 
 
@@ -157,7 +164,7 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
     reset(): void {
         this.state.phrase = new Phrase('');
         this.setNext('');
-        if(this._nextCharsRef?.current) this._nextCharsRef.current.hidden = true;
+        if (this._nextCharsRef?.current) this._nextCharsRef.current.hidden = true;
     }
 
     public get nextChars(): HTMLElement | null {
@@ -165,7 +172,7 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
     }
 
     set wpm(wpm: string) {
-        if(this._wpmRef.current) this._wpmRef.current.innerText = wpm;
+        if (this._wpmRef.current) this._wpmRef.current.innerText = wpm;
     }
 
     get phrase(): Phrase {
@@ -178,7 +185,7 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
 
 
     set phrase(phrase: HTMLInputElement) {
-        this.state.phrase = new Phrase(phrase.value);
+        this.setState({ phrase: new Phrase(phrase.value) });
     }
 
     setNextCharsDisplay(stringBeingTested: string): void {
@@ -228,15 +235,13 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
     };
 
     cancel = () => {
-        this._charTimeArray = [];
         if (this.wpm) this.wpm = '0';
-        if (this._charTimes.current) this._charTimes.current.innerHTML = '';
         // clear error class from all chords
         this.setNext('');
     }
 
     testInput = (stringBeingTested: string) => {
-        
+
         this.startTImer();
 
         const nextChordHTML = this.setNext(stringBeingTested);
@@ -270,10 +275,10 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
                 const firstNonMatchingChar = this.getFirstNonMatchingChar(stringBeingTested);
                 const mismatchedChar = this.state.phrase.value[firstNonMatchingChar];
                 const mismatchedCharCode: string = this.state.phrase.chords[firstNonMatchingChar]?.chordCode;
-                this.setState({ 
+                this.setState({
                     mismatchedIsVisible: true,
-                    mismatchedChar, 
-                    mismatchedCharCode 
+                    mismatchedChar,
+                    mismatchedCharCode
                 });
                 this.showError(mismatchedChar, mismatchedCharCode);
             } else {
@@ -289,32 +294,11 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
             // SHOW completion indication
             // this._timer.setSvg('stop');
             this.stopTimer();
-            this.setState(
-                { 
-                    isActive: false, 
-                    mismatchedChar: '', 
-                    mismatchedCharCode: '', 
-                    mismatchedIsVisible: false, 
-                    nextChars: '',
-                });
-            let charTimeList = "";
-            this._charTimeArray.forEach((x: CharTime) => {
-                charTimeList += `<li>${x.char.replace(' ', spaceDisplayChar)}: ${x.duration}</li>`;
-            });
 
-            if (this._charTimes.current) this._charTimes.current.innerHTML = charTimeList;
-            localStorage
-                .setItem(
-                    `charTimerSession_${(new Date).toISOString()}`,
-                    JSON.stringify(this._charTimeArray)
-                );
             // TODO: I could probably move this whole if code block into this function.
             this.handleSuccess();
-
-            // this._timer.success();
             return;
         }
-        // this._timer.start();
     }
 
     private getFirstNonMatchingChar = (stringBeingTested: string): number => {

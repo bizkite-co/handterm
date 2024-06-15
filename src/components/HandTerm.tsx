@@ -154,18 +154,8 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       this.terminalGameRef.current.completeGame();
     }
     if (command.startsWith('level')) {
-
       if (!this.terminalGameRef.current) return;
-      let nextLevel = this.terminalGameRef.current.getLevel() + 1;
-      const matchResult = command.match(/\d+/g);
-      if (matchResult) {
-        nextLevel = parseInt(matchResult[0] ?? '1');
-        if (nextLevel > getLevelCount()) nextLevel = getLevelCount();
-      }
-      if (nextLevel > getLevelCount()) nextLevel = 1;
-      if (nextLevel < 1) nextLevel = 1;
-      console.log("nextLevel", nextLevel);
-      this.terminalGameRef.current?.setLevel(nextLevel);
+      this.terminalGameRef.current?.levelUp( + command);
     }
     if (command === 'play') {
       status = 200;
@@ -283,7 +273,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       isInPhraseMode: true,
       phrase: newPhrase,
     });
-
+    console.log('New phrase:', this.state.phrase);
     // this.props.onNewPhrase(newPhrase); 
   }
 
@@ -465,15 +455,19 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     }
   }
 
-  handlePhraseSuccess = (phrase: string, wpm: number) => {
+  handlePhraseSuccess = (phrase: string) => {
+    let wpmPhrase = this.wpmCalculator
+      .getWPMs().wpmAverage.toString(10)
+      + ':' + phrase;
     this.setState(
       prevState => ({
         outputElements: [
           ...prevState.outputElements,
-          wpm.toString() + ":" + phrase
+          wpmPhrase
         ]
       })
     );
+    this.writeOutput(wpmPhrase);
 
     this.terminalGameRef.current?.completeGame();
     this.adapterRef.current?.terminalReset();

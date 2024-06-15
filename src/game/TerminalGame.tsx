@@ -4,7 +4,7 @@ import { Zombie4 } from './Zombie4';
 import { Hero } from './Hero';
 import { Action, ActionType } from './types/ActionTypes';
 import { SpritePosition } from './types/Position';
-import { layers } from './Level';
+import { layers, getLevelCount } from './Level';
 import { Sprite } from './sprites/Sprite';
 import { IParallaxLayer, ParallaxLayer } from './ParallaxLayer';
 import { TerminalCssClasses } from '../types/TerminalTypes';
@@ -88,6 +88,8 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
 
   public levelUp = (setLevel: number | null = null) => {
     let nextLevel = setLevel || this.getLevel() + 1;
+    if (nextLevel > getLevelCount()) nextLevel = 1;
+    if (nextLevel < 1) nextLevel = 1;
     this.setLevel(nextLevel);
   }
 
