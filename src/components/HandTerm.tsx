@@ -12,7 +12,6 @@ import ReactDOMServer from 'react-dom/server';
 import { ActionType } from '../game/types/ActionTypes';
 import Phrases from '../utils/Phrases';
 import { IWebCam, WebCam } from '../utils/WebCam';
-import { getLevelCount } from '../game/Level';
 import { CommandContext } from '../commands/CommandContext';
 
 export interface IHandTermProps {
@@ -223,7 +222,6 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       let command = this.adapterRef.current?.getCurrentCommand() ?? '';
       this.terminalReset();
       this.handleCommand(command);
-      // TODO: A bunch of phrase command stuff should be moved from NextCharsDisplay to here, such as phrase generation.
     } else if (this.state.isInPhraseMode) {
       // # IN PHRASE MODE
       this.terminalWrite(character);
@@ -235,10 +233,8 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
         return;
       }
 
-      const nextChars = this.nextCharsDisplayRef.current?.getNextCharacters(command) ?? '';
       this.setState({
         commandLine: command,
-        phrase: nextChars,
       });
       if ([',', '.', '!', '?'].includes(character) || /[0-9]/.test(character)) {
         this.setHeroSummersaultAction();
@@ -467,7 +463,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
         ]
       })
     );
-    this.writeOutput(wpmPhrase);
+    this.saveCommandResponseHistory("game", wpmPhrase, 200);
 
     this.terminalGameRef.current?.completeGame();
     this.adapterRef.current?.terminalReset();

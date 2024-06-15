@@ -35,15 +35,6 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
     private _wpmRef: React.RefObject<HTMLSpanElement>;
     public isTestMode: boolean;
 
-    state = {
-        mismatchedChar: '',
-        mismatchedCharCode: '',
-        mismatchedIsVisible: false,
-        nextChars: 'Next Chars',
-        nextCharsIsVisible: false,
-        isActive: false,
-        phrase: new Phrase(''),
-    }
 
     private _errorDisplayRef: React.RefObject<any>;
     private _nextCharsLength: number = 60;
@@ -59,6 +50,15 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
         this._svgCharacter = React.createRef<HTMLImageElement>();
         this.isTestMode = localStorage.getItem('testMode') == 'true';
         this._timerRef = createRef();
+        this.state = {
+            mismatchedChar: '',
+            mismatchedCharCode: '',
+            mismatchedIsVisible: false,
+            nextChars: 'Next Chars',
+            nextCharsIsVisible: false,
+            isActive: false,
+            phrase: new Phrase(this.props.newPhrase),
+        }
     }
 
     componentDidMount() {
@@ -66,25 +66,24 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
             this.setState({
                 phrase: new Phrase(this.props.newPhrase)
             })
-            console.log("componentDidMount newPhrase", this.props.newPhrase);
-            console.log("componentDidMount newPhrase", this.state.phrase);
         }
     }
 
     componentDidUpdate(prevProps: NextCharsDisplayProps) {
-        if (this.props.isInPhraseMode !== prevProps.isInPhraseMode) {
+        if ( this.props.newPhrase !== prevProps.newPhrase) {
             if (this.props.isInPhraseMode) {
-                // this.setNewPhrase(phrase);
                 this.setState({
-                    phrase: new Phrase(this.props.newPhrase)
+                    phrase: new Phrase(this.props.newPhrase),
+                    nextChars: this.props.newPhrase
                 })
-                console.log("componentDidUpdate newPhrase", this.state.phrase.value);
             }
         }
         // Check if the commandLine prop has changed
         if (this.props.commandLine !== prevProps.commandLine) {
             // Handle the new commandLine prop, for example by setting state
-            this.setState({ nextChars: this.getNextCharacters(this.props.commandLine) });
+            const nextChars = this.getNextCharacters(this.props.commandLine);
+
+            this.setState({ nextChars: nextChars });
 
             // Or perform any other actions necessary to respond to the change
             this.handleCommandLineChange(this.props.commandLine);
@@ -162,7 +161,6 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
     }
 
     reset(): void {
-        this.state.phrase = new Phrase('');
         this.setNext('');
         if (this._nextCharsRef?.current) this._nextCharsRef.current.hidden = true;
     }
@@ -378,7 +376,7 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
                 <div id={TerminalCssClasses.NextCharsRate} ref={this._nextCharsRateRef}></div>
                 <span id={TerminalCssClasses.WPM} ref={this._wpmRef}></span>
                 <pre id={TerminalCssClasses.NextChars} ref={this._nextCharsRef} >
-                    {this.props.newPhrase}
+                    {this.state.nextChars}
                 </pre>
             </div>
         );
