@@ -8,6 +8,7 @@ import { layers, getLevelCount } from './Level';
 import { Sprite } from './sprites/Sprite';
 import { IParallaxLayer, ParallaxLayer } from './ParallaxLayer';
 import { TerminalCssClasses } from '../types/TerminalTypes';
+import ScrollingTextLayer from './ScrollingTextLayer';
 
 interface ITerminalGameProps {
   canvasHeight: number
@@ -33,7 +34,10 @@ interface ITerminalGameState {
   backgroundOffsetX: number;
   isPhraseComplete: boolean;
   textScrollX: number;
+  isTextScrolling: boolean;
   layers: IParallaxLayer[];
+  isInScrollMode: boolean;
+  textToScroll: string;
 }
 
 interface ICharacterRefMethods {
@@ -48,11 +52,9 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
   private animationFrameIndex?: number;
   public context: CanvasRenderingContext2D | null = null;
   private heroXPercent: number = 0.23;
-  isInScrollMode: boolean = true;
   zombie4DeathTimeout: NodeJS.Timeout | null = null;
   // Add a new field for the text animation
   private textScrollX: number = this.props.canvasWidth; // Start offscreen to the right
-  private textToScroll: string = "Terminal Velocity!";
   private heroRef = React.createRef<ICharacterRefMethods>();
   private zombie4Ref = React.createRef<ICharacterRefMethods>();
 
@@ -71,6 +73,9 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
       backgroundOffsetX: 0,
       isPhraseComplete: false,
       textScrollX: this.props.canvasWidth,
+      textToScroll: "Terminal Velocity!",
+      isTextScrolling: false,
+      isInScrollMode: true,
       layers: layers[0]
     };
   }
@@ -117,7 +122,6 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
     }
   }
 
-
   componentDidUpdate(
     _prevProps: Readonly<ITerminalGameProps>,
     prevState: Readonly<ITerminalGameState>,
@@ -143,7 +147,6 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
     }
   }
 
-
   setupCanvas(canvas: HTMLCanvasElement) {
     if (canvas) {
       const context = canvas.getContext('2d');
@@ -163,18 +166,19 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
     }
   }
 
-  drawScrollingText(context: CanvasRenderingContext2D) {
-    context.font = 'italic 60px Arial'; // Customize as needed
-    context.fillStyle = 'lightgreen'; // Text color
-    context.fillText(this.textToScroll, this.textScrollX, 85); // Adjust Y coordinate as needed
+  toggleScrollingText = (show: boolean | null = null) => {
+    // Used passed in value, or if that is null, toggle the state
+    if (show === null) show = !this.state.isTextScrolling;
+    this.setState({ isTextScrolling: show });
+  };
 
-    // Update the X position for the next frame
-    this.textScrollX -= 5; // Adjust speed as needed
+  drawScrollingText() {
 
-    // Reset text position if it's fully offscreen to the left
-    if (this.textScrollX < -context.measureText(this.textToScroll).width) {
-      this.textScrollX = this.props.canvasWidth;
-    }
+    this.toggleScrollingText(true);
+
+    setTimeout(() => {
+      this.toggleScrollingText(false);
+    }, 3000); // Adjust delay as needed
   }
 
   // Call this method when the game is completed
@@ -265,7 +269,7 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
     }
 
     // Determine if we need to scroll the background
-    if (this.isInScrollMode && heroDx !== 0) {
+    if (this.state.isInScrollMode && heroDx !== 0) {
       // Calculate the new background offset
       // const newBackgroundOffsetX = this.state.backgroundOffsetX + heroDx;
 
@@ -304,7 +308,7 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
         // Get the parallax layers for the current level
 
         if (this.state.isPhraseComplete) {
-          this.drawScrollingText(context);
+          this.drawScrollingText();
         }
 
         this.updateCharacterAndBackgroundPostion(context);
@@ -349,7 +353,14 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
         <div
           id={TerminalCssClasses.TerminalGame}
           style={{ position: "relative", height: this.props.canvasHeight }}>
-          <div className="parallax-background">
+          <div
+            className="parallax-background">
+
+            {this.state.isTextScrolling && (
+              <ScrollingTextLayer
+                text={this.state.textToScroll}
+                canvasHeight={this.props.canvasHeight} />
+            )}
             {this.state.layers.map((layer, index) => (
               <ParallaxLayer
                 key={index}
