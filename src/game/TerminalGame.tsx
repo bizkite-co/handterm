@@ -24,10 +24,8 @@ interface ITerminalGameProps {
 
 interface ITerminalGameState {
   currentLevel: number;
-  heroActionType: ActionType;
   heroPosition: SpritePosition;
   heroReady: boolean;
-  zombie4ActionType: ActionType;
   zombie4Position: SpritePosition;
   zombie4Ready: boolean;
   context: CanvasRenderingContext2D | null;
@@ -62,10 +60,8 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
   getInitState(props: ITerminalGameProps): ITerminalGameState {
     return {
       currentLevel: 1,
-      heroActionType: props.heroActionType,
       heroPosition: { leftX: props.canvasWidth * this.heroXPercent, topY: 30 },
       heroReady: false,
-      zombie4ActionType: props.zombie4ActionType,
       zombie4Position: { leftX: 50, topY: 0 },
       zombie4Ready: false,
       context: null as CanvasRenderingContext2D | null,
@@ -201,7 +197,6 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
     this.setZombie4Action('Death');
     // After three seconds, reset the position
     // TODO: The actions are controlled by props, not state.
-    console.log("Zombie4 action:", this.state.zombie4ActionType);
     this.zombie4DeathTimeout = setTimeout(() => {
       // Optionally reset the action if needed
       this.setZombie4Action('Walk'); // Or the default action you want to set
@@ -212,7 +207,6 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
       });
 
       this.zombie4DeathTimeout = null;
-      console.log("Zombie4 action:", this.state.zombie4ActionType);
     }, 3000);
   };
 
@@ -220,19 +214,19 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
   checkProximityAndSetAction() {
     // Constants to define "near"
     // TODO: Sprite image widths seem to be off by about 150.
-    const ATTACK_THRESHOLD = 250; // pixels or appropriate unit for your game
+    const ATTACK_THRESHOLD = 100; // pixels or appropriate unit for your game
 
     // Calculate the distance between the hero and zombie4
     const distance = this.state.heroPosition.leftX - this.state.zombie4Position.leftX;
 
     // If zombie4 is near the Hero, set its current action to Attack
-    if (150 < distance && distance < ATTACK_THRESHOLD) {
+    if (25 < distance && distance < ATTACK_THRESHOLD) {
 
       // Assuming zombie4 has a method to update its action
       this.setZombie4Action('Attack'); // Replace 'Attack' with actual ActionType for attacking
     } else {
       // Otherwise, set it back to whatever action it should be doing when not attacking
-      if (this.state.zombie4ActionType === 'Attack') {
+      if (this.props.zombie4ActionType === 'Attack') {
         this.setZombie4Action('Walk'); // Replace 'Walk' with actual ActionType for walking
       }
     }
