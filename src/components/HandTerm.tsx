@@ -34,7 +34,7 @@ export interface IHandTermState {
 }
 
 class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
- // Declare the context property with the type of your CommandContext
+  // Declare the context property with the type of your CommandContext
   static contextType = CommandContext;
   // TypeScript will now understand that this.context is of the type of your CommandContext
   declare context: ContextType<typeof CommandContext>;
@@ -88,7 +88,11 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
   }
 
   componentDidUpdate(_prevProps: Readonly<IHandTermProps>, _prevState: Readonly<IHandTermState>, _snapshot?: any): void {
-    if(this.adapterRef.current){
+    this.scrollToBottom();
+  }
+
+  scrollToBottom() {
+    if (this.adapterRef.current) {
       this.adapterRef.current.scrollBottom();
       this.adapterRef.current.focusTerminal();
     }
@@ -101,7 +105,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
         this.setState({ terminalSize: size });
       }
     }
-    window.scrollTo(0, window.outerHeight + 100);
+    this.scrollToBottom();
 
     if (this.videoElementRef.current) {
       this.webCam = new WebCam(this.videoElementRef.current);
@@ -125,22 +129,22 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
   }
 
   public handleCommand = (command: string) => {
-    if(this.context) {
+    if (this.context) {
       const args = [''];
       const switchs = {}
       const output = this.context
         .executeCommand(
-          command, 
-          args, 
+          command,
+          args,
           switchs,
         );
-      if(output.status === 200) return;
+      if (output.status === 200) return;
     }
 
     let status = 404;
     let response = "Command not found.";
     this.terminalGameRef.current?.resetGame();
-    window.scrollTo(0, document.body.scrollHeight);
+    this.scrollToBottom();
     if (this.state.isInPhraseMode) {
       response = "";
     }
@@ -153,7 +157,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     }
     if (command.startsWith('level')) {
       if (!this.terminalGameRef.current) return;
-      this.terminalGameRef.current?.levelUp( + command);
+      this.terminalGameRef.current?.levelUp(+ command);
     }
     if (command === 'play') {
       status = 200;
@@ -196,7 +200,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       this._commandHistory.shift(); // Remove the oldest command
     }
     this.saveCommandResponseHistory(command, response, status); // Save updated history to localStorage
-    return ;
+    return;
   }
 
   public handleCharacter = (character: string) => {
@@ -382,7 +386,6 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     this.writeOutput(commandResponse)
     this.writeOutput(slowestCharactersHTML)
 
-
     // Now you can append slowestCharactersHTML as a string to your element's innerHTML
     commandResponseElement.innerHTML += slowestCharactersHTML;
     this._persistence.setItem(`${LogKeys.Command}_${timeCode}`, commandResponseElement.outerHTML);
@@ -390,7 +393,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     return commandResponse;
   }
 
-  writeOutput(output: string){
+  writeOutput(output: string) {
     this._commandHistory?.push(output);
     this.setState(prevState => ({ outputElements: [...prevState.outputElements, output] }));
   }
@@ -528,17 +531,9 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     let getFontSize: string = localStorage.getItem('terminalFontSize') || this.currentFontSize.toString();
     const fontSize = (getFontSize && getFontSize == 'NaN') ? this.currentFontSize : parseInt(getFontSize);
 
-    console.log("loadFontSize", fontSize);
     if (fontSize) {
       this.currentFontSize = fontSize;
       document.documentElement.style.setProperty('--terminal-font-size', `${this.currentFontSize}px`);
-      // if (this.terminalElement) {
-
-      //   this.terminalElement.style.fontSize = `${this.currentFontSize}px`;
-      // } else {
-      //   console.error('XtermAdapter - terminalElement is NULL');
-      // }
-      // this.terminal.options.fontSize = this.currentFontSize;
     }
   }
 

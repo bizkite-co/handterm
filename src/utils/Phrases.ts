@@ -1,20 +1,17 @@
 
 export default class Phrases {
     private static phrases = [
-        { name: "asdf", phrase: "asdf sad dad daf fas fad das dad sas" },
-        { name: "jkl;", phrase: "jill kill jelly lilly jolly jill" },
-        {
-            name: "hello", phrase: "Hello, World!"
-        },
-        {
-            name: "mr", phrase: "Mr. Jock, TV quiz PhD., bags few lynx."
-        },
-        {
-            name: "watch", phrase: "Watch \"Jeopardy!\", Alex Trebek's fun TV"
-        },
-        {
-            name: "pack", phrase: "Pack my box with five dozen liquor jugs."
-        },
+        { name: "asd", phrase: "asdf" },
+        { name: "asd2", phrase: "asdf sad dad daf fas fad das dad sas" },
+        { name: "jkl", phrase: "jill" },
+        { name: "jkl2", phrase: "jill kill jelly lilly jolly jill" },
+        { name: "hello", phrase: "Hello, World!" },
+        { name: "pack", phrase: "Pack my box with five dozen liquor jugs." },
+        { name: "sphinx", phrase: "Sphinx of black quartz, judge my vow." },
+        { name: "waltz", phrase: "Waltz, bad nymph, for quick jigs vex." },
+        { name: "list", phrase: "List.map(fun i -> i + 1)[1;2;3]" },
+        { name: "mr", phrase: "Mr. Jock, TV quiz PhD., bags few lynx." },
+        { name: "watch", phrase: "Watch \"Jeopardy!\", Alex Trebek's fun TV" },
         {
             name: "h1", phrase: "Type anywhere with this one-handed keyboard. Stop sitting down to type. Stop looking down to send messages."
         },
@@ -25,7 +22,7 @@ export default class Phrases {
             name: "h3", phrase: "Use the same keyboard, designed for your hand, everywhere. You never have to learn a new one. The natural motions of your fingers compose the characters."
         },
         {
-            name: "h4", phrase: "It's build around your hand, so you don't have to reorient your finger placement on a board. Repositioning your fingers on a board is the biggest hurdle of typing-training, so don't do it."
+            name: "h4", phrase: "It's built around your hand, so you don't have to reorient your finger placement on a board. Repositioning your fingers on a board is the biggest hurdle of typing-training, so don't do it."
         },
         {
             name: "h5", phrase: "Handex is built around your finger movements, so you'll never have to reposition your fingers to find a key. Even unusual keys, such `\\`, `~`, `|`, `^`, `&` are easy to type."
@@ -38,15 +35,6 @@ export default class Phrases {
         },
         {
             name: "x=4", phrase: "x=4; y=$((x + 5)); z=$((x > 5 ? x : 5)); echo \"Max: $z\"; grep 'Max' <<< \"Max: $z\" || echo \"No match found\" > /dev/null; echo \"Sum: $(($y))\""
-        },
-        {
-            name: "waltz", phrase: "Waltz, bad nymph, for quick jigs vex."
-        },
-        {
-            name: "sphinx", phrase: "Sphinx of black quartz, judge my vow."
-        },
-        {
-            name: "list", phrase: "List.map(fun i -> i + 1)[1;2;3]"
         },
         {
             name: "arr", phrase: "arr=(1 2 3); sum=0; for i in \"${arr[@]}\"; do sum=$(($sum + i)); done; echo \"Sum: $sum\"; [[ $sum -lt 10 ]] && echo \"$sum < 10\" || echo \"$sum >= 10\""

@@ -21,21 +21,23 @@ body {
 }
 
 .terminal-container {
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end; /* Aligns children (HandexTerm) to the bottom */
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    /* Aligns children (HandexTerm) to the bottom */
 }
 
 .parallax-background {
-  position: relative;
-  overflow: hidden;
-  height: 100px; /* Example height, adjust as needed */
+    position: relative;
+    overflow: hidden;
+    height: 100px;
+    /* Example height, adjust as needed */
 }
 
 .parallax-layer {
-  position: absolute;
-  height: 100px;
-  width: 100%;
+    position: absolute;
+    height: 100px;
+    width: 100%;
 }
 
 .chord-navigation {
@@ -53,14 +55,17 @@ body {
         clear: both;
     }
 }
+
 .phrase-names {
     text-align: left;
 }
+
 .phrase-name {
     display: inline-block;
     width: auto;
     margin: 0 10px 10px 0;
 }
+
 .key-container {
     float: left;
     flex-direction: column;
@@ -141,6 +146,7 @@ div.terminal {
     background-color: rgba(0, 0, 0, 0.3);
     /* Adjust the alpha value for transparency */
 }
+
 .xterm-screen {
     width: 100%;
 }
@@ -181,6 +187,7 @@ div.terminal {
         }
     }
 }
+
 .hidden-canvas {
     visibility: hidden;
     position: absolute;
@@ -206,14 +213,21 @@ div.terminal {
 
 /* Responsive font size and padding */
 @media (max-width: 600px) {
+
     /* Example breakpoint for mobile devices */
     :root {
         --terminal-line-height: 1.2em;
     }
+
     body {
         padding: 5px;
     }
+
     /* Add any additional mobile-specific styles here */
+    .scrolling-text {
+        animation: scrollText 1s linear infinite;
+        /* Adjust duration as needed */
+    }
 }
 
 .terminal-line {
@@ -263,4 +277,26 @@ div.terminal {
 .terminal-progress-bar {
     /* Progress bar styles */
     background-color: darkblue;
+}
+
+@keyframes scrollText {
+    0% {
+        transform: translateX(100%);
+    }
+
+    100% {
+        transform: translateX(-100%);
+    }
+}
+
+.scrolling-text-container {
+    /* Additional styles for positioning if needed */
+}
+
+.scrolling-text {
+    animation: scrollText 5s linear infinite;
+    /* Adjust duration as needed */
+    color: lightgreen;
+    /* Text color */
+    font: italic 60px Arial;
 }
