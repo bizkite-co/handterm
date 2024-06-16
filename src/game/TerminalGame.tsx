@@ -18,6 +18,8 @@ interface ITerminalGameProps {
   zombie4ActionType: ActionType
   onTouchStart: TouchEventHandler<HTMLDivElement>;
   onTouchEnd: TouchEventHandler<HTMLDivElement>;
+  onSetHeroAction: (action: ActionType) => void;
+  onSetZombie4Action: (action: ActionType) => void;
 }
 
 interface ITerminalGameState {
@@ -54,7 +56,6 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
   private heroXPercent: number = 0.23;
   zombie4DeathTimeout: NodeJS.Timeout | null = null;
   // Add a new field for the text animation
-  private textScrollX: number = this.props.canvasWidth; // Start offscreen to the right
   private heroRef = React.createRef<ICharacterRefMethods>();
   private zombie4Ref = React.createRef<ICharacterRefMethods>();
 
@@ -184,7 +185,6 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
   // Call this method when the game is completed
   public completeGame() {
     this.setZombie4ToDeathThenResetPosition();
-    this.textScrollX = this.props.canvasWidth; // Reset scroll position
     this.setState({
       isPhraseComplete: true,
       textScrollX: this.props.canvasWidth
@@ -200,17 +200,20 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
 
     this.setZombie4Action('Death');
     // After three seconds, reset the position
+    // TODO: The actions are controlled by props, not state.
+    console.log("Zombie4 action:", this.state.zombie4ActionType);
     this.zombie4DeathTimeout = setTimeout(() => {
+      // Optionally reset the action if needed
+      this.setZombie4Action('Walk'); // Or the default action you want to set
       this.setState({
         zombie4Position: { topY: 0, leftX: -70 },
         isPhraseComplete: false,
         textScrollX: this.props.canvasWidth
       });
 
-      // Optionally reset the action if needed
-      this.setZombie4Action('Walk'); // Or the default action you want to set
       this.zombie4DeathTimeout = null;
-    }, 5000);
+      console.log("Zombie4 action:", this.state.zombie4ActionType);
+    }, 3000);
   };
 
 
@@ -239,7 +242,8 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
   }
 
   setZombie4Action(action: ActionType) {
-    this.setState({ zombie4ActionType: action });
+    this.props.onSetZombie4Action(action);
+    // this.setState({ zombie4ActionType: action });
   }
 
 

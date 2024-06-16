@@ -680,6 +680,8 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
                 isInPhraseMode={this.state.isInPhraseMode}
                 heroActionType={this.state.heroAction}
                 zombie4ActionType={this.state.zombie4Action}
+                onSetHeroAction={this.setHeroAction}
+                onSetZombie4Action={this.setZombie4Action}
                 onTouchStart={this.handleTouchStart}
                 onTouchEnd={this.handleTouchEnd}
               />

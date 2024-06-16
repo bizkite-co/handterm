@@ -289,9 +289,10 @@ div.terminal {
     }
 }
 
-.scrolling-text-container {
-    /* Additional styles for positioning if needed */
-}
+/* .scrolling-text-container {
+
+} 
+*/
 
 .scrolling-text {
     animation: scrollText 5s linear infinite;
