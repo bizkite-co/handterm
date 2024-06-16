@@ -9,6 +9,7 @@ import { Sprite } from './sprites/Sprite';
 import { IParallaxLayer, ParallaxLayer } from './ParallaxLayer';
 import { TerminalCssClasses } from '../types/TerminalTypes';
 import ScrollingTextLayer from './ScrollingTextLayer';
+import confetti from 'canvas-confetti';
 
 interface ITerminalGameProps {
   canvasHeight: number
@@ -181,6 +182,7 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
   // Call this method when the game is completed
   public completeGame() {
     this.setZombie4ToDeathThenResetPosition();
+    this.triggerConfettiCannon();
     this.setState({
       isPhraseComplete: true,
       textScrollX: this.props.canvasWidth
@@ -328,12 +330,25 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
       this.startAnimationLoop(this.state.context);
     }
   }
+
   stopAnimationLoop() {
     if (this.animationFrameIndex) {
       cancelAnimationFrame(this.animationFrameIndex);
       this.animationFrameIndex = undefined;
       console.log("stopAnimationLoop");
     }
+  }
+
+  triggerConfettiCannon() {
+    // The confetti function accepts various options to customize the confetti effect
+    confetti({
+      zIndex: 3, // Ensure it renders above the canvas
+      angle: 160,
+      spread: 45,
+      startVelocity: 45,
+      particleCount: 150,
+      origin: {x: 0.99, y: 0.8 } // Adjust to make it seem like the confetti is coming from the bottom
+    });
   }
 
   handleHeroPositionChange = (newPosition: SpritePosition) => {
@@ -389,4 +404,3 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
     );
   }
 }
-
