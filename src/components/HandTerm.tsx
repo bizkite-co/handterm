@@ -24,6 +24,7 @@ export interface IHandTermState {
   outputElements: React.ReactNode[];
   isInPhraseMode: boolean;
   phrase: string;
+  phraseIndex: number;
   isActive: boolean;
   commandLine: string;
   heroAction: ActionType;
@@ -75,6 +76,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       outputElements: this.getCommandHistory(),
       isInPhraseMode: false,
       phrase: '', // Initial value
+      phraseIndex: 0,
       isActive: false,
       commandLine: '',
       heroAction: 'Idle',
@@ -121,12 +123,6 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     this.removeTouchListeners();
   }
 
-  handlePhraseComplete = () => {
-    this.setState({
-      isInPhraseMode: false,
-      phrase: ''
-    });
-  }
 
   public handleCommand = (command: string) => {
     if (this.context) {
@@ -154,6 +150,8 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       if (!this.terminalGameRef.current) return;
       this.terminalGameRef.current.setZombie4ToDeathThenResetPosition();
       this.terminalGameRef.current.completeGame();
+      response = "Killed zombie 4. Reset position and game completed.";
+      status = 200;
     }
     if (command.startsWith('level')) {
       if (!this.terminalGameRef.current) return;
@@ -260,21 +258,6 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     return charDuration.durationMilliseconds;
   }
 
-  setNewPhrase = (phraseName: string) => {
-    phraseName = phraseName.replace('phrase ', '');
-    const newPhrase
-      = phraseName && phraseName != "" && Phrases.getPhrase(phraseName)
-        ? Phrases.getPhrase(phraseName)
-        : Phrases.getRandomPhrase();
-
-    // this.phrase = new Phrase(newPhrase);
-    this.setState({
-      isInPhraseMode: true,
-      phrase: newPhrase,
-    });
-    console.log('New phrase:', this.state.phrase);
-    // this.props.onNewPhrase(newPhrase); 
-  }
 
   parseCommand(input: string): void {
     const args = input.split(/\s+/); // Split the input by whitespace
@@ -471,7 +454,36 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     this.adapterRef.current?.terminalReset();
     this.adapterRef.current?.prompt();
     this.terminalGameRef.current?.levelUp();
-    this.setNewPhrase('');
+    this.handlePhraseComplete();
+  }
+
+  handlePhraseComplete = () => {
+
+    let newPhraseIndex = (this.state.phraseIndex + 1) % Phrases.phrases.length;
+    let newPhrase = Phrases.getPhraseByIndex(newPhraseIndex);
+    this.setState({
+      phraseIndex: newPhraseIndex,
+      isInPhraseMode: true,
+      phrase: newPhrase
+    });
+    this.terminalGameRef.current?.completeGame();
+    console.log("Phrase complete", this.state.phraseIndex);
+  }
+
+  setNewPhrase = (phraseName: string) => {
+    phraseName = phraseName.replace('phrase ', '');
+    const newPhrase
+      = phraseName && phraseName != "" && Phrases.getPhrase(phraseName)
+        ? Phrases.getPhrase(phraseName)
+        : Phrases.getPhraseByIndex(this.state.phraseIndex);
+
+    // this.phrase = new Phrase(newPhrase);
+    this.setState({
+      isInPhraseMode: true,
+      phrase: newPhrase,
+    });
+    console.log('New phrase:', this.state.phrase);
+    // this.props.onNewPhrase(newPhrase); 
   }
 
   setHeroRunAction = () => {
@@ -579,7 +591,6 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
         }
         this.currentFontSize *= scaleFactor;
         console.log('currentFontSize', this.currentFontSize);
-        // TODO: Figure out how to resize fonts now with REact.
         document.documentElement.style.setProperty('--terminal-font-size', `${this.currentFontSize}pt`);
         this.lastTouchDistance = currentDistance;
         // this.terminal.options.fontSize = this.currentFontSize;

@@ -132,7 +132,6 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
         else {
             console.error("ErrorDisplay ref not found");
         }
-        // TODO: Do we need to pass the WPM back? If so, remove this hardcoded abomination.
         this.props.onPhraseSuccess(this.state.phrase.value);
     };
 
@@ -186,10 +185,6 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
         this.setState({ phrase: new Phrase(phrase.value) });
     }
 
-    setNextCharsDisplay(stringBeingTested: string): void {
-        this.setState({ nextChars: this.getNextCharacters(stringBeingTested) });
-    }
-
     getNextCharacters(stringBeingTested: string): string {
         const nextIndex = this.getFirstNonMatchingChar(stringBeingTested);
         const nextChars = this.state.phrase.value.substring(nextIndex, nextIndex + this._nextCharsLength);
@@ -197,7 +192,6 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
     }
 
     private setNext = (testPhrase: string): HTMLElement | null => {
-        // TODO: figure out why setNextCharsDisplay is also calling getFirstNonMatchingChar and see if we can do it all at once.
         const nextIndex = this.getFirstNonMatchingChar(testPhrase);
         if (nextIndex < 0) {
             return null;
@@ -208,7 +202,7 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
             return null;
         }
 
-        this.setNextCharsDisplay(testPhrase);
+        this.setState({ nextChars: this.getNextCharacters(testPhrase) });
 
         const nextChordHTML = this.state.phrase.chordsHTML[nextIndex] as HTMLElement;
 
@@ -290,10 +284,7 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
         if (stringBeingTested.trim() == this.state.phrase.value.trim()) {
             // SUCCESS 
             // SHOW completion indication
-            // this._timer.setSvg('stop');
             this.stopTimer();
-
-            // TODO: I could probably move this whole if code block into this function.
             this.handleSuccess();
             return;
         }

@@ -1,6 +1,6 @@
 
 export default class Phrases {
-    private static phrases = [
+    public static readonly phrases = [
         { name: "asd", phrase: "asdf" },
         { name: "asd2", phrase: "asdf sad dad daf fas fad das dad sas" },
         { name: "jkl", phrase: "jill" },
@@ -57,7 +57,16 @@ export default class Phrases {
         }
         return this.phrases[0].phrase;
     }
-    public static getPhrases(): string[] {
+
+    public static getPhraseByIndex(index: number): string {
+        if (index >= 0 && index < this.phrases.length) {
+            return this.phrases[index].phrase;
+        } 
+        if(index < 0) return this.phrases[0].phrase;
+        if(index >= this.phrases.length) return this.phrases[this.phrases.length - 1].phrase;
+        return this.phrases[0].phrase;
+    }
+    public static getPhraseNames(): string[] {
         return Phrases.phrases.map(x => x.name);
     }
     public static getRandomPhrase(): string {

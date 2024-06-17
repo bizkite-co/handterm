@@ -31,6 +31,9 @@
     "eslint": "^8.57.0",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.6",
+    "glob": "^10.4.1",
+    "react-docgen": "^7.0.3",
+    "typedoc": "^0.25.13",
     "typescript": "^5.2.2",
     "vite": "^5.2.0"
   }
