@@ -90,13 +90,12 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
   }
 
   componentDidUpdate(_prevProps: Readonly<IHandTermProps>, _prevState: Readonly<IHandTermState>, _snapshot?: any): void {
-    this.scrollToBottom();
+    
   }
 
   scrollToBottom() {
     if (this.adapterRef.current) {
       this.adapterRef.current.scrollBottom();
-      this.adapterRef.current.focusTerminal();
     }
   }
 

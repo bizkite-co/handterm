@@ -2,6 +2,7 @@
 import React, { useEffect, useRef } from 'react';
 import HandTerm from './components/HandTerm';
 import { CommandProvider } from './commands/CommandProvider';
+import { TerminalCssClasses } from './types/TerminalTypes';
 
 const App = () => {
   const containerRef = React.createRef<HTMLDivElement>();
@@ -11,31 +12,37 @@ const App = () => {
   useEffect(() => {
     const w = getContainerWidth();
     setContainerWidth(w);
-    const handleClickOutsideTerminal = (event: MouseEvent) => {
+
+    const handleClickOutsideTerminal = (event: UIEvent) => {
       // Check if the click is outside of the terminal area
+
       if (
         handexTermRef.current &&
-        handexTermRef.current.adapterRef.current &&
-        handexTermRef.current.adapterRef.current.terminalRef.current &&
-        handexTermRef.current.adapterRef.current.terminalRef.current
+        handexTermRef.current.adapterRef.current
+        && (event.target as HTMLElement).id !== TerminalCssClasses.Terminal
       ) {
         event.stopPropagation();
+        window.scrollTo(0, window.screen.height)
         handexTermRef.current.adapterRef.current.focusTerminal();
-        setTimeout(() => {
-          if (
-            handexTermRef.current &&
-            handexTermRef.current.adapterRef.current &&
-            handexTermRef.current.adapterRef.current.terminalRef.current &&
-            handexTermRef.current.adapterRef.current.terminalRef.current
-          ) handexTermRef.current.adapterRef.current.focusTerminal();
-        }, 1000);
-        // type a character to trigger the focus event
-        // handexTermRef.current.adapterRef.current.terminalWrite('a');
+
+        if (event instanceof MouseEvent || (event instanceof TouchEvent && event.touches.length === 1)) {
+          handexTermRef.current.adapterRef.current.focusTerminal();
+
+          setTimeout(() => {
+            if (
+              handexTermRef.current &&
+              handexTermRef.current.adapterRef.current
+            ) handexTermRef.current.adapterRef.current.focusTerminal();
+          }, 1000);
+          // type a character to trigger the focus event
+          // handexTermRef.current.adapterRef.current.terminalWrite('a');
+        }
       }
     };
 
     // Attach the event listener to the document body
     document.body.addEventListener('click', handleClickOutsideTerminal);
+    document.body.addEventListener('touchstart', handleClickOutsideTerminal);
 
     // Clean up the event listener
     return () => {

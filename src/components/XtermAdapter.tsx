@@ -59,6 +59,7 @@ export class XtermAdapter extends React.Component<IXtermAdapterProps, IXtermAdap
   public focusTerminal() {
     // Logic to focus the terminal goes here
     this.terminal.focus();
+    this.terminal.scrollToBottom();
   }
 
   terminalReset(): void {
@@ -100,7 +101,7 @@ export class XtermAdapter extends React.Component<IXtermAdapterProps, IXtermAdap
   }
 
   scrollBottom = () => {
-    window.scrollTo(0, window.innerHeight);
+    this.terminal.scrollToBottom();
   }
 
   componentDidUpdate(_prevProps: Readonly<IXtermAdapterProps>): void {
