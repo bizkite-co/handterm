@@ -156,6 +156,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       if (!this.terminalGameRef.current) return;
       this.terminalGameRef.current?.levelUp(+ command);
     }
+    // TODO: `>` character maps to wrong SVG. Shows up in "List" phrase.
     if (command === 'play') {
       status = 200;
       response = "Would you like to play a game?"

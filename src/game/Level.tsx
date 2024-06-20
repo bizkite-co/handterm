@@ -23,6 +23,21 @@ export const layers: IParallaxLayer[][] = [
     { imageSrc: '/images/post_soviet_city_parallax/post_soviet_city_parallax/layer_8_fg_buildings.png', scale: 0.6, movementRate: 0.6 },
     { imageSrc: '/images/post_soviet_city_parallax/post_soviet_city_parallax/layer_9_wall.png', scale: 0.6, movementRate: 1 },
   ],
+  [
+    {imageSrc: '/images/parallax-city-background-pack/1BG.png', scale: 1, movementRate: 0},
+    {imageSrc: '/images/parallax-city-background-pack/2Mountain.png', scale: 1, movementRate: 0.2},
+    {imageSrc: '/images/parallax-city-background-pack/3MountainCloser.png', scale: 1, movementRate: 0.3},
+    {imageSrc: '/images/parallax-city-background-pack/3MountainCloserWCranes.png', scale: 1, movementRate: 0.4},
+    {imageSrc: '/images/parallax-city-background-pack/5Buildings.png', scale: 1, movementRate: 0.5},
+    {imageSrc: '/images/parallax-city-background-pack/6BlueBuildings.png', scale: 1, movementRate: 0.7},
+    {imageSrc: '/images/parallax-city-background-pack/7FireDept.png', scale: 1, movementRate: 0.8},
+    {imageSrc: '/images/parallax-city-background-pack/8Player.png', scale: 1, movementRate: 1},
+  ],
+  [
+    {imageSrc: '/images/city-ruins/post_apocalipse1.png', scale: 1, movementRate: 0},
+    {imageSrc: '/images/city-ruins/post_apocalipse2.png', scale: 1, movementRate: 0.5},
+    {imageSrc: '/images/city-ruins/post_apocalipse3.png', scale: 1, movementRate: 1},
+  ]
 ];
 
 
