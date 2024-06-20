@@ -151,6 +151,9 @@ div.terminal {
     width: 100%;
 }
 
+#chord-image-holder .char {
+    font-size: 60px;
+}
 
 #timer-root {
     color: white;

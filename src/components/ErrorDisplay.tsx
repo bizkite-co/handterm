@@ -33,7 +33,7 @@ const ErrorDisplay = forwardRef((props: ErrorDisplayProps, ref) => {
       <div>Error Count: {errorCount}</div>
       <div className="chord-image-holder" id="chord-image-holder" data-source="ErrorDisplay.tsx">
         <div className="col-sm-2 row generated next" id="chord2" >
-          <span id="char15">{mismatchedChar}</span>
+          <span id="char15" className="char">{mismatchedChar}</span>
           <img loading="lazy" alt="2" src={`${import.meta.env.BASE_URL}images/svgs/${mismatchedCharCode}.svg`} width="100" className="hand"></img>
 
         </div></div>

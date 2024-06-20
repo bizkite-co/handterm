@@ -8,7 +8,8 @@ Vite, TypeScript, React, `@xterm/xterm`, HTML 5 canvas. Windows, VS Code, PowerS
 
 ## Priorities
 
-Robust, expert-level React implementation. Prefer functional components and other modern React best practices.
+* Robust, expert-level React implementation. 
+* Prefer functional components and other modern React best practices.
 
 ## Prompt Instructions
 
@@ -17,7 +18,7 @@ Robust, expert-level React implementation. Prefer functional components and othe
 ## Game Play
 
 * [ ] If players test high WPM on the basics, they progress past basic training.
-    * [ ] If they do a random word asdfjkl;, for instance, they don't have to do home row training.
+    * [ ] If they test successfully on a random word on the "asdfjkl;" row, for instance, they don't have to do home row training.
     * [ ] This should work as a game logic simplifier, not complexifier. Only do it if there's an easy way.
     * [ ] This might reduce the need for logins and complex progress tracking. Just use fast-basics testing to retest everyone on the basics anyway.
 * [ ] Tutorial mode could start with `asdf` and SVGs, maybe.

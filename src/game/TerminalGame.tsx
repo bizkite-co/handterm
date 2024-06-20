@@ -335,7 +335,6 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
     if (this.animationFrameIndex) {
       cancelAnimationFrame(this.animationFrameIndex);
       this.animationFrameIndex = undefined;
-      console.log("stopAnimationLoop");
     }
   }
 
