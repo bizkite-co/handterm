@@ -1,6 +1,5 @@
 1. Define Character Base Class: Create a base class for all characters that includes common properties and methods required for animation.
 1. Sprite Management: Use a sprite manager to handle loading and drawing frames for any character.
-1. Zombie4 Class: Extend the base class to create a specific `Zombie4` class.
 1. Animation Controller: Implement an animation controller to manage different states like idle, walking, etc.
 1. Use TypeScript for Strong Typing: Leverage TypeScript's type system to ensure your code is well-typed.
 

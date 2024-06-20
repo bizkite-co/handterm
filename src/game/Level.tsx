@@ -34,9 +34,16 @@ export const layers: IParallaxLayer[][] = [
     {imageSrc: '/images/parallax-city-background-pack/8Player.png', scale: 1, movementRate: 1},
   ],
   [
-    {imageSrc: '/images/city-ruins/post_apocalipse1.png', scale: 1, movementRate: 0},
-    {imageSrc: '/images/city-ruins/post_apocalipse2.png', scale: 1, movementRate: 0.5},
+    {imageSrc: '/images/city-ruins/post_apocalipse1.png', scale: 1.3, movementRate: 0},
+    {imageSrc: '/images/city-ruins/post_apocalipse2.png', scale: 1.3, movementRate: 0.5},
     {imageSrc: '/images/city-ruins/post_apocalipse3.png', scale: 1, movementRate: 1},
+  ],
+  [
+    {imageSrc: '/images/haunted-forest-parallaxing-background/background_1.png', scale: 1, movementRate: 0},
+    {imageSrc: '/images/haunted-forest-parallaxing-background/background_2.png', scale: 1, movementRate: 0.2},
+    {imageSrc: '/images/haunted-forest-parallaxing-background/background_3.png', scale: 1, movementRate: 0.4},
+    {imageSrc: '/images/haunted-forest-parallaxing-background/background_4.png', scale: 1, movementRate: 0.6},
+    {imageSrc: '/images/haunted-forest-parallaxing-background/background_5.png', scale: 1, movementRate: 1},
   ]
 ];
 
