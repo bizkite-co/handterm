@@ -154,7 +154,9 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     }
     if (command.startsWith('level')) {
       if (!this.terminalGameRef.current) return;
-      this.terminalGameRef.current?.levelUp(+ command);
+      let levelNum = command.match(/\d+/);
+      const level = levelNum && levelNum.length ? parseInt(levelNum[0]) : null;
+      this.terminalGameRef.current?.levelUp(level);
     }
     // TODO: `>` character maps to wrong SVG. Shows up in "List" phrase.
     if (command === 'play') {

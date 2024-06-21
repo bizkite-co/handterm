@@ -90,9 +90,13 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
   }
 
   public levelUp = (setLevel: number | null = null) => {
+    // If setLevel is greater than the max level, setLevel = maxLevel
+    if(setLevel && setLevel > getLevelCount()) setLevel = getLevelCount();
     let nextLevel = setLevel || this.getLevel() + 1;
-    if (nextLevel > getLevelCount()) nextLevel = 1;
+    // If incremented level is greater than the max level, setLevel = 1
+    if (nextLevel > getLevelCount()) nextLevel = 0;
     if (nextLevel < 1) nextLevel = 1;
+    console.log('nextLevel', nextLevel);
     this.setLevel(nextLevel);
   }
 
