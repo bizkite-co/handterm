@@ -18,7 +18,7 @@ import { TutorialComponent } from './TutorialComponent';
 
 const Achievements: Achievement[] = [
   { prompt: 'The most important key is the Return (ENTER) key. Press the thumb tip and release.', phrase: '', unlocked: false },
-  { prompt: 'Type `asdf` & Enter. Notice that it requires finger-pinch only.', phrase: 'asdf', unlocked: false },
+  { prompt: 'Type `fdsa` & Enter. Notice that it requires finger-pinch only.', phrase: 'fdsa', unlocked: false },
   { prompt: 'Type `jkl;`. Notice that it requires finger-grasp only.', phrase: 'jkl;', unlocked: false },
   { prompt: 'Many characters require combinations followed by releasing all keys. Type `zxcv` and we\'ll show corrections as you type.', phrase: 'zxcv', unlocked: false },
   { prompt: 'Press the thumb tip followed by a finger tip to type numbers 1-4', phrase: '1234', unlocked: false },
