@@ -1,6 +1,6 @@
 // App.tsx
 import React, { useEffect, useRef } from 'react';
-import HandTerm from './components/HandTerm';
+import  HandTerm  from './components/HandTerm';
 import { CommandProvider } from './commands/CommandProvider';
 import { TerminalCssClasses } from './types/TerminalTypes';
 
@@ -15,7 +15,6 @@ const App = () => {
 
     const handleClickOutsideTerminal = (event: UIEvent) => {
       // Check if the click is outside of the terminal area
-
       if (
         handexTermRef.current &&
         handexTermRef.current.adapterRef.current

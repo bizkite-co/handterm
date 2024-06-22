@@ -5,6 +5,7 @@ import { TerminalCssClasses } from '../types/TerminalTypes';
 import React, { TouchEventHandler } from 'react';
 
 interface IXtermAdapterState {
+
 }
 
 interface IXtermAdapterProps {
@@ -141,6 +142,9 @@ export class XtermAdapter extends React.Component<IXtermAdapterProps, IXtermAdap
     const isLeftOfPromptChar = this.terminal.buffer.active.cursorX < this.promptLength;
     return isFirstLine && isLeftOfPromptChar;
   }
+  isCursorOnFirstLine(): boolean {
+    return this.terminal.buffer.active.cursorY === 0;
+  }
 
   onDataHandler(data: string): void {
     // TODO: Move business logic to HandexTerm and just leave `@xterm/xterm.js` handling features in here.
@@ -163,14 +167,16 @@ export class XtermAdapter extends React.Component<IXtermAdapterProps, IXtermAdap
             return;
           }
         }
-        if (data.charCodeAt(2) === 65 && this.isCursorOnPrompt()) {
+        if (data.charCodeAt(2) === 65 && this.isCursorOnFirstLine()) {
+          // UP Arrow
+          // TODO: Handle UP Arrow key command history.
+          this.props.onAddCharacter('ArrowUp')
           return;
         }
         if (
           data.charCodeAt(2) === 68
-          && this.isCursorOnPrompt()) {
-          return;
-        }
+          && this.isCursorOnPrompt()
+        ) { return; }
       }
     }
     this.props.onAddCharacter(data);

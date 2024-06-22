@@ -55,6 +55,7 @@ export class Phrase {
                     return x.key
                     .replace('&#x2581;', ' ') 
                     .replace('(underscore)', '_') 
+                    .replace('Return (ENTER)', '\r')
                     == chordChar; 
                 });
         // Load the clone in Chord order into the wholePhraseChords div.
@@ -67,6 +68,7 @@ export class Phrase {
         else {
             console.error("Missing chord:", chordChar?.charCodeAt(0));
         }
+        // console.log("Found chord:", chordChar, inChord);
         return inChord;
     }
 }

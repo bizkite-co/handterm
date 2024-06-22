@@ -91,7 +91,7 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
 
   public levelUp = (setLevel: number | null = null) => {
     // If setLevel is greater than the max level, setLevel = maxLevel
-    if(setLevel && setLevel > getLevelCount()) setLevel = getLevelCount();
+    if (setLevel && setLevel > getLevelCount()) setLevel = getLevelCount();
     let nextLevel = setLevel || this.getLevel() + 1;
     // If incremented level is greater than the max level, setLevel = 1
     if (nextLevel > getLevelCount()) nextLevel = 0;
@@ -350,7 +350,7 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
       spread: 45,
       startVelocity: 45,
       particleCount: 150,
-      origin: {x: 0.99, y: 0.8 } // Adjust to make it seem like the confetti is coming from the bottom
+      origin: { x: 0.99, y: 0.8 } // Adjust to make it seem like the confetti is coming from the bottom
     });
   }
 
@@ -365,45 +365,45 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
   // Additional methods for calculating WPM, updating the progress bar, etc.
   render() {
     return (
-      <>
+      <div
+        id={TerminalCssClasses.TerminalGame}
+        hidden={!this.props.isInPhraseMode}
+        style={{ position: "relative", height: this.props.canvasHeight }}
+      >
         <div
-          id={TerminalCssClasses.TerminalGame}
-          style={{ position: "relative", height: this.props.canvasHeight }}>
-          <div
-            className="parallax-background">
+          className="parallax-background">
 
-            {this.state.isTextScrolling && (
-              <ScrollingTextLayer
-                text={this.state.textToScroll}
-                canvasHeight={this.props.canvasHeight} />
-            )}
-            {this.state.layers.map((layer, index) => (
-              <ParallaxLayer
-                key={index}
-                layer={layer}
-                offset={this.state.backgroundOffsetX}
-                canvasHeight={this.props.canvasHeight}
-              />
-            ))}
-          </div>
-          <canvas
-            style={{ position: "absolute", top: 0, left: 0, zIndex: 2 }}
-            ref={this.canvasRef}
-            width={this.props.canvasWidth}
-            height={this.props.canvasHeight}>
-          </canvas>
-          <Hero
-            ref={this.heroRef}
-            currentActionType={this.props.heroActionType}
-            scale={1.95}
-          />
-          <Zombie4
-            ref={this.zombie4Ref}
-            currentActionType={this.props.zombie4ActionType}
-            scale={1.90}
-          />
+          {this.state.isTextScrolling && (
+            <ScrollingTextLayer
+              text={this.state.textToScroll}
+              canvasHeight={this.props.canvasHeight} />
+          )}
+          {this.state.layers.map((layer, index) => (
+            <ParallaxLayer
+              key={index}
+              layer={layer}
+              offset={this.state.backgroundOffsetX}
+              canvasHeight={this.props.canvasHeight}
+            />
+          ))}
         </div>
-      </>
+        <canvas
+          style={{ position: "absolute", top: 0, left: 0, zIndex: 2 }}
+          ref={this.canvasRef}
+          width={this.props.canvasWidth}
+          height={this.props.canvasHeight}>
+        </canvas>
+        <Hero
+          ref={this.heroRef}
+          currentActionType={this.props.heroActionType}
+          scale={1.95}
+        />
+        <Zombie4
+          ref={this.zombie4Ref}
+          currentActionType={this.props.zombie4ActionType}
+          scale={1.90}
+        />
+      </div>
     );
   }
 }

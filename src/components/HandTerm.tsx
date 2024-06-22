@@ -13,6 +13,17 @@ import { ActionType } from '../game/types/ActionTypes';
 import Phrases from '../utils/Phrases';
 import { IWebCam, WebCam } from '../utils/WebCam';
 import { CommandContext } from '../commands/CommandContext';
+import { Achievement } from '../lib/useAchievements';
+import { TutorialComponent } from './TutorialComponent';
+
+const Achievements: Achievement[] = [
+  { prompt: 'The most important key is the Return (ENTER) key. Press the thumb tip and release.', phrase: '', unlocked: false },
+  { prompt: 'Type `asdf` & Enter. Notice that it requires finger-pinch only.', phrase: 'asdf', unlocked: false },
+  { prompt: 'Type `jkl;`. Notice that it requires finger-grasp only.', phrase: 'jkl;', unlocked: false },
+  { prompt: 'Many characters require combinations followed by releasing all keys. Type `zxcv` and we\'ll show corrections as you type.', phrase: 'zxcv', unlocked: false },
+  { prompt: 'Press the thumb tip followed by a finger tip to type numbers 1-4', phrase: '1234', unlocked: false },
+]
+
 
 export interface IHandTermProps {
   // Define the interface for your HandexTerm logic
@@ -32,6 +43,11 @@ export interface IHandTermState {
   terminalSize: { width: number; height: number } | undefined;
   terminalFontSize: number;
   canvasHeight: number;
+  unlockedAchievements: string[];
+  nextAchievement: Achievement | null;
+  isInTutorial: boolean;
+  commandHistory: string[];
+  currentCommandIndex: number;
 }
 
 class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
@@ -58,8 +74,22 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
   isShowVideo: any;
   outputRef = React.createRef<HTMLDivElement>();
 
-  updateTerminalFontSize(newSize: number) {
-    this.setState({ terminalFontSize: newSize });
+  loadAchievements(): string[] {
+    const storedAchievements = localStorage.getItem('achievements');
+    return storedAchievements ? JSON.parse(storedAchievements) : [];
+  }
+
+  saveAchievements(achievementPhrase: string) {
+    const storedAchievementString:string = localStorage.getItem('achievements') || '';
+    let storedAchievements = storedAchievementString ? JSON.parse(storedAchievementString) : [];
+    storedAchievements.push(achievementPhrase);
+    localStorage.setItem('achievements', JSON.stringify(storedAchievements));
+  }
+
+  getNextAchievement(): Achievement | null {
+    const unlockedAchievements = this.loadAchievements() || [];
+    const nextAchievement = Achievements.find(a => !unlockedAchievements.some(ua => ua === a.phrase));
+    return nextAchievement || null;
   }
 
   public focusTerminal() {
@@ -72,6 +102,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     super(IHandexTermProps);
     this._persistence = new LocalStoragePersistence();
     const initialCanvasHeight = localStorage.getItem('canvasHeight') || '100';
+    const nextAchievement = this.getNextAchievement();
     this.state = {
       outputElements: this.getCommandHistory(),
       isInPhraseMode: false,
@@ -84,13 +115,25 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       terminalSize: undefined,
       terminalFontSize: 17,
       canvasHeight: parseInt(initialCanvasHeight),
+      unlockedAchievements: this.loadAchievements(),
+      nextAchievement: nextAchievement,
+      isInTutorial: true,
+      commandHistory: this.loadCommandHistory(),
+      currentCommandIndex: -1,
     }
     this.loadDebugValue();
     this.loadFontSize();
   }
 
   componentDidUpdate(_prevProps: Readonly<IHandTermProps>, _prevState: Readonly<IHandTermState>, _snapshot?: any): void {
-    
+
+  }
+
+  loadCommandHistory() {
+    return JSON.parse(localStorage.getItem('commandHistory') || '[]');
+  }
+  saveCommandHistory(commandHistory: any) {
+    localStorage.setItem('commandHistory', JSON.stringify(commandHistory));
   }
 
   scrollToBottom() {
@@ -124,6 +167,19 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
 
 
   public handleCommand = (command: string) => {
+    this.setState(
+      prevState => ({
+        commandHistory: [command, ...prevState.commandHistory],
+        currentCommandIndex: -1,
+      }),
+      () => this.saveCommandHistory(this.state.commandHistory)
+    );
+    // TODO: handle achievement unlocks
+    if (this.state.isInTutorial) {
+      if (this.state.nextAchievement?.phrase === command) {
+        this.unlockAchievement(command);
+      }
+    }
     if (this.context) {
       const args = [''];
       const switchs = {}
@@ -158,10 +214,11 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       const level = levelNum && levelNum.length ? parseInt(levelNum[0]) : null;
       this.terminalGameRef.current?.levelUp(level);
     }
-    // TODO: `>` character maps to wrong SVG. Shows up in "List" phrase.
-    if (command === 'play') {
+
+    if (command === 'play' || command.startsWith('play ')) {
       status = 200;
-      response = "Would you like to play a game?"
+      response = "Type the phrase as fast as you can."
+      this.setNewPhrase(command);
     }
     if (command === 'phrase' || command.startsWith('phrase ')) {
       status = 200;
@@ -177,7 +234,6 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       else {
         response = "Stopping video camera..."
       }
-      // this.handleCommand(command + ' --' + this.adapterRef.current?.isShowVideo);
     }
 
     if (this.nextCharsDisplayRef.current) this.nextCharsDisplayRef.current.cancelTimer();
@@ -213,7 +269,21 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       this.adapterRef.current?.terminalReset();
       this.adapterRef.current?.prompt();
     }
+    if (character === 'ArrowUp') {
+      let newCommandIndex = 0;
 
+      this.setState(prevState => {
+        newCommandIndex = (prevState.currentCommandIndex + 1) % prevState.commandHistory.length;
+        character = this.state.commandHistory[newCommandIndex];
+
+        console.log('ArrowUp pressed', newCommandIndex, character);
+        return {
+          currentCommandIndex: newCommandIndex,
+          commandLine: character,
+        };
+      });
+      console.log('ArrowUp', character);
+    }
     if (character.charCodeAt(0) === 4) { // Ctrl+D
       console.log('Ctrl+D pressed');
       this.increaseFontSize();
@@ -260,6 +330,21 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     return charDuration.durationMilliseconds;
   }
 
+  unlockAchievement = (phrase: string) => {
+    this.setState(prevState => {
+      const unlockedAchievements = prevState.unlockedAchievements;
+      if (this.state.nextAchievement?.phrase === phrase) {
+        this.saveAchievements(phrase);
+      }
+      const nextAchievement = this.getNextAchievement();
+      return {
+        ...prevState,
+        achievements: unlockedAchievements,
+        nextAchievement: nextAchievement,
+        isInTutorial: nextAchievement ? true : false
+      };
+    });
+  };
 
   parseCommand(input: string): void {
     const args = input.split(/\s+/); // Split the input by whitespace
@@ -383,7 +468,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     this.setState(prevState => ({ outputElements: [...prevState.outputElements, output] }));
   }
 
-  clearCommandHistory(): void {
+  clearCommandHistory(args: string[] = []): void {
     let keys: string[] = [];
     for (let i = localStorage.length; i >= 0; i--) {
       let key = localStorage.key(i);
@@ -394,6 +479,11 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
         || key.includes(LogKeys.CharTime)
       ) {
         keys.push(key);
+      }
+      if(args.includes("achievements")){
+        if (key.includes('achievements')) {
+          keys.push(key);
+        }
       }
     }
     for (let key of keys) {
@@ -677,7 +767,6 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       <CommandContext.Consumer>
         {(context) => {
           this.context = context;
-
           return (
             <div className="terminal-container">
               <Output
@@ -706,6 +795,14 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
                 newPhrase={this.state.phrase}
                 onPhraseSuccess={this.handlePhraseSuccess}
               />
+              {this.state.nextAchievement 
+                && TutorialComponent
+                && <TutorialComponent
+                  achievement={this.state.nextAchievement}
+                  isInTutorial={this.state.isInTutorial}
+                  includeReturn={true}
+                />
+              }
               <XtermAdapter
                 ref={this.adapterRef}
                 terminalElement={this.terminalElementRef.current}
@@ -731,5 +828,4 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
 }
 
 HandTerm.contextType = CommandContext;
-
 export default HandTerm;

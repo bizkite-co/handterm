@@ -304,3 +304,14 @@ div.terminal {
     /* Text color */
     font: italic 60px Arial;
 }
+
+.chord-display-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center; /* Optional: if you want to vertically align them */
+}
+.tutorial-component pre {
+    color: lightsalmon;
+    font-size: var(--terminal-font-size);
+}
