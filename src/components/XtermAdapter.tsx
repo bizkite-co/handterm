@@ -65,7 +65,6 @@ export class XtermAdapter extends React.Component<IXtermAdapterProps, IXtermAdap
 
   terminalReset(): void {
     this.terminal.reset();
-    // this.prompt();
   }
 
   terminalWrite(data: string): void {

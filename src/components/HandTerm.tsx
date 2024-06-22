@@ -104,7 +104,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     const initialCanvasHeight = localStorage.getItem('canvasHeight') || '100';
     const nextAchievement = this.getNextAchievement();
     this.state = {
-      outputElements: this.getCommandHistory(),
+      outputElements: this.getCommandResponseHistory().slice(-1),
       isInPhraseMode: false,
       phrase: '', // Initial value
       phraseIndex: 0,
@@ -168,6 +168,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
 
   public handleCommand = (command: string) => {
     this.setState(
+      // Update the command history
       prevState => ({
         commandHistory: [command, ...prevState.commandHistory],
         currentCommandIndex: -1,
@@ -176,6 +177,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     );
     // TODO: handle achievement unlocks
     if (this.state.isInTutorial) {
+      // Unlock the next achievement and decide if we are still in tutorial mode
       if (this.state.nextAchievement?.phrase === command) {
         this.unlockAchievement(command);
       }
@@ -270,19 +272,20 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       this.adapterRef.current?.prompt();
     }
     if (character === 'ArrowUp') {
-      let newCommandIndex = 0;
-
-      this.setState(prevState => {
-        newCommandIndex = (prevState.currentCommandIndex + 1) % prevState.commandHistory.length;
-        character = this.state.commandHistory[newCommandIndex];
-
-        console.log('ArrowUp pressed', newCommandIndex, character);
-        return {
+      let newCommandIndex = (this.state.currentCommandIndex + 1) % this.state.commandHistory.length;
+      let command = this.state.commandHistory[newCommandIndex];
+      const commandResponseHistory = this.getCommandResponseHistory().reverse();
+      this.setState({
           currentCommandIndex: newCommandIndex,
-          commandLine: character,
-        };
+          commandLine: command,
+          outputElements: [commandResponseHistory[newCommandIndex]],
       });
-      console.log('ArrowUp', character);
+
+      console.log('if ArrowUp', character, newCommandIndex);
+      this.terminalReset();
+      this.terminalPrompt();
+      this.terminalWrite(command);
+      return;
     }
     if (character.charCodeAt(0) === 4) { // Ctrl+D
       console.log('Ctrl+D pressed');
@@ -364,11 +367,11 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     }
   }
 
-  getCommandHistory(): string[] {
+  getCommandResponseHistory(): string[] {
     let keys: string[] = [];
     let commandHistory: string[] = [];
     for (let i = 0; i < localStorage.length; i++) {
-      if (!localStorage.key(i)?.startsWith(LogKeys.Command)) continue;
+      if (!localStorage.key(i)?.startsWith(LogKeys.Command + '_')) continue;
 
       const key = localStorage.key(i);
       if (!key) continue;
@@ -464,8 +467,8 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
   }
 
   writeOutput(output: string) {
-    this._commandHistory?.push(output);
-    this.setState(prevState => ({ outputElements: [...prevState.outputElements, output] }));
+    this._commandHistory = [output];
+    this.setState({ outputElements: [ output ] });
   }
 
   clearCommandHistory(args: string[] = []): void {
@@ -627,6 +630,11 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
   private terminalReset(): void {
     this.adapterRef.current?.terminalReset();
   }
+
+  private terminalPrompt(): void {
+    this.adapterRef.current?.prompt();
+  }
+
   private terminalWrite(data: string): void {
     this.adapterRef.current?.terminalWrite(data);
   }
