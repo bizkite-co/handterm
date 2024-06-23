@@ -91,7 +91,6 @@ export const useBaseCharacter = (props: BaseCharacterProps) => {
 
     // Specify how to clean up after this effect
     return () => {
-      // console.log('BaseCharacter Cleanup called');
     };
   }, [props.currentActionType]);
 

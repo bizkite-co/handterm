@@ -34,25 +34,20 @@ class StateMachine {
       case State.Idle:
         if (action === Action.Start) {
           this.currentState = State.Running;
-          console.log('Game started');
         }
         break;
       case State.Running:
         if (action === Action.Pause) {
           this.currentState = State.Paused;
-          console.log('Game paused');
         } else if (action === Action.Stop) {
           this.currentState = State.Stopped;
-          console.log('Game stopped');
         }
         break;
       case State.Paused:
         if (action === Action.Resume) {
           this.currentState = State.Running;
-          console.log('Game resumed');
         } else if (action === Action.Stop) {
           this.currentState = State.Stopped;
-          console.log('Game stopped');
         }
         break;
       case State.Stopped:

@@ -77,7 +77,6 @@ export class XtermAdapter extends React.Component<IXtermAdapterProps, IXtermAdap
 
   handleResize = () => {
     // Assuming fitAddon is stored as a class member
-    console.log('handleResize');
     this.fitAddon?.fit();
   }
   componentDidMount() {
@@ -89,7 +88,6 @@ export class XtermAdapter extends React.Component<IXtermAdapterProps, IXtermAdap
     }
     this.onDataDisposable = this.terminal.onData(this.onDataHandler);
     this.terminal.onCursorMove(() => {
-      // console.log('cursor move', this.terminal.buffer);
     })
     // this.loadCommandHistory();
     this.setViewPortOpacity();
@@ -128,7 +126,6 @@ export class XtermAdapter extends React.Component<IXtermAdapterProps, IXtermAdap
   handleBackSpaceAndNavigation(data: string): boolean {
     let result = false;
     if (data.charCodeAt(0) === 127) {
-      if (this.isDebug) console.log('Backspace pressed', this.terminal.buffer.active.cursorX, this.terminal.buffer.active.cursorY);
       if (this.isCursorOnPrompt()) return true;
       this.terminal.write('\x1b[D\x1b[P');
       result = true;
@@ -160,7 +157,6 @@ export class XtermAdapter extends React.Component<IXtermAdapterProps, IXtermAdap
       if (data.charCodeAt(1) === 91) {
         if (data.length > 2) {
           if (data.charCodeAt(2) === 72) { // HOME
-            console.log('Home pressed');
             // TODO: Handle Home key
             this.terminal.write(`\x1b[${this.promptLength + 1}G`);
             return;

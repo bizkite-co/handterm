@@ -583,7 +583,6 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
 
     // this.phrase = new Phrase(newPhrase);
     this.setState((prevState) => {
-      console.log('Set new phrase:', newPhrase, this.state.phrase, this.state.phraseIndex);
       return {
         ...prevState,
         isInPhraseMode: true,
@@ -592,7 +591,6 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       }
     });
 
-    console.log('New phrase:', newPhrase, this.state.phrase, this.state.phraseIndex);
     // this.props.onNewPhrase(newPhrase); 
   }
 
@@ -701,11 +699,9 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
               canvasHeight: prevState.canvasHeight * scaleFactor
             }
           })
-          console.log('canvasHeight', this.state.canvasHeight);
           return;
         }
         this.currentFontSize *= scaleFactor;
-        console.log('currentFontSize', this.currentFontSize);
         document.documentElement.style.setProperty('--terminal-font-size', `${this.currentFontSize}pt`);
         this.lastTouchDistance = currentDistance;
         // this.terminal.options.fontSize = this.currentFontSize;
