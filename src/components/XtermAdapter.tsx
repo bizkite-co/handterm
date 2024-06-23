@@ -1,5 +1,5 @@
 // XtermAdapter.ts
-import { Terminal, ITerminalOptions } from '@xterm/xterm';
+import { Terminal } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
 import { TerminalCssClasses } from '../types/TerminalTypes';
 import React, { TouchEventHandler } from 'react';
