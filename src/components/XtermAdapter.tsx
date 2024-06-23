@@ -1,5 +1,5 @@
 // XtermAdapter.ts
-import { Terminal } from '@xterm/xterm';
+import { Terminal, ITerminalOptions } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
 import { TerminalCssClasses } from '../types/TerminalTypes';
 import React, { TouchEventHandler } from 'react';
@@ -39,8 +39,32 @@ export class XtermAdapter extends React.Component<IXtermAdapterProps, IXtermAdap
       cursorStyle: 'block',
       cursorInactiveStyle: 'outline',
       rows: 16,
-      fontSize: this.props.terminalFontSize
-    });
+      fontSize: this.props.terminalFontSize,
+      theme: {
+        foreground: 'white',
+        background: 'black',
+        cursor: 'white',
+        cursorAccent: 'yellow',
+        selectionForeground: 'gray',
+        selectionBackground: 'black',
+        black: '#000000',
+        red: '#ff0000',
+        green: '#00ff00',
+        yellow: '#ffff00',
+        blue: '#0000ff',
+        magenta: '#ff00ff',
+        cyan: '#00ffff',
+        white: '#ffffff',
+        brightBlack: '#808080',
+        brightRed: '#ff0000',
+        brightGreen: '#00ff00',
+        brightYellow: '#ffff00',
+        brightBlue: '#0000ff',
+        brightMagenta: '#ff00ff',
+        brightCyan: '#00ffff',
+        brightWhite: '#ffffff'
+      } 
+  });
     this.onDataHandler = this.onDataHandler.bind(this);
   }
 

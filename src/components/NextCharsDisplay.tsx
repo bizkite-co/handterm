@@ -32,12 +32,10 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
     public isTestMode: boolean;
 
 
-    private _errorDisplayRef: React.RefObject<any>;
     private _nextCharsLength: number = 60;
 
     constructor(props: NextCharsDisplayProps) {
         super(props);
-        this._errorDisplayRef = createRef<HTMLDivElement>();
         this.voiceSynth = window.speechSynthesis as SpeechSynthesis;
         this._nextCharsRef = React.createRef<HTMLPreElement>();
         this._nextCharsRateRef = React.createRef<HTMLDivElement>();
@@ -94,8 +92,6 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
             mismatchedIsVisible: true
 
         })
-        // Call showError on the ErrorDisplay ref
-        if (this._errorDisplayRef.current) this._errorDisplayRef.current.showError();
     };
 
     hideError = () => {
@@ -103,8 +99,6 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
             mismatchedChar: null,
             mismatchedIsVisible: false
         })
-        // Call hideError on the ErrorDisplay ref
-        // if (this._errorDisplayRef.current) this._errorDisplayRef.current.hideError();
     };
 
     handleSuccess = () => {
@@ -115,13 +109,6 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
                 mismatchedIsVisible: false,
                 nextChars: '',
             });
-        // Call hideError on the ErrorDisplay ref
-        if (this._errorDisplayRef.current) {
-            this._errorDisplayRef.current.hideError();
-        }
-        else {
-            console.error("ErrorDisplay ref not found");
-        }
         this.props.onPhraseSuccess(this.state.phrase.value.join(''));
     };
 
@@ -343,7 +330,6 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
                 {this.state.mismatchedChar
                     && <ErrorDisplay
                         isVisible={this.state.mismatchedIsVisible}
-                        ref={this._errorDisplayRef}
                         mismatchedChar={this.state.mismatchedChar}
                     />
                 }

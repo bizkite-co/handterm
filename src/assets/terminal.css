@@ -223,7 +223,7 @@ div.terminal {
     }
 
     body {
-        padding: 5px;
+        padding-left: 2px;
     }
 
     /* Add any additional mobile-specific styles here */
