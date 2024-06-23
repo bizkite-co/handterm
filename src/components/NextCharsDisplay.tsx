@@ -1,4 +1,3 @@
-import { spaceDisplayChar } from "../types/Types.js";
 import { TerminalCssClasses } from "../types/TerminalTypes.js";
 
 import React, { createRef } from 'react';
@@ -15,8 +14,7 @@ interface NextCharsDisplayProps {
 }
 interface NextCharsDisplayState {
     isActive: boolean;
-    mismatchedChar: string;
-    mismatchedCharCode: string;
+    mismatchedChar: string | null;
     mismatchedIsVisible: boolean;
     nextChars: string;
     nextCharsIsVisible: boolean;
@@ -28,8 +26,6 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
     private _nextCharsRef: React.RefObject<HTMLPreElement>;
     private _nextCharsRateRef: React.RefObject<HTMLDivElement>;
 
-    private _chordImageHolderRef: React.RefObject<HTMLDivElement>;
-    private _svgCharacter: React.RefObject<HTMLImageElement>;
     private _timerRef: React.RefObject<any>;
     private voiceSynth: SpeechSynthesis;
     private _wpmRef: React.RefObject<HTMLSpanElement>;
@@ -46,34 +42,31 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
         this._nextCharsRef = React.createRef<HTMLPreElement>();
         this._nextCharsRateRef = React.createRef<HTMLDivElement>();
         this._wpmRef = React.createRef();
-        this._chordImageHolderRef = React.createRef<HTMLDivElement>();
-        this._svgCharacter = React.createRef<HTMLImageElement>();
         this.isTestMode = localStorage.getItem('testMode') == 'true';
         this._timerRef = createRef();
         this.state = {
-            mismatchedChar: '',
-            mismatchedCharCode: '',
+            mismatchedChar: null,
             mismatchedIsVisible: false,
-            nextChars: 'Next Chars',
+            nextChars: this.props.newPhrase,
             nextCharsIsVisible: false,
             isActive: false,
-            phrase: new Phrase(this.props.newPhrase),
+            phrase: new Phrase(this.props.newPhrase.split('')),
         }
     }
 
     componentDidMount() {
         if (this.props.isInPhraseMode) {
             this.setState({
-                phrase: new Phrase(this.props.newPhrase)
+                phrase: new Phrase(this.props.newPhrase.split(''))
             })
         }
     }
 
     componentDidUpdate(prevProps: NextCharsDisplayProps) {
-        if ( this.props.newPhrase !== prevProps.newPhrase) {
+        if (this.props.newPhrase !== prevProps.newPhrase) {
             if (this.props.isInPhraseMode) {
                 this.setState({
-                    phrase: new Phrase(this.props.newPhrase),
+                    phrase: new Phrase(this.props.newPhrase.split('')),
                     nextChars: this.props.newPhrase
                 })
             }
@@ -95,10 +88,9 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
     }
 
 
-    showError = (char: string, charCode: string) => {
+    showError = (char: string) => {
         this.setState({
             mismatchedChar: char,
-            mismatchedCharCode: charCode,
             mismatchedIsVisible: true
 
         })
@@ -108,12 +100,11 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
 
     hideError = () => {
         this.setState({
-            mismatchedChar: '',
-            mismatchedCharCode: '',
+            mismatchedChar: null,
             mismatchedIsVisible: false
         })
         // Call hideError on the ErrorDisplay ref
-        if (this._errorDisplayRef.current) this._errorDisplayRef.current.hideError();
+        // if (this._errorDisplayRef.current) this._errorDisplayRef.current.hideError();
     };
 
     handleSuccess = () => {
@@ -121,7 +112,6 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
             {
                 isActive: false,
                 mismatchedChar: '',
-                mismatchedCharCode: '',
                 mismatchedIsVisible: false,
                 nextChars: '',
             });
@@ -132,7 +122,7 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
         else {
             console.error("ErrorDisplay ref not found");
         }
-        this.props.onPhraseSuccess(this.state.phrase.value);
+        this.props.onPhraseSuccess(this.state.phrase.value.join(''));
     };
 
 
@@ -156,7 +146,7 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
         if (this._timerRef.current) {
             this._timerRef.current.reset();
         }
-        if (this._nextCharsRef.current) this._nextCharsRef.current.innerText = this.state.phrase.value;
+        if (this._nextCharsRef.current) this._nextCharsRef.current.innerText = this.state.phrase.value.join('');
     }
 
     reset(): void {
@@ -182,12 +172,12 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
 
 
     set phrase(phrase: HTMLInputElement) {
-        this.setState({ phrase: new Phrase(phrase.value) });
+        this.setState({ phrase: new Phrase(phrase.value.split('')) });
     }
 
     getNextCharacters(stringBeingTested: string): string {
         const nextIndex = this.getFirstNonMatchingChar(stringBeingTested);
-        const nextChars = this.state.phrase.value.substring(nextIndex, nextIndex + this._nextCharsLength);
+        const nextChars = this.state.phrase.value.join('').substring(nextIndex, nextIndex + this._nextCharsLength);
         return nextChars || stringBeingTested.substring(nextIndex, nextIndex + this._nextCharsLength);
     }
 
@@ -206,23 +196,23 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
 
         const nextChordHTML = this.state.phrase.chordsHTML[nextIndex] as HTMLElement;
 
-        if (nextChordHTML) {
-            nextChordHTML.classList.add("next");
-            if (this._chordImageHolderRef.current) this._chordImageHolderRef.current.replaceChildren(nextChordHTML);
-        }
+        // if (nextChordHTML) {
+        //     nextChordHTML.classList.add("next");
+        //     if (this._chordImageHolderRef.current) this._chordImageHolderRef.current.replaceChildren(nextChordHTML);
+        // }
 
         // Set the next character in the SVG element
-        if (this._svgCharacter.current && nextChordHTML) {
-            const nameAttribute = nextChordHTML.getAttribute("name");
-            if (nameAttribute) {
-                this._svgCharacter.current.innerHTML = nameAttribute
-                    .replace("Space", spaceDisplayChar)
-                    .replace("tab", "↹");
-            }
-        }
-        if (this._svgCharacter.current && !this.isTestMode) {
-            this._svgCharacter.current.hidden = false;
-        }
+        // if (this._svgCharacter.current && nextChordHTML) {
+        //     const nameAttribute = nextChordHTML.getAttribute("name");
+        //     if (nameAttribute) {
+        //         this._svgCharacter.current.innerHTML = nameAttribute
+        //             .replace("Space", spaceDisplayChar)
+        //             .replace("tab", "↹");
+        //     }
+        // }
+        // if (this._svgCharacter.current && !this.isTestMode) {
+        //     this._svgCharacter.current.hidden = false;
+        // }
         return nextChordHTML;
     };
 
@@ -244,14 +234,14 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
         // TODO: de-overlap this and comparePhrase
         if (stringBeingTested.length === 0) {
             // stop timer
-            const chordImageHolderChild = this._chordImageHolderRef.current?.firstChild as HTMLImageElement;
-            if (chordImageHolderChild) chordImageHolderChild.hidden = true;
+            // const chordImageHolderChild = this._chordImageHolderRef.current?.firstChild as HTMLImageElement;
+            // if (chordImageHolderChild) chordImageHolderChild.hidden = true;
             this.cancelTimer();
             return;
         }
 
         if (stringBeingTested
-            == this.state.phrase.value
+            == this.state.phrase.value.join('')
                 .trim().substring(0, stringBeingTested.length)
         ) {
             // if (this._testArea) this._testArea.style.border = "4px solid #FFF3";
@@ -263,26 +253,21 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
         }
         else {
             // #MISMATCHED
-            if (this._errorDisplayRef.current) {
-                const firstNonMatchingChar = this.getFirstNonMatchingChar(stringBeingTested);
-                const mismatchedChar = this.state.phrase.value[firstNonMatchingChar];
-                // TODO: Fix lookup for ENTER, ESCAPE, BACKSPACE, TAB, DELETE, etc.
-                const mismatchedCharCode = this.state.phrase.chords.find(c => c.key == mismatchedChar)?.chordCode || '';
-                this.setState({
-                    mismatchedIsVisible: true,
-                    mismatchedChar,
-                    mismatchedCharCode
-                });
-                this.showError(mismatchedChar, mismatchedCharCode);
-            } else {
-                console.error('NextCharsDisplay.testInput #MISMATCHED errorDisplayRef.current is null');
-            }
+            const firstNonMatchingChar = this.getFirstNonMatchingChar(stringBeingTested);
+            const mismatchedChar = this.state.phrase.value[firstNonMatchingChar];
+            // TODO: Fix lookup for ENTER, ESCAPE, BACKSPACE, TAB, DELETE, etc.
+            // const mismatchedCharCode = this.state.phrase.chords.find(c => c.key == mismatchedChar)?.chordCode || '';
+            this.setState({
+                mismatchedIsVisible: true,
+                mismatchedChar,
+            });
+            this.showError(mismatchedChar);
 
             // const chordImageHolderChild = this._chordImageHolder?.firstChild as HTMLImageElement;
             // if (chordImageHolderChild) chordImageHolderChild.hidden = false;
         }
 
-        if (stringBeingTested.trim() == this.state.phrase.value.trim()) {
+        if (stringBeingTested.trim() == this.state.phrase.value.join('').trim()) {
             // SUCCESS 
             // SHOW completion indication
             this.stopTimer();
@@ -351,17 +336,17 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
     }
 
     render() {
+        
         return (
             <div hidden={!this.props.isInPhraseMode}>
                 {/* ...other components */}
-                <ErrorDisplay
-                    isVisible={this.state.mismatchedIsVisible}
-                    ref={this._errorDisplayRef}
-                    svgCharacter={this._svgCharacter.current}
-                    chordImageHolder={this._chordImageHolderRef.current}
-                    mismatchedChar={this.state.mismatchedChar}
-                    mismatchedCharCode={this.state.mismatchedCharCode}
-                />
+                {this.state.mismatchedChar
+                    && <ErrorDisplay
+                        isVisible={this.state.mismatchedIsVisible}
+                        ref={this._errorDisplayRef}
+                        mismatchedChar={this.state.mismatchedChar}
+                    />
+                }
                 <Timer
                     ref={this._timerRef}
                 />

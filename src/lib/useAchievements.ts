@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 
 // Define a type for the achievement
 export type Achievement = {
-  phrase: string;
+  phrase: string[];
   prompt: string;
   unlocked: boolean;
 };
@@ -31,7 +31,7 @@ export function useAchievements(initialAchievements: Achievement[]) {
   const unlockAchievement = (name: string) => {
     setAchievements((prevAchievements) =>
       prevAchievements.map((ach) =>
-        ach.phrase === name ? { ...ach, unlocked: true } : ach
+        ach.phrase.join('') === name ? { ...ach, unlocked: true } : ach
       )
     );
   };

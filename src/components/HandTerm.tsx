@@ -15,13 +15,14 @@ import { IWebCam, WebCam } from '../utils/WebCam';
 import { CommandContext } from '../commands/CommandContext';
 import { Achievement } from '../lib/useAchievements';
 import { TutorialComponent } from './TutorialComponent';
+import { ChordDisplay } from './ChordDisplay';
 
 const Achievements: Achievement[] = [
-  { prompt: 'The most important key is the Return (ENTER) key. Press the thumb tip and release.', phrase: '', unlocked: false },
-  { prompt: 'Type `fdsa` & Enter. Notice that it requires finger-pinch only.', phrase: 'fdsa', unlocked: false },
-  { prompt: 'Type `jkl;`. Notice that it requires finger-grasp only.', phrase: 'jkl;', unlocked: false },
-  { prompt: 'Many characters require combinations followed by releasing all keys. Type `zxcv` and we\'ll show corrections as you type.', phrase: 'zxcv', unlocked: false },
-  { prompt: 'Press the thumb tip followed by a finger tip to type numbers 1-4', phrase: '1234', unlocked: false },
+  { prompt: 'The most important key is the Return (ENTER) key. Press the thumb tip and release.', phrase: ['Return (ENTER)'], unlocked: false },
+  { prompt: 'Type `fdsa` & Enter. Notice that it requires finger-pinch only.', phrase: 'fdsa'.split(''), unlocked: false },
+  { prompt: 'Type `jkl;`. Notice that it requires finger-grasp only.', phrase: 'jkl;'.split(''), unlocked: false },
+  { prompt: 'Many characters require combinations followed by releasing all keys. Type `zxcv` and we\'ll show corrections as you type.', phrase: 'zxcv'.split(''), unlocked: false },
+  { prompt: 'Press the thumb tip followed by a finger tip to type numbers 1-4', phrase: '1234'.split(''), unlocked: false },
 ]
 
 
@@ -80,7 +81,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
   }
 
   saveAchievements(achievementPhrase: string) {
-    const storedAchievementString:string = localStorage.getItem('achievements') || '';
+    const storedAchievementString: string = localStorage.getItem('achievements') || '';
     let storedAchievements = storedAchievementString ? JSON.parse(storedAchievementString) : [];
     storedAchievements.push(achievementPhrase);
     localStorage.setItem('achievements', JSON.stringify(storedAchievements));
@@ -88,7 +89,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
 
   getNextAchievement(): Achievement | null {
     const unlockedAchievements = this.loadAchievements() || [];
-    const nextAchievement = Achievements.find(a => !unlockedAchievements.some(ua => ua === a.phrase));
+    const nextAchievement = Achievements.find(a => !unlockedAchievements.some(ua => ua === a.phrase.join('')));
     return nextAchievement || null;
   }
 
@@ -178,7 +179,9 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     // TODO: handle achievement unlocks
     if (this.state.isInTutorial) {
       // Unlock the next achievement and decide if we are still in tutorial mode
-      if (this.state.nextAchievement?.phrase === command) {
+      if (command === '') command = 'Return (ENTER)';
+      if (this.state.nextAchievement?.phrase.join('') === command
+      ) {
         this.unlockAchievement(command);
       }
     }
@@ -193,7 +196,6 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
         );
       if (output.status === 200) return;
     }
-
     let status = 404;
     let response = "Command not found.";
     this.terminalGameRef.current?.resetGame();
@@ -203,6 +205,17 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     }
     this.setState({ isInPhraseMode: false, commandLine: '' });
 
+    if (command === 'help' || command === '411') {
+      status = 200;
+      const commandChords = ['UpArrow', 'LeftArrow', 'DownArrow', 'RightArrow'].map(c => {
+        return <ChordDisplay displayChar={[c]} />
+      });
+      const commandChordsHtml = commandChords.map(element => {
+        return ReactDOMServer.renderToStaticMarkup(element);
+      }).join('');
+      response = "<div class='chord-display-container'>" + commandChordsHtml + "</div>";
+    }
+
     if (command === 'kill') {
       if (!this.terminalGameRef.current) return;
       this.terminalGameRef.current.setZombie4ToDeathThenResetPosition();
@@ -210,6 +223,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       response = "Killed zombie 4. Reset position and game completed.";
       status = 200;
     }
+
     if (command.startsWith('level')) {
       if (!this.terminalGameRef.current) return;
       let levelNum = command.match(/\d+/);
@@ -222,6 +236,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       response = "Type the phrase as fast as you can."
       this.setNewPhrase(command);
     }
+
     if (command === 'phrase' || command.startsWith('phrase ')) {
       status = 200;
       response = "Type the phrase as fast as you can."
@@ -264,9 +279,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
   public handleCharacter = (character: string) => {
     const charDuration: CharDuration = this.wpmCalculator.addKeystroke(character);
     const wpm = this.wpmCalculator.getWPM(charDuration);
-    if (this.isDebug) console.log('wpm', wpm);
     if (character.charCodeAt(0) === 3) { // Ctrl+C
-      console.log('Ctrl+C pressed');
       this.setState({ isInPhraseMode: false, commandLine: '' });
       this.adapterRef.current?.terminalReset();
       this.adapterRef.current?.prompt();
@@ -276,12 +289,11 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       let command = this.state.commandHistory[newCommandIndex];
       const commandResponseHistory = this.getCommandResponseHistory().reverse();
       this.setState({
-          currentCommandIndex: newCommandIndex,
-          commandLine: command,
-          outputElements: [commandResponseHistory[newCommandIndex]],
+        currentCommandIndex: newCommandIndex,
+        commandLine: command,
+        outputElements: [commandResponseHistory[newCommandIndex]],
       });
 
-      console.log('if ArrowUp', character, newCommandIndex);
       this.terminalReset();
       this.terminalPrompt();
       this.terminalWrite(command);
@@ -314,7 +326,6 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       });
       if ([',', '.', '!', '?'].includes(character) || /[0-9]/.test(character)) {
         this.setHeroSummersaultAction();
-        console.log('Set hero to summersault');
       }
       else {
         this.setHeroRunAction();
@@ -324,7 +335,6 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       this.terminalWrite(character);
       if ([',', '.', '!', '?'].includes(character) || /[0-9]/.test(character)) {
         this.setHeroSummersaultAction();
-        console.log('Set hero to summersault');
       }
       else {
         this.setHeroRunAction();
@@ -336,7 +346,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
   unlockAchievement = (phrase: string) => {
     this.setState(prevState => {
       const unlockedAchievements = prevState.unlockedAchievements;
-      if (this.state.nextAchievement?.phrase === phrase) {
+      if (this.state.nextAchievement?.phrase.join('') === phrase) {
         this.saveAchievements(phrase);
       }
       const nextAchievement = this.getNextAchievement();
@@ -456,11 +466,10 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
 
     const slowestCharactersHTML = ReactDOMServer.renderToStaticMarkup(slowestCharacters);
 
+    commandResponseElement.innerHTML += slowestCharactersHTML;
     this.writeOutput(commandResponse)
-    this.writeOutput(slowestCharactersHTML)
 
     // Now you can append slowestCharactersHTML as a string to your element's innerHTML
-    commandResponseElement.innerHTML += slowestCharactersHTML;
     this._persistence.setItem(`${LogKeys.Command}_${timeCode}`, commandResponseElement.outerHTML);
 
     return commandResponse;
@@ -468,7 +477,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
 
   writeOutput(output: string) {
     this._commandHistory = [output];
-    this.setState({ outputElements: [ output ] });
+    this.setState({ outputElements: [output] });
   }
 
   clearCommandHistory(args: string[] = []): void {
@@ -483,7 +492,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       ) {
         keys.push(key);
       }
-      if(args.includes("achievements")){
+      if (args.includes("achievements")) {
         if (key.includes('achievements')) {
           keys.push(key);
         }
@@ -562,22 +571,28 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       phrase: newPhrase
     });
     this.terminalGameRef.current?.completeGame();
-    console.log("Phrase complete", this.state.phraseIndex);
   }
 
   setNewPhrase = (phraseName: string) => {
     phraseName = phraseName.replace('phrase ', '');
+
     const newPhrase
       = phraseName && phraseName != "" && Phrases.getPhrase(phraseName)
         ? Phrases.getPhrase(phraseName)
         : Phrases.getPhraseByIndex(this.state.phraseIndex);
 
     // this.phrase = new Phrase(newPhrase);
-    this.setState({
-      isInPhraseMode: true,
-      phrase: newPhrase,
+    this.setState((prevState) => {
+      console.log('Set new phrase:', newPhrase, this.state.phrase, this.state.phraseIndex);
+      return {
+        ...prevState,
+        isInPhraseMode: true,
+        phrase: newPhrase,
+        commandLine: newPhrase
+      }
     });
-    console.log('New phrase:', this.state.phrase);
+
+    console.log('New phrase:', newPhrase, this.state.phrase, this.state.phraseIndex);
     // this.props.onNewPhrase(newPhrase); 
   }
 
@@ -654,8 +669,8 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       // this.terminalElement.focus();
     }, 500)
     if (event.touches.length === 2) {
-
       // event.preventDefault();
+
       this.lastTouchDistance = this.getDistanceBetweenTouches(event.touches as unknown as TouchList);
     }
   }
@@ -795,15 +810,18 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
                 onTouchStart={this.handleTouchStart}
                 onTouchEnd={this.handleTouchEnd}
               />
-              <NextCharsDisplay
-                ref={this.nextCharsDisplayRef}
-                onTimerStatusChange={this.handleTimerStatusChange}
-                commandLine={this.state.commandLine}
-                isInPhraseMode={this.state.isInPhraseMode}
-                newPhrase={this.state.phrase}
-                onPhraseSuccess={this.handlePhraseSuccess}
-              />
-              {this.state.nextAchievement 
+              {this.state.isInPhraseMode
+                && this.state.phrase
+                && <NextCharsDisplay
+                  ref={this.nextCharsDisplayRef}
+                  onTimerStatusChange={this.handleTimerStatusChange}
+                  commandLine={this.state.commandLine}
+                  isInPhraseMode={this.state.isInPhraseMode}
+                  newPhrase={this.state.phrase}
+                  onPhraseSuccess={this.handlePhraseSuccess}
+                />
+              }
+              {Array.isArray(this.state.nextAchievement?.phrase)
                 && TutorialComponent
                 && <TutorialComponent
                   achievement={this.state.nextAchievement}
@@ -825,7 +843,8 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
                 ref={this.videoElementRef as React.RefObject<HTMLVideoElement>}
                 id="terminal-video"
                 hidden={!this.isShowVideo}
-              ></video>
+              >
+              </video>
             </div>
 
           );

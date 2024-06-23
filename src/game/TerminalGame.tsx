@@ -211,7 +211,6 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
         isPhraseComplete: false,
         textScrollX: this.props.canvasWidth
       });
-
       this.zombie4DeathTimeout = null;
     }, 3000);
   };

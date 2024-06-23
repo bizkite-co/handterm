@@ -9,9 +9,11 @@ export interface ITutorialComponentProps {
 }
 
 export function TutorialComponent(props: any) {
-    
+    if(!Array.isArray(props.achievement.phrase)) 
+        throw new Error('achievement is undefined');
     const characters: Chord[] = new Phrase(props.achievement.phrase).chords;
-
+    if(characters.length === 0) 
+        throw new Error('achievement is undefined');
     return (
         <div
             className="tutorial-component"
@@ -23,14 +25,13 @@ export function TutorialComponent(props: any) {
                     characters.map((character: Chord, index: number) => {
                         return <ChordDisplay
                             key={index}
-                            displayChar={character.key}
-                            displayCharCode={character.chordCode}
+                            displayChar={[character.key]}
                         />
                     })
                 }
-                {props.includeReturn &&
-                    <ChordDisplay displayChar="\r" displayCharCode="0" />
-                }
+                {/* {props.includeReturn &&
+                    <ChordDisplay displayChar={"\r".split('')} />
+                } */}
             </div>
         </div>
     );

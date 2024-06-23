@@ -3,17 +3,22 @@ import { Chord } from "../types/Types.js";
 import { createHTMLElementFromHTML } from "./dom.js";
 
 export class Phrase {
-    private _value: string;
+    private _value: string[];
     private _chords: Chord[] = [];
     private _chordsHTML: HTMLElement[] = [];
 
-
-    constructor(value: string) {
+    constructor(value: string[]) {
+        if(!value || !Array.isArray(value) || value.length == 0){
+            throw new Error('Phrase value must be an array with at least one element');
+        }
         this._value = value;
-        this.setChords();
+        if(!value[0]) return;
+        if (Array.isArray(value)) {
+            this.setChords(value);
+        }
     }
 
-    get value(): string {
+    get value(): string[] {
         return this._value;
     }
 
@@ -25,13 +30,13 @@ export class Phrase {
         return this._chords;
     }
 
-    setChords(): void {
-        Array.from(this._value).forEach((char) => {
-            const foundChordHTML = Phrase.findChordHTML(char);
+    private setChords(keys: string[]): void {
+        keys.forEach((key) => {
+            const foundChordHTML = Phrase.findChordHTML(key);
             if (foundChordHTML) {
                 this._chordsHTML.push(foundChordHTML);
             }
-            const chord = allChords.find(x => x.key == char);
+            const chord = allChords.find(x => x.key == key);
             if (chord) {
                 this._chords.push(chord);
             }
@@ -51,24 +56,23 @@ export class Phrase {
         let inChord: HTMLElement | null = null;
         const foundChords
             = Array.from(allChords)
-                .filter(x => { 
+                .filter(x => {
                     return x.key
-                    .replace('&#x2581;', ' ') 
-                    .replace('(underscore)', '_') 
-                    .replace('Return (ENTER)', '\r')
-                    == chordChar; 
+                        .replace('&#x2581;', ' ')
+                        .replace('(underscore)', '_')
+                        // .replace('Return (ENTER)', '\r')
+                        == chordChar;
                 });
         // Load the clone in Chord order into the wholePhraseChords div.
         if (foundChords.length > 0) {
             // const inChord = foundChords[0].cloneNode(true) as HTMLDivElement;
             const foundChord = foundChords[0];
             inChord = this.createChordHTML(foundChord);
-            inChord.setAttribute("name", foundChord.key);
+            inChord.setAttribute("name", foundChord.key.replace('(', '').replace(')', '').replace(' ', '-'));
         }
         else {
             console.error("Missing chord:", chordChar?.charCodeAt(0));
         }
-        // console.log("Found chord:", chordChar, inChord);
         return inChord;
     }
 }

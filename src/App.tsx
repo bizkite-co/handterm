@@ -31,7 +31,9 @@ const App = () => {
             if (
               handexTermRef.current &&
               handexTermRef.current.adapterRef.current
-            ) handexTermRef.current.adapterRef.current.focusTerminal();
+            ) {
+              handexTermRef.current.adapterRef.current.focusTerminal();
+            }
           }, 1000);
           // type a character to trigger the focus event
           // handexTermRef.current.adapterRef.current.terminalWrite('a');

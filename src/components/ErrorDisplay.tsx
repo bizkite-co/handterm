@@ -2,37 +2,31 @@ import { useState, useImperativeHandle, forwardRef } from 'react';
 import { ChordDisplay } from './ChordDisplay';
 
 interface ErrorDisplayProps {
-  svgCharacter: HTMLImageElement | null;
-  chordImageHolder: HTMLDivElement | null;
   mismatchedChar: string;
-  mismatchedCharCode: string;
   isVisible: boolean;
 }
 
 const ErrorDisplay = forwardRef((props: ErrorDisplayProps, ref) => {
   const [errorCount, setErrorCount] = useState(0);
-  const { mismatchedChar, mismatchedCharCode } = props;
+  const { mismatchedChar } = props;
 
 
   const showError = () => {
     setErrorCount(prevCount => prevCount + 1);
   };
 
-  const hideError = () => {
-    // svgCharacter.hidden = false;
-    // chordImageHolder.hidden = false;
-  };
 
   // Use useImperativeHandle to expose functions to the parent component
   useImperativeHandle(ref, () => ({
     showError,
-    hideError,
   }));
 
   return (
-    <div style={{ display: props.isVisible ? 'block' : 'none'}} >
+    <div style={{ display: props.isVisible ? 'block' : 'none' }} >
       <div>Error Count: {errorCount}</div>
-      <ChordDisplay displayChar={mismatchedChar} displayCharCode={mismatchedCharCode} />
+      {mismatchedChar &&
+        <ChordDisplay displayChar={mismatchedChar.split('')} />
+      }
     </div>
   );
 });
