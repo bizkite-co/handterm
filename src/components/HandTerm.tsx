@@ -25,7 +25,6 @@ const Achievements: Achievement[] = [
   { prompt: 'Press the thumb tip followed by a finger tip to type numbers 1-4', phrase: '1234'.split(''), unlocked: false },
 ]
 
-
 export interface IHandTermProps {
   // Define the interface for your HandexTerm logic
   terminalWidth: number;
@@ -165,7 +164,6 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     }
     this.removeTouchListeners();
   }
-
 
   public handleCommand = (command: string) => {
     this.setState(
@@ -361,9 +359,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
   parseCommand(input: string): void {
     const args = input.split(/\s+/); // Split the input by whitespace
     const command = args[0]; // The first element is the command
-
     // Now you can handle the command and options
-
     // Based on the command, you can switch and call different functions
     switch (command) {
       case 'someCommand':
@@ -589,7 +585,6 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
         commandLine: newPhrase
       }
     });
-
     // this.props.onNewPhrase(newPhrase); 
   }
 
@@ -606,7 +601,6 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     this.heroRunTimeoutId = window.setTimeout(() => {
       this.setState({ heroAction: 'Idle' });
       this.heroRunTimeoutId = null; // Clear the timeout ID
-
     }, 800);
   }
 
@@ -623,7 +617,6 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     this.heroSummersaultTimeoutId = window.setTimeout(() => {
       this.setState({ heroAction: 'Idle' });
       this.heroSummersaultTimeoutId = null; // Clear the timeout ID
-
     }, 800);
   }
 
@@ -671,18 +664,6 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       this.lastTouchDistance = this.getDistanceBetweenTouches(event.touches as unknown as TouchList);
     }
   }
-
-  // private handleTouchStart = (event: TouchEvent) => {
-  //   setTimeout(() => {
-  //     // this.terminalElement.focus();
-  //   }, 500);
-
-  //   if (event.touches.length === 2) {
-  //     // event.preventDefault();
-  //     const touchList = event.touches as unknown as TouchList;
-  //     this.lastTouchDistance = this.getDistanceBetweenTouches(touchList);
-  //   }
-  // };
 
   public handleTouchMove = (event: TouchEvent) => {
     if (event.touches.length === 2) {
@@ -769,7 +750,6 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     );
   }
 
-
   public toggleVideo = (): boolean => {
     this.isShowVideo = !this.isShowVideo;
     this.webCam?.toggleVideo(this.isShowVideo);
@@ -841,7 +821,6 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
               >
               </video>
             </div>
-
           );
         }}
       </CommandContext.Consumer>
