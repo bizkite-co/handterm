@@ -278,7 +278,6 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
 
   public handleCharacter = (character: string) => {
     const charDuration: CharDuration = this.wpmCalculator.addKeystroke(character);
-    const wpm = this.wpmCalculator.getWPM(charDuration);
     if (character.charCodeAt(0) === 3) { // Ctrl+C
       this.setState({ isInPhraseMode: false, commandLine: '' });
       this.adapterRef.current?.terminalReset();
