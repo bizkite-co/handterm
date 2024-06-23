@@ -49,12 +49,11 @@ export default class Phrases {
 
     public static getPhrase(key: string): string {
         const phrase = this.phrases.find(x => x.name == key);
-        if (!phrase) {
-            if (key) console.error("Phrase not found: " + key);
-        }
-        else {
+        if (phrase) {
+            // Return specified phrase, if it exists.
             return phrase.phrase;
         }
+        // Else, return first phrase.
         return this.phrases[0].phrase;
     }
 
