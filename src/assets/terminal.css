@@ -126,7 +126,6 @@ pre#nextChars {
     float: left;
 }
 
-
 video#terminal-video {
     width: 100%;
     top: 0;
@@ -152,7 +151,7 @@ div.terminal {
 }
 
 #chord-image-holder .char {
-    font-size: 40px;
+    font-size: 35px;
 }
 
 #timer-root {
@@ -177,14 +176,11 @@ div.terminal {
     padding: 0;
     margin: 0;
     flex-direction: column;
-
     .prompt {
         color: lightseagreen;
-
         .domain {
             color: darkkhaki;
         }
-
         .user {
             color: magenta;
         }
@@ -206,8 +202,6 @@ div.terminal {
 #terminal-output div {
     z-index: 1000;
 }
-
-
 
 .wpm {
     color: #fa807280;
@@ -291,11 +285,6 @@ div.terminal {
         transform: translateX(-100%);
     }
 }
-
-/* .scrolling-text-container {
-
-} 
-*/
 
 .scrolling-text {
     animation: scrollText 5s linear infinite;
