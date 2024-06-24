@@ -16,7 +16,7 @@ export function ChordDisplay(
     const displayChar = props.displayChar
         .join('')
         .replace("Arrow", "")
-        .replace(" (ENTER)", "");
+        .replace("Return (ENTER)", "Enter");
     return (
         <div className="chord-image-holder" id="chord-image-holder" data-source="ErrorDisplay.tsx">
             <div className="col-sm-2 row generated next" id="chord2" >
