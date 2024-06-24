@@ -304,3 +304,6 @@ div.terminal {
     color: lightsalmon;
     font-size: var(--terminal-font-size);
 }
+#terminal .xterm-cursor-block {
+    color: white !important;
+}
