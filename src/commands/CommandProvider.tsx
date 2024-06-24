@@ -43,7 +43,7 @@ export const CommandProvider: React.FC<CommandProviderProps> = (props: CommandPr
       console.error('CommandProvider: handTermRef.current is NULL');
       return 'CommandProvider: handTermRef.current is NULL';
     }
-    handTerm.clearCommandHistory();
+    handTerm.clearCommandHistory("clear");
   }, []);
 
   // Provide the context with the necessary values

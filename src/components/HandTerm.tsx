@@ -480,7 +480,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     this.setState({ outputElements: [output] });
   }
 
-  clearCommandHistory(command: string, args: string[] = [], switches: Record<string, boolean | string> = {}): void {
+  clearCommandHistory(_command: string, args: string[] = [], _switches: Record<string, boolean | string> = {}): void {
     let keys: string[] = [];
     for (let i = localStorage.length; i >= 0; i--) {
       let key = localStorage.key(i);
