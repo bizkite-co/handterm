@@ -165,11 +165,11 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     this.removeTouchListeners();
   }
 
-  public handleCommand = (command: string) => {
+  public handleCommand = (cmd: string) => {
     this.setState(
       // Update the command history
       prevState => ({
-        commandHistory: [command, ...prevState.commandHistory],
+        commandHistory: [cmd, ...prevState.commandHistory],
         currentCommandIndex: -1,
       }),
       () => this.saveCommandHistory(this.state.commandHistory)
@@ -177,20 +177,19 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     // TODO: handle achievement unlocks
     if (this.state.isInTutorial) {
       // Unlock the next achievement and decide if we are still in tutorial mode
-      if (command === '') command = 'Return (ENTER)';
-      if (this.state.nextAchievement?.phrase.join('') === command
+      if (cmd === '') cmd = 'Return (ENTER)';
+      if (this.state.nextAchievement?.phrase.join('') === cmd
       ) {
-        this.unlockAchievement(command);
+        this.unlockAchievement(cmd);
       }
     }
+    const {command, args, switches} = this.parseCommand(cmd);
     if (this.context) {
-      const args = [''];
-      const switchs = {}
       const output = this.context
         .executeCommand(
           command,
           args,
-          switchs,
+          switches,
         );
       if (output.status === 200) return;
     }
@@ -356,20 +355,26 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     });
   };
 
-  parseCommand(input: string): void {
-    const args = input.split(/\s+/); // Split the input by whitespace
-    const command = args[0]; // The first element is the command
-    // Now you can handle the command and options
-    // Based on the command, you can switch and call different functions
-    switch (command) {
-      case 'someCommand':
-        // Handle 'someCommand'
-        break;
-      // Add cases for other commands as needed
-      default:
-        // Handle unknown command
-        break;
+  private parseCommand(input: string): { command: string, args: string[], switches: Record<string, boolean> } {
+    const parts = input.split(/\s+/); // Split by whitespace
+    const command = parts.shift(); // The first element is the command
+    const args = [];
+    const switches: Record<string, boolean> = {};
+
+    if (command) {
+      for (const part of parts) {
+        if (part.startsWith('--')) {
+          // It's a switch, remove the '--' and set it to true in the switches object
+          const switchName = part.substring(2);
+          switches[switchName] = true;
+        } else {
+          // It's an argument
+          args.push(part);
+        }
+      }
     }
+
+    return { command: command || '', args, switches };
   }
 
   getCommandResponseHistory(): string[] {
@@ -475,7 +480,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     this.setState({ outputElements: [output] });
   }
 
-  clearCommandHistory(args: string[] = []): void {
+  clearCommandHistory(command: string, args: string[] = [], switches: Record<string, boolean | string> = {}): void {
     let keys: string[] = [];
     for (let i = localStorage.length; i >= 0; i--) {
       let key = localStorage.key(i);

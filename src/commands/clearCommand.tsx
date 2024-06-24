@@ -17,7 +17,7 @@ export const clearCommand: ICommand = {
     }
     // Logic to clear the command history from localStorage
     // Logic to clear the command history from context (state)
-    _handTerm.clearCommandHistory();
+    _handTerm.clearCommandHistory(_commandName, _args, _switches);
     return { status: 200, message: 'Command history cleared.'};
   }
 };
