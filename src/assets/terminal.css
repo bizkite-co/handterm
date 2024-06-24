@@ -118,12 +118,17 @@ body {
 pre#nextChars {
     padding: 0;
     margin: 0;
-    min-height: 1.5em;
+    /* min-height: 1.5em; */
     color: lightgreen;
     font-weight: bold;
-    font-size: calc(var(--terminal-font-size) + 5px);
-    line-height: 1.5em;
+    font-size: calc(var(--terminal-font-size) * 1.2);
     float: left;
+    white-space: pre-wrap;
+    /* Allows text to wrap */
+    word-break: break-word;
+    /* Ensures words break to prevent overflow */
+    font-family: var(--terminal-font-family);
+    /* Maintains monospace font */
 }
 
 video#terminal-video {
@@ -176,11 +181,14 @@ div.terminal {
     padding: 0;
     margin: 0;
     flex-direction: column;
+
     .prompt {
         color: lightseagreen;
+
         .domain {
             color: darkkhaki;
         }
+
         .user {
             color: magenta;
         }
@@ -298,18 +306,24 @@ div.terminal {
     display: flex;
     flex-direction: row;
     justify-content: flex-start;
-    align-items: center; /* Optional: if you want to vertically align them */
+    align-items: center;
+    /* Optional: if you want to vertically align them */
 }
+
 .tutorial-component pre {
     color: lightsalmon;
     font-size: var(--terminal-font-size);
 }
+
 #terminal .xterm-cursor-block {
     color: white !important;
 }
 
 .tutorial-component pre {
-    white-space: pre-wrap; /* Allows text to wrap */
-    word-break: break-word; /* Ensures words break to prevent overflow */
-    font-family: var(--terminal-font-family); /* Maintains monospace font */
+    white-space: pre-wrap;
+    /* Allows text to wrap */
+    word-break: break-word;
+    /* Ensures words break to prevent overflow */
+    font-family: var(--terminal-font-family);
+    /* Maintains monospace font */
 }
