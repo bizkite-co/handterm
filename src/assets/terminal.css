@@ -307,3 +307,9 @@ div.terminal {
 #terminal .xterm-cursor-block {
     color: white !important;
 }
+
+.tutorial-component pre {
+    white-space: pre-wrap; /* Allows text to wrap */
+    word-break: break-word; /* Ensures words break to prevent overflow */
+    font-family: var(--terminal-font-family); /* Maintains monospace font */
+}

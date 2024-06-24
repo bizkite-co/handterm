@@ -19,7 +19,7 @@ export function TutorialComponent(props: any) {
             className="tutorial-component"
             hidden={!props.isInTutorial}
         >
-            <pre>{props.achievement.prompt}</pre>
+            <pre className="tutorial-prompt">{props.achievement.prompt}</pre>
             <div className="chord-display-container">
                 {
                     characters.map((character: Chord, index: number) => {
@@ -29,9 +29,6 @@ export function TutorialComponent(props: any) {
                         />
                     })
                 }
-                {/* {props.includeReturn &&
-                    <ChordDisplay displayChar={"\r".split('')} />
-                } */}
             </div>
         </div>
     );

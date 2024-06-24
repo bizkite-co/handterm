@@ -18,7 +18,7 @@ import { TutorialComponent } from './TutorialComponent';
 import { ChordDisplay } from './ChordDisplay';
 
 const Achievements: Achievement[] = [
-  { prompt: 'The most important key is the Return (ENTER) key. Press the thumb tip and release.', phrase: ['Return (ENTER)'], unlocked: false },
+  { prompt: 'The most important key is the Return (ENTER) key. Press the thumb tip and release. You\'ll use this key to enter every command.', phrase: ['Return (ENTER)'], unlocked: false },
   { prompt: 'Type `fdsa` & Enter. Notice that it requires finger-pinch only.', phrase: 'fdsa'.split(''), unlocked: false },
   { prompt: 'Type `jkl;`. Notice that it requires finger-grasp only.', phrase: 'jkl;'.split(''), unlocked: false },
   { prompt: 'Press the thumb tip followed by a finger tip to type numbers 1-4', phrase: '1234'.split(''), unlocked: false },
