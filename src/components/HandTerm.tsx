@@ -13,17 +13,10 @@ import { ActionType } from '../game/types/ActionTypes';
 import Phrases from '../utils/Phrases';
 import { IWebCam, WebCam } from '../utils/WebCam';
 import { CommandContext } from '../commands/CommandContext';
-import { Achievement } from '../lib/useAchievements';
+import { Achievement, Achievements } from '../types/Types';
 import { TutorialComponent } from './TutorialComponent';
 import { ChordDisplay } from './ChordDisplay';
 
-const Achievements: Achievement[] = [
-  { prompt: 'The most important key is the Return (ENTER) key. Press the thumb tip and release. You\'ll use this key to enter every command.', phrase: ['Return (ENTER)'], unlocked: false },
-  { prompt: 'Type `fdsa` & Enter. Notice that it requires finger-pinch only.', phrase: 'fdsa'.split(''), unlocked: false },
-  { prompt: 'Type `jkl;`. Notice that it requires finger-grasp only.', phrase: 'jkl;'.split(''), unlocked: false },
-  { prompt: 'Press the thumb tip followed by a finger tip to type numbers 1-4', phrase: '1234'.split(''), unlocked: false },
-  { prompt: 'Many characters require combinations followed by releasing all keys. Type `zxcv` and we\'ll show corrections as you type.', phrase: 'zxcv'.split(''), unlocked: false },
-]
 
 export interface IHandTermProps {
   // Define the interface for your HandexTerm logic

@@ -1,6 +1,6 @@
 import { ChordDisplay } from "./ChordDisplay";
 import { Chord } from "../types/Types";
-import { Achievement } from "../lib/useAchievements";
+import { Achievement } from "../types/Types";
 import { Phrase } from "../utils/Phrase";
 
 export interface ITutorialComponentProps {
