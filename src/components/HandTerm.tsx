@@ -32,6 +32,11 @@ export interface IHandTermProps {
       callback: (error: any, result: any) => void
     ) => void;
     getCurrentUser: () => any;
+    changePassword: (
+      oldPassword: string,
+      newPassword: string,
+      callback: (error: any, result: any) => void
+    ) => void;
     // Add other properties returned by useAuth here
   };
 }
@@ -82,6 +87,8 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
   private inLoginProcess: boolean = false;
   private tempUserName: string = '';
   private tempPassword: string = '';
+  private tempNewPassword: string = '';
+  private isInChangePasswordMode: boolean = false;
 
   loadAchievements(): string[] {
     const storedAchievements = localStorage.getItem('achievements');
@@ -95,7 +102,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
           console.error("Login failed", error);
           // Handle login failure here
         }
-        console.log("Login successful", result);
+        console.log("Login successful", JSON.stringify(result));
       });
       console.log("Login successful");
       // Handle post-login logic here
@@ -339,7 +346,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
             console.error(error);
           }
           else {
-            this.terminalWrite("Login successful!" + result);
+            this.terminalWrite("Login successful!" + JSON.stringify(result));
           }
           this.inLoginProcess = false;
           this.tempPassword = '';
@@ -348,6 +355,27 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
         })
       }
       else {
+        this.tempPassword += character;
+        this.terminalWrite("*");
+        return;
+      }
+    }
+    if (this.isInChangePasswordMode) {
+      if (character === '\r') {
+
+        this.props.auth.changePassword(this.tempPassword, this.tempNewPassword, (error: any, result: any) => {
+          if (error) {
+            console.error(error);
+          }
+          else {
+            this.terminalWrite("Password changed successfully!" + result);
+          }
+          this.isInChangePasswordMode = false;
+          this.terminalReset();
+        })
+      }
+      else {
+
         this.tempPassword += character;
         this.terminalWrite("*");
         return;

@@ -33,8 +33,27 @@ export const useAuth = () => {
     });
   };
 
+  const changePassword = (username: string, oldPassword: string, newPassword: string, callback: (error: any, result: any) => void) => {
+    const cognitoUser = userPool.getCurrentUser();
+    if (cognitoUser) {
+      cognitoUser.changePassword(oldPassword, newPassword, (err, result) => {
+        if (err) {
+          console.error(err);
+          callback(err, null);
+          return;
+        }
+        console.log('Password changed successfully!', result);
+        callback(null, result);
+      });
+    } else {
+      console.error('User not authenticated!');
+      callback('User not authenticated!', null);
+    }
+  };
+
   const getCurrentUser = () => {
-    return userPool.getCurrentUser();
+    const result = userPool.getCurrentUser()?.getUsername();
+    return result;
   }
 
 
@@ -103,5 +122,5 @@ export const useAuth = () => {
     setIsLoggedIn(false);
   };
 
-  return { isLoggedIn, login, logout, signUp, refreshSession, getCurrentUser };
+  return { isLoggedIn, login, logout, signUp, refreshSession, getCurrentUser, changePassword };
 };
