@@ -33,7 +33,7 @@ export const useAuth = () => {
     });
   };
 
-  const changePassword = (username: string, oldPassword: string, newPassword: string, callback: (error: any, result: any) => void) => {
+  const changePassword = (oldPassword: string, newPassword: string, callback: (error: any, result: any) => void) => {
     const cognitoUser = userPool.getCurrentUser();
     if (cognitoUser) {
       cognitoUser.changePassword(oldPassword, newPassword, (err, result) => {
