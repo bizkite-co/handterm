@@ -29,7 +29,9 @@ export interface IHandTermProps {
       username: string, 
       password: string, 
       email: string, 
-      callback: (error: any, result: any) => void) => void;
+      callback: (error: any, result: any) => void
+    ) => void;
+    getCurrentUser: () => any;
     // Add other properties returned by useAuth here
   };
 }
@@ -243,7 +245,8 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     }
 
     if (command === 'profile'){
-      response = "Is logged in: " + this.props.auth.isLoggedIn;
+      const currentUser = this.props.auth.getCurrentUser();
+      response = "Is logged in: " + JSON.stringify(currentUser);
       console.log("profile", this.props.auth.isLoggedIn);
     }
 

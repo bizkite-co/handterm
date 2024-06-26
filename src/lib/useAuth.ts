@@ -1,3 +1,5 @@
+// src/lib/useAuth.ts
+
 import { useState } from 'react';
 import { CognitoUserPool, AuthenticationDetails, CognitoUser, CognitoUserAttribute, CognitoRefreshToken } from 'amazon-cognito-identity-js';
 
@@ -31,6 +33,11 @@ export const useAuth = () => {
     });
   };
 
+  const getCurrentUser = () => {
+    return userPool.getCurrentUser();
+  }
+
+
   const login = (username: string, password: string, callback: (error: any, result: any) => void) => {
     const authenticationDetails = new AuthenticationDetails({
       Username: username,
@@ -46,9 +53,15 @@ export const useAuth = () => {
       onSuccess: (session) => {
         console.log('Authentication successful!', session.getIdToken().getJwtToken());
         setIsLoggedIn(true);
-        // Decode the ID token to get user data
-        const idTokenPayload = session.getIdToken().decodePayload();
-        console.log("Username:", idTokenPayload['cognito:username']);
+        // Store tokens in sessionStorage
+        sessionStorage.setItem('idToken', session.getIdToken().getJwtToken());
+        sessionStorage.setItem('accessToken', session.getAccessToken().getJwtToken());
+        sessionStorage.setItem('refreshToken', session.getRefreshToken().getToken());
+        const refreshTokenTimeout = (
+          session.getIdToken().getExpiration() 
+          - Math.floor(Date.now() / 1000) - 300
+        ) * 1000;
+        setTimeout(refreshSession, refreshTokenTimeout);
         callback(null, session);
       },
       onFailure: (err) => {
@@ -90,5 +103,5 @@ export const useAuth = () => {
     setIsLoggedIn(false);
   };
 
-  return { isLoggedIn, login, logout, signUp, refreshSession };
+  return { isLoggedIn, login, logout, signUp, refreshSession, getCurrentUser };
 };
