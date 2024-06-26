@@ -591,7 +591,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
   }
 
   private createTimeCode(now = new Date()): string[] {
-    return now.toISOString('en-US', { hour12: false }).split(':');
+    return now.toISOString().split(':');
   }
 
   private createTimeHTML(time = new Date()): TimeHTML {
