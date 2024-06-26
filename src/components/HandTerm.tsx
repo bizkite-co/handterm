@@ -21,6 +21,17 @@ import { ChordDisplay } from './ChordDisplay';
 export interface IHandTermProps {
   // Define the interface for your HandexTerm logic
   terminalWidth: number;
+  auth: {
+    login: (username: string, password: string, callback: (error: any, result: any) => void) => void;
+    logout: () => void;
+    isLoggedIn: boolean;
+    signUp: (
+      username: string, 
+      password: string, 
+      email: string, 
+      callback: (error: any, result: any) => void) => void;
+    // Add other properties returned by useAuth here
+  };
 }
 
 export interface IHandTermState {
@@ -70,6 +81,22 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
   loadAchievements(): string[] {
     const storedAchievements = localStorage.getItem('achievements');
     return storedAchievements ? JSON.parse(storedAchievements) : [];
+  }
+
+  handleLogin = async (username: string, password: string) => {
+    try {
+      await this.props.auth.login(username, password, (error, result) => {
+        if (error) {
+          console.error("Login failed", error);
+          // Handle login failure here
+        }
+      });
+      console.log("Login successful");
+      // Handle post-login logic here
+    } catch (error) {
+      console.error("Login failed", error);
+      // Handle login failure here
+    }
   }
 
   saveAchievements(achievementPhrase: string) {
@@ -176,7 +203,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
         this.unlockAchievement(cmd);
       }
     }
-    const {command, args, switches} = this.parseCommand(cmd);
+    const { command, args, switches } = this.parseCommand(cmd);
     if (this.context) {
       const output = this.context
         .executeCommand(
@@ -214,6 +241,43 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       status = 200;
     }
 
+    if (command === 'profile'){
+      response = "Is logged in: " + this.props.auth.isLoggedIn;
+      console.log("profile", this.props.auth.isLoggedIn);
+    }
+
+    if (command === 'signup'){
+      response = "Signing up...";
+      const commandSlices = cmd.split(' ');
+      this.props.auth.signUp(commandSlices[1], commandSlices[2], commandSlices[3], (error, result) => {
+        if (error) {
+          console.error(error);
+          response = "Error signing up." + result;
+          status = 500;
+        }
+        else {
+          response = "Sign up successful!" + result;
+          status = 200;
+        }
+      })
+    }
+
+    if (command === 'login'){
+      response = "Logging in...";
+      const commandSlices = cmd.split(' ');
+      this.props.auth.login(commandSlices[1], commandSlices[2], (error: any, result: any) => {
+        if (error) {
+          console.error(error);
+          response = "Error logging in." + result;
+          status = 500;
+        }
+        else {
+          response = "Login successful!" + result;
+          status = 200;
+        }
+      })
+    }
+
     if (command.startsWith('level')) {
       if (!this.terminalGameRef.current) return;
       let levelNum = command.match(/\d+/);
@@ -232,6 +296,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       response = "Type the phrase as fast as you can."
       this.setNewPhrase(command);
     }
+
     if (command.startsWith('video')) {
       status = 200;
       const isOn = this.toggleVideo();
@@ -810,6 +875,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
                 onAddCharacter={this.handleCharacter}
                 onTouchStart={this.handleTouchStart}
                 onTouchEnd={this.handleTouchEnd}
+                onLogin={this.handleLogin}
               />
               {/* TODO: Move this into JSX in the WebCam component */}
               <video

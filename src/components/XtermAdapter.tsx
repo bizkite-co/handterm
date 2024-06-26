@@ -16,6 +16,7 @@ interface IXtermAdapterProps {
   onTouchStart: TouchEventHandler<HTMLDivElement>;
   onTouchEnd: TouchEventHandler<HTMLDivElement>;
   terminalFontSize: number;
+  onLogin: (username: string, password: string) => void;
 }
 
 export class XtermAdapter extends React.Component<IXtermAdapterProps, IXtermAdapterState> {
@@ -197,6 +198,42 @@ export class XtermAdapter extends React.Component<IXtermAdapterProps, IXtermAdap
     this.promptLength = promptText.length - 21;
     this.terminal.write(promptText);
     // this.promptLength = this.terminal.buffer.active.cursorX;
+  }
+  promptLogin() {
+    this.terminal.writeln('Welcome to Handex Term!');
+    this.terminal.writeln('Login:');
+    this.terminal.write('Username: ');
+    let username = '';
+    let password = '';
+    let isUsernameComplete = false;
+
+    this.terminal.onKey(({ key, domEvent }) => {
+      const char = domEvent.key;
+
+      if (key === 'Enter') { // Enter key
+        if (isUsernameComplete) {
+          // Here you would call the login function with username and password
+          // and handle the authentication result.
+          // For example:
+          // this.props.onLogin(username, password);
+          this.terminal.writeln('');
+        } else {
+          isUsernameComplete = true;
+          this.terminal.writeln('');
+          this.terminal.write('Password: ');
+        }
+      } else if (key.charCodeAt(0) === 127) {
+        if (this.isCursorOnPrompt()) return true;
+        this.terminal.write('\x1b[D\x1b[P');
+      } else {
+        // Append typed character to 'username' or 'password'
+        if (isUsernameComplete) {
+          password += char;
+        } else {
+          username += char;
+        }
+      }
+    });
   }
 
   public getTerminalSize(): { width: number; height: number } | undefined {

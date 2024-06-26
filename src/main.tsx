@@ -1,9 +1,15 @@
-import ReactDOM from 'react-dom/client';
-import './commands';
-import App from './App';
+import { Buffer } from 'buffer';
+window.Buffer = Buffer;
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  // <React.StrictMode>
-    <App />
-  /* </React.StrictMode> */
-)
+// Define 'global' if it's undefined (for browser environments)
+if (typeof global === 'undefined') {
+  window.global = window;
+}
+(async () => {
+  const ReactDOM = await import('react-dom/client');
+  const App = await import('./App');
+
+  ReactDOM.createRoot(document.getElementById('root')!).render(
+    <App.default />
+  );
+})();

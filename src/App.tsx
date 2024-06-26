@@ -3,6 +3,7 @@ import React, { useEffect, useRef } from 'react';
 import  HandTerm  from './components/HandTerm';
 import { CommandProvider } from './commands/CommandProvider';
 import { TerminalCssClasses } from './types/TerminalTypes';
+import { useAuth } from './lib/useAuth';
 
 const App = () => {
   const containerRef = React.createRef<HTMLDivElement>();
@@ -70,6 +71,7 @@ const App = () => {
       <div ref={containerRef}>
         <HandTerm
           ref={handexTermRef}
+          auth={useAuth()}
           terminalWidth={containerWidth}
         />
       </div>
