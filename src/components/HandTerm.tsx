@@ -26,9 +26,9 @@ export interface IHandTermProps {
     logout: () => void;
     isLoggedIn: boolean;
     signUp: (
-      username: string, 
-      password: string, 
-      email: string, 
+      username: string,
+      password: string,
+      email: string,
       callback: (error: any, result: any) => void
     ) => void;
     getCurrentUser: () => any;
@@ -79,6 +79,9 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
   private currentFontSize: number = 17;
   isShowVideo: any;
   outputRef = React.createRef<HTMLDivElement>();
+  private inLoginProcess: boolean = false;
+  private tempUserName: string = '';
+  private tempPassword: string = '';
 
   loadAchievements(): string[] {
     const storedAchievements = localStorage.getItem('achievements');
@@ -244,13 +247,13 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       status = 200;
     }
 
-    if (command === 'profile'){
+    if (command === 'profile') {
       const currentUser = this.props.auth.getCurrentUser();
       response = "Is logged in: " + JSON.stringify(currentUser);
       console.log("profile", this.props.auth.isLoggedIn);
     }
 
-    if (command === 'signup'){
+    if (command === 'signup') {
       response = "Signing up...";
       const commandSlices = cmd.split(' ');
       this.props.auth.signUp(commandSlices[1], commandSlices[2], commandSlices[3], (error, result) => {
@@ -266,20 +269,12 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       })
     }
 
-    if (command === 'login'){
+    if (command === 'login') {
       response = "Logging in...";
       const commandSlices = cmd.split(' ');
-      this.props.auth.login(commandSlices[1], commandSlices[2], (error: any, result: any) => {
-        if (error) {
-          console.error(error);
-          response = "Error logging in." + result;
-          status = 500;
-        }
-        else {
-          response = "Login successful!" + result;
-          status = 200;
-        }
-      })
+      this.inLoginProcess = true;
+      this.tempUserName = commandSlices[1];
+
     }
 
     if (command.startsWith('level')) {
@@ -337,6 +332,27 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
 
   public handleCharacter = (character: string) => {
     const charDuration: CharDuration = this.wpmCalculator.addKeystroke(character);
+    if (this.inLoginProcess) {
+      if (character === '\r') {
+        this.props.auth.login(this.tempUserName, this.tempPassword, (error: any, result: any) => {
+          if (error) {
+            console.error(error);
+          }
+          else {
+            this.terminalWrite("Login successful!" + result);
+          }
+          this.inLoginProcess = false;
+          this.tempPassword = '';
+          this.tempUserName = '';
+          this.terminalReset();
+        })
+      }
+      else {
+        this.tempPassword += character;
+        this.terminalWrite("*");
+        return;
+      }
+    }
     if (character.charCodeAt(0) === 3) { // Ctrl+C
       this.setState({ isInPhraseMode: false, commandLine: '' });
       this.adapterRef.current?.terminalReset();
@@ -575,7 +591,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
   }
 
   private createTimeCode(now = new Date()): string[] {
-    return now.toLocaleTimeString('en-US', { hour12: false }).split(':');
+    return now.toISOString('en-US', { hour12: false }).split(':');
   }
 
   private createTimeHTML(time = new Date()): TimeHTML {
