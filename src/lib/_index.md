@@ -21,3 +21,13 @@
 
 6. **Implement Logout Functionality:**
    - Provide a command that allows users to log out, which should invalidate the session tokens.
+
+```ts
+Cognito: {
+
+   authenticationFlowType: 'USER_PASSWORD_AUTH',
+   region: 'us-east-1',
+   userPoolId: 'us-east-1_apGvoR62E',
+   userPoolWebClientId: '776i4gt2nij7ce30m9jlo9fcq0',
+}
+``` 
