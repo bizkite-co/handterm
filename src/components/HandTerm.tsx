@@ -90,6 +90,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
           console.error("Login failed", error);
           // Handle login failure here
         }
+        console.log("Login successful", result);
       });
       console.log("Login successful");
       // Handle post-login logic here

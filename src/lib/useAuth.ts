@@ -74,7 +74,7 @@ export const useAuth = () => {
               console.error(refreshErr);
             } else {
               // Update state/session storage with new tokens
-              console.log('Session refreshed successfully.');
+              console.log('Session refreshed successfully.', newSession.getIdToken().getJwtToken());
               // Optionally decode new ID token for user data
             }
           });
@@ -90,5 +90,5 @@ export const useAuth = () => {
     setIsLoggedIn(false);
   };
 
-  return { isLoggedIn, login, logout, signUp };
+  return { isLoggedIn, login, logout, signUp, refreshSession };
 };
