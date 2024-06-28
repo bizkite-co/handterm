@@ -16,6 +16,7 @@ import { CommandContext } from '../commands/CommandContext';
 import { Achievement, Achievements } from '../types/Types';
 import { TutorialComponent } from './TutorialComponent';
 import { ChordDisplay } from './ChordDisplay';
+import axios from 'axios';
 
 
 export interface IHandTermProps {
@@ -118,6 +119,13 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     storedAchievements.push(achievementPhrase);
     localStorage.setItem('achievements', JSON.stringify(storedAchievements));
   }
+
+  saveDocument = async (documentData: any) => {
+    //  TODO: Replace this with your actual API endpoint
+    const API_BASE_URL = 'http://localhost:3000';
+    const response = await axios.post(`${API_BASE_URL}/saveDocument`, documentData);
+    return response.data; // Handle the response accordingly
+  };
 
   getNextAchievement(): Achievement | null {
     const unlockedAchievements = this.loadAchievements() || [];
