@@ -17,10 +17,10 @@ jobs:
           node-version: '20'  # Set this to the node version you prefer
 
       - name: Install dependencies
-        run: npm install  # or use yarn
+        run: yarn  # or use yarn
 
       - name: Build
-        run: npm run build  # or use yarn
+        run: yarn run build  # or use yarn
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
