@@ -91,6 +91,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
   private tempNewPassword: string = '';
   private isInChangePasswordMode: boolean = false;
 
+
   loadAchievements(): string[] {
     const storedAchievements = localStorage.getItem('achievements');
     return storedAchievements ? JSON.parse(storedAchievements) : [];
@@ -122,8 +123,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
 
   saveDocument = async (documentData: any) => {
     //  TODO: Replace this with your actual API endpoint
-    const API_BASE_URL = 'http://localhost:3000';
-    const response = await axios.post(`${API_BASE_URL}/saveDocument`, documentData);
+    const response = await axios.post(`${import.meta.env.VITE_API_URL}/saveDocument`, documentData);
     return response.data; // Handle the response accordingly
   };
 

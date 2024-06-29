@@ -7,6 +7,7 @@
   "scripts": {
     "build-lambda": "tsc --project lambda/handtermEdgeFunction/tsconfig.json",
     "build": "tsc",
+    "deploy": "yarn build && cdk deploy --region=us-east-1 --profile mark",
     "watch": "tsc -w",
     "test": "jest",
     "cdk": "cdk"
@@ -24,7 +25,9 @@
   "dependencies": {
     "@aws-cdk/aws-lambda": "^1.204.0",
     "aws-cdk-lib": "2.147.2",
+    "aws-sdk": "^2.1651.0",
     "constructs": "^10.0.0",
+    "dotenv": "^16.4.5",
     "source-map-support": "^0.5.21"
   }
 }
