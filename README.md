@@ -1,5 +1,19 @@
 # Handex Terminal
 
+## Development Setup
+
+* Vite
+* React
+* TypeScript
+
+This project uses [Yarn](https://yarnpkg.com/) for dependency management. Please ensure you have Yarn installed on your development machine.
+
+To install dependencies, run:
+
+```bash
+yarn
+```
+
 ## Roadmap
 
 * [ ] Introduction to the Handex and the SVG notation.

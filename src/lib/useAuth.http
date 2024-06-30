@@ -3,9 +3,9 @@ POST {{ $dotenv VITE_API_URL}}/signup HTTP/1.1
 content-type: application/json
 
 {
-"username": "mark@whywe.tech",
-"password": "FastTrack#1",
-"email": "mark@whywe.tech"
+"username": "mark+test@whywe.tech",
+"email": "mark+test@whywe.tech",
+"password": "FastTrack#1"
 }
 
 ### Sign In

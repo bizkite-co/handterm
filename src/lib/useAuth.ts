@@ -3,6 +3,11 @@ import axios from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
+const config = {
+headers: {
+  "Content-Type": "application/json",
+  }
+}
 export const useAuth = () => {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
 
@@ -14,7 +19,7 @@ export const useAuth = () => {
   const checkSession = async () => {
     try {
       // This could be a call to a `/session` endpoint that verifies the session
-      await axios.get(`${API_URL}/session`);
+      await axios.get(`${API_URL}/session`, config);
       setIsLoggedIn(true);
     } catch (error) {
       console.error('Session check failed:', error);
@@ -24,7 +29,7 @@ export const useAuth = () => {
 
   const signUp = async (username: string, password: string, email: string) => {
     try {
-      await axios.post(`${API_URL}/signUp`, { username, password, email });
+      await axios.post(`${API_URL}/signup`, { username, password, email }, config);
       // Handle post-signup logic (e.g., auto-login or redirect to login page)
     } catch (error) {
       console.error('Signup failed:', error);
@@ -34,7 +39,7 @@ export const useAuth = () => {
 
   const getCurrentUser = async () => {
     try {
-      const response = await axios.get(`${API_URL}/currentUser`);
+      const response = await axios.get(`${API_URL}/currentUser`, config);
       return response.data; // Contains username, attributes, etc.
     } catch (error) {
       console.error('Error fetching current user:', error);

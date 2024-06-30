@@ -271,7 +271,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     if (command === 'signup') {
       response = "Signing up...";
       const commandSlices = cmd.split(' ');
-      this.props.auth.signUp(commandSlices[1], commandSlices[2], commandSlices[3], (error, result) => {
+      this.props.auth.signUp(commandSlices[1], commandSlices[2], commandSlices[1], (error, result) => {
         if (error) {
           console.error(error);
           response = "Error signing up." + result;

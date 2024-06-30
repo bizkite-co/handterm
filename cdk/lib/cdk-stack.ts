@@ -15,7 +15,20 @@ const lambdaRuntime = lambda.Runtime.NODEJS_16_X;
 export class HandTermCdkStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
-
+    const corsConfig = {
+      allowOrigins: apigateway.Cors.ALL_ORIGINS, // Include both your production and local origins
+      allowMethods: apigateway.Cors.ALL_METHODS,
+      allowHeaders: [
+        'Content-Type',
+        'X-Amz-Date',
+        'Authorization',
+        'X-Api-Key',
+        'X-Requested-With',
+        'sec-ch-ua',
+        'sec-ch-ua-mobile',
+        'sec-ch-ua-platform'
+      ],
+    };
     // Cognito User Pool
     const userPool = new cognito.UserPool(this, 'HandTermUserPool', {
       userPoolName: 'HandTermUserPool',
@@ -38,16 +51,11 @@ export class HandTermCdkStack extends cdk.Stack {
       autoVerify: { email: true }
     });
 
-    // Assuming lambdaAtEdge is your authentication Lambda function
     const api = new apigateway.RestApi(this, 'HandTermApi', {
-      restApiName: 'HandTerm Service',
+      restApiName: 'HandTermService',
       description: 'This service serves authentication requests.',
       // Add default CORS options here
-      defaultCorsPreflightOptions: {
-        allowOrigins: ['https://handterm.com', 'http://localhost:3000'], // Include both your production and local origins
-        allowMethods: apigateway.Cors.ALL_METHODS,
-        allowHeaders: ['Content-Type', 'X-Amz-Date', 'Authorization', 'X-Api-Key', 'X-Requested-With'],
-      }
+      defaultCorsPreflightOptions: corsConfig,
     });
 
     // Assuming `api` is your RestApi object and `userPool` is your Cognito User Pool
