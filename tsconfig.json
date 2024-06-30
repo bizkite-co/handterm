@@ -1,3 +1,5 @@
+// tsconfig.json
+
 {
   "compilerOptions": {
     "baseUrl": "./",
@@ -6,6 +8,7 @@
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "skipLibCheck": true,
+    "outDir": "./dist",
 
     /* Bundler mode */
     "moduleResolution": "bundler",
@@ -23,6 +26,7 @@
   },
   "include": [
     "./src",
+    "./shared",
     "./src/types/elements.d.ts",
   ],
   "references": [{ "path": "./tsconfig.node.json" }]
