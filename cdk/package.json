@@ -6,7 +6,6 @@
     "cdk": "bin/cdk.js"
   },
   "scripts": {
-    "build-lambda": "tsc --project lambda/handtermEdgeFunction/tsconfig.json",
     "build": "tsc",
     "deploy": "yarn build && cdk deploy --region=us-east-1 --profile mark",
     "watch": "tsc -w",
