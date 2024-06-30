@@ -1,5 +1,5 @@
 // cdk/lib/cdk-stack.ts
-
+import {ENDPOINTS} from '../cdkshared/endpoints';
 import {
   aws_cognito as cognito,
   aws_s3 as s3,
@@ -86,7 +86,7 @@ export class HandTermCdkStack extends cdk.Stack {
 
     // S3 Bucket for User Logs
     const logsBucket = new s3.Bucket(this, 'HandTermHistoryBucket', {
-      bucketName: 'handterm-history',
+      bucketName: ENDPOINTS.aws.s3.bucketName,
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
       encryption: s3.BucketEncryption.S3_MANAGED,
     });
@@ -122,7 +122,7 @@ export class HandTermCdkStack extends cdk.Stack {
     });
 
     const tokenHandlerIntegration = new apigateway.LambdaIntegration(tokenHandlerLambda);
-    const authCallbackResource = api.root.addResource('auth');
+    const authCallbackResource = api.root.addResource(ENDPOINTS.api.TokenHandler);
 
     // Use the authorizer for your endpoint
     authCallbackResource.addMethod('GET', tokenHandlerIntegration, {
@@ -140,11 +140,35 @@ export class HandTermCdkStack extends cdk.Stack {
         COGNITO_APP_CLIENT_ID: userPoolClient.userPoolClientId,
       }
     });
-
-
     const signUpIntegration = new apigateway.LambdaIntegration(signUpLambda);
-    const signUpResource = api.root.addResource('signup');
+    const signUpResource = api.root.addResource(ENDPOINTS.api.SignUp);
     signUpResource.addMethod('POST', signUpIntegration);
+
+    const signInLambda = new lambda.Function(this, 'SignInFunction', {
+      runtime: lambdaRuntime,
+      handler: 'signIn.handler',
+      role: lambdaExecutionRole,
+      code: lambda.Code.fromAsset('lambda/authentication'),
+      environment: {
+        COGNITO_APP_CLIENT_ID: userPoolClient.userPoolClientId,
+      }
+    });
+    const signInIntegration = new apigateway.LambdaIntegration(signInLambda);
+    const signInResource = api.root.addResource(ENDPOINTS.api.SignIn);
+    signInResource.addMethod('POST', signInIntegration);
+
+    const changePasswordLambda = new lambda.Function(this, 'ChangePasswordFunction', {
+      runtime: lambdaRuntime,
+      handler: 'changePassword.handler',
+      role: lambdaExecutionRole,
+      code: lambda.Code.fromAsset('lambda/authentication'),
+      environment: {
+        COGNITO_APP_CLIENT_ID: userPoolClient.userPoolClientId,
+      }
+    });
+    const changePasswordIntegration = new apigateway.LambdaIntegration(changePasswordLambda);
+    const changePasswordResource = api.root.addResource(ENDPOINTS.api.ChangePassword);
+    changePasswordResource.addMethod('POST', changePasswordIntegration);
 
     // Outputs
     new cdk.CfnOutput(this, 'UserPoolId', { value: userPool.userPoolId });
