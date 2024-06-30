@@ -1,0 +1,551 @@
+repo_name: InTEGr8or/handex-react
+report_id: df1097a77917792f54b13e60b8bcab8b
+version: 0.1
+repo_type: Public
+timestamp: '2024-06-30T19:09:47+00:00'
+requested_by: InTEGr8or
+provider: github
+branch: master
+detected_tools_count: 41
+tools:
+- name: TypeScript
+  description: A superset of JavaScript that compiles to clean JavaScript output
+  website_url: http://www.typescriptlang.org
+  license: Apache-2.0
+  open_source: true
+  hosted_saas: false
+  category: Languages & Frameworks
+  sub_category: Languages
+  image_url: https://img.stackshare.io/service/1612/bynNY5dJ.jpg
+  detection_source_url: https://github.com/InTEGr8or/handex-react
+  detection_source: Repo Metadata
+- name: CSS 3
+  description: The latest evolution of the Cascading Style Sheets language
+  website_url: https://developer.mozilla.org/en-US/docs/Web/CSS/CSS3
+  open_source: true
+  hosted_saas: false
+  category: Languages & Frameworks
+  sub_category: Languages
+  image_url: https://img.stackshare.io/service/6727/css.png
+  detection_source_url: https://github.com/InTEGr8or/handex-react
+  detection_source: Repo Metadata
+- name: JavaScript
+  description: Lightweight, interpreted, object-oriented language with first-class
+    functions
+  website_url: https://developer.mozilla.org/en-US/docs/Web/JavaScript
+  open_source: true
+  hosted_saas: false
+  category: Languages & Frameworks
+  sub_category: Languages
+  image_url: https://img.stackshare.io/service/1209/javascript.jpeg
+  detection_source_url: https://github.com/InTEGr8or/handex-react
+  detection_source: Repo Metadata
+- name: ".NET"
+  description: A free, cross-platform, open source developer platform for building
+    many different types of applications
+  website_url: http://www.microsoft.com/net/
+  license: MIT
+  open_source: true
+  hosted_saas: false
+  category: Languages & Frameworks
+  sub_category: Frameworks (Full Stack)
+  image_url: https://img.stackshare.io/service/1014/IoPy1dce_400x400.png
+  detection_source_url: https://github.com/InTEGr8or/handex-react/blob/master/package.json
+  detection_source: package.json
+  last_updated_by: Mark Stouffer
+  last_updated_on: 2024-05-19 00:59:45.000000000 Z
+- name: Node.js
+  description: A platform built on Chrome's JavaScript runtime for easily building
+    fast, scalable network applications
+  website_url: http://nodejs.org/
+  open_source: true
+  hosted_saas: false
+  category: Languages & Frameworks
+  sub_category: Frameworks (Full Stack)
+  image_url: https://img.stackshare.io/service/1011/n1JRsFeB_400x400.png
+  detection_source_url: https://github.com/InTEGr8or/handex-react/blob/master/cdk/package.json
+  detection_source: cdk/package.json
+  last_updated_by: Mark Stouffer
+  last_updated_on: 2024-06-28 17:07:20.000000000 Z
+- name: React
+  description: A JavaScript library for building user interfaces
+  website_url: https://reactjs.org/
+  version: 18.3.1
+  license: MIT
+  open_source: true
+  hosted_saas: false
+  category: Libraries
+  sub_category: Javascript UI Libraries
+  image_url: https://img.stackshare.io/service/1020/OYIaJ1KK.png
+  detection_source_url: https://github.com/InTEGr8or/handex-react/blob/master/yarn.lock
+  detection_source: package.json
+  last_updated_by: Mark Stouffer
+  last_updated_on: 2024-06-29 21:05:18.000000000 Z
+- name: Dotenv
+  description: Loads environment variables from .env for Nodejs projects
+  website_url: https://github.com/motdotla/dotenv
+  license: BSD-2-Clause
+  open_source: true
+  hosted_saas: false
+  category: Build, Test, Deploy
+  sub_category: Server Configuration and Automation
+  image_url: https://img.stackshare.io/service/8067/default_90dcb1286af7685c68df319c764b80704df1155b.png
+  detection_source_url: https://github.com/InTEGr8or/handex-react/blob/master/cdk/package.json
+  detection_source: cdk/package.json
+  last_updated_by: Mark Stouffer
+  last_updated_on: 2024-06-29 21:05:18.000000000 Z
+- name: ESLint
+  description: The fully pluggable JavaScript code quality tool
+  website_url: http://eslint.org/
+  license: MIT
+  open_source: true
+  hosted_saas: false
+  category: Build, Test, Deploy
+  sub_category: Code Review
+  image_url: https://img.stackshare.io/service/3337/Q4L7Jncy.jpg
+  detection_source_url: https://github.com/InTEGr8or/handex-react/blob/master/package.json
+  detection_source: package.json
+  last_updated_by: Mark Stouffer
+  last_updated_on: 2024-05-19 00:59:45.000000000 Z
+- name: Git
+  description: Fast, scalable, distributed revision control system
+  website_url: http://git-scm.com/
+  open_source: true
+  hosted_saas: false
+  category: Build, Test, Deploy
+  sub_category: Version Control System
+  image_url: https://img.stackshare.io/service/1046/git.png
+  detection_source_url: https://github.com/InTEGr8or/handex-react
+  detection_source: Repo Metadata
+- name: GitHub Actions
+  description: Automate your workflow from idea to production
+  website_url: https://github.com/features/actions
+  open_source: false
+  hosted_saas: true
+  category: Build, Test, Deploy
+  sub_category: Continuous Integration
+  image_url: https://img.stackshare.io/service/11563/actions.png
+  detection_source_url: https://github.com/InTEGr8or/handex-react/blob/master/.github/workflows/deploy.yml
+  detection_source: ".github/workflows/deploy.yml"
+  last_updated_by: Mark Stouffer
+  last_updated_on: 2024-05-27 19:11:10.000000000 Z
+- name: Jest
+  description: Painless JavaScript Unit Testing
+  website_url: http://facebook.github.io/jest/
+  version: 29.7.0
+  license: MIT
+  open_source: true
+  hosted_saas: false
+  category: Build, Test, Deploy
+  sub_category: Javascript Testing Framework
+  image_url: https://img.stackshare.io/service/830/jest.png
+  detection_source_url: https://github.com/InTEGr8or/handex-react/blob/master/cdk/yarn.lock
+  detection_source: cdk/package.json
+  last_updated_by: Mark Stouffer
+  last_updated_on: 2024-06-28 17:07:20.000000000 Z
+- name: NuGet
+  description: The package manager for .NET
+  website_url: https://www.nuget.org/
+  open_source: false
+  hosted_saas: false
+  category: Build, Test, Deploy
+  sub_category: Package Managers
+  image_url: https://img.stackshare.io/service/2637/6I3oEOP4_400x400.jpg
+  detection_source_url: https://github.com/InTEGr8or/handex-react/blob/master/package.json
+  detection_source: package.json
+  last_updated_by: Mark Stouffer
+  last_updated_on: 2024-05-19 00:59:45.000000000 Z
+- name: Vite
+  description: Native-ESM powered web dev build tool
+  website_url: https://vitejs.dev/
+  license: MIT
+  open_source: true
+  hosted_saas: false
+  category: Build, Test, Deploy
+  sub_category: JS Build Tools / JS Task Runners
+  image_url: https://img.stackshare.io/service/21547/default_1aeac791cde11ff66cc0b20dcc6144eeb185c905.png
+  detection_source_url: https://github.com/InTEGr8or/handex-react/blob/master/package.json
+  detection_source: package.json
+  last_updated_by: Mark Stouffer
+  last_updated_on: 2024-05-19 00:59:45.000000000 Z
+- name: Yarn
+  description: A new package manager for JavaScript
+  website_url: https://yarnpkg.com/
+  open_source: true
+  hosted_saas: false
+  category: Build, Test, Deploy
+  sub_category: Front End Package Manager
+  image_url: https://img.stackshare.io/service/5848/44mC-kJ3.jpg
+  detection_source_url: https://github.com/InTEGr8or/handex-react/blob/master/cdk/yarn.lock
+  detection_source: cdk/yarn.lock
+  last_updated_by: Mark Stouffer
+  last_updated_on: 2024-06-28 17:07:20.000000000 Z
+- name: npm
+  description: The package manager for JavaScript.
+  website_url: https://www.npmjs.com/
+  open_source: false
+  hosted_saas: false
+  category: Build, Test, Deploy
+  sub_category: Front End Package Manager
+  image_url: https://img.stackshare.io/service/1120/lejvzrnlpb308aftn31u.png
+  detection_source_url: https://github.com/InTEGr8or/handex-react/blob/master/package.json
+  detection_source: package.json
+  last_updated_by: Mark Stouffer
+  last_updated_on: 2024-05-19 00:59:45.000000000 Z
+- name: AWS Lambda
+  description: Automatically run code in response to modifications to objects in Amazon
+    S3 buckets, messages in Kinesis streams, or updates in DynamoDB
+  website_url: http://aws.amazon.com/lambda
+  open_source: false
+  hosted_saas: true
+  category: Application Hosting
+  sub_category: Serverless / Task Processing
+  image_url: https://img.stackshare.io/service/1909/aws-lambda.png
+  detection_source_url: https://github.com/InTEGr8or/handex-react/blob/master/cdk/package.json
+  detection_source: cdk/package.json
+  last_updated_by: Mark Stouffer
+  last_updated_on: 2024-06-28 17:07:20.000000000 Z
+- name: Buffer
+  description: The easiest way to schedule tweets, Facebook posts and more
+  website_url: https://bufferapp.com/
+  open_source: false
+  hosted_saas: true
+  category: Support, Sales, and Marketing
+  sub_category: Social Media Tools
+  image_url: https://img.stackshare.io/service/825/hnc3q-7x.jpg
+  detection_source_url: https://github.com/InTEGr8or/handex-react/blob/master/package.json
+  detection_source: package.json
+  last_updated_by: Mark Stouffer
+  last_updated_on: 2024-06-26 00:29:10.000000000 Z
+- name: Jupyter
+  description: Multi-language interactive computing environments.
+  website_url: http://jupyter.org
+  license: BSD-3-Clause
+  open_source: true
+  hosted_saas: false
+  category: Application Utilities
+  sub_category: Data Science Notebooks
+  image_url: https://img.stackshare.io/service/4190/fGBUdNf__400x400.jpg
+  detection_source_url: https://github.com/InTEGr8or/handex-react
+  detection_source: Repo Metadata
+- name: PowerShell
+  description: A task automation and configuration management framework
+  website_url: https://docs.microsoft.com/en-us/powershell/
+  open_source: false
+  hosted_saas: false
+  category: Languages & Frameworks
+  sub_category: Languages
+  image_url: https://img.stackshare.io/service/3681/powershell-logo.png
+  detection_source_url: https://github.com/InTEGr8or/handex-react
+  detection_source: Repo Metadata
+- name: axios
+  description: Promise based HTTP client for the browser and node.js
+  website_url: https://github.com/mzabriskie/axios
+  version: 1.7.2
+  license: MIT
+  open_source: true
+  hosted_saas: false
+  category: Libraries
+  sub_category: Javascript Utilities & Libraries
+  image_url: https://img.stackshare.io/no-img-open-source.png
+  detection_source_url: https://github.com/InTEGr8or/handex-react/blob/master/yarn.lock
+  detection_source: package.json
+  last_updated_by: Mark Stouffer
+  last_updated_on: 2024-06-28 17:07:20.000000000 Z
+- name: "@testing-library/react"
+  description: Simple and complete React DOM testing utilities that encourage good
+    testing practices
+  package_url: https://www.npmjs.com/@testing-library/react
+  version: 16.0.0
+  license: MIT
+  open_source: true
+  hosted_saas: false
+  category: Libraries
+  sub_category: npm Packages
+  image_url: https://img.stackshare.io/package/16549/default_d522554c6a41cb28d922d6d3ad32ad4afa0e3bb5.png
+  detection_source_url: https://github.com/InTEGr8or/handex-react/blob/master/yarn.lock
+  detection_source: package.json
+  last_updated_by: Mark Stouffer
+  last_updated_on: 2024-06-29 21:05:18.000000000 Z
+- name: "@testing-library/react-hooks"
+  description: Simple and complete React hooks testing utilities that encourage good
+    testing practices
+  package_url: https://www.npmjs.com/@testing-library/react-hooks
+  version: 8.0.1
+  license: MIT
+  open_source: true
+  hosted_saas: false
+  category: Libraries
+  sub_category: npm Packages
+  image_url: https://img.stackshare.io/package/17877/default_d41d3b5a213e129d6ea411e77eecb13f54b6aea5.png
+  detection_source_url: https://github.com/InTEGr8or/handex-react/blob/master/yarn.lock
+  detection_source: package.json
+  last_updated_by: Mark Stouffer
+  last_updated_on: 2024-06-29 21:05:18.000000000 Z
+- name: "@types/aws-lambda"
+  description: TypeScript definitions for AWS Lambda
+  package_url: https://www.npmjs.com/@types/aws-lambda
+  version: 8.10.140
+  license: MIT
+  open_source: true
+  hosted_saas: false
+  category: Libraries
+  sub_category: npm Packages
+  image_url: https://img.stackshare.io/package/17868/default_b760b4f955878b0055c02bde0608c2f01e7d4f4f.png
+  detection_source_url: https://github.com/InTEGr8or/handex-react/blob/master/cdk/yarn.lock
+  detection_source: cdk/package.json
+  last_updated_by: Mark Stouffer
+  last_updated_on: 2024-06-29 21:05:18.000000000 Z
+- name: "@types/jest"
+  description: TypeScript definitions for Jest
+  package_url: https://www.npmjs.com/@types/jest
+  version: 29.5.12
+  license: MIT
+  open_source: true
+  hosted_saas: false
+  category: Libraries
+  sub_category: npm Packages
+  image_url: https://img.stackshare.io/package/15840/default_004658cda9b38934f2871435e9dc15608c86e8be.png
+  detection_source_url: https://github.com/InTEGr8or/handex-react/blob/master/cdk/yarn.lock
+  detection_source: cdk/package.json
+  last_updated_by: Mark Stouffer
+  last_updated_on: 2024-06-28 17:07:20.000000000 Z
+- name: "@types/node"
+  description: TypeScript definitions for Node.js
+  package_url: https://www.npmjs.com/@types/node
+  version: 20.14.2
+  license: MIT
+  open_source: true
+  hosted_saas: false
+  category: Libraries
+  sub_category: npm Packages
+  image_url: https://img.stackshare.io/package/15809/default_5e5e8ac63beda29f31f1844df64d4b8247570a66.png
+  detection_source_url: https://github.com/InTEGr8or/handex-react/blob/master/cdk/yarn.lock
+  detection_source: cdk/package.json
+  last_updated_by: Mark Stouffer
+  last_updated_on: 2024-06-28 17:07:20.000000000 Z
+- name: "@types/react"
+  description: TypeScript definitions for React
+  package_url: https://www.npmjs.com/@types/react
+  version: 18.3.3
+  license: MIT
+  open_source: true
+  hosted_saas: false
+  category: Libraries
+  sub_category: npm Packages
+  image_url: https://img.stackshare.io/package/15894/default_1d65e37e65b7f80761374f0202776043277d505d.png
+  detection_source_url: https://github.com/InTEGr8or/handex-react/blob/master/yarn.lock
+  detection_source: package.json
+  last_updated_by: Mark Stouffer
+  last_updated_on: 2024-06-29 21:05:18.000000000 Z
+- name: "@types/react-dom"
+  description: TypeScript definitions for React
+  package_url: https://www.npmjs.com/@types/react-dom
+  version: 18.3.0
+  license: MIT
+  open_source: true
+  hosted_saas: false
+  category: Libraries
+  sub_category: npm Packages
+  image_url: https://img.stackshare.io/package/15946/default_54b691c123fc8979741e800e4dcd3936c0f3b246.png
+  detection_source_url: https://github.com/InTEGr8or/handex-react/blob/master/yarn.lock
+  detection_source: package.json
+  last_updated_by: Mark Stouffer
+  last_updated_on: 2024-06-29 21:05:18.000000000 Z
+- name: "@typescript-eslint/eslint-plugin"
+  description: TypeScript plugin for ESLint
+  package_url: https://www.npmjs.com/@typescript-eslint/eslint-plugin
+  version: 7.13.0
+  license: MIT
+  open_source: true
+  hosted_saas: false
+  category: Libraries
+  sub_category: npm Packages
+  image_url: https://img.stackshare.io/package/15982/default_8b5680d4e916298d08363c291a0d6e34c07ceb15.png
+  detection_source_url: https://github.com/InTEGr8or/handex-react/blob/master/yarn.lock
+  detection_source: package.json
+  last_updated_by: Mark Stouffer
+  last_updated_on: 2024-06-17 02:29:06.000000000 Z
+- name: "@typescript-eslint/parser"
+  description: An ESLint custom parser which leverages TypeScript ESTree
+  package_url: https://www.npmjs.com/@typescript-eslint/parser
+  version: 7.13.0
+  license: BSD-2-Clause
+  open_source: true
+  hosted_saas: false
+  category: Libraries
+  sub_category: npm Packages
+  image_url: https://img.stackshare.io/package/15980/default_732016a20524708efe7a4c77497fe9bfeea19ba6.png
+  detection_source_url: https://github.com/InTEGr8or/handex-react/blob/master/yarn.lock
+  detection_source: package.json
+  last_updated_by: Mark Stouffer
+  last_updated_on: 2024-06-17 02:29:06.000000000 Z
+- name: aws-sdk
+  description: AWS SDK for JavaScript
+  package_url: https://www.npmjs.com/aws-sdk
+  version: 2.1651.0
+  license: Apache-2.0
+  open_source: true
+  hosted_saas: false
+  category: Libraries
+  sub_category: npm Packages
+  image_url: https://img.stackshare.io/package/16018/default_7a88bebb451873cc63bd99007de5bd3bb8ef85de.png
+  detection_source_url: https://github.com/InTEGr8or/handex-react/blob/master/cdk/yarn.lock
+  detection_source: cdk/package.json
+  last_updated_by: Mark Stouffer
+  last_updated_on: 2024-06-29 21:05:18.000000000 Z
+- name: canvas
+  description: Canvas graphics API backed by Cairo
+  package_url: https://www.npmjs.com/canvas
+  version: 2.11.2
+  license: MIT
+  open_source: true
+  hosted_saas: false
+  category: Libraries
+  sub_category: npm Packages
+  image_url: https://img.stackshare.io/package/16664/default_783b9b6c17b863f264c1418b0eb831316f741afd.png
+  detection_source_url: https://github.com/InTEGr8or/handex-react/blob/master/yarn.lock
+  detection_source: package.json
+  last_updated_by: Mark Stouffer
+  last_updated_on: 2024-06-16 06:00:44.000000000 Z
+- name: eslint-plugin-react-hooks
+  description: ESLint rules for React Hooks
+  package_url: https://www.npmjs.com/eslint-plugin-react-hooks
+  version: 4.6.2
+  license: MIT
+  open_source: true
+  hosted_saas: false
+  category: Libraries
+  sub_category: npm Packages
+  image_url: https://img.stackshare.io/package/16149/default_1f3a2fc7d882e29a43394ecdf491b8989ea3f0fa.png
+  detection_source_url: https://github.com/InTEGr8or/handex-react/blob/master/yarn.lock
+  detection_source: package.json
+  last_updated_by: Mark Stouffer
+  last_updated_on: 2024-06-29 21:05:18.000000000 Z
+- name: glob
+  description: A little globber
+  package_url: https://www.npmjs.com/glob
+  version: 7.2.3
+  license: ISC
+  open_source: true
+  hosted_saas: false
+  category: Libraries
+  sub_category: npm Packages
+  image_url: https://img.stackshare.io/package/15875/default_7c39a83d4acd952df89b1ebfdb94c8646324fbf1.png
+  detection_source_url: https://github.com/InTEGr8or/handex-react/blob/master/cdk/yarn.lock
+  detection_source: package.json
+  last_updated_by: Mark Stouffer
+  last_updated_on: 2024-06-17 02:29:06.000000000 Z
+- name: react-docgen
+  description: A CLI and toolkit to extract information from React components for
+    documentation generation
+  package_url: https://www.npmjs.com/react-docgen
+  version: 7.0.3
+  license: MIT
+  open_source: true
+  hosted_saas: false
+  category: Libraries
+  sub_category: npm Packages
+  image_url: https://img.stackshare.io/package/16818/default_9a5182350af29cb82b3344853e865051f508ac6c.png
+  detection_source_url: https://github.com/InTEGr8or/handex-react/blob/master/yarn.lock
+  detection_source: package.json
+  last_updated_by: Mark Stouffer
+  last_updated_on: 2024-06-29 21:05:18.000000000 Z
+- name: react-dom
+  description: React package for working with the DOM
+  package_url: https://www.npmjs.com/react-dom
+  version: 18.3.1
+  license: MIT
+  open_source: true
+  hosted_saas: false
+  category: Libraries
+  sub_category: npm Packages
+  image_url: https://img.stackshare.io/package/15808/default_14fd11531839d935f920b6d55bd6f3528c890ad7.png
+  detection_source_url: https://github.com/InTEGr8or/handex-react/blob/master/yarn.lock
+  detection_source: package.json
+  last_updated_by: Mark Stouffer
+  last_updated_on: 2024-06-29 21:05:18.000000000 Z
+- name: recast
+  description: JavaScript syntax tree transformer
+  package_url: https://www.npmjs.com/recast
+  version: 0.23.9
+  license: MIT
+  open_source: true
+  hosted_saas: false
+  category: Libraries
+  sub_category: npm Packages
+  image_url: https://img.stackshare.io/package/17195/default_183829c5079b84333a720d8590a328efc043ba0e.png
+  detection_source_url: https://github.com/InTEGr8or/handex-react/blob/master/yarn.lock
+  detection_source: package.json
+  last_updated_by: Mark Stouffer
+  last_updated_on: 2024-06-26 00:29:10.000000000 Z
+- name: source-map-support
+  description: Fixes stack traces for files with source maps
+  package_url: https://www.npmjs.com/source-map-support
+  version: 0.5.13
+  license: MIT
+  open_source: true
+  hosted_saas: false
+  category: Libraries
+  sub_category: npm Packages
+  image_url: https://img.stackshare.io/package/16028/default_c7b204838197013798409fa2b4dafce450edc7fb.png
+  detection_source_url: https://github.com/InTEGr8or/handex-react/blob/master/cdk/yarn.lock
+  detection_source: cdk/package.json
+  last_updated_by: Mark Stouffer
+  last_updated_on: 2024-06-28 17:07:20.000000000 Z
+- name: ts-jest
+  description: A preprocessor with source maps support to help use TypeScript with
+    Jest
+  package_url: https://www.npmjs.com/ts-jest
+  version: 29.1.5
+  license: MIT
+  open_source: true
+  hosted_saas: false
+  category: Libraries
+  sub_category: npm Packages
+  image_url: https://img.stackshare.io/package/15864/default_6743ba96cf149a3c3c68a185199f9705d6eff80e.png
+  detection_source_url: https://github.com/InTEGr8or/handex-react/blob/master/cdk/yarn.lock
+  detection_source: cdk/package.json
+  last_updated_by: Mark Stouffer
+  last_updated_on: 2024-06-28 17:07:20.000000000 Z
+- name: ts-node
+  description: TypeScript execution environment and REPL for node.js
+  package_url: https://www.npmjs.com/ts-node
+  version: 10.9.2
+  license: MIT
+  open_source: true
+  hosted_saas: false
+  category: Libraries
+  sub_category: npm Packages
+  image_url: https://img.stackshare.io/package/15830/default_6743ba96cf149a3c3c68a185199f9705d6eff80e.png
+  detection_source_url: https://github.com/InTEGr8or/handex-react/blob/master/cdk/yarn.lock
+  detection_source: cdk/package.json
+  last_updated_by: Mark Stouffer
+  last_updated_on: 2024-06-28 17:07:20.000000000 Z
+- name: typedoc
+  description: Create api documentation for TypeScript projects
+  package_url: https://www.npmjs.com/typedoc
+  version: 0.25.13
+  license: Apache-2.0
+  open_source: true
+  hosted_saas: false
+  category: Libraries
+  sub_category: npm Packages
+  image_url: https://img.stackshare.io/package/15983/default_8b5680d4e916298d08363c291a0d6e34c07ceb15.png
+  detection_source_url: https://github.com/InTEGr8or/handex-react/blob/master/yarn.lock
+  detection_source: package.json
+  last_updated_by: Mark Stouffer
+  last_updated_on: 2024-06-17 02:29:06.000000000 Z
+- name: vite
+  description: Native-ESM powered web dev build tool
+  package_url: https://www.npmjs.com/vite
+  version: 5.3.1
+  open_source: false
+  hosted_saas: false
+  category: Build, Test, Deploy
+  sub_category: Package Managers
+  image_url: https://img.stackshare.io/package/npm/image.png
+  detection_source_url: https://github.com/InTEGr8or/handex-react/blob/master/yarn.lock
+  detection_source: package.json
+  last_updated_by: Mark Stouffer
+  last_updated_on: 2024-05-27 19:11:10.000000000 Z
