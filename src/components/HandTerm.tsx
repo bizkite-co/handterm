@@ -375,7 +375,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     if (this.isInChangePasswordMode) {
       if (character === '\r') {
 
-        this.props.auth.changePassword(this.tempPassword, this.tempNewPassword, (error: any, result: any) => {
+        this.props.auth.changePassword(this.getTempPassword(), this.tempNewPassword, (error: any, result: any) => {
           if (error) {
             console.error(error);
           }
@@ -388,7 +388,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       }
       else {
 
-        this.tempPassword += character;
+        this.appendTempPassword(character);
         this.terminalWrite("*");
         return;
       }
