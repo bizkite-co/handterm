@@ -28,6 +28,7 @@ export class XtermAdapter extends React.Component<IXtermAdapterProps, IXtermAdap
   private fitAddon = new FitAddon();
   private isDebug: boolean = false;
   private onDataDisposable: import("@xterm/xterm").IDisposable | null = null;
+  private tempPassword: string = '';
 
   constructor(props: IXtermAdapterProps) {
     super(props);
@@ -56,6 +57,15 @@ export class XtermAdapter extends React.Component<IXtermAdapterProps, IXtermAdap
     // Logic to focus the terminal goes here
     this.terminal.focus();
     this.terminal.scrollToBottom();
+  }
+  public appendTempPassword(passwordChar: string) {
+    this.tempPassword += passwordChar; 
+  }
+  public resetTempPassword() {
+    this.tempPassword = '';
+  }
+  public getTempPassword() {
+    return this.tempPassword;
   }
 
   terminalReset(): void {
@@ -122,6 +132,7 @@ export class XtermAdapter extends React.Component<IXtermAdapterProps, IXtermAdap
     let result = false;
     if (data.charCodeAt(0) === 127) {
       if (this.isCursorOnPrompt()) return true;
+      this.tempPassword = this.tempPassword.slice(0, -1);
       this.terminal.write('\x1b[D\x1b[P');
       result = true;
     }

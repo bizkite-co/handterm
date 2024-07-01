@@ -31,6 +31,9 @@ export const useAuth = () => {
   };
 
   const signUp = async (username: string, password: string, email: string) => {
+    if (!username || !password || !email) {
+      throw new Error('All fields are required');
+    }
     try {
       await axios.post(`${API_URL}/${ENDPOINTS.api.SignUp}`, { username, password, email }, config);
       // Handle post-signup logic (e.g., auto-login or redirect to login page)
@@ -50,9 +53,13 @@ export const useAuth = () => {
     }
   };
   const signIn = async (username: string, password: string) => {
+    if( !username || !password) {
+      throw new Error('All fields are required');
+    }
     try {
       const response = await axios.post(`${API_URL}/${ENDPOINTS.api.SignIn}`, { username, password });
       // The API should set an HttpOnly cookie directly, no need to handle tokens here
+      console.log('Login successful:', response.data);
       setIsLoggedIn(true);
       return response.data; // Return session data if needed
     } catch (error) {

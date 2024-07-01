@@ -1,18 +1,25 @@
 // cdk/lambda/authentication/signUp.ts
 
-const AWS = require('aws-sdk');
+import * as AWS from 'aws-sdk';
+
 const cognito = new AWS.CognitoIdentityServiceProvider({ region: 'us-east-1' });
 
 exports.handler = async (event: { body: string; }) => {
-  console.log("signUp function called");
-  console.log('Received event:', event); // Log the incoming event
+  console.log('Signup received event:', event); // Log the incoming event
+
+  const body = typeof event.body === 'string' ? JSON.parse(event.body) : event.body;
 
   try {
-    const { username, password, email } = JSON.parse(event.body);
-    console.log(`Processing signUp for username: ${username}, email: ${email}`); // Log the extracted variables
+    // Check if event.body is a string and parse it, otherwise, use it directly
+    const { username, password, email } = body;
 
+    console.log(`Processing signUp for username: ${body}`); // Log the extracted variables
+    const clientId = process.env.COGNITO_APP_CLIENT_ID;
+    if (!clientId) {
+      throw new Error('COGNITO_APP_CLIENT_ID environment variable is not set.');
+    }
     var params = {
-      ClientId: process.env.COGNITO_APP_CLIENT_ID,
+      ClientId: clientId,
       Username: username,
       Password: password,
       UserAttributes: [
@@ -22,7 +29,7 @@ exports.handler = async (event: { body: string; }) => {
         },
       ],
     };
-
+    body.params = params;
     const data = await cognito.signUp(params).promise();
     console.log('SignUp success:', JSON.stringify(data)); // Log successful signup
     // Include CORS headers in the successful response
@@ -43,7 +50,7 @@ exports.handler = async (event: { body: string; }) => {
         "Access-Control-Allow-Origin": "*", // Adjust this value based on your requirements
         "Access-Control-Allow-Credentials": true, // If your client needs to handle cookies
       },
-      body: JSON.stringify(err.message)
+      body: JSON.stringify({ error: err.message, request: body })
     };
   }
 };

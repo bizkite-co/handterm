@@ -87,7 +87,6 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
   outputRef = React.createRef<HTMLDivElement>();
   private inLoginProcess: boolean = false;
   private tempUserName: string = '';
-  private tempPassword: string = '';
   private tempNewPassword: string = '';
   private isInChangePasswordMode: boolean = false;
 
@@ -287,9 +286,13 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     if (command === 'login') {
       response = "Logging in...";
       const commandSlices = cmd.split(' ');
-      this.inLoginProcess = true;
-      this.tempUserName = commandSlices[1];
-
+      if (commandSlices.length < 2) {
+        response = "Please provide a username.";
+        status = 400;
+      } else {
+        this.inLoginProcess = true;
+        this.tempUserName = commandSlices[1];
+      }
     }
 
     if (command.startsWith('level')) {
@@ -349,7 +352,8 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     const charDuration: CharDuration = this.wpmCalculator.addKeystroke(character);
     if (this.inLoginProcess) {
       if (character === '\r') {
-        this.props.auth.login(this.tempUserName, this.tempPassword, (error: any, result: any) => {
+
+        this.props.auth.login(this.tempUserName, this.getTempPassword(), (error: any, result: any) => {
           if (error) {
             console.error(error);
           }
@@ -357,13 +361,13 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
             this.terminalWrite("Login successful!" + JSON.stringify(result));
           }
           this.inLoginProcess = false;
-          this.tempPassword = '';
+          this.resetTempPassword();
           this.tempUserName = '';
           this.terminalReset();
         })
       }
       else {
-        this.tempPassword += character;
+        this.appendTempPassword(character);
         this.terminalWrite("*");
         return;
       }
@@ -761,6 +765,16 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
 
   private terminalWrite(data: string): void {
     this.adapterRef.current?.terminalWrite(data);
+  }
+
+  private appendTempPassword(password: string): void {
+    this.adapterRef.current?.appendTempPassword(password);
+  }
+  private resetTempPassword(): void {
+    this.adapterRef.current?.resetTempPassword();
+  }
+  private getTempPassword(): string {
+    return this.adapterRef.current?.getTempPassword() || '';
   }
 
   private loadFontSize(): void {

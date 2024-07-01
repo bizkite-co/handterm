@@ -1,5 +1,5 @@
 // cdk/lib/cdk-stack.ts
-import {ENDPOINTS} from '../cdkshared/endpoints';
+import { ENDPOINTS } from '../cdkshared/endpoints';
 import {
   aws_cognito as cognito,
   aws_s3 as s3,
@@ -69,6 +69,7 @@ export class HandTermCdkStack extends cdk.Stack {
     const userPoolClient = userPool.addClient('AppClient', {
       authFlows: {
         userSrp: true,
+        userPassword: true // Enable USER_PASSWORD_AUTH flow
       },
       generateSecret: false,
       // Add your API Gateway endpoint URL to the list of callback URLs

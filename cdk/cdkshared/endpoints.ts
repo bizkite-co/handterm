@@ -11,16 +11,16 @@ export const ENDPOINTS = {
         },
     },
     api: {
-        SignUp: '/signUp',
-        GetLog: '/getLog',
-        SaveLog: '/saveLog',
-        SignIn: '/signIn',
-        SignOut: '/signOut',
-        ChangePassword: '/changePassword',
-        TokenHandler: '/tokenHandler',
-        RefreshSession: '/refreshSession',
-        CheckSession: '/checkSession',
-        GetUser: '/getUser',
+        SignUp: 'signUp',
+        GetLog: 'getLog',
+        SaveLog: 'saveLog',
+        SignIn: 'signIn',
+        SignOut: 'signOut',
+        ChangePassword: 'changePassword',
+        TokenHandler: 'tokenHandler',
+        RefreshSession: 'refreshSession',
+        CheckSession: 'checkSession',
+        GetUser: 'getUser',
     }
 
 } as const

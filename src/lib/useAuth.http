@@ -1,18 +1,19 @@
+
 ### Sign Up
-POST {{ $dotenv VITE_API_URL}}/signup HTTP/1.1
+POST {{ $dotenv VITE_API_URL }}/signUp HTTP/1.1
 content-type: application/json
 
 {
-"username": "mark+test@whywe.tech",
-"email": "mark+test@whywe.tech",
-"password": "FastTrack#1"
+  "username": "mark+10@whywe.tech",
+  "email": "mark+10@whywe.tech",
+  "password": "Pass_w0rd"
 }
 
 ### Sign In
-POST {{dotenv VITE_API_URL}}/signin HTTP/1.1
+POST {{ $dotenv VITE_API_URL }}/signIn HTTP/1.1
 content-type: application/json
 
 {
-  "username": "testuser",
-  "password": "TestPassword1!"
+  "username": "mark+11@whywe.tech",
+  "password": "Pass_w0rd"
 }
