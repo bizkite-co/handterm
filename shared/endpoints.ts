@@ -7,20 +7,20 @@ export const ENDPOINTS = {
         },
         s3: {
             url: 'https://s3.amazonaws.com',
-            bucketName: 'handterm-history',
+            bucketName: 'handterm',
         },
     },
     api: {
-        SignUp: 'signUp',
-        GetLog: 'getLog',
-        SaveLog: 'saveLog',
-        SignIn: 'signIn',
-        SignOut: 'signOut',
-        ChangePassword: 'changePassword',
-        TokenHandler: 'tokenHandler',
-        RefreshSession: 'refreshSession',
-        CheckSession: 'checkSession',
-        GetUser: 'getUser',
+        SignUp: '/signUp',
+        GetLog: '/getLog',
+        SaveLog: '/saveLog',
+        SignIn: '/signIn',
+        SignOut: '/signOut',
+        ChangePassword: '/changePassword',
+        TokenHandler: '/tokenHandler',
+        RefreshSession: '/refreshSession',
+        CheckSession: '/checkSession',
+        GetUser: '/getUser',
     }
 
 } as const

@@ -38,6 +38,7 @@ exports.handler = async (event: { body: string; }) => {
       headers: {
         "Access-Control-Allow-Origin": "*", // Adjust this value based on your requirements
         "Access-Control-Allow-Credentials": true, // If your client needs to handle cookies
+        
       },
       body: JSON.stringify(data)
     };

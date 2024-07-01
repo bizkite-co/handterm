@@ -52,6 +52,7 @@ export const useAuth = () => {
       return null;
     }
   };
+
   const signIn = async (username: string, password: string) => {
     if( !username || !password) {
       throw new Error('All fields are required');

@@ -4,8 +4,8 @@ POST {{ $dotenv VITE_API_URL }}/signUp HTTP/1.1
 content-type: application/json
 
 {
-  "username": "mark+10@whywe.tech",
-  "email": "mark+10@whywe.tech",
+  "username": "mark+2@whywe.tech",
+  "email": "mark+2@whywe.tech",
   "password": "Pass_w0rd"
 }
 
@@ -14,6 +14,6 @@ POST {{ $dotenv VITE_API_URL }}/signIn HTTP/1.1
 content-type: application/json
 
 {
-  "username": "mark+11@whywe.tech",
+  "username": "mark+1@whywe.tech",
   "password": "Pass_w0rd"
 }

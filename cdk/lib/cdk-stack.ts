@@ -5,30 +5,33 @@ import {
   aws_s3 as s3,
   aws_lambda as lambda,
   aws_iam as iam,
-  aws_apigateway as apigateway,
+  aws_apigatewayv2 as apigatewayv2,
+  aws_apigatewayv2_integrations as apigatewayv2Integrations,
+  App,
+  CfnOutput,
+  Stack,
+  StackProps
 } from "aws-cdk-lib";
 import { Construct } from 'constructs';
-import * as cdk from 'aws-cdk-lib';
+import { HttpMethod, HttpApi, CorsHttpMethod } from 'aws-cdk-lib/aws-apigatewayv2';
+import { HttpLambdaIntegration } from 'aws-cdk-lib/aws-apigatewayv2-integrations'; // This path is illustrative and likely incorrect
+import { HttpUserPoolAuthorizer } from 'aws-cdk-lib/aws-apigatewayv2-authorizers';
 
-const lambdaRuntime = lambda.Runtime.NODEJS_16_X;
+const nodeRuntime = lambda.Runtime.NODEJS_16_X;
 
-export class HandTermCdkStack extends cdk.Stack {
-  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
+export class HandTermCdkStack extends Stack {
+  constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
-    const corsConfig = {
-      allowOrigins: apigateway.Cors.ALL_ORIGINS, // Include both your production and local origins
-      allowMethods: apigateway.Cors.ALL_METHODS,
-      allowHeaders: [
-        'Content-Type',
-        'X-Amz-Date',
-        'Authorization',
-        'X-Api-Key',
-        'X-Requested-With',
-        'sec-ch-ua',
-        'sec-ch-ua-mobile',
-        'sec-ch-ua-platform'
-      ],
-    };
+    const allowHeaders = [
+      'Content-Type',
+      'X-Amz-Date',
+      'Authorization',
+      'X-Api-Key',
+      'X-Requested-With',
+      'sec-ch-ua',
+      'sec-ch-ua-mobile',
+      'sec-ch-ua-platform'
+    ];
     // Cognito User Pool
     const userPool = new cognito.UserPool(this, 'HandTermUserPool', {
       userPoolName: 'HandTermUserPool',
@@ -50,20 +53,14 @@ export class HandTermCdkStack extends cdk.Stack {
       },
       autoVerify: { email: true }
     });
-
-    const api = new apigateway.RestApi(this, 'HandTermApi', {
-      restApiName: 'HandTermService',
-      description: 'This service serves authentication requests.',
-      // Add default CORS options here
-      defaultCorsPreflightOptions: corsConfig,
+    
+    // TODO: Remove this before production. This is only to make signup easier during development
+    const preSignupLambda = new lambda.Function(this, 'PreSignupLambda', {
+      runtime: nodeRuntime,
+      handler: 'preSignup.handler',
+      code: lambda.Code.fromAsset('lambda/authentication'),
     });
-
-    // Assuming `api` is your RestApi object and `userPool` is your Cognito User Pool
-    const cognitoAuthorizer = new apigateway.CognitoUserPoolsAuthorizer(this, 'CognitoAuthorizer', {
-      cognitoUserPools: [userPool],
-      identitySource: 'method.request.header.Authorization',
-      authorizerName: 'CognitoAuthorizer'
-    });
+    userPool.addTrigger(cognito.UserPoolOperation.PRE_SIGN_UP, preSignupLambda);
 
     // Cognito User Pool Client
     const userPoolClient = userPool.addClient('AppClient', {
@@ -75,6 +72,18 @@ export class HandTermCdkStack extends cdk.Stack {
       // Add your API Gateway endpoint URL to the list of callback URLs
     });
 
+    // Define the HTTP API
+    const httpApi = new HttpApi(this, 'HandTermApi', {
+      apiName: 'HandTermService',
+      description: 'This service serves authentication requests.',
+      // CORS configuration if needed
+      corsPreflight: {
+        allowOrigins: ['*'],
+        allowMethods: [CorsHttpMethod.GET, CorsHttpMethod.POST, CorsHttpMethod.OPTIONS],
+        allowHeaders: ['Content-Type', 'Authorization'],
+      },
+    });
+
     // Cognito Identity Pool
     const identityPool = new cognito.CfnIdentityPool(this, 'HandTermIdentityPool', {
       identityPoolName: 'HandTermIdentityPool',
@@ -84,6 +93,9 @@ export class HandTermCdkStack extends cdk.Stack {
         providerName: userPool.userPoolProviderName,
       }],
     });
+
+    // Assuming `api` is your HttpApi object and `userPool` is your Cognito User Pool
+    const cognitoAuthorizer = new HttpUserPoolAuthorizer('CognitoAuthorizer', userPool);
 
     // S3 Bucket for User Logs
     const logsBucket = new s3.Bucket(this, 'HandTermHistoryBucket', {
@@ -112,28 +124,8 @@ export class HandTermCdkStack extends cdk.Stack {
       ],
     });
 
-    const tokenHandlerLambda = new lambda.Function(this, 'TokenHandlerFunction', {
-      runtime: lambda.Runtime.NODEJS_16_X,
-      handler: 'tokenHandler.handler',
-      role: tokenLambdaRole,
-      code: lambda.Code.fromAsset('lambda/tokenHandler'),
-      environment: {
-        COGNITO_APP_CLIENT_ID: userPoolClient.userPoolClientId,
-      }
-    });
-
-    const tokenHandlerIntegration = new apigateway.LambdaIntegration(tokenHandlerLambda);
-    const authCallbackResource = api.root.addResource(ENDPOINTS.api.TokenHandler);
-
-    // Use the authorizer for your endpoint
-    authCallbackResource.addMethod('GET', tokenHandlerIntegration, {
-      authorizer: cognitoAuthorizer,
-      authorizationType: apigateway.AuthorizationType.COGNITO,
-    });
-
-
     const signUpLambda = new lambda.Function(this, 'SignUpFunction', {
-      runtime: lambdaRuntime,
+      runtime: nodeRuntime,
       handler: 'signUp.handler',
       role: lambdaExecutionRole,
       code: lambda.Code.fromAsset('lambda/authentication'),
@@ -141,12 +133,15 @@ export class HandTermCdkStack extends cdk.Stack {
         COGNITO_APP_CLIENT_ID: userPoolClient.userPoolClientId,
       }
     });
-    const signUpIntegration = new apigateway.LambdaIntegration(signUpLambda);
-    const signUpResource = api.root.addResource(ENDPOINTS.api.SignUp);
-    signUpResource.addMethod('POST', signUpIntegration);
+    const signUpIntegration = new HttpLambdaIntegration('signup-integration', signUpLambda);
+    httpApi.addRoutes({
+      path: ENDPOINTS.api.SignUp,
+      methods: [HttpMethod.POST],
+      integration: signUpIntegration,
+    })
 
     const signInLambda = new lambda.Function(this, 'SignInFunction', {
-      runtime: lambdaRuntime,
+      runtime: nodeRuntime,
       handler: 'signIn.handler',
       role: lambdaExecutionRole,
       code: lambda.Code.fromAsset('lambda/authentication'),
@@ -154,12 +149,18 @@ export class HandTermCdkStack extends cdk.Stack {
         COGNITO_APP_CLIENT_ID: userPoolClient.userPoolClientId,
       }
     });
-    const signInIntegration = new apigateway.LambdaIntegration(signInLambda);
-    const signInResource = api.root.addResource(ENDPOINTS.api.SignIn);
-    signInResource.addMethod('POST', signInIntegration);
+    httpApi.addRoutes({
+      path: ENDPOINTS.api.SignIn,
+      methods: [HttpMethod.POST],
+      authorizer: cognitoAuthorizer,
+      integration: new HttpLambdaIntegration(
+        'post-user-signin',
+        signInLambda
+      ),
+    })
 
     const changePasswordLambda = new lambda.Function(this, 'ChangePasswordFunction', {
-      runtime: lambdaRuntime,
+      runtime: nodeRuntime,
       handler: 'changePassword.handler',
       role: lambdaExecutionRole,
       code: lambda.Code.fromAsset('lambda/authentication'),
@@ -167,18 +168,39 @@ export class HandTermCdkStack extends cdk.Stack {
         COGNITO_APP_CLIENT_ID: userPoolClient.userPoolClientId,
       }
     });
-    const changePasswordIntegration = new apigateway.LambdaIntegration(changePasswordLambda);
-    const changePasswordResource = api.root.addResource(ENDPOINTS.api.ChangePassword);
-    changePasswordResource.addMethod('POST', changePasswordIntegration);
+    const changePasswordIntegration = new HttpLambdaIntegration('change-password-integration', changePasswordLambda);
+    httpApi.addRoutes({
+      path: ENDPOINTS.api.ChangePassword,
+      methods: [HttpMethod.POST],
+      authorizer: cognitoAuthorizer,
+      integration: changePasswordIntegration,
+    })
+
+    const getUserLambda = new lambda.Function(this, 'GetUserFunction', {
+      runtime: nodeRuntime,
+      handler: 'getUser.handler',
+      role: lambdaExecutionRole,
+      code: lambda.Code.fromAsset('lambda/authentication'),
+      environment: {
+        COGNITO_APP_CLIENT_ID: userPoolClient.userPoolClientId,
+      }
+    });
+    const getUserIntegration = new HttpLambdaIntegration('get-user-integration', getUserLambda);
+    httpApi.addRoutes({
+      path: ENDPOINTS.api.GetUser,
+      methods: [HttpMethod.GET],
+      authorizer: cognitoAuthorizer,
+      integration: getUserIntegration,
+    })
 
     // Outputs
-    new cdk.CfnOutput(this, 'UserPoolId', { value: userPool.userPoolId });
-    new cdk.CfnOutput(this, 'UserPoolClientId', { value: userPoolClient.userPoolClientId });
-    new cdk.CfnOutput(this, 'IdentityPoolId', { value: identityPool.ref });
-    new cdk.CfnOutput(this, 'BucketName', { value: logsBucket.bucketName });
-    new cdk.CfnOutput(this, 'ApiEndpoint', { value: api.url });
+    new CfnOutput(this, 'UserPoolId', { value: userPool.userPoolId });
+    new CfnOutput(this, 'UserPoolClientId', { value: userPoolClient.userPoolClientId });
+    new CfnOutput(this, 'IdentityPoolId', { value: identityPool.ref });
+    new CfnOutput(this, 'BucketName', { value: logsBucket.bucketName });
+    new CfnOutput(this, 'ApiEndpoint', { value: httpApi.url || '' });
   }
 }
 
-const app = new cdk.App();
+const app = new App();
 new HandTermCdkStack(app, 'HandTermCdkStack');
