@@ -1,15 +1,17 @@
 // cdk/lambda/authentication/signIn.ts
 import * as AWS from 'aws-sdk';
 const cognito = new AWS.CognitoIdentityServiceProvider({ region: 'us-east-1' });
+
+const allowedOrigins = ['http://localhost:5173', 'https://handterm.com'];
+
+
 exports.handler = async (event: { body: string }) => {
   const body = typeof event.body === 'string' ? JSON.parse(event.body) : event.body;
   console.log('SignIn body:', body);
-  let response = {statusCode: 400, headers: {}, body: '', log: new Array<string>()};
   try {
     const { username, password } = body;
     // Ensure ClientId is a string and not undefined
     const clientId = process.env.COGNITO_APP_CLIENT_ID;
-    response.log.push(`ClientId: ${clientId}`);
     if (!clientId) {
       throw new Error('COGNITO_APP_CLIENT_ID environment variable is not set.');
     }
@@ -37,28 +39,28 @@ exports.handler = async (event: { body: string }) => {
     }
 
     // Concatenate the Set-Cookie strings into a single header value
-    const setCookieHeader = [
-      `idToken=${IdToken}; Secure; HttpOnly; Path=/`,
-      `accessToken=${AccessToken}; Secure; HttpOnly; Path=/`,
-      `refreshToken=${RefreshToken}; Secure; HttpOnly; Path=/`
-    ].join(', ');
-    response.body = JSON.stringify(data.AuthenticationResult);
-    response.statusCode = 200;
-    response.headers = {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Credentials": true,
-      "Set-Cookie": setCookieHeader,
-    }
+    const response = {
+      statusCode: 200,
+      body: JSON.stringify(data.AuthenticationResult),
+      cookies: [
+        `idToken=${IdToken}; Secure; HttpOnly; Path=/`,
+        `accessToken=${AccessToken}; Secure; HttpOnly; Path=/`,
+        `refreshToken=${RefreshToken}; Secure; HttpOnly; Path=/`
+      ]
+      // Note: No need to set 'Set-Cookie' in headers manually
+    };
     return response;
   } catch (err: any) {
     console.error('SignIn error:', err);
-    response.statusCode = 400;
-    response.headers = {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Credentials": true,
+    const response = {
+      statusCode: 500,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Credentials": true,
+      },
+      body: JSON.stringify(err.message),
+      error: err
     };
-    response.body = JSON.stringify(err.message);
-    response.log.push(err.message);
 
     return response;
   }

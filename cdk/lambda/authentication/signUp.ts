@@ -35,11 +35,6 @@ exports.handler = async (event: { body: string; }) => {
     // Include CORS headers in the successful response
     return {
       statusCode: 200,
-      headers: {
-        "Access-Control-Allow-Origin": "*", // Adjust this value based on your requirements
-        "Access-Control-Allow-Credentials": true, // If your client needs to handle cookies
-        
-      },
       body: JSON.stringify(data)
     };
   } catch (err: any) {

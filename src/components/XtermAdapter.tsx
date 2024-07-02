@@ -16,7 +16,6 @@ interface IXtermAdapterProps {
   onTouchStart: TouchEventHandler<HTMLDivElement>;
   onTouchEnd: TouchEventHandler<HTMLDivElement>;
   terminalFontSize: number;
-  onLogin: (username: string, password: string) => void;
 }
 
 export class XtermAdapter extends React.Component<IXtermAdapterProps, IXtermAdapterState> {
@@ -225,8 +224,6 @@ export class XtermAdapter extends React.Component<IXtermAdapterProps, IXtermAdap
         if (isUsernameComplete) {
           // Here you would call the login function with username and password
           // and handle the authentication result.
-          // For example:
-          // this.props.onLogin(username, password);
           this.terminal.writeln('');
         } else {
           isUsernameComplete = true;

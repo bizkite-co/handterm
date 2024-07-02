@@ -32,7 +32,7 @@ export interface IHandTermProps {
       email: string,
       callback: (error: any, result: any) => void
     ) => void;
-    getCurrentUser: () => any;
+    getUser: () => any;
     changePassword: (
       oldPassword: string,
       newPassword: string,
@@ -94,23 +94,6 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
   loadAchievements(): string[] {
     const storedAchievements = localStorage.getItem('achievements');
     return storedAchievements ? JSON.parse(storedAchievements) : [];
-  }
-
-  handleLogin = async (username: string, password: string) => {
-    try {
-      await this.props.auth.login(username, password, (error, result) => {
-        if (error) {
-          console.error("Login failed", error);
-          // Handle login failure here
-        }
-        console.log("Login successful", JSON.stringify(result));
-      });
-      console.log("Login successful");
-      // Handle post-login logic here
-    } catch (error) {
-      console.error("Login failed", error);
-      // Handle login failure here
-    }
   }
 
   saveAchievements(achievementPhrase: string) {
@@ -262,7 +245,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     }
 
     if (command === 'profile') {
-      const currentUser = this.props.auth.getCurrentUser();
+      const currentUser = this.props.auth.getUser();
       response = "Is logged in: " + JSON.stringify(currentUser);
       console.log("profile", this.props.auth.isLoggedIn);
     }
@@ -352,7 +335,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     const charDuration: CharDuration = this.wpmCalculator.addKeystroke(character);
     if (this.inLoginProcess) {
       if (character === '\r') {
-
+        this.inLoginProcess = false;
         this.props.auth.login(this.tempUserName, this.getTempPassword(), (error: any, result: any) => {
           if (error) {
             console.error(error);
@@ -360,7 +343,6 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
           else {
             this.terminalWrite("Login successful!" + JSON.stringify(result));
           }
-          this.inLoginProcess = false;
           this.resetTempPassword();
           this.tempUserName = '';
           this.terminalReset();
@@ -945,7 +927,6 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
                 onAddCharacter={this.handleCharacter}
                 onTouchStart={this.handleTouchStart}
                 onTouchEnd={this.handleTouchEnd}
-                onLogin={this.handleLogin}
               />
               {/* TODO: Move this into JSX in the WebCam component */}
               <video

@@ -15,7 +15,6 @@ import {
 import { Construct } from 'constructs';
 import { HttpMethod, HttpApi, CorsHttpMethod } from 'aws-cdk-lib/aws-apigatewayv2';
 import { HttpLambdaIntegration } from 'aws-cdk-lib/aws-apigatewayv2-integrations'; // This path is illustrative and likely incorrect
-import { HttpUserPoolAuthorizer } from 'aws-cdk-lib/aws-apigatewayv2-authorizers';
 
 const nodeRuntime = lambda.Runtime.NODEJS_16_X;
 
@@ -78,9 +77,10 @@ export class HandTermCdkStack extends Stack {
       description: 'This service serves authentication requests.',
       // CORS configuration if needed
       corsPreflight: {
-        allowOrigins: ['*'],
+        allowOrigins: ['http://localhost:5173', 'https://handterm.com'],
         allowMethods: [CorsHttpMethod.GET, CorsHttpMethod.POST, CorsHttpMethod.OPTIONS],
         allowHeaders: ['Content-Type', 'Authorization'],
+        allowCredentials: true,
       },
     });
 
@@ -93,9 +93,6 @@ export class HandTermCdkStack extends Stack {
         providerName: userPool.userPoolProviderName,
       }],
     });
-
-    // Assuming `api` is your HttpApi object and `userPool` is your Cognito User Pool
-    const cognitoAuthorizer = new HttpUserPoolAuthorizer('CognitoAuthorizer', userPool);
 
     // S3 Bucket for User Logs
     const logsBucket = new s3.Bucket(this, 'HandTermHistoryBucket', {
@@ -152,7 +149,6 @@ export class HandTermCdkStack extends Stack {
     httpApi.addRoutes({
       path: ENDPOINTS.api.SignIn,
       methods: [HttpMethod.POST],
-      authorizer: cognitoAuthorizer,
       integration: new HttpLambdaIntegration(
         'post-user-signin',
         signInLambda
@@ -172,7 +168,6 @@ export class HandTermCdkStack extends Stack {
     httpApi.addRoutes({
       path: ENDPOINTS.api.ChangePassword,
       methods: [HttpMethod.POST],
-      authorizer: cognitoAuthorizer,
       integration: changePasswordIntegration,
     })
 
@@ -189,7 +184,6 @@ export class HandTermCdkStack extends Stack {
     httpApi.addRoutes({
       path: ENDPOINTS.api.GetUser,
       methods: [HttpMethod.GET],
-      authorizer: cognitoAuthorizer,
       integration: getUserIntegration,
     })
 

@@ -7,10 +7,12 @@ import { ENDPOINTS } from '../../shared/endpoints';
 const API_URL = import.meta.env.VITE_API_URL;
 
 const config = {
-headers: {
-  "Content-Type": "application/json",
-  }
-}
+  headers: {
+    "Content-Type": "application/json",
+  },
+  withCredentials: true, // Correctly positioned and boolean value
+};
+
 export const useAuth = () => {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
 
@@ -22,7 +24,7 @@ export const useAuth = () => {
   const checkSession = async () => {
     try {
       // This could be a call to a `/session` endpoint that verifies the session
-      await axios.get(`${API_URL}/${ENDPOINTS.api.CheckSession}`, config);
+      await axios.get(`${API_URL}${ENDPOINTS.api.CheckSession}`, config);
       setIsLoggedIn(true);
     } catch (error) {
       console.error('Session check failed:', error);
@@ -35,7 +37,7 @@ export const useAuth = () => {
       throw new Error('All fields are required');
     }
     try {
-      await axios.post(`${API_URL}/${ENDPOINTS.api.SignUp}`, { username, password, email }, config);
+      await axios.post(`${API_URL}${ENDPOINTS.api.SignUp}`, { username, password, email }, config);
       // Handle post-signup logic (e.g., auto-login or redirect to login page)
     } catch (error) {
       console.error('Signup failed:', error);
@@ -43,9 +45,9 @@ export const useAuth = () => {
     }
   };
 
-  const getCurrentUser = async () => {
+  const getUser = async () => {
     try {
-      const response = await axios.get(`${API_URL}/${ENDPOINTS.api.GetUser}`, config);
+      const response = await axios.get(`${API_URL}${ENDPOINTS.api.GetUser}`, config);
       return response.data; // Contains username, attributes, etc.
     } catch (error) {
       console.error('Error fetching current user:', error);
@@ -54,11 +56,11 @@ export const useAuth = () => {
   };
 
   const signIn = async (username: string, password: string) => {
-    if( !username || !password) {
+    if (!username || !password) {
       throw new Error('All fields are required');
     }
     try {
-      const response = await axios.post(`${API_URL}/${ENDPOINTS.api.SignIn}`, { username, password });
+      const response = await axios.post(`${API_URL}${ENDPOINTS.api.SignIn}`, { username, password });
       // The API should set an HttpOnly cookie directly, no need to handle tokens here
       console.log('Login successful:', response.data);
       setIsLoggedIn(true);
@@ -71,7 +73,7 @@ export const useAuth = () => {
 
   const signOut = async () => {
     try {
-      await axios.get(`${API_URL}/${ENDPOINTS.api.SignOut}`);
+      await axios.get(`${API_URL}${ENDPOINTS.api.SignOut}`);
       setIsLoggedIn(false);
     } catch (error) {
       console.error('Logout failed:', error);
@@ -82,7 +84,7 @@ export const useAuth = () => {
   const refreshSession = async () => {
     try {
       // This endpoint should refresh the session and set a new HttpOnly cookie
-      await axios.post(`${API_URL}/${ENDPOINTS.api.RefreshSession}`);
+      await axios.post(`${API_URL}${ENDPOINTS.api.RefreshSession}`);
       setIsLoggedIn(true);
     } catch (error) {
       console.error('Session refresh failed:', error);
@@ -93,12 +95,12 @@ export const useAuth = () => {
 
   const changePassword = async (oldPassword: string, newPassword: string) => {
     try {
-      await axios.post(`${API_URL}/${ENDPOINTS.api.ChangePassword}`, { oldPassword, newPassword });
+      await axios.post(`${API_URL}${ENDPOINTS.api.ChangePassword}`, { oldPassword, newPassword });
     } catch (error) {
       console.error('Password change failed:', error);
       throw error;
     }
   };
 
-  return { isLoggedIn, login: signIn, logout: signOut, signUp, refreshSession, getCurrentUser, checkSession, changePassword };
+  return { isLoggedIn, login: signIn, logout: signOut, signUp, refreshSession, getUser, checkSession, changePassword };
 };

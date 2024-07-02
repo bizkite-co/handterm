@@ -4,6 +4,8 @@ import * as AWS from 'aws-sdk';
 
 const cognito = new AWS.CognitoIdentityServiceProvider({ region: 'us-east-1' });
 
+const allowedOrigins = ['http://localhost:5173', 'https://handterm.com'];
+
 exports.handler = async (event: { body: string }) => {
   const body = typeof event.body === 'string' ? JSON.parse(event.body) : event.body;
   try {
@@ -19,8 +21,7 @@ exports.handler = async (event: { body: string }) => {
     return {
       statusCode: 200,
       headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Credentials": true,
+        "Set-Cookie": `accessToken=${accessToken}; HttpOnly; Secure; Path=/;`,
       },
       body: JSON.stringify({ message: 'Password changed successfully' }),
     };
