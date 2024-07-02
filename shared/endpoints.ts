@@ -11,6 +11,7 @@ export const ENDPOINTS = {
         },
     },
     api: {
+        BaseUrl: 'https://x7jzrjfuv8.execute-api.us-east-1.amazonaws.com',
         SignUp: '/signUp',
         GetLog: '/getLog',
         SaveLog: '/saveLog',

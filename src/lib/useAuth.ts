@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { ENDPOINTS } from '../../shared/endpoints';
 
-const API_URL = import.meta.env.VITE_API_URL;
+const API_URL = ENDPOINTS.api.BaseUrl;
 
 const config = {
   headers: {

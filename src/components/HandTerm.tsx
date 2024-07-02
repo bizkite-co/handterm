@@ -17,6 +17,7 @@ import { Achievement, Achievements } from '../types/Types';
 import { TutorialComponent } from './TutorialComponent';
 import { ChordDisplay } from './ChordDisplay';
 import axios from 'axios';
+import { ENDPOINTS } from 'shared/endpoints';
 
 
 export interface IHandTermProps {
@@ -105,7 +106,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
 
   saveDocument = async (documentData: any) => {
     //  TODO: Replace this with your actual API endpoint
-    const response = await axios.post(`${import.meta.env.VITE_API_URL}/saveDocument`, documentData);
+    const response = await axios.post(`${ENDPOINTS.api.BaseUrl}/saveDocument`, documentData);
     return response.data; // Handle the response accordingly
   };
 
