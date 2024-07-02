@@ -47,6 +47,7 @@ export const useAuth = () => {
 
   const getUser = async () => {
     try {
+      debugger;
       const response = await axios.get(`${API_URL}${ENDPOINTS.api.GetUser}`, config);
       return response.data; // Contains username, attributes, etc.
     } catch (error) {
