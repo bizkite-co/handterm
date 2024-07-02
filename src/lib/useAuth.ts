@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { ENDPOINTS } from '../../shared/endpoints';
+import { ENDPOINTS } from '../shared/endpoints';
 
 const API_URL = ENDPOINTS.api.BaseUrl;
 
