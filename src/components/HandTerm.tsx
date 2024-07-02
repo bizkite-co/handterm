@@ -17,7 +17,7 @@ import { Achievement, Achievements } from '../types/Types';
 import { TutorialComponent } from './TutorialComponent';
 import { ChordDisplay } from './ChordDisplay';
 import axios from 'axios';
-import { ENDPOINTS } from 'src/shared/endpoints';
+import { ENDPOINTS } from '../shared/endpoints';
 
 
 export interface IHandTermProps {
