@@ -4,14 +4,17 @@ import * as AWS from 'aws-sdk';
 
 const s3 = new AWS.S3();
 
-exports.handler = async (event: { body: string; }) => {
-    const { logData, userId } = JSON.parse(event.body); // Example payload
+exports.handler = async (event:any) => {
+    console.log('event', event);
+    const userId = event.requestContext.authorizer.userId;
+
+    const { logData } = JSON.parse(event.body); // Example payload
     const bucketName = 'handterm';
 
     try {
         await s3.putObject({
             Bucket: bucketName,
-            Key: `logs/${userId}/${Date.now()}.txt`,
+            Key: `logs/${userId}/${Date.now()}.json`,
             Body: logData,
         }).promise();
 

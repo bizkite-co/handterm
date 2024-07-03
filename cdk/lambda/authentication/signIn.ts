@@ -43,11 +43,10 @@ exports.handler = async (event: { body: string }) => {
       statusCode: 200,
       body: JSON.stringify(data.AuthenticationResult),
       cookies: [
-        `idToken=${IdToken}; Secure; HttpOnly; Path=/`,
-        `accessToken=${AccessToken}; Secure; HttpOnly; Path=/`,
-        `refreshToken=${RefreshToken}; Secure; HttpOnly; Path=/`
+        `idToken=${IdToken}; SameSite=None; Secure; Path=/`,
+        `accessToken=${AccessToken}; SameSite=None; Secure; Path=/`,
+        `refreshToken=${RefreshToken}; SameSite=None; Secure; Path=/`
       ]
-      // Note: No need to set 'Set-Cookie' in headers manually
     };
     return response;
   } catch (err: any) {

@@ -22,6 +22,6 @@ export const ENDPOINTS = {
         RefreshSession: '/refreshSession',
         CheckSession: '/checkSession',
         GetUser: '/getUser',
+        SetUser: '/setUser',
     }
-
 } as const

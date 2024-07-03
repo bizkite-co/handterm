@@ -45,9 +45,36 @@ export const useAuth = () => {
     }
   };
 
+  const getAuthConfig = () => {
+      // Retrieve the Access Token from localStorage
+      const accessToken = localStorage.getItem('AccessToken');
+      if (!accessToken) {
+        throw new Error('No access token found');
+      }
+      // Include the Access Token in the Authorization header
+      const authConfig = {
+        ...config, // Spread the existing config to keep content-type
+        headers: {
+          ...config.headers, // Spread any existing headers
+          'Authorization': `Bearer ${accessToken}` // Add the Authorization header with the Access Token
+        }
+      };
+      return authConfig;
+  }
+
+  const setUser = async (profile: string) => {
+    // Set the user profile string for the current logged in user
+    try {
+      await axios.post(`${API_URL}${ENDPOINTS.api.SetUser}`, { profile }, getAuthConfig());
+    } catch (error) {
+      console.error('Error setting user profile:', error);
+    }
+  }
+
   const getUser = async () => {
     try {
-      const response = await axios.get(`${API_URL}${ENDPOINTS.api.GetUser}`, config);
+      // Make the request with the Access Token
+      const response = await axios.get(`${API_URL}${ENDPOINTS.api.GetUser}`, getAuthConfig());
       return response.data; // Contains username, attributes, etc.
     } catch (error) {
       console.error('Error fetching current user:', error);
@@ -64,6 +91,13 @@ export const useAuth = () => {
       // The API should set an HttpOnly cookie directly, no need to handle tokens here
       console.log('Login successful:', response.data);
       setIsLoggedIn(true);
+      localStorage.setItem('AccessToken', response.data.AccessToken);
+      localStorage.setItem('RefreshToken', response.data.RefreshToken);
+      localStorage.setItem('IdToken', response.data.IdToken);
+      localStorage.setItem(
+        'ExpiresAt',
+        (new Date().getTime() + response.data.ExpiresIn * 1000).toString(10)
+      );
       return response.data; // Return session data if needed
     } catch (error) {
       console.error('Login failed:', error);
@@ -102,5 +136,5 @@ export const useAuth = () => {
     }
   };
 
-  return { isLoggedIn, login: signIn, logout: signOut, signUp, refreshSession, getUser, checkSession, changePassword };
+  return { isLoggedIn, login: signIn, logout: signOut, signUp, refreshSession, getUser, checkSession, changePassword, setUser };
 };

@@ -34,6 +34,7 @@ export interface IHandTermProps {
       callback: (error: any, result: any) => void
     ) => void;
     getUser: () => any;
+    setUser: (profile: string) => void;
     changePassword: (
       oldPassword: string,
       newPassword: string,
@@ -245,10 +246,16 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       status = 200;
     }
 
-    if (command === 'profile') {
-      const currentUser = this.props.auth.getUser();
-      response = "Is logged in: " + JSON.stringify(currentUser);
-      console.log("profile", this.props.auth.isLoggedIn);
+    if (command.startsWith('profile')) {
+      if (args.length === 0) {
+        const currentUser = this.props.auth.getUser();
+        response = "Is logged in: " + JSON.stringify(currentUser);
+        console.log("profile", this.props.auth.isLoggedIn);
+      } else {
+        const content = args.join(' ');
+        this.props.auth.setUser(content);
+      }
+
     }
 
     if (command === 'signup') {
