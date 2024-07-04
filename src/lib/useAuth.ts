@@ -138,7 +138,8 @@ export const useAuth = () => {
     try {
       // Make the request with the Access Token
       const authConfig = await getAuthConfig();
-      const response = await axios.get(`${API_URL}${ENDPOINTS.api.GetUser}`, authConfig);
+      const request = axios.get(`${API_URL}${ENDPOINTS.api.GetUser}`, authConfig);
+      const response = await request;
       return response.data; // Contains username, attributes, etc.
     } catch (error) {
       console.error('Error fetching current user:', error);

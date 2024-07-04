@@ -5,22 +5,18 @@ import {
   aws_s3 as s3,
   aws_lambda as lambda,
   aws_iam as iam,
-  aws_apigatewayv2 as apigatewayv2,
-  aws_apigatewayv2_integrations as apigatewayv2Integrations,
   App,
   CfnOutput,
   Stack,
-  aws_apigatewayv2_authorizers as apigatewayv2authorizers,
   StackProps
 } from "aws-cdk-lib";
 import { Construct } from 'constructs';
-import { HttpMethod, HttpApi, CorsHttpMethod, HttpAuthorizerType } from 'aws-cdk-lib/aws-apigatewayv2';
+import { HttpMethod, HttpApi, CorsHttpMethod } from 'aws-cdk-lib/aws-apigatewayv2';
 import { HttpLambdaIntegration } from 'aws-cdk-lib/aws-apigatewayv2-integrations'; // This path is illustrative and likely incorrect
-import { HttpJwtAuthorizer, HttpLambdaAuthorizer, HttpLambdaAuthorizerProps } from 'aws-cdk-lib/aws-apigatewayv2-authorizers';
+import {  HttpLambdaAuthorizer } from 'aws-cdk-lib/aws-apigatewayv2-authorizers';
 import { IFunction } from 'aws-cdk-lib/aws-lambda';
 
 const nodeRuntime = lambda.Runtime.NODEJS_16_X;
-const region = "us-east-1";
 
 export class HandTermCdkStack extends Stack {
   constructor(
@@ -61,14 +57,6 @@ export class HandTermCdkStack extends Stack {
       autoVerify: { email: true }
     });
 
-    // TODO: Remove this before production. This is only to make signup easier during development
-    const preSignupLambda = new lambda.Function(this, 'PreSignupLambda', {
-      runtime: nodeRuntime,
-      handler: 'preSignup.handler',
-      code: lambda.Code.fromAsset('lambda/authentication'),
-    });
-    userPool.addTrigger(cognito.UserPoolOperation.PRE_SIGN_UP, preSignupLambda);
-
     // Cognito User Pool Client
     const userPoolClient = userPool.addClient('AppClient', {
       authFlows: {
@@ -89,6 +77,13 @@ export class HandTermCdkStack extends Stack {
       }],
     });
 
+    // TODO: Remove this before production. This is only to make signup easier during development
+    const preSignupLambda = new lambda.Function(this, 'PreSignupLambda', {
+      runtime: nodeRuntime,
+      handler: 'preSignup.handler',
+      code: lambda.Code.fromAsset('lambda/authentication'),
+    });
+    userPool.addTrigger(cognito.UserPoolOperation.PRE_SIGN_UP, preSignupLambda);
     // S3 Bucket for User Logs
     const logsBucket = new s3.Bucket(this, 'HandTermHistoryBucket', {
       bucketName: ENDPOINTS.aws.s3.bucketName,
@@ -107,6 +102,10 @@ export class HandTermCdkStack extends Stack {
         iam.ManagedPolicy.fromAwsManagedPolicyName('AmazonS3FullAccess'),
       ],
     });
+
+    const cognitoUserPoolEnvVar = {
+      COGNITO_USER_POOL_ID: userPool.userPoolId
+    };
 
     const authorizerLambda: IFunction = new lambda.Function(this, 'AuthorizerFunction', {
       runtime: nodeRuntime,
