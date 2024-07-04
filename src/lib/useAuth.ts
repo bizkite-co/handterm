@@ -124,7 +124,7 @@ export const useAuth = () => {
     }
   }
 
-  const listLog = async (limit: number) => {
+  const listLog = async () => {
     try {
       const authConfig = await getAuthConfig();
       const response = await axios.get(`${API_URL}${ENDPOINTS.api.ListLog}`, authConfig);
