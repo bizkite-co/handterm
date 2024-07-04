@@ -7,10 +7,16 @@ const s3 = new AWS.S3({ region: 'us-east-1' });
 export const handler = async (event: any) => {
     try {
 
-        console.log('event:', event, 'userId:', event.requestContext.authorizer.userId);
-        const userId = event.requestContext.authorizer.userId;
+        console.log('event:', event, 'userId:', event.requestContext.authorizer);
+        const userId = event.requestContext.authorizer.lambda.userId;
+        if (!userId) {
+            return {
+                statusCode: 400,
+                body: JSON.stringify({ message: 'User is not authenticated' }),
+            };
+        }
         const objectKey = `user_data/${userId}/_index.md`;
-
+        console.log('objectKey:', objectKey);
         try {
             await s3.headObject({
                 Bucket: 'handterm',

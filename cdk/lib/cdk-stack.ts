@@ -170,6 +170,25 @@ export class HandTermCdkStack extends Stack {
       ),
     })
 
+    const refreshTokenLambda = new lambda.Function(this, 'RefreshTokenFunction', {
+      runtime: nodeRuntime,
+      handler: 'refreshToken.handler',
+      role: lambdaExecutionRole,
+      code: lambda.Code.fromAsset('lambda/authentication'),
+      environment: {
+        COGNITO_APP_CLIENT_ID: userPoolClient.userPoolClientId,
+      }
+    });
+
+    httpApi.addRoutes({
+      path: ENDPOINTS.api.RefreshToken,
+      methods: [HttpMethod.POST],
+      integration: new HttpLambdaIntegration(
+        'post-user-signin',
+        refreshTokenLambda
+      ),
+    })
+
     const changePasswordLambda = new lambda.Function(this, 'ChangePasswordFunction', {
       runtime: nodeRuntime,
       handler: 'changePassword.handler',
@@ -254,6 +273,23 @@ export class HandTermCdkStack extends Stack {
       authorizer: lambdaAuthorizer,
       methods: [HttpMethod.POST],
       integration: getLogIntegration,
+    })
+
+    const listLogLambda = new lambda.Function(this, 'ListLogFunction', {
+      runtime: nodeRuntime,
+      handler: 'listLog.handler',
+      role: lambdaExecutionRole,
+      code: lambda.Code.fromAsset('lambda/userStorage'),
+      environment: {
+        COGNITO_APP_CLIENT_ID: userPoolClient.userPoolClientId,
+      }
+    });
+    const listLogIntegration = new HttpLambdaIntegration('list-log-integration', listLogLambda);
+    httpApi.addRoutes({
+      path: ENDPOINTS.api.ListLog,
+      authorizer: lambdaAuthorizer,
+      methods: [HttpMethod.POST],
+      integration: listLogIntegration,
     })
 
     // Outputs

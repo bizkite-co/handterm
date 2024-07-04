@@ -8,18 +8,20 @@ export const ENDPOINTS = {
         s3: {
             url: 'https://s3.amazonaws.com',
             bucketName: 'handterm',
+            userKey: 'user_data/{{userId}}/'
         },
     },
     api: {
         BaseUrl: 'https://x7jzrjfuv8.execute-api.us-east-1.amazonaws.com',
         SignUp: '/signUp',
         GetLog: '/getLog',
+        ListLog: '/listLog',
         SaveLog: '/saveLog',
         SignIn: '/signIn',
         SignOut: '/signOut',
         ChangePassword: '/changePassword',
         TokenHandler: '/tokenHandler',
-        RefreshSession: '/refreshSession',
+        RefreshToken: '/refreshToken',
         CheckSession: '/checkSession',
         GetUser: '/getUser',
         SetUser: '/setUser',

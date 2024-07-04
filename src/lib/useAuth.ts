@@ -44,37 +44,102 @@ export const useAuth = () => {
       throw error;
     }
   };
+  const refreshTokenIfNeeded = async () => {
+    const accessToken = localStorage.getItem('AccessToken');
+    const refreshToken = localStorage.getItem('RefreshToken');
+    const expiresAt = localStorage.getItem('ExpiresAt');
 
-  const getAuthConfig = () => {
-      // Retrieve the Access Token from localStorage
-      const accessToken = localStorage.getItem('AccessToken');
-      if (!accessToken) {
-        throw new Error('No access token found');
+    if (!expiresAt || !refreshToken) {
+      console.error('No refresh token or expiry time found');
+      setIsLoggedIn(false);
+      return false; // Indicate that the session could not be refreshed
+    }
+
+    const isTokenExpired = new Date().getTime() > parseInt(expiresAt);
+    if (!accessToken || isTokenExpired) {
+      try {
+        const response = await axios.post(`${API_URL}${ENDPOINTS.api.RefreshToken}`, { refreshToken }, config);
+        // Assuming the response contains the new access token and its expiry time
+        localStorage.setItem('AccessToken', response.data.AccessToken);
+        localStorage.setItem('ExpiresAt', (new Date().getTime() + response.data.ExpiresIn * 1000).toString(10));
+        console.log('Token refreshed successfully');
+        return true; // Indicate that the session was successfully refreshed
+      } catch (error) {
+        console.error('Token refresh failed:', error);
+        setIsLoggedIn(false);
+        return false; // Indicate that the session could not be refreshed
       }
-      // Include the Access Token in the Authorization header
-      const authConfig = {
-        ...config, // Spread the existing config to keep content-type
-        headers: {
-          ...config.headers, // Spread any existing headers
-          'Authorization': `Bearer ${accessToken}` // Add the Authorization header with the Access Token
-        }
-      };
-      return authConfig;
-  }
+    }
+    return true; // Token is valid and not expired
+  };
+
+  const getAuthConfig = async () => {
+    // Ensure refreshTokenIfNeeded is awaited to complete the refresh before proceeding
+    await refreshTokenIfNeeded();
+
+    const accessToken = localStorage.getItem('AccessToken');
+    if (!accessToken) {
+      throw new Error('No access token found');
+    }
+    // Include the Access Token in the Authorization header
+    return {
+      ...config, // Spread the existing config to keep content-type
+      headers: {
+        ...config.headers, // Spread any existing headers
+        'Authorization': `Bearer ${accessToken}`, // Add the Authorization header with the Access Token
+      }
+    };
+  };
 
   const setUser = async (profile: string) => {
     // Set the user profile string for the current logged in user
     try {
-      await axios.post(`${API_URL}${ENDPOINTS.api.SetUser}`, { profile }, getAuthConfig());
+      const authConfig = await getAuthConfig();
+      await axios.post(`${API_URL}${ENDPOINTS.api.SetUser}`, { profile }, authConfig);
     } catch (error) {
       console.error('Error setting user profile:', error);
+    }
+  }
+
+  const saveLog = async (key: string, content: string) => {
+    try {
+      const keyContentBodyJson = JSON.stringify({ key, content });
+      const authConfig = await getAuthConfig();
+      await axios.post(`${API_URL}${ENDPOINTS.api.SaveLog}`, {body: keyContentBodyJson }, authConfig);
+      return true;
+    } catch (error) {
+      console.error('Error saving log:', error);
+      return false;
+    }
+  }
+
+  const getLog = async (key: string) => {
+    try {
+      const authConfig = await getAuthConfig();
+      const response = await axios.get(`${API_URL}${ENDPOINTS.api.GetLog}/${key}`, authConfig);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching log:', error);
+      return null;
+    }
+  }
+
+  const listLog = async (limit: number) => {
+    try {
+      const authConfig = await getAuthConfig();
+      const response = await axios.get(`${API_URL}${ENDPOINTS.api.ListLog}`, authConfig);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching log:', error);
+      return null;
     }
   }
 
   const getUser = async () => {
     try {
       // Make the request with the Access Token
-      const response = await axios.get(`${API_URL}${ENDPOINTS.api.GetUser}`, getAuthConfig());
+      const authConfig = await getAuthConfig();
+      const response = await axios.get(`${API_URL}${ENDPOINTS.api.GetUser}`, authConfig);
       return response.data; // Contains username, attributes, etc.
     } catch (error) {
       console.error('Error fetching current user:', error);
@@ -94,6 +159,7 @@ export const useAuth = () => {
       localStorage.setItem('AccessToken', response.data.AccessToken);
       localStorage.setItem('RefreshToken', response.data.RefreshToken);
       localStorage.setItem('IdToken', response.data.IdToken);
+      localStorage.setItem('SignedInAs', username);
       localStorage.setItem(
         'ExpiresAt',
         (new Date().getTime() + response.data.ExpiresIn * 1000).toString(10)
@@ -115,18 +181,6 @@ export const useAuth = () => {
     }
   };
 
-  const refreshSession = async () => {
-    try {
-      // This endpoint should refresh the session and set a new HttpOnly cookie
-      await axios.post(`${API_URL}${ENDPOINTS.api.RefreshSession}`);
-      setIsLoggedIn(true);
-    } catch (error) {
-      console.error('Session refresh failed:', error);
-      setIsLoggedIn(false);
-      throw error;
-    }
-  };
-
   const changePassword = async (oldPassword: string, newPassword: string) => {
     try {
       await axios.post(`${API_URL}${ENDPOINTS.api.ChangePassword}`, { oldPassword, newPassword });
@@ -136,5 +190,5 @@ export const useAuth = () => {
     }
   };
 
-  return { isLoggedIn, login: signIn, logout: signOut, signUp, refreshSession, getUser, checkSession, changePassword, setUser };
+  return { isLoggedIn, login: signIn, logout: signOut, signUp, getUser, checkSession, changePassword, setUser, saveLog, getLog, listLog };
 };

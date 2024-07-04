@@ -2,9 +2,6 @@
 import * as AWS from 'aws-sdk';
 const cognito = new AWS.CognitoIdentityServiceProvider({ region: 'us-east-1' });
 
-const allowedOrigins = ['http://localhost:5173', 'https://handterm.com'];
-
-
 exports.handler = async (event: { body: string }) => {
   const body = typeof event.body === 'string' ? JSON.parse(event.body) : event.body;
   console.log('SignIn body:', body);

@@ -12,6 +12,7 @@ export const handler = async (event: APIGatewayTokenAuthorizerEvent): Promise<AP
             AccessToken: token
         }).promise();
 
+        console.log('Response:', response);
         const userId = response.Username;
 
         return generatePolicy(userId, 'Allow', event.methodArn, { userId });

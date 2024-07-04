@@ -9,11 +9,27 @@ content-type: application/json
   "password": "Pass_w0rd"
 }
 
+
 ### Sign In
+
+# @name signup
 POST {{ $dotenv VITE_API_URL }}/signIn HTTP/1.1
 content-type: application/json
 
 {
   "username": "mark+1@whywe.tech",
   "password": "Pass_w0rd"
+}
+
+###
+
+@accessToken = {{ signup.response.body.AccessToken }}
+
+POST {{ $dotenv VITE_API_URL }}/saveLog HTTP/1.1
+content-type: application/json
+Authorization: {{accessToken}}
+
+{
+  "key": "test_key_2",
+  "content": "Pass_w0rd"
 }
