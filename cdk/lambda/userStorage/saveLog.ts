@@ -5,16 +5,12 @@ import * as AWS from 'aws-sdk';
 const s3 = new AWS.S3();
 
 exports.handler = async (event:any) => {
-    console.log('SaveLogFuntion called');
-    console.log('event', event);
-    console.log('authorizer', event.requestContext.authorizer.lambda);
     const userId = event.requestContext.authorizer.lambda.userId;
-    console.log('userId:', userId);
     const { key, content } = JSON.parse(event.body); // Example payload
-    console.log('userId:', userId, 'key:', key, 'content:', content);
+    console.log('userId:', userId, 'key:', key);
 
     const bucketName = 'handterm';
-
+    // TODO: replace('_', '/') to partition by folder, which is S3-optimal.
     try {
         await s3.putObject({
             Bucket: bucketName,

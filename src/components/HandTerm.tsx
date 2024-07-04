@@ -368,10 +368,10 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
           else {
             this.terminalWrite("Login successful!" + JSON.stringify(result));
           }
-          this.resetTempPassword();
           this.tempUserName = '';
           this.terminalReset();
         })
+        this.resetTempPassword();
       }
       else {
         this.appendTempPassword(character);
@@ -392,6 +392,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
           this.isInChangePasswordMode = false;
           this.terminalReset();
         })
+        this.resetTempPassword();
       }
       else {
 

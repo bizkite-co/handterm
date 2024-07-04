@@ -51,7 +51,7 @@ export const handler = async (event: any) => {
                 console.error('S3 headObject error:', error);
                 return {
                     statusCode: 500,
-                    body: JSON.stringify({ message: 'Internal Server Error' }),
+                    body: JSON.stringify({ message: 'S# Head Object Error' }),
                 };
             }
         }
