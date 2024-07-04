@@ -247,6 +247,23 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       status = 200;
     }
 
+    if (command === 'wrt') {
+      if( args.length === 0 ) {
+        (async () => {
+          try {
+            const content = await this.props.auth.getWrt();
+            this.writeOutput(content);
+          } catch (error) {
+            this.writeOutput("Error getting WRT: " + error);
+          }
+
+        })();
+        response = "Getting WRT";
+      } else {
+        const content = args.join(' ');
+        this.props.auth.setWrt(content);    
+      }
+    }
     if (command.startsWith('profile')) {
       if (args.length === 0) {
 
