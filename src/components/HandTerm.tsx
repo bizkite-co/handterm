@@ -35,7 +35,7 @@ export interface IHandTermProps {
     ) => void;
     getUser: () => any;
     setUser: (profile: string) => void;
-    saveLog: (key: string, content: string) => boolean | null;
+    saveLog: (key: string, content: string, extension: string) => boolean | null;
     getLog: (key: string) => string | string[] | null;
     changePassword: (
       oldPassword: string,
@@ -567,7 +567,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
           const content = localStorage.getItem(key);
           if (content) {
             try {
-              const result = await this.props.auth.saveLog(key, content);
+              const result = await this.props.auth.saveLog(key, content, 'json');
               if (!result) {
                 // If saveLog returns false, stop the archiving process
                 this.writeOutput("Stopping archive due to saveLog returning false.");
