@@ -19,10 +19,21 @@ export interface ChordRow {
     strokes: string;
 }
 
-export interface Chord {
+export interface IChord {
     key: string;
     chordCode: string;
     index: number;
+}
+
+export class Chord implements IChord {
+    key: string;
+    chordCode: string;
+    index: number;
+    constructor(key: string, chordCode: string, index: number) {
+        this.key = key;
+        this.chordCode = chordCode;
+        this.index = index;
+    }
 }
 
 export type Achievement = {

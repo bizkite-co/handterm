@@ -11,7 +11,7 @@ export interface ITutorialComponentProps {
 export function TutorialComponent(props: any) {
     if(!Array.isArray(props.achievement.phrase)) 
         throw new Error('achievement is undefined');
-    const characters: Chord[] = new Phrase(props.achievement.phrase).chords;
+    const characters: string[] = props.achievement.phrase;
     if(characters.length === 0) 
         throw new Error('achievement is undefined');
     return (
@@ -22,10 +22,10 @@ export function TutorialComponent(props: any) {
             <pre className="tutorial-prompt">{props.achievement.prompt}</pre>
             <div className="chord-display-container">
                 {
-                    characters.map((character: Chord, index: number) => {
+                    characters.map((character: string, index: number) => {
                         return <ChordDisplay
                             key={index}
-                            displayChar={[character.key]}
+                            displayChar={character}
                         />
                     })
                 }

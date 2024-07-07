@@ -25,7 +25,7 @@ const ErrorDisplay = forwardRef((props: ErrorDisplayProps, ref) => {
     <div style={{ display: props.isVisible ? 'block' : 'none' }} >
       <div>Error Count: {errorCount}</div>
       {mismatchedChar &&
-        <ChordDisplay displayChar={mismatchedChar.split('')} />
+        <ChordDisplay displayChar={mismatchedChar} />
       }
     </div>
   );

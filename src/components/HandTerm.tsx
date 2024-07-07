@@ -64,6 +64,8 @@ export interface IHandTermState {
   isInTutorial: boolean;
   commandHistory: string[];
   currentCommandIndex: number;
+  isInSvgMode: boolean;
+  lastTypedCharacter: string | null;
 }
 
 class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
@@ -147,6 +149,8 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       isInTutorial: true,
       commandHistory: this.loadCommandHistory(),
       currentCommandIndex: -1,
+      isInSvgMode: false,
+      lastTypedCharacter: null
     }
     this.loadDebugValue();
     this.loadFontSize();
@@ -232,7 +236,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     if (command === 'help' || command === '411') {
       status = 200;
       const commandChords = ['UpArrow', 'LeftArrow', 'DownArrow', 'RightArrow'].map(c => {
-        return <ChordDisplay displayChar={[c]} />
+        return <ChordDisplay displayChar={c} />
       });
       const commandChordsHtml = commandChords.map(element => {
         return ReactDOMServer.renderToStaticMarkup(element);
@@ -280,7 +284,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
         (async () => {
           try {
             const user: any = await this.props.auth.getUser();
-            if(user){
+            if (user) {
               this.writeOutput("Fetched user: " + user.content);
             } else {
               this.writeOutput("No user found.");
@@ -389,6 +393,9 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
 
   public handleCharacter = (character: string) => {
     const charDuration: CharDuration = this.wpmCalculator.addKeystroke(character);
+    if (this.state.isInSvgMode) {
+      // TODO: Show last character SVG. 
+    }
     if (this.inLoginProcess) {
       if (character === '\r') {
         this.inLoginProcess = false;
@@ -1029,6 +1036,11 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
                   onPhraseSuccess={this.handlePhraseSuccess}
                 />
               }
+
+              {this.state.lastTypedCharacter &&
+                <ChordDisplay displayChar={this.state.lastTypedCharacter} />
+              }
+
               {Array.isArray(this.state.nextAchievement?.phrase)
                 && TutorialComponent
                 && <TutorialComponent
