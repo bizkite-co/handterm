@@ -236,7 +236,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     if (command === 'help' || command === '411') {
       status = 200;
       const commandChords = ['UpArrow', 'LeftArrow', 'DownArrow', 'RightArrow'].map(c => {
-        return <ChordDisplay displayChar={c} />
+        return <ChordDisplay displayChar={[c]} />
       });
       const commandChordsHtml = commandChords.map(element => {
         return ReactDOMServer.renderToStaticMarkup(element);
@@ -356,6 +356,10 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       response = "Type the phrase as fast as you can."
       this.setNewPhrase(command);
     }
+    if( command === 'svg') {
+      // toggle svg mode
+      this.setState({ isInSvgMode: !this.state.isInSvgMode });
+    }
 
     if (command.startsWith('video')) {
       status = 200;
@@ -395,6 +399,9 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     const charDuration: CharDuration = this.wpmCalculator.addKeystroke(character);
     if (this.state.isInSvgMode) {
       // TODO: Show last character SVG. 
+      this.setState({ lastTypedCharacter: character });
+    } else {
+      this.setState({ lastTypedCharacter: null });
     }
     if (this.inLoginProcess) {
       if (character === '\r') {
@@ -1038,7 +1045,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
               }
 
               {this.state.lastTypedCharacter &&
-                <ChordDisplay displayChar={this.state.lastTypedCharacter} />
+                <ChordDisplay displayChar={[this.state.lastTypedCharacter]} />
               }
 
               {Array.isArray(this.state.nextAchievement?.phrase)

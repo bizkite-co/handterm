@@ -7,9 +7,11 @@ export interface ChordDisplayProps {
 export function ChordDisplay(
     props: ChordDisplayProps
 ) {
-    const findChar = props.displayChar
+    // TODO: Why is this joined?
+    const findChar = props.displayChar[0]
         .replace("Arrow", "")
         .replace("Return (ENTER)", "Enter");
+
     const foundChord
         = Array.from(allChords)
             .find(x => {

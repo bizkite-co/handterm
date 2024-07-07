@@ -1,7 +1,5 @@
 import { ChordDisplay } from "./ChordDisplay";
-import { Chord } from "../types/Types";
 import { Achievement } from "../types/Types";
-import { Phrase } from "../utils/Phrase";
 
 export interface ITutorialComponentProps {
     achievement: Achievement;
@@ -25,7 +23,7 @@ export function TutorialComponent(props: any) {
                     characters.map((character: string, index: number) => {
                         return <ChordDisplay
                             key={index}
-                            displayChar={character}
+                            displayChar={[character]}
                         />
                     })
                 }
