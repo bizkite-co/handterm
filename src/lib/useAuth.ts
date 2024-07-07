@@ -115,7 +115,8 @@ export const useAuth = () => {
   const getLog = async (key: string) => {
     try {
       const authConfig = await getAuthConfig();
-      const response = await axios.get(`${API_URL}${ENDPOINTS.api.GetLog}?key=${key}`, authConfig);
+      const keyString = key ? `?key=${key}` : '';
+      const response = await axios.get(`${API_URL}${ENDPOINTS.api.GetLog}${keyString}`, authConfig);
       return response.data;
     } catch (error) {
       console.error('Error fetching log:', error);

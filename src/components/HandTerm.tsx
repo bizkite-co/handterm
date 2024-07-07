@@ -280,7 +280,11 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
         (async () => {
           try {
             const user: any = await this.props.auth.getUser();
-            this.writeOutput("Fetched user: " + user.content);
+            if(user){
+              this.writeOutput("Fetched user: " + user.content);
+            } else {
+              this.writeOutput("No user found.");
+            }
           } catch (error) {
             console.error("Error fetching user:", error);
           }

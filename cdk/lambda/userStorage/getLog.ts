@@ -8,7 +8,7 @@ exports.handler = async (event: any) => {
     const userId = authorizer.lambda.userId;
     const logDomain = event.queryStringParameters.key || '';
     const bucketName = 'handterm';
-    console.log('getLog received event:', event, 'userId:', userId, 'logDomain:', event.queryStringParameters);
+    console.log('getLog received userId:', userId, 'logDomain:', event.queryStringParameters);
     if (!userId) {
         return { statusCode: 401, body: JSON.stringify({ message: 'Unauthorized' }) };
     }

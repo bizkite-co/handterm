@@ -27,7 +27,7 @@ content-type: application/json
 
 POST {{ $dotenv VITE_API_URL }}/saveLog HTTP/1.1
 content-type: application/json
-Authorization: {{ Bearer accessToken}}
+Authorization: Bearer {{ signin.response.body.AccessToken }}
 
 {
   "key": "test_key_2",
@@ -40,5 +40,6 @@ Authorization: {{ Bearer accessToken}}
 
 GET {{ $dotenv VITE_API_URL }}/getLog HTTP/1.1
 content-type: application/json
-Authorization: {{ accessToken }}
+Authorization: Bearer {{ signin.response.body.AccessToken }}
 
+?key=wrt

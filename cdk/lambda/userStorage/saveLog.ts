@@ -7,10 +7,10 @@ const s3 = new AWS.S3();
 exports.handler = async (event:any) => {
     const userId = event.requestContext.authorizer.lambda.userId;
     if (!userId) {
-        return { statusCode: 401, body: JSON.stringify({ message: 'Unauthorized' }) };
+        return { statusCode: 401, body: JSON.stringify({ message: 'Unauthorized. userId not found.' }) };
     }
     const { key, content, extension } = JSON.parse(event.body); // Example payload
-    console.log('userId:', userId, 'key:', key, 'extension:', extension);
+    console.log('saveLog called with userId:', userId, 'key:', key, 'extension:', extension);
 
     const bucketName = 'handterm';
 
