@@ -11,7 +11,7 @@ export const handler = async (event: any) => {
         const userId = event.requestContext.authorizer.lambda.userId;
         if (!userId) {
             return {
-                statusCode: 400,
+                statusCode: 401,
                 body: JSON.stringify({ message: 'User is not authenticated' }),
             };
         }

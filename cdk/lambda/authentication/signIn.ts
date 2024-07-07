@@ -30,7 +30,7 @@ exports.handler = async (event: { body: string }) => {
     if (!IdToken || !AccessToken || !RefreshToken) {
       // Handle the missing tokens scenario, perhaps by throwing an error or returning an error response
       return {
-        statusCode: 400,
+        statusCode: 401,
         body: JSON.stringify({ message: "Authentication failed or incomplete." }),
       };
     }
@@ -49,7 +49,7 @@ exports.handler = async (event: { body: string }) => {
   } catch (err: any) {
     console.error('SignIn error:', err);
     const response = {
-      statusCode: 500,
+      statusCode: 400,
       headers: {
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Credentials": true,

@@ -6,14 +6,17 @@ const s3 = new AWS.S3();
 exports.handler = async (event: any) => {
     console.log('event:', event, 'userId:', event.requestContext.authorizer.userId);
     const userId = event.requestContext.authorizer.lambda.userId;
+    if (!userId) {
+        return { statusCode: 401, body: JSON.stringify({ message: 'Unauthorized' }) };
+    }
     const bucketName = ENDPOINTS.aws.s3.bucketName;
     const body = JSON.parse(event.body);
-    const filePrefix = body.filePrefix || body.filePrefix + '_' || '';
+    const logDomain = body.logDomain;
     const limit = body.limit || 10;
     try {
         const { Contents } = await s3.listObjectsV2({
             Bucket: bucketName,
-            Prefix: `user_data/${userId}/logs/${filePrefix}`,
+            Prefix: `user_data/${userId}/logs/${logDomain}`,
         }).promise();
 
         if (!Contents) {

@@ -36,6 +36,7 @@ export interface IHandTermProps {
     getUser: () => any;
     setUser: (profile: string) => void;
     saveLog: (key: string, content: string) => boolean | null;
+    getLog: (key: string) => string | string[] | null;
     changePassword: (
       oldPassword: string,
       newPassword: string,
@@ -247,6 +248,32 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       status = 200;
     }
 
+    if (command === 'wrt') {
+      if (args.length === 0) {
+        (async () => {
+          try {
+            const contents = await this.props.auth.getLog('wrt');
+
+            if (contents) {
+              if (!Array.isArray(contents)) {
+                this.writeOutput("No WRT found.");
+              } else {
+                const text = contents.join('<br/>');
+                this.writeOutput(text);
+              }
+            }
+          } catch (error) {
+            this.writeOutput("Error getting WRT: " + error);
+          }
+
+        })();
+        response = "Getting WRT";
+      } else {
+        const content = args.join(' ');
+
+        this.props.auth.saveLog('wrt/' + new Date().getTime(), content, 'txt');
+      }
+    }
     if (command.startsWith('profile')) {
       if (args.length === 0) {
 

@@ -6,12 +6,11 @@ export const handler = async (event: any) => {
   try {
     // Assuming event.body contains the data to write, and userId is passed as part of the request
     // For simplicity, not showing the authentication part here
-    console.log('event', event, 'authorizer:', event.requestContext.authorizer);
-    console.log('event', event, 'userId:', event.requestContext.authorizer.lambda.userId);
     const userId = event.requestContext.authorizer.lambda.userId;
-    console.log('userId:', userId);
+    if (!userId) {
+      return { statusCode: 401, body: JSON.stringify({ message: 'Unauthorized' }) };
+    }
     const { profile } = JSON.parse(event.body);
-    console.log('userId:', userId, 'profile:', profile);
     const objectKey = `user_data/${userId}/_index.md`;
 
     // Write the content to the S3 object

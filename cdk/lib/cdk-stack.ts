@@ -270,7 +270,7 @@ export class HandTermCdkStack extends Stack {
     httpApi.addRoutes({
       path: ENDPOINTS.api.GetLog,
       authorizer: lambdaAuthorizer,
-      methods: [HttpMethod.POST],
+      methods: [HttpMethod.POST, HttpMethod.GET],
       integration: getLogIntegration,
     })
 
@@ -287,7 +287,7 @@ export class HandTermCdkStack extends Stack {
     httpApi.addRoutes({
       path: ENDPOINTS.api.ListLog,
       authorizer: lambdaAuthorizer,
-      methods: [HttpMethod.POST],
+      methods: [HttpMethod.POST, HttpMethod.GET],
       integration: listLogIntegration,
     })
 

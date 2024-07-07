@@ -101,10 +101,10 @@ export const useAuth = () => {
     }
   }
 
-  const saveLog = async (key: string, content: string) => {
+  const saveLog = async (key: string, content: string, extension: string = 'json') => {
     try {
       const authConfig = await getAuthConfig();
-      await axios.post(`${API_URL}${ENDPOINTS.api.SaveLog}`, { key, content }, authConfig);
+      await axios.post(`${API_URL}${ENDPOINTS.api.SaveLog}`, { key, content, extension }, authConfig);
       return true;
     } catch (error) {
       console.error('Error saving log:', error);
@@ -115,7 +115,7 @@ export const useAuth = () => {
   const getLog = async (key: string) => {
     try {
       const authConfig = await getAuthConfig();
-      const response = await axios.get(`${API_URL}${ENDPOINTS.api.GetLog}/${key}`, authConfig);
+      const response = await axios.get(`${API_URL}${ENDPOINTS.api.GetLog}?key=${key}`, authConfig);
       return response.data;
     } catch (error) {
       console.error('Error fetching log:', error);
