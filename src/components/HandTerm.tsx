@@ -13,7 +13,7 @@ import { ActionType } from '../game/types/ActionTypes';
 import Phrases from '../utils/Phrases';
 import { IWebCam, WebCam } from '../utils/WebCam';
 import { CommandContext } from '../commands/CommandContext';
-import { Achievement, Achievements } from '../types/Types';
+import { Achievement, Achievements, AsyncResponse } from '../types/Types';
 import { TutorialComponent } from './TutorialComponent';
 import { Chord } from './Chord';
 import axios from 'axios';
@@ -33,10 +33,10 @@ export interface IHandTermProps {
       email: string,
       callback: (error: any, result: any) => void
     ) => void;
-    getUser: () => any;
+    getUser: () => Promise<AsyncResponse<any>>;
     setUser: (profile: string) => void;
     saveLog: (key: string, content: string, extension: string) => boolean | null;
-    getLog: (key: string) => string | string[] | null;
+    getLog: (key: string) => Promise<AsyncResponse<any>>;
     changePassword: (
       oldPassword: string,
       newPassword: string,
@@ -179,7 +179,9 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       if (size) {
         this.setState({ terminalSize: size });
       }
+      this.adapterRef.current.terminalWrite(localStorage.getItem('currentCommand') || '');
     }
+    this
     this.scrollToBottom();
 
     if (this.videoElementRef.current) {
@@ -256,13 +258,13 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       if (args.length === 0) {
         (async () => {
           try {
-            const contents = await this.props.auth.getLog('wrt');
+            const wrtResponse = await this.props.auth.getLog('wrt');
 
-            if (contents) {
-              if (!Array.isArray(contents)) {
+            if (wrtResponse.status == 200) {
+              if (!Array.isArray(wrtResponse.data)) {
                 this.writeOutput("No WRT found.");
               } else {
-                const text = contents.join('<br/>');
+                const text = wrtResponse.data.join('<br/>');
                 this.writeOutput(text);
               }
             }
@@ -283,11 +285,12 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
 
         (async () => {
           try {
-            const user: any = await this.props.auth.getUser();
-            if (user) {
-              this.writeOutput("Fetched user: " + user.content);
+            const userResponse: any = await this.props.auth.getUser();
+
+            if (userResponse.status === 200) {
+              this.writeOutput(`Fetched userId: ` + userResponse.data.userId.split('-').slice(-1)[0] + ` username: ` + userResponse.data.content);
             } else {
-              this.writeOutput("No user found.");
+              this.writeOutput(userResponse.error.join('<br/>'));
             }
           } catch (error) {
             console.error("Error fetching user:", error);
@@ -397,6 +400,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
 
   public handleCharacter = (character: string) => {
     const charDuration: CharDuration = this.wpmCalculator.addKeystroke(character);
+    localStorage.setItem('currentCommand', this.adapterRef.current?.getCurrentCommand() + character);
     if (this.state.isInSvgMode) {
       // TODO: Show last character of current command SVG. Handle backspace and return properly. 
       this.setState({ lastTypedCharacter: character });
@@ -474,7 +478,9 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     if (character.charCodeAt(0) === 13) { // Enter key
       // Process the command before clearing the terminal
       // TODO: cancel timer
+
       let command = this.adapterRef.current?.getCurrentCommand() ?? '';
+      localStorage.setItem('currentCommand', '');
       this.terminalReset();
       this.handleCommand(command);
     } else if (this.state.isInPhraseMode) {

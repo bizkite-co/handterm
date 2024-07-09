@@ -3,10 +3,11 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { ENDPOINTS } from '../shared/endpoints';
+import { AsyncResponse } from 'src/types/Types';
 
 const API_URL = ENDPOINTS.api.BaseUrl;
 
-const config = {
+const baseConfig = {
   headers: {
     "Content-Type": "application/json",
   },
@@ -24,7 +25,7 @@ export const useAuth = () => {
   const checkSession = async () => {
     try {
       // This could be a call to a `/session` endpoint that verifies the session
-      await axios.get(`${API_URL}${ENDPOINTS.api.CheckSession}`, config);
+      await axios.get(`${API_URL}${ENDPOINTS.api.CheckSession}`, baseConfig);
       setIsLoggedIn(true);
     } catch (error) {
       console.error('Session check failed:', error);
@@ -37,58 +38,69 @@ export const useAuth = () => {
       throw new Error('All fields are required');
     }
     try {
-      await axios.post(`${API_URL}${ENDPOINTS.api.SignUp}`, { username, password, email }, config);
+      await axios.post(`${API_URL}${ENDPOINTS.api.SignUp}`, { username, password, email }, baseConfig);
       // Handle post-signup logic (e.g., auto-login or redirect to login page)
     } catch (error) {
       console.error('Signup failed:', error);
       throw error;
     }
   };
-  const refreshTokenIfNeeded = async () => {
+  const refreshTokenIfNeeded = async (): Promise<AsyncResponse<number>> => {
+    let response: AsyncResponse<number> = { status: 200, error: [] };
     const accessToken = localStorage.getItem('AccessToken');
     const refreshToken = localStorage.getItem('RefreshToken');
     const expiresAt = localStorage.getItem('ExpiresAt');
-
-    if (!expiresAt || !refreshToken) {
-      console.error('No refresh token or expiry time found');
-      setIsLoggedIn(false);
-      return false; // Indicate that the session could not be refreshed
+    if(!accessToken) {
+      response.error.push('No access token found');
+    }
+    if(!refreshToken) {
+      response.error.push('No refresh token found');
+    }
+    if(!expiresAt) {
+      response.error.push('No expiry time found');
+    }
+    if(response.status !== 200 || !accessToken || !refreshToken || !expiresAt) {
+      response.status = 401;
+      return response;
     }
 
     const isTokenExpired = new Date().getTime() > parseInt(expiresAt);
     if (!accessToken || isTokenExpired) {
       try {
-        const response = await axios.post(`${API_URL}${ENDPOINTS.api.RefreshToken}`, { refreshToken }, config);
+        const postResponse = await axios.post(`${API_URL}${ENDPOINTS.api.RefreshToken}`, { refreshToken }, baseConfig);
         // Assuming the response contains the new access token and its expiry time
-        localStorage.setItem('AccessToken', response.data.AccessToken);
-        localStorage.setItem('ExpiresAt', (new Date().getTime() + response.data.ExpiresIn * 1000).toString(10));
+        localStorage.setItem('AccessToken', postResponse.data.AccessToken);
+        localStorage.setItem('ExpiresAt', (new Date().getTime() + postResponse.data.ExpiresIn * 1000).toString(10));
         console.log('Token refreshed successfully');
-        return true; // Indicate that the session was successfully refreshed
+        response.status = 200;
+        return response; // Indicate that the session was successfully refreshed
       } catch (error) {
         console.error('Token refresh failed:', error);
         setIsLoggedIn(false);
-        return false; // Indicate that the session could not be refreshed
+        return response; // Indicate that the session could not be refreshed
       }
     }
-    return true; // Token is valid and not expired
+    return response; // Token is valid and not expired
   };
 
-  const getAuthConfig = async () => {
+  const getAuthConfig = async (): Promise<AsyncResponse<any>> => {
     // Ensure refreshTokenIfNeeded is awaited to complete the refresh before proceeding
-    await refreshTokenIfNeeded();
+    const refreshResponse = await refreshTokenIfNeeded();
+    if(refreshResponse.status !== 200) return refreshResponse;
 
     const accessToken = localStorage.getItem('AccessToken');
     if (!accessToken) {
       throw new Error('No access token found');
     }
-    // Include the Access Token in the Authorization header
-    return {
-      ...config, // Spread the existing config to keep content-type
+    let response: AsyncResponse<any> = { status: 200, error: [], data: {
+      ...baseConfig, // Spread the existing config to keep content-type
       headers: {
-        ...config.headers, // Spread any existing headers
+        ...baseConfig.headers, // Spread any existing headers
         'Authorization': `Bearer ${accessToken}`, // Add the Authorization header with the Access Token
       }
-    };
+    } };
+    // Include the Access Token in the Authorization header
+    return response;
   };
 
   const setUser = async (profile: string) => {
@@ -112,15 +124,18 @@ export const useAuth = () => {
     }
   }
 
-  const getLog = async (key: string) => {
+  const getLog = async (key: string): Promise<AsyncResponse<any>> => {
     try {
       const authConfig = await getAuthConfig();
       const keyString = key ? `?key=${key}` : '';
-      const response = await axios.get(`${API_URL}${ENDPOINTS.api.GetLog}${keyString}`, authConfig);
-      return response.data;
+      const response = await axios.get(`${API_URL}${ENDPOINTS.api.GetLog}${keyString}`, authConfig.data);
+      return {status: 200, data: response.data, error: []}; // Contains log content, etc.
     } catch (error) {
-      console.error('Error fetching log:', error);
-      return null;
+      return {
+        status: 404,
+        error: ['Error fetching log'],
+        data: null
+      };
     }
   }
 
@@ -135,16 +150,20 @@ export const useAuth = () => {
     }
   }
 
-  const getUser = async () => {
+  const getUser = async (): Promise<AsyncResponse<any>> => {
     try {
       // Make the request with the Access Token
       const authConfig = await getAuthConfig();
-      const request = axios.get(`${API_URL}${ENDPOINTS.api.GetUser}`, authConfig);
+      if(authConfig.status !== 200) return authConfig;
+      const request = axios.get(`${API_URL}${ENDPOINTS.api.GetUser}`, authConfig.data);
       const response = await request;
-      return response.data; // Contains username, attributes, etc.
+      return {data:response.data, status: 200, error: []}; // Contains username, attributes, etc.
     } catch (error) {
-      console.error('Error fetching current user:', error);
-      return null;
+      return {
+        status: 401,
+        error: ['Error fetching current user'],
+        data: null
+      };
     }
   };
 
