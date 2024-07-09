@@ -107,7 +107,7 @@ export const useAuth = () => {
     // Set the user profile string for the current logged in user
     try {
       const authConfig = await getAuthConfig();
-      await axios.post(`${API_URL}${ENDPOINTS.api.SetUser}`, { profile }, authConfig);
+      await axios.post(`${API_URL}${ENDPOINTS.api.SetUser}`, { profile }, authConfig.data);
     } catch (error) {
       console.error('Error setting user profile:', error);
     }
@@ -116,7 +116,7 @@ export const useAuth = () => {
   const saveLog = async (key: string, content: string, extension: string = 'json') => {
     try {
       const authConfig = await getAuthConfig();
-      await axios.post(`${API_URL}${ENDPOINTS.api.SaveLog}`, { key, content, extension }, authConfig);
+      await axios.post(`${API_URL}${ENDPOINTS.api.SaveLog}`, { key, content, extension }, authConfig.data);
       return true;
     } catch (error) {
       console.error('Error saving log:', error);
@@ -142,7 +142,7 @@ export const useAuth = () => {
   const listLog = async () => {
     try {
       const authConfig = await getAuthConfig();
-      const response = await axios.get(`${API_URL}${ENDPOINTS.api.ListLog}`, authConfig);
+      const response = await axios.get(`${API_URL}${ENDPOINTS.api.ListLog}`, authConfig.data);
       return response.data;
     } catch (error) {
       console.error('Error fetching log:', error);
