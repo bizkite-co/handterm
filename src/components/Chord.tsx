@@ -1,11 +1,11 @@
-import { allChords } from "../../src/allChords";
+import { allChords } from "../allChords";
 
-export interface ChordDisplayProps {
-    displayChar: string[];
+export interface ChordProps {
+    displayChar: string;
 }
 
-export function ChordDisplay(
-    props: ChordDisplayProps
+export function Chord(
+    props: ChordProps
 ) {
     // TODO: Why is this joined?
 
@@ -15,8 +15,9 @@ export function ChordDisplay(
                 return x.key
                     .replace('&#x2581;', ' ')
                     .replace('(underscore)', '_')
+                    .replace('Return (ENTER)', '\r')
                     // .replace('Return (ENTER)', '\r')
-                    == props.displayChar[0];
+                    == props.displayChar;
             });
 
     const foundChar = foundChord?.key

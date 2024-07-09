@@ -1,5 +1,5 @@
 import { useState, useImperativeHandle, forwardRef } from 'react';
-import { ChordDisplay } from './ChordDisplay';
+import { Chord } from './Chord';
 
 interface ErrorDisplayProps {
   mismatchedChar: string;
@@ -25,7 +25,7 @@ const ErrorDisplay = forwardRef((props: ErrorDisplayProps, ref) => {
     <div style={{ display: props.isVisible ? 'block' : 'none' }} >
       <div>Error Count: {errorCount}</div>
       {mismatchedChar &&
-        <ChordDisplay displayChar={[mismatchedChar]} />
+        <Chord displayChar={mismatchedChar} />
       }
     </div>
   );

@@ -15,7 +15,7 @@ import { IWebCam, WebCam } from '../utils/WebCam';
 import { CommandContext } from '../commands/CommandContext';
 import { Achievement, Achievements } from '../types/Types';
 import { TutorialComponent } from './TutorialComponent';
-import { ChordDisplay } from './ChordDisplay';
+import { Chord } from './Chord';
 import axios from 'axios';
 import { ENDPOINTS } from '../shared/endpoints';
 
@@ -236,7 +236,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     if (command === 'help' || command === '411') {
       status = 200;
       const commandChords = ['UpArrow', 'LeftArrow', 'DownArrow', 'RightArrow'].map(c => {
-        return <ChordDisplay displayChar={[c]} />
+        return <Chord displayChar={c} />
       });
       const commandChordsHtml = commandChords.map(element => {
         return ReactDOMServer.renderToStaticMarkup(element);
@@ -398,7 +398,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
   public handleCharacter = (character: string) => {
     const charDuration: CharDuration = this.wpmCalculator.addKeystroke(character);
     if (this.state.isInSvgMode) {
-      // TODO: Show last character SVG. 
+      // TODO: Show last character of current command SVG. Handle backspace and return properly. 
       this.setState({ lastTypedCharacter: character });
     } else {
       this.setState({ lastTypedCharacter: null });
@@ -1045,7 +1045,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
               }
 
               {this.state.lastTypedCharacter &&
-                <ChordDisplay displayChar={[this.state.lastTypedCharacter]} />
+                <Chord displayChar={this.state.lastTypedCharacter} />
               }
 
               {Array.isArray(this.state.nextAchievement?.phrase)

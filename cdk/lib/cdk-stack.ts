@@ -8,7 +8,8 @@ import {
   App,
   CfnOutput,
   Stack,
-  StackProps
+  StackProps,
+  Duration
 } from "aws-cdk-lib";
 import { Construct } from 'constructs';
 import { HttpMethod, HttpApi, CorsHttpMethod } from 'aws-cdk-lib/aws-apigatewayv2';
@@ -64,6 +65,7 @@ export class HandTermCdkStack extends Stack {
         userPassword: true // Enable USER_PASSWORD_AUTH flow
       },
       generateSecret: false,
+      refreshTokenValidity: Duration.days(90),
       // Add your API Gateway endpoint URL to the list of callback URLs
     });
 
