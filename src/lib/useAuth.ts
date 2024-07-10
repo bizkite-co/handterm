@@ -56,7 +56,7 @@ export const useAuth = () => {
     if(!refreshToken) {
       response.error.push('No refresh token found');
     }
-    if(!expiresAt) {
+    if(!expiresAt || isNaN(parseInt(expiresAt))) {
       response.error.push('No expiry time found');
     }
     if(response.status !== 200 || !accessToken || !refreshToken || !expiresAt) {
@@ -70,7 +70,7 @@ export const useAuth = () => {
         const postResponse = await axios.post(`${API_URL}${ENDPOINTS.api.RefreshToken}`, { refreshToken }, baseConfig);
         // Assuming the response contains the new access token and its expiry time
         localStorage.setItem('AccessToken', postResponse.data.AccessToken);
-        localStorage.setItem('ExpiresAt', (new Date().getTime() + postResponse.data.ExpiresIn * 1000).toString(10));
+        setExpiresAt(postResponse.data.ExpiresIn);
         console.log('Token refreshed successfully');
         response.status = 200;
         return response; // Indicate that the session was successfully refreshed
@@ -82,6 +82,16 @@ export const useAuth = () => {
     }
     return response; // Token is valid and not expired
   };
+  const setExpiresAt = (expiresIn: string) => {
+    const expiresAt = getExpiresAt(expiresIn);
+    if(expiresAt) localStorage.setItem('ExpiresAt', expiresAt);
+  }
+  const getExpiresAt = (expiresIn: string) => {
+    const expiresInNumber = parseInt(expiresIn);
+    if(isNaN(expiresInNumber)) return null;
+    const expiresAt = new Date().getTime() + expiresInNumber * 1000;
+    return expiresAt.toString(10);
+  }
 
   const getAuthConfig = async (): Promise<AsyncResponse<any>> => {
     // Ensure refreshTokenIfNeeded is awaited to complete the refresh before proceeding
@@ -180,10 +190,7 @@ export const useAuth = () => {
       localStorage.setItem('RefreshToken', response.data.RefreshToken);
       localStorage.setItem('IdToken', response.data.IdToken);
       localStorage.setItem('SignedInAs', username);
-      localStorage.setItem(
-        'ExpiresAt',
-        (new Date().getTime() + response.data.ExpiresIn * 1000).toString(10)
-      );
+      setExpiresAt(response.data.ExpiresIn);
       return response.data; // Return session data if needed
     } catch (error) {
       console.error('Login failed:', error);

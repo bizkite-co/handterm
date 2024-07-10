@@ -1,4 +1,5 @@
 import { Buffer } from 'buffer';
+import './commands';
 window.Buffer = Buffer;
 
 // Define 'global' if it's undefined (for browser environments)

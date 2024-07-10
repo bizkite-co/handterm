@@ -254,32 +254,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       status = 200;
     }
 
-    if (command === 'wrt') {
-      if (args.length === 0) {
-        (async () => {
-          try {
-            const wrtResponse = await this.props.auth.getLog('wrt');
 
-            if (wrtResponse.status == 200) {
-              if (!Array.isArray(wrtResponse.data)) {
-                this.writeOutput("No WRT found.");
-              } else {
-                const text = wrtResponse.data.join('<br/>');
-                this.writeOutput(text);
-              }
-            }
-          } catch (error) {
-            this.writeOutput("Error getting WRT: " + error);
-          }
-
-        })();
-        response = "Getting WRT";
-      } else {
-        const content = args.join(' ');
-
-        this.props.auth.saveLog('wrt/' + new Date().getTime(), content, 'txt');
-      }
-    }
     if (command.startsWith('profile')) {
       if (args.length === 0) {
 
@@ -302,16 +277,6 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
         this.props.auth.setUser(content);
       }
     }
-
-    if (command === 'archive') {
-      response = "Archiving...";
-      status = 200;
-      this.archiveCommandHistory();
-    }
-    if (command === 'dearch') {
-      this.dearchiveCommandHistory();
-    }
-
 
     if (command === 'signup') {
       response = "Signing up...";
@@ -574,66 +539,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     return commandHistory;
   }
 
-  async archiveCommandHistory() {
 
-    const archiveNext = async (index: number) => {
-      if (index >= localStorage.length) return; // Stop if we've processed all items
-
-      const key = localStorage.key(index);
-      if (!key) {
-        archiveNext(index + 1); // Skip and move to the next item
-        return;
-      }
-
-      if (key.startsWith(LogKeys.Command + '_') || key.startsWith(LogKeys.CharTime + '_')) {
-        if (!key.includes('_archive_')) {
-          const logKey = key.substring(0, key.indexOf('_'));
-          const content = localStorage.getItem(key);
-          if (content) {
-            try {
-              const result = await this.props.auth.saveLog(key, content, 'json');
-              if (!result) {
-                // If saveLog returns false, stop the archiving process
-                this.writeOutput("Stopping archive due to saveLog returning false.");
-                return;
-              }
-              localStorage.setItem(key.replace(logKey, logKey + '_archive'), content);
-              localStorage.removeItem(key);
-            } catch (e: any) {
-              this.writeOutput(e.message);
-            }
-          }
-        }
-      }
-
-      // Use setTimeout to avoid blocking the main thread
-      // and process the next item in the next event loop tick
-      setTimeout(() => archiveNext(index + 1), 0);
-    };
-
-    archiveNext(0); // Start processing from the first item
-  }
-
-  dearchiveCommandHistory() {
-    for (let i = localStorage.length; 0 < i; i--) {
-      const key = localStorage.key(i);
-      if (!key) continue;
-      if (key.includes('_archive_')) {
-        const content = localStorage.getItem(key);
-        if (!content) continue;
-        localStorage.setItem(key.replace('_archive', ''), content);
-        localStorage.removeItem(key);
-      } else {
-        if (key.startsWith(LogKeys.Command + '2') || key.startsWith(LogKeys.CharTime + '2')) {
-          const content = localStorage.getItem(key);
-          if (!content) continue;
-          const logKey = key.substring(0, key.indexOf('2'));
-          localStorage.setItem(key.replace(logKey, logKey + '_'), content);
-          localStorage.removeItem(key);
-        }
-      }
-    }
-  }
 
   private WpmsToHTML(wpms: CharWPM[], name: string | undefined) {
     name = name ?? "slowest-characters";
