@@ -123,14 +123,14 @@ export const useAuth = () => {
     }
   }
 
-  const saveLog = async (key: string, content: string, extension: string = 'json') => {
+  const saveLog = async (key: string, content: string, extension: string = 'json'): Promise<AsyncResponse<any>> => {
     try {
       const authConfig = await getAuthConfig();
       await axios.post(`${API_URL}${ENDPOINTS.api.SaveLog}`, { key, content, extension }, authConfig.data);
-      return true;
+      return {status: 200, data: null, error: []};
     } catch (error) {
       console.error('Error saving log:', error);
-      return false;
+      return {status: 404, data: null, error: ['Error saving log']};
     }
   }
 
