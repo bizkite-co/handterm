@@ -140,10 +140,10 @@ export const useAuth = () => {
       const keyString = key ? `?key=${key}` : '';
       const response = await axios.get(`${API_URL}${ENDPOINTS.api.GetLog}${keyString}`, authConfig.data);
       return {status: 200, data: response.data, error: []}; // Contains log content, etc.
-    } catch (error) {
+    } catch (error: any) {
       return {
         status: 404,
-        error: ['Error fetching log'],
+        error: ['Error fetching log', error.message],
         data: null
       };
     }
@@ -168,10 +168,10 @@ export const useAuth = () => {
       const request = axios.get(`${API_URL}${ENDPOINTS.api.GetUser}`, authConfig.data);
       const response = await request;
       return {data:response.data, status: 200, error: []}; // Contains username, attributes, etc.
-    } catch (error) {
+    } catch (error: any) {
       return {
         status: 401,
-        error: ['Error fetching current user'],
+        error: ['Error fetching current user', error.message],
         data: null
       };
     }

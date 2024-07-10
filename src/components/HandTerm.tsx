@@ -24,7 +24,7 @@ export interface IHandTermProps {
   // Define the interface for your HandexTerm logic
   terminalWidth: number;
   auth: {
-    login: (username: string, password: string, callback: (error: any, result: any) => void) => void;
+    login: (username: string, password: string) => Promise<AsyncResponse<any>>;
     logout: () => void;
     isLoggedIn: boolean;
     signUp: (
@@ -324,7 +324,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       response = "Type the phrase as fast as you can."
       this.setNewPhrase(command);
     }
-    if( command === 'svg') {
+    if (command === 'svg') {
       // toggle svg mode
       this.setState({ isInSvgMode: !this.state.isInSvgMode });
     }
@@ -363,6 +363,10 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     return;
   }
 
+  public prompt = () => {
+    this.adapterRef.current?.prompt();
+  }
+
   public handleCharacter = (character: string) => {
     const charDuration: CharDuration = this.wpmCalculator.addKeystroke(character);
     localStorage.setItem('currentCommand', this.adapterRef.current?.getCurrentCommand() + character);
@@ -375,17 +379,20 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     if (this.inLoginProcess) {
       if (character === '\r') {
         this.inLoginProcess = false;
-        this.props.auth.login(this.tempUserName, this.getTempPassword(), (error: any, result: any) => {
-          if (error) {
-            this.terminalWrite(error.message);
+        // Immediately invoked async function to use await
+        (async () => {
+          try {
+            const result = await this.props.auth.login(this.tempUserName, this.getTempPassword());
+            this.terminalWrite("Login successful! Status: " + JSON.stringify(result.status));
+            this.prompt();
+          } catch (error: any) {
+            this.terminalWrite("Login failed: " + error.message);
+          } finally {
+            this.tempUserName = '';
+            this.terminalReset();
+            this.resetTempPassword();
           }
-          else {
-            this.terminalWrite("Login successful!" + JSON.stringify(result));
-          }
-          this.tempUserName = '';
-          this.terminalReset();
-        })
-        this.resetTempPassword();
+        })();
       }
       else {
         this.appendTempPassword(character);

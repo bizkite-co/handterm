@@ -30,7 +30,10 @@ export const wrtCommand: ICommand = {
                             const text = wrtResponse.data.join('<br/>');
                             _handTerm.writeOutput(text);
                         }
+                    } else {
+                        _handTerm.writeOutput("Error getting WRT: " + wrtResponse.error.join(', '));
                     }
+
                 } catch (error) {
                     _handTerm.writeOutput("Error getting WRT: " + error);
                 }
