@@ -36,7 +36,7 @@ export interface IHandTermProps {
     getUser: () => Promise<AsyncResponse<any>>;
     setUser: (profile: string) => void;
     saveLog: (key: string, content: string, extension: string) => Promise<AsyncResponse<any>>;
-    getLog: (key: string) => Promise<AsyncResponse<any>>;
+    getLog: (key: string, limit?: number) => Promise<AsyncResponse<any>>;
     changePassword: (
       oldPassword: string,
       newPassword: string,

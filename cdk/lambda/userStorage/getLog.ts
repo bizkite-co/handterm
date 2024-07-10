@@ -7,6 +7,7 @@ exports.handler = async (event: any) => {
     const authorizer = event.requestContext.authorizer;
     const userId = authorizer.lambda.userId;
     const logDomain = event.queryStringParameters.key || '';
+    const limit = event.queryStringParameters.limit || 10;
     const bucketName = 'handterm';
     console.log('getLog received userId:', userId, 'logDomain:', event.queryStringParameters);
     if (!userId) {
@@ -29,7 +30,7 @@ exports.handler = async (event: any) => {
                 const timeB = parseInt(b.Key!.split('/').pop() || '0', 10);
                 return timeB - timeA; // Sort in descending order
             })
-            .slice(0, 5); // Get the most recent 5 keys
+            .slice(0, limit); // Get the most recent 5 keys
         
         console.log('sortedKeys:', sortedKeys);
         // Proceed with the rest of your code...

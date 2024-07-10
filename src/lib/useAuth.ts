@@ -50,16 +50,16 @@ export const useAuth = () => {
     const accessToken = localStorage.getItem('AccessToken');
     const refreshToken = localStorage.getItem('RefreshToken');
     const expiresAt = localStorage.getItem('ExpiresAt');
-    if(!accessToken) {
+    if (!accessToken) {
       response.error.push('No access token found');
     }
-    if(!refreshToken) {
+    if (!refreshToken) {
       response.error.push('No refresh token found');
     }
-    if(!expiresAt || isNaN(parseInt(expiresAt))) {
+    if (!expiresAt || isNaN(parseInt(expiresAt))) {
       response.error.push('No expiry time found');
     }
-    if(response.status !== 200 || !accessToken || !refreshToken || !expiresAt) {
+    if (response.status !== 200 || !accessToken || !refreshToken || !expiresAt) {
       response.status = 401;
       return response;
     }
@@ -84,11 +84,11 @@ export const useAuth = () => {
   };
   const setExpiresAt = (expiresIn: string) => {
     const expiresAt = getExpiresAt(expiresIn);
-    if(expiresAt) localStorage.setItem('ExpiresAt', expiresAt);
+    if (expiresAt) localStorage.setItem('ExpiresAt', expiresAt);
   }
   const getExpiresAt = (expiresIn: string) => {
     const expiresInNumber = parseInt(expiresIn);
-    if(isNaN(expiresInNumber)) return null;
+    if (isNaN(expiresInNumber)) return null;
     const expiresAt = new Date().getTime() + expiresInNumber * 1000;
     return expiresAt.toString(10);
   }
@@ -96,19 +96,21 @@ export const useAuth = () => {
   const getAuthConfig = async (): Promise<AsyncResponse<any>> => {
     // Ensure refreshTokenIfNeeded is awaited to complete the refresh before proceeding
     const refreshResponse = await refreshTokenIfNeeded();
-    if(refreshResponse.status !== 200) return refreshResponse;
+    if (refreshResponse.status !== 200) return refreshResponse;
 
     const accessToken = localStorage.getItem('AccessToken');
     if (!accessToken) {
       throw new Error('No access token found');
     }
-    let response: AsyncResponse<any> = { status: 200, error: [], data: {
-      ...baseConfig, // Spread the existing config to keep content-type
-      headers: {
-        ...baseConfig.headers, // Spread any existing headers
-        'Authorization': `Bearer ${accessToken}`, // Add the Authorization header with the Access Token
+    let response: AsyncResponse<any> = {
+      status: 200, error: [], data: {
+        ...baseConfig, // Spread the existing config to keep content-type
+        headers: {
+          ...baseConfig.headers, // Spread any existing headers
+          'Authorization': `Bearer ${accessToken}`, // Add the Authorization header with the Access Token
+        }
       }
-    } };
+    };
     // Include the Access Token in the Authorization header
     return response;
   };
@@ -127,19 +129,27 @@ export const useAuth = () => {
     try {
       const authConfig = await getAuthConfig();
       await axios.post(`${API_URL}${ENDPOINTS.api.SaveLog}`, { key, content, extension }, authConfig.data);
-      return {status: 200, data: null, error: []};
+      return { status: 200, data: null, error: [] };
     } catch (error) {
       console.error('Error saving log:', error);
-      return {status: 404, data: null, error: ['Error saving log']};
+      return { status: 404, data: null, error: ['Error saving log'] };
     }
   }
 
-  const getLog = async (key: string): Promise<AsyncResponse<any>> => {
+  const getLog = async (key: string, limit: number = 10): Promise<AsyncResponse<any>> => {
     try {
       const authConfig = await getAuthConfig();
-      const keyString = key ? `?key=${key}` : '';
-      const response = await axios.get(`${API_URL}${ENDPOINTS.api.GetLog}${keyString}`, authConfig.data);
-      return {status: 200, data: response.data, error: []}; // Contains log content, etc.
+      // Prepare the query parameters
+      const params = {
+        key: key,
+        limit: limit, 
+      };
+      // Make the request with the params object
+      const response = await axios.get(`${API_URL}${ENDPOINTS.api.GetLog}`, {
+        headers: authConfig.data.headers, // Assuming authConfig.data contains headers
+        params
+      });
+      return { status: 200, data: response.data, error: [] };
     } catch (error: any) {
       return {
         status: 404,
@@ -164,10 +174,10 @@ export const useAuth = () => {
     try {
       // Make the request with the Access Token
       const authConfig = await getAuthConfig();
-      if(authConfig.status !== 200) return authConfig;
+      if (authConfig.status !== 200) return authConfig;
       const request = axios.get(`${API_URL}${ENDPOINTS.api.GetUser}`, authConfig.data);
       const response = await request;
-      return {data:response.data, status: 200, error: []}; // Contains username, attributes, etc.
+      return { data: response.data, status: 200, error: [] }; // Contains username, attributes, etc.
     } catch (error: any) {
       return {
         status: 401,
@@ -191,7 +201,7 @@ export const useAuth = () => {
       localStorage.setItem('IdToken', response.data.IdToken);
       localStorage.setItem('SignedInAs', username);
       setExpiresAt(response.data.ExpiresIn);
-      return {data:response.data, status: 200, error: []}; // Contains username, attributes, etc. response.data; // Return session data if needed
+      return { data: response.data, status: 200, error: [] }; // Contains username, attributes, etc. response.data; // Return session data if needed
     } catch (error) {
       return {
         status: 401,

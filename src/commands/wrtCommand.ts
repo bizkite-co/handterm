@@ -21,7 +21,7 @@ export const wrtCommand: ICommand = {
         if (!args || args.length === 0) {
             (async () => {
                 try {
-                    const wrtResponse = await _handTerm.props.auth.getLog('wrt');
+                    const wrtResponse = await _handTerm.props.auth.getLog('wrt', 10);
 
                     if (wrtResponse.status == 200) {
                         if (!Array.isArray(wrtResponse.data)) {
