@@ -19,9 +19,16 @@ export const wrtCommand: ICommand = {
         if(!_handTerm) return { ...response, message: 'No HandTerm instance provided'};
 
         if (!args || args.length === 0) {
+            let limit = 10;
+            if(_switches && _switches['limit']){
+                let limitSwitch = _switches['limit']
+                if(typeof limitSwitch === 'string'){
+                    limit = parseInt(limitSwitch)
+                }
+            }
             (async () => {
                 try {
-                    const wrtResponse = await _handTerm.props.auth.getLog('wrt', 10);
+                    const wrtResponse = await _handTerm.props.auth.getLog('wrt', limit);
 
                     if (wrtResponse.status == 200) {
                         if (!Array.isArray(wrtResponse.data)) {
