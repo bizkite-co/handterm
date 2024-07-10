@@ -177,7 +177,7 @@ export const useAuth = () => {
     }
   };
 
-  const signIn = async (username: string, password: string) => {
+  const signIn = async (username: string, password: string): Promise<AsyncResponse<any>> => {
     if (!username || !password) {
       throw new Error('All fields are required');
     }
@@ -191,10 +191,13 @@ export const useAuth = () => {
       localStorage.setItem('IdToken', response.data.IdToken);
       localStorage.setItem('SignedInAs', username);
       setExpiresAt(response.data.ExpiresIn);
-      return response.data; // Return session data if needed
+      return {data:response.data, status: 200, error: []}; // Contains username, attributes, etc. response.data; // Return session data if needed
     } catch (error) {
-      console.error('Login failed:', error);
-      throw error;
+      return {
+        status: 401,
+        error: ['Login failed'],
+        data: null
+      }
     }
   };
 

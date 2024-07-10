@@ -37,10 +37,12 @@ export const wrtCommand: ICommand = {
 
             })();
             response = {status: 200, message: "Getting WRT"};
+            _handTerm.adapterRef.current?.prompt();
             return response;
         } else {
             const content = args.join(' ');
             _handTerm.props.auth.saveLog('wrt/' + new Date().getTime(), content, 'txt');
+            _handTerm.adapterRef.current?.prompt();
             return {status: 200, message: "Wrote message to wrt dir"};
         }
     }

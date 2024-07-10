@@ -377,7 +377,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
         this.inLoginProcess = false;
         this.props.auth.login(this.tempUserName, this.getTempPassword(), (error: any, result: any) => {
           if (error) {
-            console.error(error);
+            this.terminalWrite(error.message);
           }
           else {
             this.terminalWrite("Login successful!" + JSON.stringify(result));
