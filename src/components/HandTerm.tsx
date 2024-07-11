@@ -7,7 +7,7 @@ import React, { ContextType, TouchEventHandler } from 'react';
 import { XtermAdapter } from './XtermAdapter';
 import { NextCharsDisplay } from './NextCharsDisplay';
 import { Output } from './Output';
-import { TerminalGame } from '../game/TerminalGame';
+import { Game } from '../game/Game';
 import ReactDOMServer from 'react-dom/server';
 import { ActionType } from '../game/types/ActionTypes';
 import Phrases from '../utils/Phrases';
@@ -50,8 +50,10 @@ export interface IHandTermState {
   // Define the interface for your HandexTerm state
   outputElements: React.ReactNode[];
   isInPhraseMode: boolean;
-  phrase: string;
+  phraseValue: string;
+  phraseName: string;
   phraseIndex: number;
+  targetWPM: number;
   isActive: boolean;
   commandLine: string;
   heroAction: ActionType;
@@ -66,6 +68,7 @@ export interface IHandTermState {
   currentCommandIndex: number;
   isInSvgMode: boolean;
   lastTypedCharacter: string | null;
+  phrasesAchieved: string[];
 }
 
 class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
@@ -77,7 +80,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
   private terminalElementRef = React.createRef<HTMLDivElement>();
   public adapterRef = React.createRef<XtermAdapter>();
   private nextCharsDisplayRef: React.RefObject<NextCharsDisplay> = React.createRef();
-  private terminalGameRef = React.createRef<TerminalGame>();
+  private terminalGameRef = React.createRef<Game>();
   private _persistence: IPersistence;
   private _commandHistory: string[] = [];
   private wpmCalculator: IWPMCalculator = new WPMCalculator();
@@ -127,6 +130,22 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     }
   }
 
+  private loadPhrasesAchieved(): string[] {
+    const storedPhrasesAchieved = localStorage.getItem('phrasesAchieved');
+    return storedPhrasesAchieved ? JSON.parse(storedPhrasesAchieved) : [];
+  }
+  private savePhrasesAchieved(phrase: string) {
+    const storedPhrasesAchievedString: string = localStorage.getItem('phrasesAchieved') || '';
+    let storedPhrasesAchieved = storedPhrasesAchievedString ? JSON.parse(storedPhrasesAchievedString) : [];
+    storedPhrasesAchieved.push(phrase);
+    localStorage.setItem('phrasesAchieved', JSON.stringify(storedPhrasesAchieved));
+  }
+
+  private loadTargetWPM(): number {
+    const storedTargetWPM = localStorage.getItem('targetWPM');
+    return storedTargetWPM ? parseInt(storedTargetWPM) : 30;
+  }
+
   constructor(IHandexTermProps: IHandTermProps) {
     super(IHandexTermProps);
     this._persistence = new LocalStoragePersistence();
@@ -135,8 +154,11 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     this.state = {
       outputElements: this.getCommandResponseHistory().slice(-1),
       isInPhraseMode: false,
-      phrase: '', // Initial value
+      phraseValue: '', // Initial value
+      phraseName: '',
       phraseIndex: 0,
+      phrasesAchieved: this.loadPhrasesAchieved(),
+      targetWPM: this.loadTargetWPM(),
       isActive: false,
       commandLine: '',
       heroAction: 'Idle',
@@ -246,15 +268,6 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       response = "<div class='chord-display-container'>" + commandChordsHtml + "</div>";
     }
 
-    if (command === 'kill') {
-      if (!this.terminalGameRef.current) return;
-      this.terminalGameRef.current.setZombie4ToDeathThenResetPosition();
-      this.terminalGameRef.current.completeGame();
-      response = "Killed zombie 4. Reset position and game completed.";
-      status = 200;
-    }
-
-
     if (command.startsWith('profile')) {
       if (args.length === 0) {
 
@@ -313,17 +326,12 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       this.terminalGameRef.current?.levelUp(level);
     }
 
-    if (command === 'play' || command.startsWith('play ')) {
+    if (command === 'play' || command === 'phrase') {
       status = 200;
       response = "Type the phrase as fast as you can."
-      this.setNewPhrase(command);
+      this.setNewPhrase(args.join(''));
     }
 
-    if (command === 'phrase' || command.startsWith('phrase ')) {
-      status = 200;
-      response = "Type the phrase as fast as you can."
-      this.setNewPhrase(command);
-    }
     if (command === 'svg') {
       // toggle svg mode
       this.setState({ isInSvgMode: !this.state.isInSvgMode });
@@ -488,11 +496,11 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     return charDuration.durationMilliseconds;
   }
 
-  unlockAchievement = (phrase: string) => {
+  unlockAchievement = (achievementPhrase: string) => {
     this.setState(prevState => {
       const unlockedAchievements = prevState.unlockedAchievements;
-      if (this.state.nextAchievement?.phrase.join('') === phrase) {
-        this.saveAchievements(phrase);
+      if (this.state.nextAchievement?.phrase.join('') === achievementPhrase) {
+        this.saveAchievements(achievementPhrase);
       }
       const nextAchievement = this.getNextAchievement();
       return {
@@ -705,9 +713,16 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     }
   }
 
-  handlePhraseSuccess = (phrase: string) => {
-    let wpmPhrase = this.wpmCalculator
-      .getWPMs().wpmAverage.toString(10)
+  private handlePhraseSuccess = (phrase: string) => {
+    const wpmAverage = this.wpmCalculator.getWPMs().wpmAverage;
+    if (wpmAverage > this.state.targetWPM) {
+      this.savePhrasesAchieved(this.state.phraseName);
+      if(!this.state.phrasesAchieved.includes(this.state.phraseName)) this.setState((prevState) => ({
+        phrasesAchieved: [...prevState.phrasesAchieved, this.state.phraseName]
+      }))
+    }
+
+    let wpmPhrase = wpmAverage.toString(10)
       + ':' + phrase;
     this.setState(
       prevState => ({
@@ -726,33 +741,37 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     this.handlePhraseComplete();
   }
 
-  handlePhraseComplete = () => {
+  private handlePhraseComplete = () => {
 
     let newPhraseIndex = (this.state.phraseIndex + 1) % Phrases.phrases.length;
-    let newPhrase = Phrases.getPhraseByIndex(newPhraseIndex);
+    let newPhrase = this.getPhrasesNotAchieved()[newPhraseIndex];
     this.setState({
       phraseIndex: newPhraseIndex,
       isInPhraseMode: true,
-      phrase: newPhrase
+      phraseValue: newPhrase.value,
+      phraseName: newPhrase.key,
     });
     this.terminalGameRef.current?.completeGame();
   }
+  getPhrasesNotAchieved = () => {
+    return Phrases.phrases.filter((phrase) => !this.state.phrasesAchieved.includes(phrase.key));
+  }
 
-  setNewPhrase = (phraseName: string) => {
+  private setNewPhrase = (phraseName: string) => {
     phraseName = phraseName.replace('phrase ', '');
 
     const newPhrase
-      = phraseName && phraseName != "" && Phrases.getPhrase(phraseName)
-        ? Phrases.getPhrase(phraseName)
-        : Phrases.getPhraseByIndex(this.state.phraseIndex);
+      = phraseName && phraseName != "" && Phrases.getPhraseByKey(phraseName)
+        ? Phrases.getPhraseByKey(phraseName)
+        : this.getPhrasesNotAchieved()[this.state.phraseIndex];
 
-    // this.phrase = new Phrase(newPhrase);
     this.setState((prevState) => {
       return {
         ...prevState,
         isInPhraseMode: true,
-        phrase: newPhrase,
-        commandLine: newPhrase
+        phraseValue: newPhrase.value,
+        phraseName: newPhrase.key,
+        commandLine: newPhrase.value
       }
     });
     // this.props.onNewPhrase(newPhrase); 
@@ -953,7 +972,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
                 onTouchStart={this.handleTouchStart}
                 onTouchEnd={this.handleTouchEnd}
               />
-              <TerminalGame
+              <Game
                 ref={this.terminalGameRef}
                 canvasHeight={this.state.canvasHeight}
                 canvasWidth={canvasWidth} // Use the width from terminalSize if available
@@ -964,15 +983,16 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
                 onSetZombie4Action={this.setZombie4Action}
                 onTouchStart={this.handleTouchStart}
                 onTouchEnd={this.handleTouchEnd}
+                phrasesAchieved={this.state.phrasesAchieved}
               />
               {this.state.isInPhraseMode
-                && this.state.phrase
+                && this.state.phraseValue
                 && <NextCharsDisplay
                   ref={this.nextCharsDisplayRef}
                   onTimerStatusChange={this.handleTimerStatusChange}
                   commandLine={this.state.commandLine}
                   isInPhraseMode={this.state.isInPhraseMode}
-                  newPhrase={this.state.phrase}
+                  newPhrase={this.state.phraseValue}
                   onPhraseSuccess={this.handlePhraseSuccess}
                 />
               }

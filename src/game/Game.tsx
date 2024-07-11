@@ -11,7 +11,7 @@ import { TerminalCssClasses } from '../types/TerminalTypes';
 import ScrollingTextLayer from './ScrollingTextLayer';
 import confetti from 'canvas-confetti';
 
-interface ITerminalGameProps {
+interface IGameProps {
   canvasHeight: number
   canvasWidth: number
   isInPhraseMode: boolean
@@ -21,9 +21,10 @@ interface ITerminalGameProps {
   onTouchEnd: TouchEventHandler<HTMLDivElement>;
   onSetHeroAction: (action: ActionType) => void;
   onSetZombie4Action: (action: ActionType) => void;
+  phrasesAchieved: string[];
 }
 
-interface ITerminalGameState {
+interface IGameState {
   currentLevel: number;
   heroPosition: SpritePosition;
   heroReady: boolean;
@@ -47,7 +48,7 @@ interface ICharacterRefMethods {
   draw: (context: CanvasRenderingContext2D, position: SpritePosition) => number;
 }
 
-export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalGameState> {
+export class Game extends React.Component<IGameProps, IGameState> {
 
   private canvasRef = React.createRef<HTMLCanvasElement>();
   private animationFrameIndex?: number;
@@ -58,7 +59,7 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
   private heroRef = React.createRef<ICharacterRefMethods>();
   private zombie4Ref = React.createRef<ICharacterRefMethods>();
 
-  getInitState(props: ITerminalGameProps): ITerminalGameState {
+  getInitState(props: IGameProps): IGameState {
     return {
       currentLevel: 1,
       heroPosition: { leftX: props.canvasWidth * this.heroXPercent, topY: 30 },
@@ -74,7 +75,7 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
       textToScroll: "Terminal Velocity!",
       isTextScrolling: false,
       isInScrollMode: true,
-      layers: layers[0]
+      layers: layers[0],
     };
   }
 
@@ -108,7 +109,7 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
     this.setState({ currentLevel: newLevel });
   }
 
-  constructor(props: ITerminalGameProps) {
+  constructor(props: IGameProps) {
     super(props);
     this.state = this.getInitState(props);
   }
@@ -124,8 +125,8 @@ export class TerminalGame extends React.Component<ITerminalGameProps, ITerminalG
   }
 
   componentDidUpdate(
-    _prevProps: Readonly<ITerminalGameProps>,
-    prevState: Readonly<ITerminalGameState>,
+    _prevProps: Readonly<IGameProps>,
+    prevState: Readonly<IGameState>,
     _snapshot?: any
   ): void {
     if (this.state.currentLevel !== prevState.currentLevel) {

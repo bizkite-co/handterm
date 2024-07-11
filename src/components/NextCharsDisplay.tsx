@@ -183,23 +183,6 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
 
         const nextChordHTML = this.state.phrase.chordsHTML[nextIndex] as HTMLElement;
 
-        // if (nextChordHTML) {
-        //     nextChordHTML.classList.add("next");
-        //     if (this._chordImageHolderRef.current) this._chordImageHolderRef.current.replaceChildren(nextChordHTML);
-        // }
-
-        // Set the next character in the SVG element
-        // if (this._svgCharacter.current && nextChordHTML) {
-        //     const nameAttribute = nextChordHTML.getAttribute("name");
-        //     if (nameAttribute) {
-        //         this._svgCharacter.current.innerHTML = nameAttribute
-        //             .replace("Space", spaceDisplayChar)
-        //             .replace("tab", "↹");
-        //     }
-        // }
-        // if (this._svgCharacter.current && !this.isTestMode) {
-        //     this._svgCharacter.current.hidden = false;
-        // }
         return nextChordHTML;
     };
 

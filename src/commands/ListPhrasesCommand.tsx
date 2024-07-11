@@ -21,7 +21,7 @@ export const ListPhrasesCommand: ICommand = {
     }
     // Logic to clear the command history from localStorage
     // Logic to clear the command history from context (state)
-    const phrases = Phrases.phrases.map(x => x.name).join('\n');
+    const phrases = Phrases.phrases.map(x => x.key).join('\n');
     _handTerm?.saveCommandResponseHistory(_commandName, phrases, 200);
     return { status: 200, message: phrases};
   }
