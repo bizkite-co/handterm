@@ -654,7 +654,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
   }
 
   clearCommandHistory(_command: string, args: string[] = [], _switches: Record<string, boolean | string> = {}): void {
-    let keys: string[] = [];
+    let removeKeys: string[] = [];
     for (let i = localStorage.length; i >= 0; i--) {
       let key = localStorage.key(i);
       if (!key) continue;
@@ -663,16 +663,16 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
         || key.includes('terminalCommandHistory') // Remove after clearing legacy phone db.
         || key.includes(LogKeys.CharTime)
       ) {
-        keys.push(key);
+        removeKeys.push(key);
       }
-      if (args.includes("achievements")) {
-        if (key.includes('achievements')) {
-          keys.push(key);
+      if(args) {
+        if(key.includes(args[0])) {
+          removeKeys.push(key);
         }
       }
     }
-    for (let key of keys) {
-      localStorage.removeItem(key); // Clear localStorage.length
+    for (let removeKey of removeKeys) {
+      localStorage.removeItem(removeKey); // Clear localStorage.length
     }
     this._commandHistory = [];
     this.setState({ outputElements: [] });
