@@ -219,7 +219,7 @@ div.terminal {
 #footer {
     div {
         float: left;
-        padding: 0 30px;
+        padding: 10px 0 0 30px;
         font-size: calc(var(--terminal-font-size) * 2.8);
         text-align: center;
         a {
@@ -230,7 +230,7 @@ div.terminal {
     img {
         width: 150px;
         float: right;
-        padding: 15px;
+        padding: 0 15px 15px 0;
     }
 }
 
@@ -256,6 +256,14 @@ div.terminal {
     .scrolling-text {
         animation: scrollText 1s linear infinite;
         /* Adjust duration as needed */
+    }
+    #footer {
+        div {
+            font-size: calc(var(--terminal-font-size) * 0.8);
+        }
+        img {
+            width: 100px;
+        }
     }
 }
 
