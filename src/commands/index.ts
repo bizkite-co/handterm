@@ -5,8 +5,10 @@ import { clearCommand } from './clearCommand';
 import { ListPhrasesCommand } from "./ListPhrasesCommand";
 import { archiveCommand } from './archiveCommand';
 import { wrtCommand } from './wrtCommand';
+import { cleanCommand } from './cleanCommand';
 
 commandRegistry.register(clearCommand);
+commandRegistry.register(cleanCommand);
 commandRegistry.register(ListPhrasesCommand);
 commandRegistry.register(archiveCommand);
 commandRegistry.register(wrtCommand);

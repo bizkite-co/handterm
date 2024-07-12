@@ -5,7 +5,6 @@ import { ICommandResponse } from './ICommand';
 export interface ICommandContext {
   commandHistory: string[];
   appendToOutput: (element: React.ReactNode) => void;
-  clearOuput: () => void;
   executeCommand: (
     commandName: string, 
     args?: string[], 

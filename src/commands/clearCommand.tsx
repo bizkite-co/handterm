@@ -1,4 +1,5 @@
 // src/commands/clearCommand.ts
+import { LogKeys } from '../types/TerminalTypes';
 import HandTerm from '../components/HandTerm';
 import { ICommand } from './ICommand';
 
@@ -7,17 +8,40 @@ export const clearCommand: ICommand = {
   description: 'Clear the command history',
   // Make sure the parameters match the ICommand execute definition
   execute: (
-    _commandName: string, 
-    _args?: string[], 
-    _switches?: Record<string, boolean | string>, 
-    _handTerm?: HandTerm
+    _commandName: string,
+    args?: string[],
+    _switches?: Record<string, boolean | string>,
+    handTerm?: HandTerm
   ) => {
-    if (!_handTerm) {
-      return { status: 404, message: 'No command context available.'};
+    if (!handTerm) {
+      return { status: 404, message: 'No command context available.' };
     }
     // Logic to clear the command history from localStorage
     // Logic to clear the command history from context (state)
-    _handTerm.clearCommandHistory(_commandName, _args, _switches);
-    return { status: 200, message: 'Command history cleared.'};
+    let removeKeys: string[] = [];
+    for (let i = localStorage.length; i >= 0; i--) {
+      let key = localStorage.key(i);
+      if (!key) continue;
+      if (
+        key.includes(LogKeys.Command)
+        || key.includes('terminalCommandHistory') // Remove after clearing legacy phone db.
+        || key.includes(LogKeys.CharTime)
+      ) {
+        removeKeys.push(key);
+      }
+      if (args) {
+        if (key.includes(args[0])) {
+          removeKeys.push(key);
+        }
+      }
+    }
+    for (let removeKey of removeKeys) {
+      localStorage.removeItem(removeKey); // Clear localStorage.length
+    }
+    handTerm.commandHistory = [];
+    handTerm.setState({ outputElements: [] });
+    handTerm.terminalReset();
+    handTerm.prompt();
+    return { status: 200, message: 'Command history cleared.' };
   }
 };

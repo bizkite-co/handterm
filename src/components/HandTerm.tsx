@@ -65,7 +65,8 @@ export interface IHandTermState {
   nextAchievement: Achievement | null;
   isInTutorial: boolean;
   commandHistory: string[];
-  currentCommandIndex: number;
+  commandHistoryIndex: number;
+  commandHistoryFilter: string | null;
   isInSvgMode: boolean;
   lastTypedCharacter: string | null;
   phrasesAchieved: string[];
@@ -82,7 +83,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
   private nextCharsDisplayRef: React.RefObject<NextCharsDisplay> = React.createRef();
   private terminalGameRef = React.createRef<Game>();
   private _persistence: IPersistence;
-  private _commandHistory: string[] = [];
+  public commandHistory: string[] = [];
   private wpmCalculator: IWPMCalculator = new WPMCalculator();
   private videoElementRef: React.RefObject<HTMLVideoElement> = React.createRef();
   private webCam: IWebCam | null = null;
@@ -170,7 +171,8 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       nextAchievement: nextAchievement,
       isInTutorial: true,
       commandHistory: this.loadCommandHistory(),
-      currentCommandIndex: -1,
+      commandHistoryIndex: -1,
+      commandHistoryFilter: null,
       isInSvgMode: false,
       lastTypedCharacter: null
     }
@@ -183,10 +185,10 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
   }
 
   loadCommandHistory() {
-    return JSON.parse(localStorage.getItem('commandHistory') || '[]');
+    return JSON.parse(localStorage.getItem(LogKeys.CommandHistory) || '[]');
   }
   saveCommandHistory(commandHistory: any) {
-    localStorage.setItem('commandHistory', JSON.stringify(commandHistory));
+    localStorage.setItem(LogKeys.CommandHistory, JSON.stringify(commandHistory));
   }
 
   scrollToBottom() {
@@ -224,9 +226,11 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     if (cmd && cmd !== 'Return (ENTER)') {
       this.setState(
         // Update the command history
+        // TODO: Find out why this is conflicting with localStorage and storing old cleaned out history.
         prevState => ({
           commandHistory: [cmd, ...prevState.commandHistory],
-          currentCommandIndex: -1,
+          commandHistoryIndex: -1,
+          commandHistoryFilter: null
         }),
         () => this.saveCommandHistory(this.state.commandHistory)
       );
@@ -367,8 +371,8 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     }
 
     // Truncate the history if it's too long before saving
-    if (this._commandHistory.length > HandTerm.commandHistoryLimit) {
-      this._commandHistory.shift(); // Remove the oldest command
+    if (this.commandHistory.length > HandTerm.commandHistoryLimit) {
+      this.commandHistory.shift(); // Remove the oldest command
     }
     if (command !== 'Return') this.saveCommandResponseHistory(command, response, status); // Save updated history to localStorage
     return;
@@ -381,6 +385,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
   public handleCharacter = (character: string) => {
     const charDuration: CharDuration = this.wpmCalculator.addKeystroke(character);
     localStorage.setItem('currentCommand', this.adapterRef.current?.getCurrentCommand() + character);
+    const charCodes: number[] = character.split('').map(char => char.charCodeAt(0));
     if (this.state.isInSvgMode) {
       // TODO: Show last character of current command SVG. Handle backspace and return properly. 
       this.setState({ lastTypedCharacter: character });
@@ -427,7 +432,6 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
         this.resetTempPassword();
       }
       else {
-
         this.appendTempPassword(character);
         this.terminalWrite("*");
         return;
@@ -439,11 +443,15 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       this.adapterRef.current?.prompt();
     }
     if (character === 'ArrowUp') {
-      let newCommandIndex = (this.state.currentCommandIndex + 1) % this.state.commandHistory.length;
-      let command = this.state.commandHistory[newCommandIndex];
+      const currentCommand = this.state.commandHistoryFilter || this.adapterRef.current?.getCurrentCommand(); 
+      this.setState({ commandHistoryFilter: currentCommand || null });
+      let newCommandIndex = (this.state.commandHistoryIndex + 1) % this.state.commandHistory.length;
+      let command = this.state
+        .commandHistory
+        .filter((ch) => ch.startsWith(currentCommand || ''))[newCommandIndex];
       const commandResponseHistory = this.getCommandResponseHistory().reverse();
       this.setState({
-        currentCommandIndex: newCommandIndex,
+        commandHistoryIndex: newCommandIndex,
         commandLine: command,
         outputElements: [commandResponseHistory[newCommandIndex]],
       });
@@ -453,6 +461,27 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       this.terminalWrite(command);
       return;
     }
+    if (charCodes.join(',') == '27,91,66') {
+      const currentCommand = this.state.commandHistoryFilter;
+      let newCommandIndex = (this.state.commandHistoryIndex - 1 + this.state.commandHistory.length) 
+        % this.state.commandHistory.length;
+      if(newCommandIndex < 0) newCommandIndex = 0;
+      if(newCommandIndex >= this.state.commandHistory.length) newCommandIndex = this.state.commandHistory.length - 1;
+      let command = this.state
+        .commandHistory
+        .filter((ch) => ch.startsWith(currentCommand || ''))[newCommandIndex];
+      const commandResponseHistory = this.getCommandResponseHistory().reverse();
+      this.setState({
+        commandHistoryIndex: newCommandIndex,
+        commandLine: command,
+        outputElements: [commandResponseHistory[newCommandIndex]],
+      });
+      this.terminalReset();
+      this.terminalPrompt();
+      this.terminalWrite(command);
+      return;
+    }
+
     if (character.charCodeAt(0) === 4) { // Ctrl+D
       console.log('Ctrl+D pressed');
       this.increaseFontSize();
@@ -635,7 +664,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
 
     commandText = commandText.replace(/{{wpm}}/g, ('_____' + wpmSum.toFixed(0)).slice(-4));
 
-    if (!this._commandHistory) { this._commandHistory = []; }
+    if (!this.commandHistory) { this.commandHistory = []; }
     const commandResponse = commandResponseElement.outerHTML;
     const characterAverages = this.averageWpmByCharacter(wpms.charWpms.filter(wpm => wpm.durationMilliseconds > 1));
     const slowestCharacters = this.WpmsToHTML(characterAverages.sort((a, b) => a.wpm - b.wpm).slice(0, 3), "slow-chars");
@@ -652,35 +681,8 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
   }
 
   writeOutput(output: string) {
-    this._commandHistory = [output];
+    this.commandHistory = [output];
     this.setState({ outputElements: [output] });
-  }
-
-  clearCommandHistory(_command: string, args: string[] = [], _switches: Record<string, boolean | string> = {}): void {
-    let removeKeys: string[] = [];
-    for (let i = localStorage.length; i >= 0; i--) {
-      let key = localStorage.key(i);
-      if (!key) continue;
-      if (
-        key.includes(LogKeys.Command)
-        || key.includes('terminalCommandHistory') // Remove after clearing legacy phone db.
-        || key.includes(LogKeys.CharTime)
-      ) {
-        removeKeys.push(key);
-      }
-      if (args) {
-        if (key.includes(args[0])) {
-          removeKeys.push(key);
-        }
-      }
-    }
-    for (let removeKey of removeKeys) {
-      localStorage.removeItem(removeKey); // Clear localStorage.length
-    }
-    this._commandHistory = [];
-    this.setState({ outputElements: [] });
-    this.adapterRef.current?.terminalReset();
-    this.adapterRef.current?.prompt();
   }
 
   createCommandRecord(command: string, commandTime: Date): string {
@@ -824,7 +826,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     this.setState({ isActive });
   }
 
-  private terminalReset(): void {
+  public terminalReset(): void {
     this.adapterRef.current?.terminalReset();
   }
 

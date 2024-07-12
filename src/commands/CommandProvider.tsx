@@ -37,21 +37,12 @@ export const CommandProvider: React.FC<CommandProviderProps> = (props: CommandPr
     if(element) handTerm.writeOutput(element.toString());
   }, []);
 
-  const clearOuput = useCallback(() => {
-    const handTerm = props.handTermRef.current;
-    if (!handTerm) {
-      console.error('CommandProvider: handTermRef.current is NULL');
-      return 'CommandProvider: handTermRef.current is NULL';
-    }
-    handTerm.clearCommandHistory("clear");
-  }, []);
 
   // Provide the context with the necessary values
   const contextValue = useMemo<ICommandContext>(() => ({
     commandHistory,
     executeCommand,
     appendToOutput: appendToOutput,
-    clearOuput: clearOuput
   }), [commandHistory, executeCommand]);
 
   return (
