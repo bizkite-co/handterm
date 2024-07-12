@@ -219,8 +219,12 @@ div.terminal {
 #footer {
     div {
         float: left;
+        padding: 0 30px;
         font-size: calc(var(--terminal-font-size) * 2.8);
         text-align: center;
+        a {
+            color: cyan;
+        }
     }
 
     img {
