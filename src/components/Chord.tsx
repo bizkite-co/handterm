@@ -9,16 +9,18 @@ export function Chord(
 ) {
     // TODO: Why is this joined?
 
-    const foundChord
+    let foundChord
         = Array.from(allChords)
             .find(x => {
                 return x.key
                     .replace('&#x2581;', ' ')
                     .replace('(underscore)', '_')
-                    .replace('Return (ENTER)', '\r')
                     // .replace('Return (ENTER)', '\r')
                     == props.displayChar;
             });
+    if(!foundChord) {
+        foundChord = Array.from(allChords).find(x => x.key == props.displayChar);
+    }
 
     const foundChar = foundChord?.key
         .replace("Arrow", "")

@@ -1,13 +1,16 @@
 export type PhraseType = { key: string, value: string };
+
+const standardChars = /^[a-zA-Z0-9\s'";:.!,?]+$/;
+
 export default class Phrases {
     public static readonly phrases: PhraseType[] = [
         { key: "asd", value: "asdf" },
         { key: "asd2", value: "asdf sad dad daf fas fad das dad sas" },
-        { key: "ask", value: "Ask dad; A sad lass had salad."},
+        { key: "ask", value: "Ask dad; A sad lass had salad." },
         { key: "jkl", value: "jill" },
-        { key: "gallant", value: "A gallant lad; a glass."},
-        { key: "alas", value: "Alas, Khal’s flask has a crack."},
-        { key: "lads", value: "Lads’ flags fall as gaffs sag." },
+        { key: "gallant", value: "A gallant lad; a glass." },
+        { key: "alas", value: "Alas, Khal's flask has a crack." },
+        { key: "lads", value: "Lads' flags fall as gaffs sag." },
         { key: "jkl2", value: "jill kill jelly lilly jolly jill" },
         { key: "hello", value: "Hello, World!" },
         { key: "pack", value: "Pack my box with five dozen liquor jugs." },
@@ -39,12 +42,22 @@ export default class Phrases {
         return this.getPhraseByIndex(0);
     }
 
-    public static getPhraseByIndex(index: number): PhraseType  {
+    public checkPhrases = (): Response => {
+        let response: Response = {status: 200, message: ''};
+        Phrases.phrases.forEach((phrase, index) => {
+            if (!standardChars.test(phrase.value)) {
+                console.warn(`Phrase at index ${index} contains non-standard characters: ${phrase.value}`);
+            }
+        });
+        return response;
+    };
+
+    public static getPhraseByIndex(index: number): PhraseType {
         if (index >= 0 && index < this.phrases.length) {
             return this.phrases[index];
-        } 
-        if(index < 0) return this.phrases[0];
-        if(index >= this.phrases.length) return this.phrases[this.phrases.length - 1];
+        }
+        if (index < 0) return this.phrases[0];
+        if (index >= this.phrases.length) return this.phrases[this.phrases.length - 1];
         return this.phrases[0];
     }
     public static getPhraseNames(): string[] {
