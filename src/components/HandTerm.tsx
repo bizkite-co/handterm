@@ -221,14 +221,16 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
   }
 
   public handleCommand = (cmd: string) => {
-    this.setState(
-      // Update the command history
-      prevState => ({
-        commandHistory: [cmd, ...prevState.commandHistory],
-        currentCommandIndex: -1,
-      }),
-      () => this.saveCommandHistory(this.state.commandHistory)
-    );
+    if (cmd && cmd !== 'Return (ENTER)') {
+      this.setState(
+        // Update the command history
+        prevState => ({
+          commandHistory: [cmd, ...prevState.commandHistory],
+          currentCommandIndex: -1,
+        }),
+        () => this.saveCommandHistory(this.state.commandHistory)
+      );
+    }
     // TODO: handle achievement unlocks
     if (this.state.isInTutorial) {
       // Unlock the next achievement and decide if we are still in tutorial mode
@@ -329,6 +331,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     if (command === 'play' || command === 'phrase') {
       status = 200;
       response = "Type the phrase as fast as you can."
+      this.setState({ phraseIndex: 0 }); 
       this.setNewPhrase(args.join(''));
     }
 
@@ -367,7 +370,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     if (this._commandHistory.length > HandTerm.commandHistoryLimit) {
       this._commandHistory.shift(); // Remove the oldest command
     }
-    this.saveCommandResponseHistory(command, response, status); // Save updated history to localStorage
+    if (command !== 'Return') this.saveCommandResponseHistory(command, response, status); // Save updated history to localStorage
     return;
   }
 
@@ -665,8 +668,8 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       ) {
         removeKeys.push(key);
       }
-      if(args) {
-        if(key.includes(args[0])) {
+      if (args) {
+        if (key.includes(args[0])) {
           removeKeys.push(key);
         }
       }
@@ -717,7 +720,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     const wpmAverage = this.wpmCalculator.getWPMs().wpmAverage;
     if (wpmAverage > this.state.targetWPM) {
       this.savePhrasesAchieved(this.state.phraseName);
-      if(!this.state.phrasesAchieved.includes(this.state.phraseName)) this.setState((prevState) => ({
+      if (!this.state.phrasesAchieved.includes(this.state.phraseName)) this.setState((prevState) => ({
         phrasesAchieved: [...prevState.phrasesAchieved, this.state.phraseName]
       }))
     }
