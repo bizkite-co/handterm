@@ -131,7 +131,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     }
   }
 
-  private loadPhrasesAchieved(): string[] {
+  private getPhrasesAchieved(): string[] {
     const storedPhrasesAchieved = localStorage.getItem('phrasesAchieved');
     return storedPhrasesAchieved ? JSON.parse(storedPhrasesAchieved) : [];
   }
@@ -158,7 +158,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       phraseValue: '', // Initial value
       phraseName: '',
       phraseIndex: 0,
-      phrasesAchieved: this.loadPhrasesAchieved(),
+      phrasesAchieved: this.getPhrasesAchieved(),
       targetWPM: this.loadTargetWPM(),
       isActive: false,
       commandLine: '',
@@ -759,7 +759,8 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     this.terminalGameRef.current?.completeGame();
   }
   getPhrasesNotAchieved = () => {
-    return Phrases.phrases.filter((phrase) => !this.state.phrasesAchieved.includes(phrase.key));
+    const phrasesAchieved = this.getPhrasesAchieved();
+    return Phrases.phrases.filter((phrase) => !phrasesAchieved.includes(phrase.key));
   }
 
   private setNewPhrase = (phraseName: string) => {

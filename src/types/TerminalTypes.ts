@@ -34,7 +34,8 @@ export const TerminalCssClasses = {
 export const LogKeys = {
     CharTime: 'char-time',
     Command: 'command',
-    CommandHistory: 'commandHistory'
+    CommandHistory: 'commandHistory',
+    PhrasesAchieved: 'phrasesAchieved',
 } as const;
 
 export type TimeCode = string;

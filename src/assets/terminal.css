@@ -23,6 +23,7 @@ body {
 }
 
 .terminal-container {
+    padding: 15px 0 0 0;
     flex-direction: column;
     justify-content: flex-end;
     /* Aligns children (HandexTerm) to the bottom */
@@ -217,9 +218,10 @@ div.terminal {
 }
 
 #footer {
+    padding: 0 0 15 0;
     div {
         float: left;
-        padding: 10px 0 0 30px;
+        padding: 20px 0 0 30px;
         font-size: calc(var(--terminal-font-size) * 2.8);
         text-align: center;
         a {
@@ -228,7 +230,7 @@ div.terminal {
     }
 
     img {
-        width: 150px;
+        width: 170px;
         float: right;
         padding: 0 15px 15px 0;
     }
@@ -236,7 +238,7 @@ div.terminal {
 
 
 .wpm {
-    color: #fa807280;
+    color: #fa8072cb;
     padding: 0 5px;
 }
 
@@ -262,7 +264,7 @@ div.terminal {
             font-size: calc(var(--terminal-font-size) * 0.8);
         }
         img {
-            width: 100px;
+            width: 120px;
         }
     }
 }

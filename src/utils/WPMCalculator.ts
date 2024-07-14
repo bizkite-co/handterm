@@ -26,6 +26,7 @@ export class WPMCalculator implements IWPMCalculator {
     saveKeystrokes(timeCode: TimeCode): number {
         let charsAndSum = this.getWPMs();
         localStorage.setItem(LogKeys.CharTime + '_' + timeCode, JSON.stringify(charsAndSum.charWpms));
+        this.previousTimestamp = 0;
         return charsAndSum.wpmAverage;
     }
 
