@@ -141,6 +141,9 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     storedPhrasesAchieved.push(phrase);
     localStorage.setItem('phrasesAchieved', JSON.stringify(storedPhrasesAchieved));
   }
+  private resetPhrasesAchieved() {
+    localStorage.removeItem('phrasesAchieved');
+  }
 
   private loadTargetWPM(): number {
     const storedTargetWPM = localStorage.getItem(LogKeys.TargetWPM);
@@ -282,6 +285,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
         if (!isNaN(targetWPM)) {
           this.setState({ targetWPM: targetWPM });
           localStorage.setItem(LogKeys.TargetWPM, targetWPM.toString());
+          this.resetPhrasesAchieved();
           response = "Target WPM set to " + targetWPM;
         } else {
           response = "Target WPM must be a number";
