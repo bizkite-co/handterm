@@ -36,6 +36,7 @@ export const LogKeys = {
     Command: 'command',
     CommandHistory: 'commandHistory',
     PhrasesAchieved: 'phrasesAchieved',
+    TargetWPM: 'targetWPM',
 } as const;
 
 export type TimeCode = string;

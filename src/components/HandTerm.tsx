@@ -143,8 +143,8 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
   }
 
   private loadTargetWPM(): number {
-    const storedTargetWPM = localStorage.getItem('targetWPM');
-    return storedTargetWPM ? parseInt(storedTargetWPM) : 30;
+    const storedTargetWPM = localStorage.getItem(LogKeys.TargetWPM);
+    return storedTargetWPM ? parseInt(storedTargetWPM) : 25;
   }
 
   constructor(IHandexTermProps: IHandTermProps) {
@@ -272,6 +272,21 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
         return ReactDOMServer.renderToStaticMarkup(element);
       }).join('');
       response = "<div class='chord-display-container'>" + commandChordsHtml + "</div>";
+    }
+
+    if (command === 'target'){
+      if (args.length === 0) {
+        response = "Target WPM: " + this.state.targetWPM;
+      } else {
+        const targetWPM = parseInt(args[0]);
+        if (!isNaN(targetWPM)) {
+          this.setState({ targetWPM: targetWPM });
+          localStorage.setItem(LogKeys.TargetWPM, targetWPM.toString());
+          response = "Target WPM set to " + targetWPM;
+        } else {
+          response = "Target WPM must be a number";
+        }
+      }
     }
 
     if (command.startsWith('profile')) {
