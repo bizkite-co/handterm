@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { ENDPOINTS } from '../shared/endpoints';
-import { AsyncResponse } from 'src/types/Types';
+import { MyResponse } from 'src/types/Types';
 
 const API_URL = ENDPOINTS.api.BaseUrl;
 
@@ -45,8 +45,8 @@ export const useAuth = () => {
       throw error;
     }
   };
-  const refreshTokenIfNeeded = async (): Promise<AsyncResponse<number>> => {
-    let response: AsyncResponse<number> = { status: 200, error: [] };
+  const refreshTokenIfNeeded = async (): Promise<MyResponse<number>> => {
+    let response: MyResponse<number> = { status: 200, error: [], message: 'Token refresh' };
     const accessToken = localStorage.getItem('AccessToken');
     const refreshToken = localStorage.getItem('RefreshToken');
     const expiresAt = localStorage.getItem('ExpiresAt');
@@ -93,7 +93,7 @@ export const useAuth = () => {
     return expiresAt.toString(10);
   }
 
-  const getAuthConfig = async (): Promise<AsyncResponse<any>> => {
+  const getAuthConfig = async (): Promise<MyResponse<any>> => {
     // Ensure refreshTokenIfNeeded is awaited to complete the refresh before proceeding
     const refreshResponse = await refreshTokenIfNeeded();
     if (refreshResponse.status !== 200) return refreshResponse;
@@ -102,8 +102,8 @@ export const useAuth = () => {
     if (!accessToken) {
       throw new Error('No access token found');
     }
-    let response: AsyncResponse<any> = {
-      status: 200, error: [], data: {
+    let response: MyResponse<any> = {
+      status: 200, message: 'Get auth config', error: [], data: {
         ...baseConfig, // Spread the existing config to keep content-type
         headers: {
           ...baseConfig.headers, // Spread any existing headers
@@ -125,18 +125,18 @@ export const useAuth = () => {
     }
   }
 
-  const saveLog = async (key: string, content: string, extension: string = 'json'): Promise<AsyncResponse<any>> => {
+  const saveLog = async (key: string, content: string, extension: string = 'json'): Promise<MyResponse<any>> => {
     try {
       const authConfig = await getAuthConfig();
       await axios.post(`${API_URL}${ENDPOINTS.api.SaveLog}`, { key, content, extension }, authConfig.data);
-      return { status: 200, data: null, error: [] };
+      return { status: 200, data: null, error: [], message: 'Log saved successfully' };
     } catch (error) {
       console.error('Error saving log:', error);
-      return { status: 404, data: null, error: ['Error saving log'] };
+      return { status: 404, message: 'Error saving log', error: ['Error saving log'] };
     }
   }
 
-  const getLog = async (key: string, limit: number = 10): Promise<AsyncResponse<any>> => {
+  const getLog = async (key: string, limit: number = 10): Promise<MyResponse<any>> => {
     try {
       const authConfig = await getAuthConfig();
       // Prepare the query parameters
@@ -149,10 +149,11 @@ export const useAuth = () => {
         headers: authConfig.data.headers, // Assuming authConfig.data contains headers
         params
       });
-      return { status: 200, data: response.data, error: [] };
+      return { status: 200, message: 'Log fetched successfully', data: response.data, error: [] };
     } catch (error: any) {
       return {
         status: 404,
+        message: 'Error fetching log',
         error: ['Error fetching log', error.message],
         data: null
       };
@@ -170,24 +171,25 @@ export const useAuth = () => {
     }
   }
 
-  const getUser = async (): Promise<AsyncResponse<any>> => {
+  const getUser = async (): Promise<MyResponse<any>> => {
     try {
       // Make the request with the Access Token
       const authConfig = await getAuthConfig();
       if (authConfig.status !== 200) return authConfig;
       const request = axios.get(`${API_URL}${ENDPOINTS.api.GetUser}`, authConfig.data);
       const response = await request;
-      return { data: response.data, status: 200, error: [] }; // Contains username, attributes, etc.
+      return { data: response.data, message: 'User fetched successfully', status: 200, error: [] }; // Contains username, attributes, etc.
     } catch (error: any) {
       return {
         status: 401,
+        message: 'Error fetching current user',
         error: ['Error fetching current user', error.message],
         data: null
       };
     }
   };
 
-  const signIn = async (username: string, password: string): Promise<AsyncResponse<any>> => {
+  const signIn = async (username: string, password: string): Promise<MyResponse<any>> => {
     if (!username || !password) {
       throw new Error('All fields are required');
     }
@@ -201,10 +203,11 @@ export const useAuth = () => {
       localStorage.setItem('IdToken', response.data.IdToken);
       localStorage.setItem('SignedInAs', username);
       setExpiresAt(response.data.ExpiresIn);
-      return { data: response.data, status: 200, error: [] }; // Contains username, attributes, etc. response.data; // Return session data if needed
+      return { data: response.data, message: 'Login successful', status: 200, error: [] }; // Contains username, attributes, etc. response.data; // Return session data if needed
     } catch (error) {
       return {
         status: 401,
+        message: 'Login failed',
         error: ['Login failed'],
         data: null
       }

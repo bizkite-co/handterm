@@ -36,9 +36,10 @@ export class Chord implements IChord {
     }
 }
 
-export type AsyncResponse<T> = {
+export type MyResponse<T> = {
   status: 200 | 400 | 401 | 403 | 404 | 500;
-  data?: T;
+  data?: T | undefined;
+  message: string | undefined;
   error: string[];
 };
 

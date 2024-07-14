@@ -1,3 +1,5 @@
+import { MyResponse } from "src/types/Types";
+
 export type PhraseType = { key: string, value: string };
 
 const standardChars = /^[a-zA-Z0-9\s'";:.!,?]+$/;
@@ -42,11 +44,17 @@ export default class Phrases {
         return this.getPhraseByIndex(0);
     }
 
-    public checkPhrases = (): Response => {
-        let response: Response = {status: 200, message: ''};
+    public checkPhrases = (): MyResponse<any> => {
+        let response: MyResponse<any> = {
+            status: 200, 
+            message: '',
+            data: '',
+            error: []
+        };
         Phrases.phrases.forEach((phrase, index) => {
             if (!standardChars.test(phrase.value)) {
-                console.warn(`Phrase at index ${index} contains non-standard characters: ${phrase.value}`);
+                response.error.push(`Phrase at index ${index} contains non-standard characters: ${phrase.value}`);
+                response.status = 400;
             }
         });
         return response;

@@ -13,7 +13,7 @@ import { ActionType } from '../game/types/ActionTypes';
 import Phrases from '../utils/Phrases';
 import { IWebCam, WebCam } from '../utils/WebCam';
 import { CommandContext } from '../commands/CommandContext';
-import { Achievement, Achievements, AsyncResponse } from '../types/Types';
+import { Achievement, Achievements, MyResponse } from '../types/Types';
 import { TutorialComponent } from './TutorialComponent';
 import { Chord } from './Chord';
 import axios from 'axios';
@@ -24,7 +24,7 @@ export interface IHandTermProps {
   // Define the interface for your HandexTerm logic
   terminalWidth: number;
   auth: {
-    login: (username: string, password: string) => Promise<AsyncResponse<any>>;
+    login: (username: string, password: string) => Promise<MyResponse<any>>;
     logout: () => void;
     isLoggedIn: boolean;
     signUp: (
@@ -33,10 +33,10 @@ export interface IHandTermProps {
       email: string,
       callback: (error: any, result: any) => void
     ) => void;
-    getUser: () => Promise<AsyncResponse<any>>;
+    getUser: () => Promise<MyResponse<any>>;
     setUser: (profile: string) => void;
-    saveLog: (key: string, content: string, extension: string) => Promise<AsyncResponse<any>>;
-    getLog: (key: string, limit?: number) => Promise<AsyncResponse<any>>;
+    saveLog: (key: string, content: string, extension: string) => Promise<MyResponse<any>>;
+    getLog: (key: string, limit?: number) => Promise<MyResponse<any>>;
     changePassword: (
       oldPassword: string,
       newPassword: string,
@@ -758,6 +758,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     });
     this.terminalGameRef.current?.completeGame();
   }
+
   getPhrasesNotAchieved = () => {
     const phrasesAchieved = this.getPhrasesAchieved();
     return Phrases.phrases.filter((phrase) => !phrasesAchieved.includes(phrase.key));
