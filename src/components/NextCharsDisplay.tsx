@@ -311,7 +311,7 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
     render() {
         
         return (
-            <div hidden={!this.props.isInPhraseMode}>
+            <div id="next-chars" hidden={!this.props.isInPhraseMode}>
                 {/* ...other components */}
                 {this.state.mismatchedChar
                     && <ErrorDisplay

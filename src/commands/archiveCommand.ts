@@ -27,7 +27,10 @@ export const archiveCommand: ICommand = {
             }
 
             if (key.startsWith(LogKeys.Command + '_') || key.startsWith(LogKeys.CharTime + '_')) {
-                if (!key.includes('_archive_')) {
+
+                if (key.includes('_archive_')) {
+                    localStorage.removeItem(key);
+                } else {
                     const logKey = key.substring(0, key.indexOf('_'));
                     const content = localStorage.getItem(key);
                     if (content) {
@@ -54,10 +57,11 @@ export const archiveCommand: ICommand = {
 
             // Use setTimeout to avoid blocking the main thread
             // and process the next item in the next event loop tick
-            setTimeout(() => archiveNext(index + 1), 0);
+            setTimeout(() => archiveNext(index + 1), 300);
         };
 
         archiveNext(0); // Start processing from the first item
+        _handTerm.prompt();
         return { status: 200, message: 'Command history archived.' };
     },
 }

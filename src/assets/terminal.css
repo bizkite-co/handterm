@@ -23,7 +23,6 @@ body {
 }
 
 .terminal-container {
-    padding: 15px 0 0 0;
     flex-direction: column;
     justify-content: flex-end;
     /* Aligns children (HandexTerm) to the bottom */
@@ -209,8 +208,20 @@ div.terminal {
 
 #terminal-output {
     /* Output area styles */
+    padding: 15px 0 0 0;
     z-index: 10000;
+    background-color: #0009;
     font-size: var(--terminal-font-size);
+}
+
+#terminal-game {
+    background-color: #0009;
+}
+#next-chars {
+    background-color: #0009;
+    pre#nextChars {
+        background-color: #0009;
+    }
 }
 
 #terminal-output div {
@@ -239,6 +250,7 @@ div.terminal {
 
 .wpm {
     color: #fa8072cb;
+    font-weight: bold;
     padding: 0 5px;
 }
 
