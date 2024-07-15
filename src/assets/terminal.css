@@ -214,6 +214,11 @@ div.terminal {
     font-size: var(--terminal-font-size);
 }
 
+.xterm-rows :first-child,
+.xterm-rows :nth-child(2) {
+    background-color: #0009;
+}
+
 #terminal-game {
     background-color: #0009;
 }
