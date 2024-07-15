@@ -13,6 +13,7 @@ interface IXtermAdapterProps {
   terminalElement: HTMLElement | null;
   terminalElementRef: React.RefObject<HTMLElement>;
   onAddCharacter: (character: string) => void;
+  onRemoveCharacter: (command: string) => void;
   onTouchStart: TouchEventHandler<HTMLDivElement>;
   onTouchEnd: TouchEventHandler<HTMLDivElement>;
   terminalFontSize: number;
@@ -37,6 +38,7 @@ export class XtermAdapter extends React.Component<IXtermAdapterProps, IXtermAdap
     }
     this.terminal = new Terminal(XtermAdapterConfig);
     this.onDataHandler = this.onDataHandler.bind(this);
+
   }
 
   initializeTerminal() {
@@ -133,6 +135,7 @@ export class XtermAdapter extends React.Component<IXtermAdapterProps, IXtermAdap
       if (this.isCursorOnPrompt()) return true;
       this.tempPassword = this.tempPassword.slice(0, -1);
       this.terminal.write('\x1b[D\x1b[P');
+      this.props.onRemoveCharacter(this.getCurrentCommand().slice(0,-1));
       result = true;
     }
     return result;

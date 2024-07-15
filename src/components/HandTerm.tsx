@@ -100,6 +100,32 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
   private tempNewPassword: string = '';
   private isInChangePasswordMode: boolean = false;
 
+  handleRemoveCharacter = (command: string) => {
+    if (command.length === 0){
+      // Reset timer
+      this.nextCharsDisplayRef.current?.resetTimer();
+    }
+    if(this.state.isInPhraseMode) {
+
+      this.setState({
+        commandLine: command,
+      });
+    }
+  }
+
+  handleRemoveCharacter = (command: string) => {
+    if (command.length === 0){
+      // Reset timer
+      this.nextCharsDisplayRef.current?.resetTimer();
+    }
+    if(this.state.isInPhraseMode) {
+
+      this.setState({
+        commandLine: command,
+      });
+    }
+  }
+
 
   loadTutorialAchievements(): string[] {
     const storedAchievements = localStorage.getItem('achievements');
@@ -499,7 +525,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       this.terminalWrite(command);
       return;
     }
-    if (charCodes.join(',') == '27,91,66') {
+    if (charCodes.join(',') == '27,91,66') { // ArrowDown
       const currentCommand = this.state.commandHistoryFilter;
       let newCommandIndex = (this.state.commandHistoryIndex - 1 + this.state.commandHistory.length)
         % this.state.commandHistory.length;
@@ -1055,6 +1081,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
                 terminalElementRef={this.terminalElementRef}
                 terminalFontSize={this.currentFontSize}
                 onAddCharacter={this.handleCharacter}
+                onRemoveCharacter={this.handleRemoveCharacter}
                 onTouchStart={this.handleTouchStart}
                 onTouchEnd={this.handleTouchEnd}
               />
