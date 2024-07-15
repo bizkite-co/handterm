@@ -11,7 +11,9 @@ interface NextCharsDisplayProps {
     isInPhraseMode: boolean;
     newPhrase: string;
     onPhraseSuccess: (phrase: string) => void;
+    onError: (error: number | undefined) => void;
 }
+
 interface NextCharsDisplayState {
     isActive: boolean;
     mismatchedChar: string | null;
@@ -86,12 +88,12 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
     }
 
 
-    showError = (char: string) => {
+    showError = (char: string, charIndex: number) => {
         this.setState({
             mismatchedChar: char,
             mismatchedIsVisible: true
-
         })
+        this.props.onError(charIndex);
     };
 
     hideError = () => {
@@ -99,6 +101,7 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
             mismatchedChar: null,
             mismatchedIsVisible: false
         })
+        this.props.onError(undefined);
     };
 
     handleSuccess = () => {
@@ -231,7 +234,7 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
                 mismatchedIsVisible: true,
                 mismatchedChar,
             });
-            this.showError(mismatchedChar);
+            this.showError(mismatchedChar, firstNonMatchingChar);
 
             // const chordImageHolderChild = this._chordImageHolder?.firstChild as HTMLImageElement;
             // if (chordImageHolderChild) chordImageHolderChild.hidden = false;

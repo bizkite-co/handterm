@@ -207,6 +207,7 @@ export class XtermAdapter extends React.Component<IXtermAdapterProps, IXtermAdap
   }
 
   prompt(user: string = 'guest', host: string = 'handex.io') {
+    this.terminal.reset();
     const promptText = `\x1b[1;34m${user}@${host} \x1b[0m\x1b[1;32m~${this.promptDelimiter}\x1b[0m `;
     this.promptLength = promptText.length - 21;
     this.terminal.write(promptText);

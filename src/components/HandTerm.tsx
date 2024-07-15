@@ -70,6 +70,7 @@ export interface IHandTermState {
   isInSvgMode: boolean;
   lastTypedCharacter: string | null;
   phrasesAchieved: string[];
+  errorCharIndex: number | undefined;
 }
 
 class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
@@ -100,19 +101,9 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
   private tempNewPassword: string = '';
   private isInChangePasswordMode: boolean = false;
 
-  handleRemoveCharacter = (command: string) => {
-    if (command.length === 0){
-      // Reset timer
-      this.nextCharsDisplayRef.current?.resetTimer();
-    }
-    if(this.state.isInPhraseMode) {
-
-      this.setState({
-        commandLine: command,
-      });
-    }
-  }
-
+  public handlePhraseError = (errorIndex: number | undefined) => {
+    this.setState({errorCharIndex: errorIndex});
+  };
   handleRemoveCharacter = (command: string) => {
     if (command.length === 0){
       // Reset timer
@@ -211,7 +202,8 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       commandHistoryIndex: -1,
       commandHistoryFilter: null,
       isInSvgMode: false,
-      lastTypedCharacter: null
+      lastTypedCharacter: null,
+      errorCharIndex: undefined
     }
     this.loadDebugValue();
     this.loadFontSize();
@@ -295,9 +287,6 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     let response = "Command not found.";
     this.terminalGameRef.current?.resetGame();
     this.scrollToBottom();
-    if (this.state.isInPhraseMode) {
-      response = "";
-    }
     this.setState({ isInPhraseMode: false, commandLine: '' });
 
     if (command === 'help' || command === '411') {
@@ -417,6 +406,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
 
     if (this.nextCharsDisplayRef.current) this.nextCharsDisplayRef.current.cancelTimer();
     if (this.state.isInPhraseMode) {
+      response = '';
       this.setState({ isInPhraseMode: false });
     }
     // Clear the terminal after processing the command
@@ -444,7 +434,9 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
 
   public handleCharacter = (character: string) => {
     const charDuration: CharDuration = this.wpmCalculator.addKeystroke(character);
-    localStorage.setItem(LogKeys.CurrentCommand, this.adapterRef.current?.getCurrentCommand() + character);
+    const currentCommand = this.adapterRef.current?.getCurrentCommand();
+
+    localStorage.setItem(LogKeys.CurrentCommand, currentCommand + character);
     const charCodes: number[] = character.split('').map(char => char.charCodeAt(0));
     if (this.state.isInSvgMode) {
       // TODO: Show last character of current command SVG. Handle backspace and return properly. 
@@ -561,14 +553,13 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       this.handleCommand(command);
     } else if (this.state.isInPhraseMode) {
       // # IN PHRASE MODE
+
+      if(this.state.errorCharIndex) {
+
+      }
+
       this.terminalWrite(character);
       let command = this.adapterRef.current?.getCurrentCommand() + character;
-
-      if (command.length === 0) {
-        if (this.nextCharsDisplayRef.current)
-          this.nextCharsDisplayRef.current.resetTimer();
-        return;
-      }
 
       this.setState({
         commandLine: command,
@@ -804,10 +795,10 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     this.saveCommandResponseHistory("game", wpmPhrase, 200);
 
     this.terminalGameRef.current?.completeGame();
-    this.adapterRef.current?.terminalReset();
-    this.adapterRef.current?.prompt();
     this.terminalGameRef.current?.levelUp();
     this.handlePhraseComplete();
+    this.adapterRef.current?.terminalReset();
+    this.adapterRef.current?.prompt();
   }
 
   private handlePhraseComplete = () => {
@@ -816,7 +807,6 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     let newPhrase = this.getPhrasesNotAchieved()[newPhraseIndex];
     this.setState({
       phraseIndex: newPhraseIndex + 1,
-      isInPhraseMode: true,
       phraseValue: newPhrase.value,
       phraseName: newPhrase.key,
     });
@@ -1060,6 +1050,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
                   isInPhraseMode={this.state.isInPhraseMode}
                   newPhrase={this.state.phraseValue}
                   onPhraseSuccess={this.handlePhraseSuccess}
+                  onError={this.handlePhraseError}
                 />
               }
 
