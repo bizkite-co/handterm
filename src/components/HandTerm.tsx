@@ -101,7 +101,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
   private isInChangePasswordMode: boolean = false;
 
 
-  loadAchievements(): string[] {
+  loadTutorialAchievements(): string[] {
     const storedAchievements = localStorage.getItem('achievements');
     return storedAchievements ? JSON.parse(storedAchievements) : [];
   }
@@ -119,9 +119,10 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     return response.data; // Handle the response accordingly
   };
 
-  getNextAchievement(): Achievement | null {
-    const unlockedAchievements = this.loadAchievements() || [];
-    const nextAchievement = Achievements.find(a => !unlockedAchievements.some(ua => ua === a.phrase.join('')));
+  getNextTutorialAchievement(): Achievement | null {
+    const unlockedAchievements = this.loadTutorialAchievements() || [];
+    const nextAchievement = Achievements
+      .find(a => !unlockedAchievements.some(ua => ua === a.phrase.join('')));
     return nextAchievement || null;
   }
 
@@ -135,9 +136,16 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     const storedPhrasesAchieved = localStorage.getItem('phrasesAchieved');
     return storedPhrasesAchieved ? JSON.parse(storedPhrasesAchieved) : [];
   }
+
+  getPhrasesNotAchieved = () => {
+    const phrasesAchieved = this.getPhrasesAchieved();
+    return Phrases.phrases.filter((phrase) => !phrasesAchieved.includes(phrase.key));
+  }
+
   private savePhrasesAchieved(phrase: string) {
     const storedPhrasesAchievedString: string = localStorage.getItem('phrasesAchieved') || '';
     let storedPhrasesAchieved = storedPhrasesAchievedString ? JSON.parse(storedPhrasesAchievedString) : [];
+    if (storedPhrasesAchieved.includes(phrase)) return;
     storedPhrasesAchieved.push(phrase);
     localStorage.setItem('phrasesAchieved', JSON.stringify(storedPhrasesAchieved));
   }
@@ -154,7 +162,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     super(IHandexTermProps);
     this._persistence = new LocalStoragePersistence();
     const initialCanvasHeight = localStorage.getItem('canvasHeight') || '100';
-    const nextAchievement = this.getNextAchievement();
+    const nextAchievement = this.getNextTutorialAchievement();
     this.state = {
       outputElements: this.getCommandResponseHistory().slice(-1),
       isInPhraseMode: false,
@@ -170,7 +178,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       terminalSize: undefined,
       terminalFontSize: 17,
       canvasHeight: parseInt(initialCanvasHeight),
-      unlockedAchievements: this.loadAchievements(),
+      unlockedAchievements: this.loadTutorialAchievements(),
       nextAchievement: nextAchievement,
       isInTutorial: true,
       commandHistory: this.loadCommandHistory(),
@@ -277,7 +285,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       response = "<div class='chord-display-container'>" + commandChordsHtml + "</div>";
     }
 
-    if (command === 'target'){
+    if (command === 'target') {
       if (args.length === 0) {
         response = "Target WPM: " + this.state.targetWPM;
       } else {
@@ -290,6 +298,13 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
         } else {
           response = "Target WPM must be a number";
         }
+      }
+    }
+
+    if (command === 'show') {
+      if (args.length === 0) {
+        response = this.getPhrasesAchieved().join('<br/>');
+        status = 200;
       }
     }
 
@@ -354,7 +369,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     if (command === 'play' || command === 'phrase') {
       status = 200;
       response = "Type the phrase as fast as you can."
-      this.setState({ phraseIndex: 0 }); 
+      this.setState({ phraseIndex: 0 });
       this.setNewPhrase(args.join(''));
     }
 
@@ -403,7 +418,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
 
   public handleCharacter = (character: string) => {
     const charDuration: CharDuration = this.wpmCalculator.addKeystroke(character);
-    localStorage.setItem('currentCommand', this.adapterRef.current?.getCurrentCommand() + character);
+    localStorage.setItem(LogKeys.CurrentCommand, this.adapterRef.current?.getCurrentCommand() + character);
     const charCodes: number[] = character.split('').map(char => char.charCodeAt(0));
     if (this.state.isInSvgMode) {
       // TODO: Show last character of current command SVG. Handle backspace and return properly. 
@@ -457,12 +472,16 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       }
     }
     if (character.charCodeAt(0) === 3) { // Ctrl+C
-      this.setState({ isInPhraseMode: false, commandLine: '' });
+      localStorage.setItem(LogKeys.CurrentCommand, '');
+      this.setState({
+        isInPhraseMode: false,
+        commandLine: ''
+      });
       this.adapterRef.current?.terminalReset();
       this.adapterRef.current?.prompt();
     }
     if (character === 'ArrowUp') {
-      const currentCommand = this.state.commandHistoryFilter || this.adapterRef.current?.getCurrentCommand(); 
+      const currentCommand = this.state.commandHistoryFilter || this.adapterRef.current?.getCurrentCommand();
       this.setState({ commandHistoryFilter: currentCommand || null });
       let newCommandIndex = (this.state.commandHistoryIndex + 1) % this.state.commandHistory.length;
       let command = this.state
@@ -482,10 +501,10 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     }
     if (charCodes.join(',') == '27,91,66') {
       const currentCommand = this.state.commandHistoryFilter;
-      let newCommandIndex = (this.state.commandHistoryIndex - 1 + this.state.commandHistory.length) 
+      let newCommandIndex = (this.state.commandHistoryIndex - 1 + this.state.commandHistory.length)
         % this.state.commandHistory.length;
-      if(newCommandIndex < 0) newCommandIndex = 0;
-      if(newCommandIndex >= this.state.commandHistory.length) newCommandIndex = this.state.commandHistory.length - 1;
+      if (newCommandIndex < 0) newCommandIndex = 0;
+      if (newCommandIndex >= this.state.commandHistory.length) newCommandIndex = this.state.commandHistory.length - 1;
       let command = this.state
         .commandHistory
         .filter((ch) => ch.startsWith(currentCommand || ''))[newCommandIndex];
@@ -553,7 +572,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       if (this.state.nextAchievement?.phrase.join('') === achievementPhrase) {
         this.saveAchievements(achievementPhrase);
       }
-      const nextAchievement = this.getNextAchievement();
+      const nextAchievement = this.getNextTutorialAchievement();
       return {
         ...prevState,
         achievements: unlockedAchievements,
@@ -767,20 +786,15 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
 
   private handlePhraseComplete = () => {
 
-    let newPhraseIndex = (this.state.phraseIndex + 1) % Phrases.phrases.length;
+    let newPhraseIndex = (this.state.phraseIndex) % Phrases.phrases.length;
     let newPhrase = this.getPhrasesNotAchieved()[newPhraseIndex];
     this.setState({
-      phraseIndex: newPhraseIndex,
+      phraseIndex: newPhraseIndex + 1,
       isInPhraseMode: true,
       phraseValue: newPhrase.value,
       phraseName: newPhrase.key,
     });
     this.terminalGameRef.current?.completeGame();
-  }
-
-  getPhrasesNotAchieved = () => {
-    const phrasesAchieved = this.getPhrasesAchieved();
-    return Phrases.phrases.filter((phrase) => !phrasesAchieved.includes(phrase.key));
   }
 
   private setNewPhrase = (phraseName: string) => {

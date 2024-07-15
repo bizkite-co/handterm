@@ -25,3 +25,4 @@ dist-ssr
 *.zip
 public/images/glitch-parallax-bg
 .env
+*.pem
