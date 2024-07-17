@@ -12,9 +12,11 @@ export interface IWPMCalculator {
 export class WPMCalculator implements IWPMCalculator {
     previousTimestamp: number = 0;
     keystrokes: CharDuration[];
+
     getKeystrokes(): CharDuration[] {
         return this.keystrokes;
     }
+
     constructor() {
         this.keystrokes = [];
     }
@@ -34,12 +36,14 @@ export class WPMCalculator implements IWPMCalculator {
         let charDur: CharDuration = { character, durationMilliseconds: 0 };
         if (this.previousTimestamp > 0) {
             charDur.durationMilliseconds = performance.now() - this.previousTimestamp;
+            if(charDur.durationMilliseconds < 0)  charDur.durationMilliseconds = 0; 
         }
         this.previousTimestamp = performance.now();
         // Record the keystroke with the current timestamp
         this.keystrokes.push(charDur);
         return charDur;
     }
+
     getWPMs(): { wpmAverage: number; charWpms: CharWPM[] } {
         let charWpms = this.keystrokes.map(this.getWPM);
         const calcedChars = charWpms.filter(charWpm => charWpm.durationMilliseconds > 1);
@@ -48,6 +52,7 @@ export class WPMCalculator implements IWPMCalculator {
         wpmAverage = Math.round(wpmAverage * 1000) / 1000
         return { wpmAverage: wpmAverage, charWpms };
     }
+
     getWPM(charDur: CharDuration): CharWPM {
         let charWpm: CharWPM = { character: charDur.character, wpm: 0.0, durationMilliseconds: 0 };
         if (charDur.durationMilliseconds > 0) {

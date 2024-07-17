@@ -254,9 +254,12 @@ div.terminal {
 
 
 .wpm {
-    color: #fa8072cb;
+    color: yellow;
     font-weight: bold;
     padding: 0 5px;
+}
+.wpm-label {
+    color: cyan;
 }
 
 /* Responsive font size and padding */

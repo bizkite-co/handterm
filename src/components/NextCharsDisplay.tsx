@@ -252,7 +252,7 @@ export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, Nex
     private getFirstNonMatchingChar = (stringBeingTested: string): number => {
         if (!this.state.phrase.value) return 0;
         const sourcePhrase = this.state.phrase.value;
-        if (stringBeingTested.length == 0) {
+        if (!stringBeingTested || stringBeingTested.length == 0) {
             return 0;
         }
         var result = 0;

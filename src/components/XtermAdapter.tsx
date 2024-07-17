@@ -60,7 +60,7 @@ export class XtermAdapter extends React.Component<IXtermAdapterProps, IXtermAdap
     this.terminal.scrollToBottom();
   }
   public appendTempPassword(passwordChar: string) {
-    this.tempPassword += passwordChar; 
+    this.tempPassword += passwordChar;
   }
   public resetTempPassword() {
     this.tempPassword = '';
@@ -74,6 +74,8 @@ export class XtermAdapter extends React.Component<IXtermAdapterProps, IXtermAdap
   }
 
   terminalWrite(data: string): void {
+    if (!data) return;
+    if (!this.terminal) return;
     this.terminal.write(data);
   }
 
@@ -134,8 +136,15 @@ export class XtermAdapter extends React.Component<IXtermAdapterProps, IXtermAdap
     if (data.charCodeAt(0) === 127) {
       if (this.isCursorOnPrompt()) return true;
       this.tempPassword = this.tempPassword.slice(0, -1);
-      this.terminal.write('\x1b[D\x1b[P');
-      this.props.onRemoveCharacter(this.getCurrentCommand().slice(0,-1));
+      // If the y is greater than zero and the x is 0, move to the end of the previous line
+      if (this.terminal.buffer.active.cursorY > 0 && this.terminal.buffer.active.cursorX === 0) {
+        // Attempt to move up one line, to the right far enough, then back one, and delete
+        this.terminal.write('\x1b[A\x1b[999C\x1b[D\x1b[P');
+      } else {
+        // For all other cases, move the cursor left one position and delete the character there
+        this.terminal.write('\x1b[D\x1b[P');
+      }
+      this.props.onRemoveCharacter(this.getCurrentCommand().slice(0, -1));
       result = true;
     }
     return result;

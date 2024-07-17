@@ -715,14 +715,20 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     const wpms = this.wpmCalculator.getWPMs();
     let wpmSum = this.wpmCalculator.saveKeystrokes(timeCode);
     this.wpmCalculator.clearKeystrokes();
-    commandResponseElement.innerHTML = commandResponseElement.innerHTML.replace(/{{wpm}}/g, ('_____' + wpmSum.toFixed(0)).slice(-4));
+    commandResponseElement.innerHTML = commandResponseElement
+      .innerHTML
+      .replace(/{{wpm}}/g,  wpmSum.toFixed(0));
 
-    commandText = commandText.replace(/{{wpm}}/g, ('_____' + wpmSum.toFixed(0)).slice(-4));
+    commandText = commandText.replace(/{{wpm}}/g, wpmSum.toFixed(0));
 
     if (!this.commandHistory) { this.commandHistory = []; }
     const commandResponse = commandResponseElement.outerHTML;
     const characterAverages = this.averageWpmByCharacter(wpms.charWpms.filter(wpm => wpm.durationMilliseconds > 1));
-    const slowestCharacters = this.WpmsToHTML(characterAverages.sort((a, b) => a.wpm - b.wpm).slice(0, 3), "slow-chars");
+    const slowestCharacters = this.WpmsToHTML(
+      characterAverages
+      .sort((a, b) => a.wpm - b.wpm)
+      .slice(0, 3), "slow-chars"
+    );
 
     const slowestCharactersHTML = ReactDOMServer.renderToStaticMarkup(slowestCharacters);
 
@@ -741,7 +747,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
   }
 
   createCommandRecord(command: string, commandTime: Date): string {
-    let commandText = `<div class="log-line"><span class="log-time">[${this.createTimeHTML(commandTime)}]</span><span class="wpm">{{wpm}}</span>${command}</div>`;
+    let commandText = `<div class="log-line"><span class="log-time">[${this.createTimeHTML(commandTime)}]</span><span class="wpm-label">WPM:</span><span class="wpm">{{wpm}}</span>${command}</div>`;
     return commandText;
   }
 
@@ -774,7 +780,9 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
   }
 
   private handlePhraseSuccess = (phrase: string) => {
-    const wpmAverage = this.wpmCalculator.getWPMs().wpmAverage;
+    const wpms = this.wpmCalculator.getWPMs();
+    const wpmAverage = wpms.wpmAverage;
+
     if (wpmAverage > this.state.targetWPM) {
       this.savePhrasesAchieved(this.state.phraseName);
       if (!this.state.phrasesAchieved.includes(this.state.phraseName)) this.setState((prevState) => ({
@@ -789,11 +797,11 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
         outputElements: [
           ...prevState.outputElements,
           wpmPhrase
+          + wpms.charWpms.join(', ')
         ]
       })
     );
     this.saveCommandResponseHistory("game", wpmPhrase, 200);
-
     this.terminalGameRef.current?.completeGame();
     this.terminalGameRef.current?.levelUp();
     this.handlePhraseComplete();
@@ -810,6 +818,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       phraseValue: newPhrase.value,
       phraseName: newPhrase.key,
     });
+    if (this.nextCharsDisplayRef.current) this.nextCharsDisplayRef.current.cancelTimer();
     this.terminalGameRef.current?.completeGame();
   }
 

@@ -64,7 +64,7 @@ export class Game extends React.Component<IGameProps, IGameState> {
       currentLevel: 1,
       heroPosition: { leftX: props.canvasWidth * this.heroXPercent, topY: 30 },
       heroReady: false,
-      zombie4Position: { leftX: 50, topY: 0 },
+      zombie4Position: { leftX: -50, topY: 0 },
       zombie4Ready: false,
       context: null as CanvasRenderingContext2D | null,
       contextBackground: null as CanvasRenderingContext2D | null,
@@ -229,6 +229,9 @@ export class Game extends React.Component<IGameProps, IGameState> {
 
       // Assuming zombie4 has a method to update its action
       this.setZombie4Action('Attack'); // Replace 'Attack' with actual ActionType for attacking
+      if(distance < 50) {
+        this.setHeroAction('Hurt');
+      }
     } else {
       // Otherwise, set it back to whatever action it should be doing when not attacking
       if (this.props.zombie4ActionType === 'Attack') {
@@ -243,6 +246,10 @@ export class Game extends React.Component<IGameProps, IGameState> {
   setZombie4Action(action: ActionType) {
     this.props.onSetZombie4Action(action);
     // this.setState({ zombie4ActionType: action });
+  }
+
+  setHeroAction(action: ActionType) {
+    this.props.onSetHeroAction(action);
   }
 
 
