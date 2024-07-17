@@ -784,7 +784,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     const wpmAverage = wpms.wpmAverage;
 
     if (wpmAverage > this.state.targetWPM) {
-      this.savePhrasesAchieved(this.state.phraseName);
+      this.savePhrasesAchieved(wpmAverage + ':' + this.state.phraseName);
       if (!this.state.phrasesAchieved.includes(this.state.phraseName)) this.setState((prevState) => ({
         phrasesAchieved: [...prevState.phrasesAchieved, this.state.phraseName]
       }))
