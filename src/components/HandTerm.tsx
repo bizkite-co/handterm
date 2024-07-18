@@ -300,6 +300,16 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       response = "<div class='chord-display-container'>" + commandChordsHtml + "</div>";
     }
 
+    if(command === 'special') {
+      status = 200;
+      // Write out all the spcieal characters to the output
+      const specialChars = ['~', '`', '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '-', '_', '+', '=', '{', '[', '}', ']', '|', '\\', ':', ';', '"', "'", '<', '>', ',', '.', '?', '/'];
+      const specialCharsHtml = specialChars.map(element => {
+        return ReactDOMServer.renderToStaticMarkup(<Chord displayChar={element} />);
+      }).join('');
+      response = "<div class='chord-display-container'>" + specialCharsHtml + "</div>";
+    }
+
     if (command === 'target') {
       if (args.length === 0) {
         response = "Target WPM: " + this.state.targetWPM;
@@ -784,7 +794,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     const wpmAverage = wpms.wpmAverage;
 
     if (wpmAverage > this.state.targetWPM) {
-      this.savePhrasesAchieved(wpmAverage + ':' + this.state.phraseName);
+      this.savePhrasesAchieved(Math.round(wpmAverage) + ': ' + this.state.phraseName);
       if (!this.state.phrasesAchieved.includes(this.state.phraseName)) this.setState((prevState) => ({
         phrasesAchieved: [...prevState.phrasesAchieved, this.state.phraseName]
       }))

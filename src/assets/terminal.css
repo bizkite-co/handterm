@@ -361,6 +361,7 @@ div.terminal {
     flex-direction: row;
     justify-content: flex-start;
     align-items: center;
+    flex-wrap: wrap;
     /* Optional: if you want to vertically align them */
 }
 
