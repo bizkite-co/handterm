@@ -89,7 +89,7 @@ body {
 
 .log-time {
     color: grey;
-    font-weight: 100m
+    font-weight: 100;
 }
 
 .log-hour {
@@ -222,6 +222,7 @@ div.terminal {
 #terminal-game {
     background-color: #0009;
 }
+
 #next-chars {
     background-color: #0009;
     pre#nextChars {
@@ -235,11 +236,13 @@ div.terminal {
 
 #footer {
     padding: 0 0 15 0;
+
     div {
         float: left;
         padding: 20px 0 0 30px;
         font-size: calc(var(--terminal-font-size) * 2.8);
         text-align: center;
+
         a {
             color: cyan;
         }
@@ -258,6 +261,7 @@ div.terminal {
     font-weight: bold;
     padding: 0 5px;
 }
+
 .wpm-label {
     color: cyan;
 }
@@ -279,10 +283,12 @@ div.terminal {
         animation: scrollText 1s linear infinite;
         /* Adjust duration as needed */
     }
+
     #footer {
         div {
             font-size: calc(var(--terminal-font-size) * 0.8);
         }
+
         img {
             width: 120px;
         }
