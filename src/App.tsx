@@ -22,7 +22,7 @@ const App = () => {
         && (event.target as HTMLElement).id !== TerminalCssClasses.Terminal
       ) {
         event.stopPropagation();
-        window.scrollTo(0, window.screen.height)
+        // window.scrollTo(0, window.screen.height)
         handexTermRef.current.adapterRef.current.focusTerminal();
 
         if (event instanceof MouseEvent || (event instanceof TouchEvent && event.touches.length === 1)) {
