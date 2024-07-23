@@ -18,6 +18,7 @@ import { TutorialComponent } from './TutorialComponent';
 import { Chord } from './Chord';
 import axios from 'axios';
 import { ENDPOINTS } from '../shared/endpoints';
+import { SlowestCharactersDisplay } from './SlowestCharactersDisplay';
 
 
 export interface IHandTermProps {
@@ -149,18 +150,18 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     }
   }
 
-  private getPhrasesAchieved(): string[] {
+  private getPhrasesAchieved() {
     const storedPhrasesAchieved = localStorage.getItem('phrasesAchieved');
 
     const phrasesAchieved = JSON.parse(storedPhrasesAchieved || '[]').map((phrase: string) => {
-      const [_wpm, phraseName] = phrase.split(':');
-      return phraseName;
+      const [wpm, phraseName] = phrase.split(':');
+      return { wpm, phraseName };
     });
     return phrasesAchieved;
   }
 
   getPhrasesNotAchieved = () => {
-    const phrasesAchieved = this.getPhrasesAchieved();
+    const phrasesAchieved = this.getPhrasesAchieved().map((phrase: { wpm: number; phraseName: string }) => phrase.phraseName);
     return Phrases.phrases.filter((phrase) => !phrasesAchieved.includes(phrase.key));
   }
 
@@ -210,7 +211,8 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       phraseValue: '', // Initial value
       phraseName: '',
       phraseIndex: 0,
-      phrasesAchieved: this.getPhrasesAchieved(),
+      phrasesAchieved: this.getPhrasesAchieved()
+        .map((phrase: { wpm: number; phraseName: string }) => phrase.phraseName),
       targetWPM: this.loadTargetWPM(),
       isActive: false,
       commandLine: '',
@@ -352,7 +354,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
 
     if (command === 'show') {
       if (args.length === 0) {
-        response = this.getPhrasesAchieved().join('<br/>');
+        response = this.getPhrasesAchieved().map((phrase: { wpm: number; phraseName: string; }) => `${phrase.wpm}:${phrase.phraseName}`).join('<br/>');
         status = 200;
       }
     }
@@ -746,22 +748,22 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     commandResponseElement.appendChild(createHTMLElementFromHTML(`<div class="response">${response}</div>`));
 
     // Only keep the latest this.commandHistoryLimit number of commands
-    const wpms = this.wpmCalculator.getWPMs();
-    let wpmSum = this.wpmCalculator.saveKeystrokes(timeCode);
+    const { wpmAverage, charWpms, wpmSum, charCount } = this.wpmCalculator.getWPMs();
+    this.wpmCalculator.saveKeystrokes(timeCode);
     this.wpmCalculator.clearKeystrokes();
     commandResponseElement.innerHTML = commandResponseElement
       .innerHTML
-      .replace(/{{wpm}}/g, wpmSum.toFixed(0));
+      .replace(/{{wpm}}/g, wpmAverage.toFixed(0));
 
-    commandText = commandText.replace(/{{wpm}}/g, wpmSum.toFixed(0));
+    commandText = commandText.replace(/{{wpm}}/g, wpmAverage.toFixed(0));
 
     if (!this.commandHistory) { this.commandHistory = []; }
     const commandResponse = commandResponseElement.outerHTML;
-    const characterAverages = this.averageWpmByCharacter(wpms.charWpms.filter(wpm => wpm.durationMilliseconds > 1));
+    const characterAverages = this.averageWpmByCharacter(charWpms.filter(wpm => wpm.durationMilliseconds > 1));
     const slowestCharacters = this.WpmsToHTML(
       characterAverages
         .sort((a, b) => a.wpm - b.wpm)
-        .slice(0, 3), "slow-chars"
+        .slice(0, 5), "slow-chars"
     );
 
     const slowestCharactersHTML = ReactDOMServer.renderToStaticMarkup(slowestCharacters);

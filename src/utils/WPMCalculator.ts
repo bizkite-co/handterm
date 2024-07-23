@@ -6,7 +6,7 @@ export interface IWPMCalculator {
     clearKeystrokes(): void;
     getKeystrokes(): CharDuration[];
     getWPM(charDur: CharDuration): CharWPM;
-    getWPMs(): { wpmAverage: number; charWpms: CharWPM[] };
+    getWPMs(): { wpmAverage: number; charWpms: CharWPM[], wpmSum: number, charCount: number };
 }
 
 export class WPMCalculator implements IWPMCalculator {
@@ -44,13 +44,13 @@ export class WPMCalculator implements IWPMCalculator {
         return charDur;
     }
 
-    getWPMs(): { wpmAverage: number; charWpms: CharWPM[] } {
+    getWPMs(): { wpmAverage: number; charWpms: CharWPM[], wpmSum: number, charCount: number } {
         let charWpms = this.keystrokes.map(this.getWPM);
         const calcedChars = charWpms.filter(charWpm => charWpm.durationMilliseconds > 1);
-        const wpmSum =calcedChars.reduce((a, b) => a + b.wpm, 0);
+        const wpmSum = calcedChars.reduce((a, b) => a + b.wpm, 0);
         let wpmAverage = wpmSum / calcedChars.length;
         wpmAverage = Math.round(wpmAverage * 1000) / 1000
-        return { wpmAverage: wpmAverage, charWpms };
+        return { wpmAverage, charWpms, wpmSum, charCount: calcedChars.length };
     }
 
     getWPM(charDur: CharDuration): CharWPM {
