@@ -102,14 +102,14 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
   private isInChangePasswordMode: boolean = false;
 
   public handlePhraseError = (errorIndex: number | undefined) => {
-    this.setState({errorCharIndex: errorIndex});
+    this.setState({ errorCharIndex: errorIndex });
   };
   handleRemoveCharacter = (command: string) => {
-    if (command.length === 0){
+    if (command.length === 0) {
       // Reset timer
       this.nextCharsDisplayRef.current?.resetTimer();
     }
-    if(this.state.isInPhraseMode) {
+    if (this.state.isInPhraseMode) {
 
       this.setState({
         commandLine: command,
@@ -151,7 +151,12 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
 
   private getPhrasesAchieved(): string[] {
     const storedPhrasesAchieved = localStorage.getItem('phrasesAchieved');
-    return storedPhrasesAchieved ? JSON.parse(storedPhrasesAchieved) : [];
+
+    const phrasesAchieved = JSON.parse(storedPhrasesAchieved || '[]').map((phrase: string) => {
+      const [_wpm, phraseName] = phrase.split(':');
+      return phraseName;
+    });
+    return phrasesAchieved;
   }
 
   getPhrasesNotAchieved = () => {
@@ -159,13 +164,32 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     return Phrases.phrases.filter((phrase) => !phrasesAchieved.includes(phrase.key));
   }
 
-  private savePhrasesAchieved(phrase: string) {
+  getNthPhraseNotAchieved = (n: number) => {
+    const phrasesNotAchieved = this.getPhrasesNotAchieved();
+    console.log("Nth phrase not achieved:", n, phrasesNotAchieved[n]);
+    return phrasesNotAchieved[n];
+  }
+
+
+  private savePhrasesAchieved(phraseName: string, wpmAverage: number) {
+    const wpmPhraseName = Math.round(wpmAverage) + ':' + phraseName;
+    const matchingPhrases = this.state.phrasesAchieved
+      .filter(p => { return p.split(":")[1] === this.state.phraseName });
+    if (matchingPhrases.length > 0) return;
+    // set state
+    this.setState((prevState) => ({
+      phrasesAchieved: [...prevState.phrasesAchieved, wpmPhraseName]
+    }))
+
     const storedPhrasesAchievedString: string = localStorage.getItem('phrasesAchieved') || '';
     let storedPhrasesAchieved = storedPhrasesAchievedString ? JSON.parse(storedPhrasesAchievedString) : [];
-    if (storedPhrasesAchieved.includes(phrase)) return;
-    storedPhrasesAchieved.push(phrase);
+    const matchingStoredPhrases = storedPhrasesAchieved
+      .filter((p: string) => { return p.split(":")[1] === this.state.phraseName });
+    if (matchingStoredPhrases.length > 0) return;
+    storedPhrasesAchieved.push(wpmPhraseName);
     localStorage.setItem('phrasesAchieved', JSON.stringify(storedPhrasesAchieved));
   }
+
   private resetPhrasesAchieved() {
     localStorage.removeItem('phrasesAchieved');
   }
@@ -300,7 +324,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       response = "<div class='chord-display-container'>" + commandChordsHtml + "</div>";
     }
 
-    if(command === 'special') {
+    if (command === 'special') {
       status = 200;
       // Write out all the spcieal characters to the output
       const specialChars = ['~', '`', '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '-', '_', '+', '=', '{', '[', '}', ']', '|', '\\', ':', ';', '"', "'", '<', '>', ',', '.', '?', '/'];
@@ -564,7 +588,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     } else if (this.state.isInPhraseMode) {
       // # IN PHRASE MODE
 
-      if(this.state.errorCharIndex) {
+      if (this.state.errorCharIndex) {
 
       }
 
@@ -727,7 +751,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     this.wpmCalculator.clearKeystrokes();
     commandResponseElement.innerHTML = commandResponseElement
       .innerHTML
-      .replace(/{{wpm}}/g,  wpmSum.toFixed(0));
+      .replace(/{{wpm}}/g, wpmSum.toFixed(0));
 
     commandText = commandText.replace(/{{wpm}}/g, wpmSum.toFixed(0));
 
@@ -736,8 +760,8 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     const characterAverages = this.averageWpmByCharacter(wpms.charWpms.filter(wpm => wpm.durationMilliseconds > 1));
     const slowestCharacters = this.WpmsToHTML(
       characterAverages
-      .sort((a, b) => a.wpm - b.wpm)
-      .slice(0, 3), "slow-chars"
+        .sort((a, b) => a.wpm - b.wpm)
+        .slice(0, 3), "slow-chars"
     );
 
     const slowestCharactersHTML = ReactDOMServer.renderToStaticMarkup(slowestCharacters);
@@ -794,10 +818,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     const wpmAverage = wpms.wpmAverage;
 
     if (wpmAverage > this.state.targetWPM) {
-      this.savePhrasesAchieved(Math.round(wpmAverage) + ': ' + this.state.phraseName);
-      if (!this.state.phrasesAchieved.includes(this.state.phraseName)) this.setState((prevState) => ({
-        phrasesAchieved: [...prevState.phrasesAchieved, this.state.phraseName]
-      }))
+      this.savePhrasesAchieved(this.state.phraseName, wpmAverage);
     }
 
     let wpmPhrase = wpmAverage.toString(10)
@@ -838,7 +859,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     const newPhrase
       = phraseName && phraseName != "" && Phrases.getPhraseByKey(phraseName)
         ? Phrases.getPhraseByKey(phraseName)
-        : this.getPhrasesNotAchieved()[this.state.phraseIndex];
+        : this.getNthPhraseNotAchieved(this.state.phraseIndex);
 
     this.setState((prevState) => {
       return {
