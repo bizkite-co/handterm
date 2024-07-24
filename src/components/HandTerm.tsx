@@ -317,7 +317,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
 
     if (command === 'help' || command === '411') {
       status = 200;
-      const commandChords = ['UpArrow', 'LeftArrow', 'DownArrow', 'RightArrow'].map(c => {
+      const commandChords = ['DELETE (Backspace)', 'Return (ENTER)', 'UpArrow', 'LeftArrow', 'DownArrow', 'RightArrow'].map(c => {
         return <Chord displayChar={c} />
       });
       const commandChordsHtml = commandChords.map(element => {
