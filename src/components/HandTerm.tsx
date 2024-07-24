@@ -131,6 +131,15 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     localStorage.setItem('achievements', JSON.stringify(storedAchievements));
   }
 
+  resetTutorialAchievements() {
+    localStorage.removeItem('achievements');
+    this.setState({ 
+      unlockedAchievements: [], 
+      nextAchievement: null, 
+      isInTutorial: true 
+    });
+  }
+
   saveDocument = async (documentData: any) => {
     //  TODO: Replace this with your actual API endpoint
     const response = await axios.post(`${ENDPOINTS.api.BaseUrl}/saveDocument`, documentData);
@@ -317,13 +326,19 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
 
     if (command === 'help' || command === '411') {
       status = 200;
-      const commandChords = ['DELETE (Backspace)', 'Return (ENTER)', 'UpArrow', 'LeftArrow', 'DownArrow', 'RightArrow'].map(c => {
+      const commandChords = [
+        'DELETE (Backspace)', 'Return (ENTER)', 'UpArrow', 'LeftArrow', 'DownArrow', 'RightArrow'
+      ].map(c => {
         return <Chord displayChar={c} />
       });
       const commandChordsHtml = commandChords.map(element => {
         return ReactDOMServer.renderToStaticMarkup(element);
       }).join('');
       response = "<div class='chord-display-container'>" + commandChordsHtml + "</div>";
+    }
+
+    if (command === 'tut') {
+      this.resetTutorialAchievements();
     }
 
     if (command === 'special') {

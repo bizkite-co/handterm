@@ -1,6 +1,6 @@
-import { Chord } from "./types/Types.js";
+import { IChord } from "./types/Types.js";
 
-export const allChords: Chord[] = [
+export const allChords: IChord[] = [
   {
     "key": "a",
     "chordCode": "4",
@@ -363,6 +363,7 @@ export const allChords: Chord[] = [
   },
   {
     "key": "Return (ENTER)",
+    "alias": "Enter",
     "chordCode": "0",
     "index": 36
   },
@@ -373,6 +374,7 @@ export const allChords: Chord[] = [
   },
   {
     "key": "DELETE (Backspace)",
+    "alias": "Backspace",
     "chordCode": "B",
     "index": 38
   },
@@ -393,6 +395,7 @@ export const allChords: Chord[] = [
   },
   {
     "key": "(underscore)",
+    "alias": "_",
     "chordCode": "5B0",
     "index": 41
   },
@@ -608,21 +611,25 @@ export const allChords: Chord[] = [
   },
   {
     "key": "RightArrow",
+    "alias": "Right",
     "chordCode": "2C",
     "index": 74
   },
   {
     "key": "LeftArrow",
+    "alias": "Left",
     "chordCode": "1B",
     "index": 75
   },
   {
     "key": "DownArrow",
+    "alias": "Down",
     "chordCode": "71",
     "index": 76
   },
   {
     "key": "UpArrow",
+    "alias": "Up",
     "chordCode": "73",
     "index": 77
   },

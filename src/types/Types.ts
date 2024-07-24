@@ -23,12 +23,14 @@ export interface IChord {
     key: string;
     chordCode: string;
     index: number;
+    alias?: string;
 }
 
 export class Chord implements IChord {
     key: string;
     chordCode: string;
     index: number;
+    alias?: string;
     constructor(key: string, chordCode: string, index: number) {
         this.key = key;
         this.chordCode = chordCode;

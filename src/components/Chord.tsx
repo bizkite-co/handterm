@@ -14,7 +14,6 @@ export function Chord(
             .find(x => {
                 return x.key
                     .replace('&#x2581;', ' ')
-                    .replace('(underscore)', '_')
                     // .replace('Return (ENTER)', '\r')
                     == props.displayChar;
             });
@@ -22,9 +21,8 @@ export function Chord(
         foundChord = Array.from(allChords).find(x => x.key == props.displayChar);
     }
 
-    const foundChar = foundChord?.key
-        .replace("Arrow", "")
-        .replace("Return (ENTER)", "Enter");
+    const foundChar = foundChord?.alias || foundChord?.key;
+
     return (
         <div className="chord-image-holder" id="chord-image-holder" data-source="ErrorDisplay.tsx">
             <div className="col-sm-2 row generated next" id="chord2" >
