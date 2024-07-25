@@ -17,6 +17,7 @@ interface IGameProps {
   isInPhraseMode: boolean
   heroActionType: ActionType
   zombie4ActionType: ActionType
+  zombie4StartPosition: SpritePosition
   onTouchStart: TouchEventHandler<HTMLDivElement>;
   onTouchEnd: TouchEventHandler<HTMLDivElement>;
   onSetHeroAction: (action: ActionType) => void;
@@ -59,12 +60,17 @@ export class Game extends React.Component<IGameProps, IGameState> {
   private heroRef = React.createRef<ICharacterRefMethods>();
   private zombie4Ref = React.createRef<ICharacterRefMethods>();
 
+  constructor(props: IGameProps) {
+    super(props);
+    this.state = this.getInitState(props);
+  }
+
   getInitState(props: IGameProps): IGameState {
     return {
       currentLevel: 1,
       heroPosition: { leftX: props.canvasWidth * this.heroXPercent, topY: 30 },
       heroReady: false,
-      zombie4Position: { leftX: -50, topY: 0 },
+      zombie4Position: this.props.zombie4StartPosition,
       zombie4Ready: false,
       context: null as CanvasRenderingContext2D | null,
       contextBackground: null as CanvasRenderingContext2D | null,
@@ -107,11 +113,6 @@ export class Game extends React.Component<IGameProps, IGameState> {
 
   changeLevel = (newLevel: number) => {
     this.setState({ currentLevel: newLevel });
-  }
-
-  constructor(props: IGameProps) {
-    super(props);
-    this.state = this.getInitState(props);
   }
 
   componentDidMount() {
@@ -207,7 +208,7 @@ export class Game extends React.Component<IGameProps, IGameState> {
       // Optionally reset the action if needed
       this.setZombie4Action('Walk'); // Or the default action you want to set
       this.setState({
-        zombie4Position: { topY: 0, leftX: -70 },
+        zombie4Position: this.props.zombie4StartPosition,
         isPhraseComplete: false,
         textScrollX: this.props.canvasWidth
       });
@@ -225,12 +226,15 @@ export class Game extends React.Component<IGameProps, IGameState> {
     const distance = this.state.heroPosition.leftX - this.state.zombie4Position.leftX;
 
     // If zombie4 is near the Hero, set its current action to Attack
-    if (25 < distance && distance < ATTACK_THRESHOLD) {
+    if (20 < distance && distance < ATTACK_THRESHOLD) {
 
       // Assuming zombie4 has a method to update its action
       this.setZombie4Action('Attack'); // Replace 'Attack' with actual ActionType for attacking
       if(distance < 50) {
         this.setHeroAction('Hurt');
+      }
+      if(distance < 30) {
+        this.setHeroAction('Death');
       }
     } else {
       // Otherwise, set it back to whatever action it should be doing when not attacking
@@ -364,7 +368,7 @@ export class Game extends React.Component<IGameProps, IGameState> {
     this.setState({ heroPosition: newPosition });
   };
 
-  handleZombie4PositionChange = (newPosition: SpritePosition) => {
+  public handleZombie4PositionChange = (newPosition: SpritePosition) => {
     this.setState({ zombie4Position: newPosition });
   }
 

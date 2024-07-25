@@ -18,6 +18,7 @@ import { TutorialComponent } from './TutorialComponent';
 import { Chord } from './Chord';
 import axios from 'axios';
 import { ENDPOINTS } from '../shared/endpoints';
+import { SpritePosition } from 'src/game/types/Position';
 
 
 export interface IHandTermProps {
@@ -100,7 +101,8 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
   private tempUserName: string = '';
   private tempNewPassword: string = '';
   private isInChangePasswordMode: boolean = false;
-
+  private heroActionTimeoutId: number | null = null;
+  private zombie4StartPostion: SpritePosition = { leftX: -50, topY: 0}
   public handlePhraseError = (errorIndex: number | undefined) => {
     this.setState({ errorCharIndex: errorIndex });
   };
@@ -132,10 +134,10 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
 
   resetTutorialAchievements() {
     localStorage.removeItem('achievements');
-    this.setState({ 
-      unlockedAchievements: [], 
-      nextAchievement: this.getNextTutorialAchievement(), 
-      isInTutorial: true 
+    this.setState({
+      unlockedAchievements: [],
+      nextAchievement: this.getNextTutorialAchievement(),
+      isInTutorial: true
     });
   }
 
@@ -435,8 +437,11 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     if (command === 'play' || command === 'phrase') {
       status = 200;
       response = "Type the phrase as fast as you can."
-      this.setState({ phraseIndex: 0 });
+      this.setState({ 
+        phraseIndex: 0, 
+      });
       this.setNewPhrase(args.join(''));
+      this.terminalGameRef.current?.handleZombie4PositionChange(this.zombie4StartPostion);
     }
 
     if (command === 'svg') {
@@ -923,7 +928,18 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
   }
 
   setHeroAction = (newAction: ActionType) => {
+    // Clear any existing timeout to reset the timer
+    if (this.heroActionTimeoutId) {
+      clearTimeout(this.heroActionTimeoutId);
+      this.heroActionTimeoutId = null;
+    }
     this.setState({ heroAction: newAction });
+    // Set a timeout to stop the hero from running after 500ms
+    if(newAction === 'Death') return;
+    this.heroActionTimeoutId = window.setTimeout(() => {
+      this.setState({ heroAction: 'Idle' });
+      this.heroActionTimeoutId = null; // Clear the timeout ID
+    }, 500);
   }
 
   setZombie4Action = (newAction: ActionType) => {
@@ -994,7 +1010,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
           return;
         }
         this.currentFontSize *= scaleFactor;
-        document.documentElement.style.setProperty('--terminal-font-size', `${this.currentFontSize}pt`);
+        document.documentElement.style.setProperty('--terminal-font-size', `${this.currentFontSize}px`);
         this.lastTouchDistance = currentDistance;
         // this.terminal.options.fontSize = this.currentFontSize;
         // this.terminal.refresh(0, this.terminal.rows - 1); // Refresh the terminal display
@@ -1097,6 +1113,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
                 onTouchStart={this.handleTouchStart}
                 onTouchEnd={this.handleTouchEnd}
                 phrasesAchieved={this.state.phrasesAchieved}
+                zombie4StartPosition={this.zombie4StartPostion}
               />
               {this.state.isInPhraseMode
                 && this.state.phraseValue
