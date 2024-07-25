@@ -18,7 +18,6 @@ import { TutorialComponent } from './TutorialComponent';
 import { Chord } from './Chord';
 import axios from 'axios';
 import { ENDPOINTS } from '../shared/endpoints';
-import { SlowestCharactersDisplay } from './SlowestCharactersDisplay';
 
 
 export interface IHandTermProps {
@@ -135,7 +134,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     localStorage.removeItem('achievements');
     this.setState({ 
       unlockedAchievements: [], 
-      nextAchievement: null, 
+      nextAchievement: this.getNextTutorialAchievement(), 
       isInTutorial: true 
     });
   }
@@ -299,8 +298,13 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
         () => this.saveCommandHistory(this.state.commandHistory)
       );
     }
+
+    if (cmd === 'tut') {
+      this.resetTutorialAchievements();
+    }
+
     // TODO: handle achievement unlocks
-    if (this.state.isInTutorial) {
+    if (this.state.isInTutorial || cmd === 'tut') {
       // Unlock the next achievement and decide if we are still in tutorial mode
       if (cmd === '') cmd = 'Return (ENTER)';
       if (this.state.nextAchievement?.phrase.join('') === cmd
@@ -335,10 +339,6 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
         return ReactDOMServer.renderToStaticMarkup(element);
       }).join('');
       response = "<div class='chord-display-container'>" + commandChordsHtml + "</div>";
-    }
-
-    if (command === 'tut') {
-      this.resetTutorialAchievements();
     }
 
     if (command === 'special') {
@@ -763,7 +763,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     commandResponseElement.appendChild(createHTMLElementFromHTML(`<div class="response">${response}</div>`));
 
     // Only keep the latest this.commandHistoryLimit number of commands
-    const { wpmAverage, charWpms, wpmSum, charCount } = this.wpmCalculator.getWPMs();
+    const { wpmAverage, charWpms } = this.wpmCalculator.getWPMs();
     this.wpmCalculator.saveKeystrokes(timeCode);
     this.wpmCalculator.clearKeystrokes();
     commandResponseElement.innerHTML = commandResponseElement
