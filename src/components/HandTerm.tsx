@@ -19,7 +19,7 @@ import { Chord } from './Chord';
 import axios from 'axios';
 import { ENDPOINTS } from '../shared/endpoints';
 import { SpritePosition } from 'src/game/types/Position';
-
+import CodeMirrorEditor from './CodeMirrorEditor';
 
 export interface IHandTermProps {
   // Define the interface for your HandexTerm logic
@@ -81,6 +81,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
   declare context: ContextType<typeof CommandContext>;
   // Implement the interface methods
   private terminalElementRef = React.createRef<HTMLDivElement>();
+
   public adapterRef = React.createRef<XtermAdapter>();
   private nextCharsDisplayRef: React.RefObject<NextCharsDisplay> = React.createRef();
   private terminalGameRef = React.createRef<Game>();
@@ -102,7 +103,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
   private tempNewPassword: string = '';
   private isInChangePasswordMode: boolean = false;
   private heroActionTimeoutId: number | null = null;
-  private zombie4StartPostion: SpritePosition = { leftX: -50, topY: 0}
+  private zombie4StartPostion: SpritePosition = { leftX: -50, topY: 0 }
   public handlePhraseError = (errorIndex: number | undefined) => {
     this.setState({ errorCharIndex: errorIndex });
   };
@@ -278,6 +279,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     }
 
     this.addTouchListeners();
+
   }
 
   componentWillUnmount(): void {
@@ -437,8 +439,8 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     if (command === 'play' || command === 'phrase') {
       status = 200;
       response = "Type the phrase as fast as you can."
-      this.setState({ 
-        phraseIndex: 0, 
+      this.setState({
+        phraseIndex: 0,
       });
       this.setNewPhrase(args.join(''));
       this.terminalGameRef.current?.handleZombie4PositionChange(this.zombie4StartPostion);
@@ -935,7 +937,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     }
     this.setState({ heroAction: newAction });
     // Set a timeout to stop the hero from running after 500ms
-    if(newAction === 'Death') return;
+    if (newAction === 'Death') return;
     this.heroActionTimeoutId = window.setTimeout(() => {
       this.setState({ heroAction: 'Idle' });
       this.heroActionTimeoutId = null; // Clear the timeout ID
@@ -1150,6 +1152,8 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
                 onTouchStart={this.handleTouchStart}
                 onTouchEnd={this.handleTouchEnd}
               />
+              <CodeMirrorEditor initialValue="" />
+
               {/* TODO: Move this into JSX in the WebCam component */}
               <video
                 ref={this.videoElementRef as React.RefObject<HTMLVideoElement>}

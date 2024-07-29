@@ -12,6 +12,11 @@ export default defineConfig({
   resolve: {
     alias: {
       '/shared/': path.resolve(__dirname, '../shared/'),
+      '@codemirror/language': '@codemirror/language',
+      '@codemirror/search': '@codemirror/search',
+      '@codemirror/commands': '@codemirror/commands',
+      '@codemirror/lang-javascript': '@codemirror/lang-javascript', // Add this line
+
     }
   },
 })

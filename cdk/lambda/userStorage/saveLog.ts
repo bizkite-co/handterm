@@ -21,7 +21,7 @@ exports.handler = async (event: any) => {
         domain = key.split(' ')[0].replace('@', '');
     }
     // TODO: replace('_', '/') to partition by folder, which is S3-optimal.
-    const contentKey = content.slice(0, 200).toLowerCase().replace(/\s/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
+    const contentKey = content.slice(0, 200).toLowerCase().replace(/\s/g, '_').replace(/[^a-zA-Z0-9\/_]/g, '');
     let keyPath = `user_data/${userId}/${domain}/${key.replace(/(l\d{4})-(\d{2})-(\d{2})/g, '$1/$2/$3').replace('_', '/')}_${contentKey}.${fileExtension}`;
 
     try {
