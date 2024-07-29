@@ -72,6 +72,7 @@ export interface IHandTermState {
   lastTypedCharacter: string | null;
   phrasesAchieved: string[];
   errorCharIndex: number | undefined;
+  editContent: string | null;
 }
 
 class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
@@ -240,7 +241,8 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       commandHistoryFilter: null,
       isInSvgMode: false,
       lastTypedCharacter: null,
-      errorCharIndex: undefined
+      errorCharIndex: undefined,
+      editContent: null
     }
     this.loadDebugValue();
     this.loadFontSize();
@@ -353,6 +355,9 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
         return ReactDOMServer.renderToStaticMarkup(<Chord displayChar={element} />);
       }).join('');
       response = "<div class='chord-display-container'>" + specialCharsHtml + "</div>";
+    }
+    if(command === 'edit'){
+      this.setState({ editContent: 'Lorem ipsum dolor sit amet consectetur adipiscing elit.' });
     }
 
     if (command === 'target') {
@@ -1142,17 +1147,21 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
                   includeReturn={true}
                 />
               }
-              <XtermAdapter
-                ref={this.adapterRef}
-                terminalElement={this.terminalElementRef.current}
-                terminalElementRef={this.terminalElementRef}
-                terminalFontSize={this.currentFontSize}
-                onAddCharacter={this.handleCharacter}
-                onRemoveCharacter={this.handleRemoveCharacter}
-                onTouchStart={this.handleTouchStart}
-                onTouchEnd={this.handleTouchEnd}
-              />
-              <CodeMirrorEditor initialValue="" />
+              {!this.state.editContent &&
+                <XtermAdapter
+                  ref={this.adapterRef}
+                  terminalElement={this.terminalElementRef.current}
+                  terminalElementRef={this.terminalElementRef}
+                  terminalFontSize={this.currentFontSize}
+                  onAddCharacter={this.handleCharacter}
+                  onRemoveCharacter={this.handleRemoveCharacter}
+                  onTouchStart={this.handleTouchStart}
+                  onTouchEnd={this.handleTouchEnd}
+                />
+              }
+              {this.state.editContent &&
+                <CodeMirrorEditor initialValue={this.state.editContent} />
+              }
 
               {/* TODO: Move this into JSX in the WebCam component */}
               <video
