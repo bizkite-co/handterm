@@ -16,7 +16,6 @@ export default defineConfig({
       '@codemirror/search': '@codemirror/search',
       '@codemirror/commands': '@codemirror/commands',
       '@codemirror/lang-javascript': '@codemirror/lang-javascript', // Add this line
-
     }
   },
 })

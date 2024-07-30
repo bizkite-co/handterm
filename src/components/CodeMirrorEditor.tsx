@@ -1,39 +1,91 @@
 // src/components/CodeMirrorEditor.tsx
-import React, { useEffect, useRef } from 'react';
+
+import React, { useEffect, useRef, useImperativeHandle, forwardRef } from 'react';
 import { EditorView, basicSetup } from 'codemirror';
-import { vim } from '@replit/codemirror-vim';
+import { vim, Vim } from '@replit/codemirror-vim';
 import { javascript } from '@codemirror/lang-javascript';
+import { markdown } from '@codemirror/lang-markdown';
+// import 'codemirror/lib/codemirror.css';
 
 interface CodeMirrorEditorProps {
   initialValue: string;
+  language: 'javascript' | 'typescript' | 'markdown';
   onChange?: (value: string) => void;
+  onSave?: (value: string) => void;
 }
 
-const CodeMirrorEditor: React.FC<CodeMirrorEditorProps> = ({ initialValue, onChange }) => {
+const CodeMirrorEditor = forwardRef<EditorView | null, CodeMirrorEditorProps>((props, ref) => {
   const editorRef = useRef<HTMLDivElement>(null);
+  const viewRef = useRef<EditorView | null>(null);
+
+  useImperativeHandle(ref, () => viewRef.current!, []);
 
   useEffect(() => {
     if (editorRef.current) {
+      const extensions = [
+        vim(),
+        basicSetup,
+        EditorView.updateListener.of((update) => {
+          if (update.docChanged && props.onChange) {
+            props.onChange(update.state.doc.toString());
+          }
+        }),
+      ];
+
+      switch (props.language) {
+        case 'typescript':
+          extensions.push(javascript({ typescript: true }));
+          break;
+        case 'markdown':
+          extensions.push(markdown());
+          break;
+        case 'javascript':
+        default:
+          extensions.push(javascript());
+          break;
+      }
+
       const view = new EditorView({
-        doc: initialValue,
-        extensions: [
-          vim(), // Enable Vim keybindings
-          basicSetup,
-          javascript(),
-          EditorView.updateListener.of((update: { docChanged: any; }) => {
-            if (update.docChanged && onChange) {
-              onChange(view.state.doc.toString());
-            }
-          }),
-        ],
+        doc: props.initialValue,
+        extensions,
         parent: editorRef.current,
       });
 
+      // Attach the onSave handler to the view instance
+      (view as any)._handlers = {
+        onSave: (docContent: string) => {
+          if (props.onSave) {
+            props.onSave(docContent);
+          }
+        },
+      };
+
+      // Pass the EditorView instance to custom Vim commands
+      Vim.defineEx('q', '', (cm: any) => {
+        const editorElement = cm.getWrapperElement();
+        if (editorElement) {
+          editorElement.style.display = 'none'; // Hide the editor
+        }
+      });
+
+      Vim.defineEx('wq', '', (cm: any) => {
+        const editorElement = cm.getWrapperElement();
+        if (editorElement) {
+          const docContent = view.state.doc.toString();
+          if ((view as any)._handlers && (view as any)._handlers.onSave) {
+            (view as any)._handlers.onSave(docContent);
+          }
+          editorElement.style.display = 'none'; // Hide the editor
+        }
+      });
+
+      viewRef.current = view;
+
       return () => view.destroy();
     }
-  }, [initialValue, onChange]);
+  }, [props.initialValue, props.language, props.onChange, props.onSave]);
 
   return <div ref={editorRef} />;
-};
+});
 
 export default CodeMirrorEditor;

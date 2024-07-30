@@ -47,6 +47,8 @@ export interface IHandTermProps {
   };
 }
 
+type LanguageType = "javascript" | "typescript" | "markdown";
+
 export interface IHandTermState {
   // Define the interface for your HandexTerm state
   outputElements: React.ReactNode[];
@@ -73,6 +75,8 @@ export interface IHandTermState {
   phrasesAchieved: string[];
   errorCharIndex: number | undefined;
   editContent: string | null;
+  editLanguage: LanguageType;
+  editFilePath: string | null;
 }
 
 class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
@@ -86,6 +90,8 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
   public adapterRef = React.createRef<XtermAdapter>();
   private nextCharsDisplayRef: React.RefObject<NextCharsDisplay> = React.createRef();
   private terminalGameRef = React.createRef<Game>();
+  private editorRef = React.createRef<any>();
+
   private _persistence: IPersistence;
   public commandHistory: string[] = [];
   private wpmCalculator: IWPMCalculator = new WPMCalculator();
@@ -105,22 +111,33 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
   private isInChangePasswordMode: boolean = false;
   private heroActionTimeoutId: number | null = null;
   private zombie4StartPostion: SpritePosition = { leftX: -50, topY: 0 }
+
   public handlePhraseError = (errorIndex: number | undefined) => {
     this.setState({ errorCharIndex: errorIndex });
   };
+
   handleRemoveCharacter = (command: string) => {
     if (command.length === 0) {
       // Reset timer
       this.nextCharsDisplayRef.current?.resetTimer();
     }
     if (this.state.isInPhraseMode) {
-
       this.setState({
         commandLine: command,
       });
     }
   }
 
+  handleEditChange = (content: string) => {
+    this.setState({ editContent: content });
+    localStorage.setItem('editContent', content);
+  };
+
+  handleEditSave = () => {
+    this.setState({ editContent: null });
+    // TODO: Save the changed content somewhere.
+    this.writeOutput(this.state.editContent || '');
+  }
 
   loadTutorialAchievements(): string[] {
     const storedAchievements = localStorage.getItem('achievements');
@@ -183,7 +200,6 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     return phrasesNotAchieved[n];
   }
 
-
   private savePhrasesAchieved(phraseName: string, wpmAverage: number) {
     const wpmPhraseName = Math.round(wpmAverage) + ':' + phraseName;
     const matchingPhrases = this.state.phrasesAchieved
@@ -242,14 +258,12 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       isInSvgMode: false,
       lastTypedCharacter: null,
       errorCharIndex: undefined,
-      editContent: null
+      editContent: null,
+      editLanguage: "markdown",
+      editFilePath: null,
     }
     this.loadDebugValue();
     this.loadFontSize();
-  }
-
-  componentDidUpdate(_prevProps: Readonly<IHandTermProps>, _prevState: Readonly<IHandTermState>, _snapshot?: any): void {
-
   }
 
   loadCommandHistory() {
@@ -356,8 +370,15 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       }).join('');
       response = "<div class='chord-display-container'>" + specialCharsHtml + "</div>";
     }
-    if(command === 'edit'){
-      this.setState({ editContent: 'Lorem ipsum dolor sit amet consectetur adipiscing elit.' });
+
+    if (command === 'edit') {
+      this.setState({
+        editContent: 'Lorem ipsum dolor sit amet consectetur adipiscing elit.'
+      }, () => {
+        if (this.editorRef.current) {
+          this.editorRef.current.focus(); // Set focus to the editor
+        }
+      });
     }
 
     if (command === 'target') {
@@ -1147,6 +1168,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
                   includeReturn={true}
                 />
               }
+
               {!this.state.editContent &&
                 <XtermAdapter
                   ref={this.adapterRef}
@@ -1159,8 +1181,15 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
                   onTouchEnd={this.handleTouchEnd}
                 />
               }
+
               {this.state.editContent &&
-                <CodeMirrorEditor initialValue={this.state.editContent} />
+                <CodeMirrorEditor
+                  ref={this.editorRef}
+                  initialValue={this.state.editContent}
+                  language={this.state.editLanguage}
+                  onChange={this.handleEditChange}
+                  onSave={this.handleEditSave}
+                />
               }
 
               {/* TODO: Move this into JSX in the WebCam component */}
