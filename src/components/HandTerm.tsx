@@ -305,6 +305,18 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     this.removeTouchListeners();
   }
 
+  handleFocusEditor = () => {
+    if (this.editorRef.current) {
+      const editor = this.editorRef.current;
+      const timer = setInterval(() => {
+        editor.focus();
+        if (editor.editorView && editor.editorView.hasFocus) {
+          clearInterval(timer);
+        }
+      }, 500);
+    }
+  };
+
   public handleCommand = (cmd: string) => {
     if (cmd && cmd !== 'Return (ENTER)') {
       this.setState(
@@ -373,11 +385,9 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
 
     if (command === 'edit') {
       this.setState({
-        editContent: 'Lorem ipsum dolor sit amet consectetur adipiscing elit.'
+        editContent: localStorage.getItem('editContent'),
       }, () => {
-        if (this.editorRef.current) {
-          this.editorRef.current.focus(); // Set focus to the editor
-        }
+        this.handleFocusEditor();
       });
     }
 

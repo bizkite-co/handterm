@@ -14,11 +14,25 @@ interface CodeMirrorEditorProps {
   onSave?: (value: string) => void;
 }
 
-const CodeMirrorEditor = forwardRef<EditorView | null, CodeMirrorEditorProps>((props, ref) => {
+interface CodeMirrorEditorHandle {
+  focus: () => void;
+  editorView: EditorView | null;
+}
+
+const CodeMirrorEditor = forwardRef<CodeMirrorEditorHandle, CodeMirrorEditorProps>((props, ref) => {
   const editorRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
 
-  useImperativeHandle(ref, () => viewRef.current!, []);
+  useImperativeHandle(ref, () => ({
+    focus: () => {
+      if (viewRef.current) {
+        viewRef.current.focus();
+      }
+    },
+    get editorView() {
+      return viewRef.current;
+    }
+  }), []);
 
   useEffect(() => {
     if (editorRef.current) {
