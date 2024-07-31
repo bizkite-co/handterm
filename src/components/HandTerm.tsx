@@ -384,8 +384,9 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     }
 
     if (command === 'edit') {
+
       this.setState({
-        editContent: localStorage.getItem('editContent'),
+        editContent: localStorage.getItem('editContent') || 'sample text',
       }, () => {
         this.handleFocusEditor();
       });
