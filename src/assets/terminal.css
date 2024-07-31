@@ -388,3 +388,11 @@ div.terminal {
     font-family: var(--terminal-font-family);
     /* Maintains monospace font */
 }
+
+.CodeMirror div.CodeMirror-cursors {
+  visibility: visible !important;
+}
+
+div.cm-content {
+  background-color: #0009;
+}

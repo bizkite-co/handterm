@@ -43,3 +43,12 @@ content-type: application/json
 Authorization: Bearer {{ signin.response.body.AccessToken }}
 
 ?key=wrt
+
+### GitHub app
+
+GET {{ $dotenv VITE_GITHUB_ISSUER_URL }}
+
+
+### GitHub auth
+
+GET https://github.com/login/oauth/authorize

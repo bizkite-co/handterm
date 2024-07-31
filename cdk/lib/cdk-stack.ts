@@ -14,8 +14,16 @@ import {
 import { Construct } from 'constructs';
 import { HttpMethod, HttpApi, CorsHttpMethod } from 'aws-cdk-lib/aws-apigatewayv2';
 import { HttpLambdaIntegration } from 'aws-cdk-lib/aws-apigatewayv2-integrations'; // This path is illustrative and likely incorrect
-import {  HttpLambdaAuthorizer } from 'aws-cdk-lib/aws-apigatewayv2-authorizers';
+import { HttpLambdaAuthorizer } from 'aws-cdk-lib/aws-apigatewayv2-authorizers';
 import { IFunction } from 'aws-cdk-lib/aws-lambda';
+
+// const githubClientSecret = process.env.VITE_GITHUB_CLIENT_SECRET;
+// const githubClientId = process.env.VITE_GITHUB_CLIENT_ID;
+// const githubIssuerUrl = process.env.VITE_GITHUB_ISSUER_URL;
+
+const githubClientSecret = "1822b8bfb24bc8198fb5d730a11db881c551816e"
+const githubClientId = "Iv23li7gy43wuuUgck9v"
+const githubIssuerUrl = "https://github.com/apps/handterm"
 
 const nodeRuntime = lambda.Runtime.NODEJS_16_X;
 
@@ -26,6 +34,9 @@ export class HandTermCdkStack extends Stack {
     props?: StackProps
   ) {
     super(scope, id, props);
+    console.log("Github Client Secret: " + githubClientSecret);
+    console.log("Github Client ID: " + githubClientId);
+    console.log("Github Issuer URL: " + githubIssuerUrl);
     const allowHeaders = [
       'Content-Type',
       'X-Amz-Date',
@@ -56,6 +67,29 @@ export class HandTermCdkStack extends Stack {
         requireSymbols: true,
       },
       autoVerify: { email: true }
+    });
+
+    // Define GitHub as an identity provider
+    new cognito.CfnUserPoolIdentityProvider(this, 'GitHubIdentityProvider', {
+      providerName: 'GitHub', // This is the name you assign to your provider
+      providerType: 'OIDC', // For GitHub, use 'OIDC' or 'SAML' as appropriate
+      userPoolId: userPool.userPoolId,
+      providerDetails: {
+        // These will be specific to the OAuth provider
+        // For GitHub, use the OAuth 2.0 endpoint information and credentials
+        authorize_scopes: 'openid,profile,email',
+        client_id: githubClientId,
+        client_secret: githubClientSecret,
+        attributes_request_method: 'GET',
+        oidc_issuer: githubIssuerUrl, // This is not directly applicable to GitHub as GitHub doesn't directly support OIDC
+        // You will need to adjust the above details for GitHub's OAuth flow
+      },
+
+      attributeMapping: {
+        // Map GitHub user attributes to Cognito user pool attributes
+        email: 'email',
+        // Add other attribute mappings as needed
+      },
     });
 
     // Cognito User Pool Client
