@@ -1,0 +1,5 @@
+/* src/components/CodeMirrorEditor.css */
+
+.CodeMirror div.CodeMirror-cursors {
+  visibility: visible !important;
+}

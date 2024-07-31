@@ -5,7 +5,16 @@ import { EditorView, basicSetup } from 'codemirror';
 import { vim, Vim } from '@replit/codemirror-vim';
 import { javascript } from '@codemirror/lang-javascript';
 import { markdown } from '@codemirror/lang-markdown';
-// import 'codemirror/lib/codemirror.css';
+import './CodeMirrorEditor.css';
+
+// Debounce function
+const debounce = (func: (...args: any[]) => void, wait: number) => {
+  let timeout: ReturnType<typeof setTimeout>;
+  return (...args: any[]) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func(...args), wait);
+  };
+};
 
 interface CodeMirrorEditorProps {
   initialValue: string;
@@ -39,11 +48,11 @@ const CodeMirrorEditor = forwardRef<CodeMirrorEditorHandle, CodeMirrorEditorProp
       const extensions = [
         vim(),
         basicSetup,
-        EditorView.updateListener.of((update) => {
+        EditorView.updateListener.of(debounce((update) => {
           if (update.docChanged && props.onChange) {
             props.onChange(update.state.doc.toString());
           }
-        }),
+        }, 300)),
       ];
 
       switch (props.language) {

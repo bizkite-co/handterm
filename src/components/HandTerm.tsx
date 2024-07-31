@@ -74,7 +74,8 @@ export interface IHandTermState {
   lastTypedCharacter: string | null;
   phrasesAchieved: string[];
   errorCharIndex: number | undefined;
-  editContent: string | null;
+  editContent: string;
+  editMode: boolean;
   editLanguage: LanguageType;
   editFilePath: string | null;
 }
@@ -134,7 +135,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
   };
 
   handleEditSave = () => {
-    this.setState({ editContent: null });
+    this.setState({ editMode: false });
     // TODO: Save the changed content somewhere.
     this.writeOutput(this.state.editContent || '');
   }
@@ -258,7 +259,8 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       isInSvgMode: false,
       lastTypedCharacter: null,
       errorCharIndex: undefined,
-      editContent: null,
+      editContent: '',
+      editMode: false,
       editLanguage: "markdown",
       editFilePath: null,
     }
@@ -384,9 +386,9 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     }
 
     if (command === 'edit') {
-
       this.setState({
         editContent: localStorage.getItem('editContent') || 'sample text',
+        editMode: true,
       }, () => {
         this.handleFocusEditor();
       });
@@ -1027,7 +1029,6 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     }, 500)
     if (event.touches.length === 2) {
       // event.preventDefault();
-
       this.lastTouchDistance = this.getDistanceBetweenTouches(event.touches as unknown as TouchList);
     }
   }
@@ -1086,7 +1087,6 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       // game.addEventListener('touchstart', this.handleTouchStart );
       game.addEventListener('touchmove', this.handleTouchMove, { passive: false });
     }
-
   }
 
   removeTouchListeners() {
@@ -1180,7 +1180,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
                 />
               }
 
-              {!this.state.editContent &&
+              {!this.state.editMode &&
                 <XtermAdapter
                   ref={this.adapterRef}
                   terminalElement={this.terminalElementRef.current}
@@ -1193,7 +1193,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
                 />
               }
 
-              {this.state.editContent &&
+              {this.state.editMode &&
                 <CodeMirrorEditor
                   ref={this.editorRef}
                   initialValue={this.state.editContent}
