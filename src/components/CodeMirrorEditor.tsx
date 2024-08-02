@@ -101,6 +101,18 @@ const CodeMirrorEditor = forwardRef<CodeMirrorEditorHandle, CodeMirrorEditorProp
         }
       });
 
+      // Handle backspace key to prevent default behavior
+      view.dom.addEventListener('keydown', (event) => {
+        if (event.key === 'Backspace') {
+          event.preventDefault();
+          const state = view.state;
+          const transaction = state.update({
+            changes: { from: state.selection.main.from - 1, to: state.selection.main.from }
+          });
+          view.dispatch(transaction);
+        }
+      });
+
       viewRef.current = view;
 
       return () => view.destroy();
