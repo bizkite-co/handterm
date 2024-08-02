@@ -17,13 +17,9 @@ import { HttpLambdaIntegration } from 'aws-cdk-lib/aws-apigatewayv2-integrations
 import { HttpLambdaAuthorizer } from 'aws-cdk-lib/aws-apigatewayv2-authorizers';
 import { IFunction } from 'aws-cdk-lib/aws-lambda';
 
-// const githubClientSecret = process.env.VITE_GITHUB_CLIENT_SECRET;
-// const githubClientId = process.env.VITE_GITHUB_CLIENT_ID;
-// const githubIssuerUrl = process.env.VITE_GITHUB_ISSUER_URL;
-
-const githubClientSecret = "1822b8bfb24bc8198fb5d730a11db881c551816e"
-const githubClientId = "Iv23li7gy43wuuUgck9v"
-const githubIssuerUrl = "https://github.com/apps/handterm"
+const githubClientSecret = process.env.VITE_GITHUB_CLIENT_SECRET;
+const githubClientId = process.env.VITE_GITHUB_CLIENT_ID;
+const githubIssuerUrl = process.env.VITE_GITHUB_ISSUER_URL;
 
 const nodeRuntime = lambda.Runtime.NODEJS_16_X;
 
@@ -70,27 +66,27 @@ export class HandTermCdkStack extends Stack {
     });
 
     // Define GitHub as an identity provider
-    new cognito.CfnUserPoolIdentityProvider(this, 'GitHubIdentityProvider', {
-      providerName: 'GitHub', // This is the name you assign to your provider
-      providerType: 'OIDC', // For GitHub, use 'OIDC' or 'SAML' as appropriate
-      userPoolId: userPool.userPoolId,
-      providerDetails: {
-        // These will be specific to the OAuth provider
-        // For GitHub, use the OAuth 2.0 endpoint information and credentials
-        authorize_scopes: 'openid,profile,email',
-        client_id: githubClientId,
-        client_secret: githubClientSecret,
-        attributes_request_method: 'GET',
-        oidc_issuer: githubIssuerUrl, // This is not directly applicable to GitHub as GitHub doesn't directly support OIDC
-        // You will need to adjust the above details for GitHub's OAuth flow
-      },
+    // new cognito.CfnUserPoolIdentityProvider(this, 'GitHubIdentityProvider', {
+    //   providerName: 'GitHub', // This is the name you assign to your provider
+    //   providerType: 'OIDC', // For GitHub, use 'OIDC' or 'SAML' as appropriate
+    //   userPoolId: userPool.userPoolId,
+    //   providerDetails: {
+    //     // These will be specific to the OAuth provider
+    //     // For GitHub, use the OAuth 2.0 endpoint information and credentials
+    //     authorize_scopes: 'openid,profile,email',
+    //     client_id: githubClientId,
+    //     client_secret: githubClientSecret,
+    //     attributes_request_method: 'GET',
+    //     oidc_issuer: githubIssuerUrl, // This is not directly applicable to GitHub as GitHub doesn't directly support OIDC
+    //     // You will need to adjust the above details for GitHub's OAuth flow
+    //   },
 
-      attributeMapping: {
-        // Map GitHub user attributes to Cognito user pool attributes
-        email: 'email',
-        // Add other attribute mappings as needed
-      },
-    });
+    //   attributeMapping: {
+    //     // Map GitHub user attributes to Cognito user pool attributes
+    //     email: 'email',
+    //     // Add other attribute mappings as needed
+    //   },
+    // });
 
     // Cognito User Pool Client
     const userPoolClient = userPool.addClient('AppClient', {
@@ -325,6 +321,40 @@ export class HandTermCdkStack extends Stack {
       authorizer: lambdaAuthorizer,
       methods: [HttpMethod.POST, HttpMethod.GET],
       integration: listLogIntegration,
+    })
+
+    const getFileLambda = new lambda.Function(this, 'GetFileFunction', {
+      runtime: nodeRuntime,
+      handler: 'getFile.handler',
+      role: lambdaExecutionRole,
+      code: lambda.Code.fromAsset('lambda/userStorage'),
+      environment: {
+        COGNITO_APP_CLIENT_ID: userPoolClient.userPoolClientId,
+      }
+    });
+    const getFileIntegration = new HttpLambdaIntegration('get-file-integration', getFileLambda);
+    httpApi.addRoutes({
+      path: ENDPOINTS.api.GetFile,
+      authorizer: lambdaAuthorizer,
+      methods: [HttpMethod.GET],
+      integration: getFileIntegration,
+    })
+
+    const putFileLambda = new lambda.Function(this, 'PutFileFunction', {
+      runtime: nodeRuntime,
+      handler: 'putFile.handler',
+      role: lambdaExecutionRole,
+      code: lambda.Code.fromAsset('lambda/userStorage'),
+      environment: {
+        COGNITO_APP_CLIENT_ID: userPoolClient.userPoolClientId,
+      }
+    });
+    const putFileIntegration = new HttpLambdaIntegration('put-file-integration', putFileLambda);
+    httpApi.addRoutes({
+      path: ENDPOINTS.api.PutFile,
+      authorizer: lambdaAuthorizer,
+      methods: [HttpMethod.POST],
+      integration: putFileIntegration,
     })
 
     // Outputs

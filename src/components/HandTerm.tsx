@@ -20,6 +20,7 @@ import axios from 'axios';
 import { ENDPOINTS } from '../shared/endpoints';
 import { SpritePosition } from 'src/game/types/Position';
 import CodeMirrorEditor from './CodeMirrorEditor';
+import { useAuth } from 'src/lib/useAuth';
 
 export interface IHandTermProps {
   // Define the interface for your HandexTerm logic
@@ -43,6 +44,9 @@ export interface IHandTermProps {
       newPassword: string,
       callback: (error: any, result: any) => void
     ) => void;
+    getFile: (key: string, extension: string) => Promise<MyResponse<any>>;
+    putFile: (key: string, content: string, extension: string) => Promise<MyResponse<any>>;
+    listLog: () => Promise<MyResponse<any>>;
     // Add other properties returned by useAuth here
   };
 }
@@ -77,7 +81,8 @@ export interface IHandTermState {
   editContent: string;
   editMode: boolean;
   editLanguage: LanguageType;
-  editFilePath: string | null;
+  editFilePath: string;
+  editFileExtension: string;
 }
 
 class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
@@ -134,9 +139,14 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     localStorage.setItem('editContent', content);
   };
 
-  handleEditSave = () => {
+  handleEditSave = (content: string) => {
     this.setState({ editMode: false });
     // TODO: Save the changed content somewhere.
+    this.props.auth.putFile(
+      this.state.editFilePath,
+      content,
+      this.state.editFileExtension || 'md'
+    );
     this.writeOutput(this.state.editContent || '');
   }
 
@@ -261,8 +271,11 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       errorCharIndex: undefined,
       editContent: '',
       editMode: false,
+      // Default edit language
       editLanguage: "markdown",
-      editFilePath: null,
+      // Default edit file path
+      editFilePath: "_index",
+      editFileExtension: "md",
     }
     this.loadDebugValue();
     this.loadFontSize();
@@ -386,12 +399,15 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     }
 
     if (command === 'edit') {
-      this.setState({
-        editContent: localStorage.getItem('editContent') || 'sample text',
-        editMode: true,
-      }, () => {
-        this.handleFocusEditor();
-      });
+      (async () => {
+        const fileContent = await this.props.auth.getFile(this.state.editFilePath, this.state.editFileExtension);
+        this.setState({
+          editContent: fileContent.data,
+          editMode: true,
+        }, () => {
+          this.handleFocusEditor();
+        });
+      })();
     }
 
     if (command === 'target') {

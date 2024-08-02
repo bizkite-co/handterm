@@ -25,5 +25,7 @@ export const ENDPOINTS = {
         CheckSession: '/checkSession',
         GetUser: '/getUser',
         SetUser: '/setUser',
+        GetFile: '/getFile',
+        PutFile: '/putFile'
     }
 } as const

@@ -160,6 +160,35 @@ export const useAuth = () => {
     }
   }
 
+  const getFile = async (key: string, extension: string = 'json'): Promise<MyResponse<any>> => {
+    try {
+      const authConfig = await getAuthConfig();
+      const response = await axios.get(`${API_URL}${ENDPOINTS.api.GetFile}`, {
+        headers: authConfig.data.headers, // Assuming authConfig.data contains headers
+        params: { key, extension }
+      });
+      return { status: 200, message: 'File fetched successfully', data: response.data, error: [] };
+    } catch (error: any) {
+      return {
+        status: 404,
+        message: 'Error fetching file',
+        error: ['Error fetching file', error.message],
+        data: null
+      };
+    }
+  }
+
+  const putFile = async (key: string, content: string, extension: string = 'json'): Promise<MyResponse<any>> => {
+    try {
+      const authConfig = await getAuthConfig();
+      await axios.post(`${API_URL}${ENDPOINTS.api.PutFile}`, { key, content, extension }, authConfig.data);
+      return { status: 200, data: null, error: [], message: 'File saved successfully' };
+    } catch (error) {
+      console.error('Error saving file:', error);
+      return { status: 404, message: 'Error saving file', error: ['Error saving file'] };
+    }
+  }
+
   const listLog = async () => {
     try {
       const authConfig = await getAuthConfig();
@@ -233,5 +262,5 @@ export const useAuth = () => {
     }
   };
 
-  return { isLoggedIn, login: signIn, logout: signOut, signUp, getUser, checkSession, changePassword, setUser, saveLog, getLog, listLog };
+  return { isLoggedIn, login: signIn, logout: signOut, signUp, getUser, checkSession, changePassword, setUser, saveLog, getLog, listLog, getFile, putFile };
 };

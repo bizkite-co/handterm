@@ -5,7 +5,6 @@ import { EditorView, basicSetup } from 'codemirror';
 import { vim, Vim } from '@replit/codemirror-vim';
 import { javascript } from '@codemirror/lang-javascript';
 import { markdown } from '@codemirror/lang-markdown';
-import './CodeMirrorEditor.css';
 
 // Debounce function
 const debounce = (func: (...args: any[]) => void, wait: number) => {
