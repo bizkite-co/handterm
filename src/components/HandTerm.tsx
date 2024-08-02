@@ -20,7 +20,6 @@ import axios from 'axios';
 import { ENDPOINTS } from '../shared/endpoints';
 import { SpritePosition } from 'src/game/types/Position';
 import CodeMirrorEditor from './CodeMirrorEditor';
-import { useAuth } from 'src/lib/useAuth';
 
 export interface IHandTermProps {
   // Define the interface for your HandexTerm logic
