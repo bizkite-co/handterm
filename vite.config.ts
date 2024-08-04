@@ -1,3 +1,5 @@
+// vite.config.ts
+
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
@@ -5,6 +7,11 @@ import dotenv from 'dotenv';
 import monacoEditorPlugin from 'vite-plugin-monaco-editor';
 
 dotenv.config();
+
+// Ensure monacoEditorPlugin is a function
+if (typeof monacoEditorPlugin !== 'function') {
+  throw new Error('Expected monacoEditorPlugin to be a function');
+}
 
 // https://vitejs.dev/config/
 export default defineConfig({

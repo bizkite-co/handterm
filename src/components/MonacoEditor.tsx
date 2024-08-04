@@ -98,7 +98,11 @@ const MonacoEditor = forwardRef<any, MonacoEditorProps>(({ initialValue, languag
     }
   }, [initialValue, language, onChange, onSave]);
 
-  return <div ref={editorRef} className="monaco-editor-container" style={{ height }} />;
+  return <div
+    ref={editorRef} 
+    className="monaco-editor-container" 
+    style={{ height }} 
+  />;
 });
 
 export default MonacoEditor;
