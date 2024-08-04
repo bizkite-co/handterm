@@ -19,7 +19,7 @@ import { Chord } from './Chord';
 import axios from 'axios';
 import { ENDPOINTS } from '../shared/endpoints';
 import { SpritePosition } from 'src/game/types/Position';
-import CodeMirrorEditor from './CodeMirrorEditor';
+import MonacoEditor from './MonacoEditor';
 
 export interface IHandTermProps {
   // Define the interface for your HandexTerm logic
@@ -243,6 +243,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     this._persistence = new LocalStoragePersistence();
     const initialCanvasHeight = localStorage.getItem('canvasHeight') || '100';
     const nextAchievement = this.getNextTutorialAchievement();
+    this.editorRef = React.createRef();
     this.state = {
       outputElements: this.getCommandResponseHistory().slice(-1),
       isInPhraseMode: false,
@@ -1209,7 +1210,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
               }
 
               {this.state.editMode &&
-                <CodeMirrorEditor
+                <MonacoEditor
                   ref={this.editorRef}
                   initialValue={this.state.editContent}
                   language={this.state.editLanguage}
