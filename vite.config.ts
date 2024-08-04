@@ -2,12 +2,19 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
 import dotenv from 'dotenv';
+import monacoEditorPlugin from 'vite-plugin-monaco-editor';
 
 dotenv.config();
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    monacoEditorPlugin({
+      // You can specify the languages you need here
+      
+    }),
+  ],
   base: '/',
   build: {
     target: 'esnext'
