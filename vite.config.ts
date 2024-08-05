@@ -1,14 +1,12 @@
 // vite.config.ts
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import path from 'path';
+import monacoEditorPluginImport from 'vite-plugin-monaco-editor';
 
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import path from 'path'
-import dotenv from 'dotenv';
-import monacoEditorPlugin from 'vite-plugin-monaco-editor';
+// Type assertion to handle the default property
+const monacoEditorPlugin = (monacoEditorPluginImport as any).default || monacoEditorPluginImport;
 
-dotenv.config();
-
-// Ensure monacoEditorPlugin is a function
 if (typeof monacoEditorPlugin !== 'function') {
   throw new Error('Expected monacoEditorPlugin to be a function');
 }
@@ -19,9 +17,11 @@ export default defineConfig({
     react(),
     monacoEditorPlugin({
       // You can specify the languages you need here
-      
     }),
   ],
+  server: {
+    port: 5173, // Ensure the port is set correctly
+  },
   base: '/',
   build: {
     target: 'esnext'
@@ -29,10 +29,6 @@ export default defineConfig({
   resolve: {
     alias: {
       '/shared/': path.resolve(__dirname, '../shared/'),
-      '@codemirror/language': '@codemirror/language',
-      '@codemirror/search': '@codemirror/search',
-      '@codemirror/commands': '@codemirror/commands',
-      '@codemirror/lang-javascript': '@codemirror/lang-javascript', // Add this line
     }
   },
-})
+});

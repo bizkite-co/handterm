@@ -1,8 +1,7 @@
 // src/components/MonacoEditor.tsx
-
 import { useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
 import * as monaco from 'monaco-editor';
-import { initVimMode } from 'monaco-vim';
+import { VimMode } from 'vim-monaco';
 import './MonacoEditor.css'; // Import the CSS file
 
 interface MonacoEditorProps {
@@ -16,6 +15,7 @@ interface MonacoEditorProps {
 const MonacoEditor = forwardRef<any, MonacoEditorProps>(({ initialValue, language, onChange, onSave, height = '400px' }, ref) => {
   const editorRef = useRef<HTMLDivElement>(null);
   const monacoEditorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
+  const vimModeRef = useRef<VimMode | null>(null);
 
   useImperativeHandle(ref, () => ({
     focus: () => {
@@ -37,8 +37,44 @@ const MonacoEditor = forwardRef<any, MonacoEditorProps>(({ initialValue, languag
 
       monacoEditorRef.current = editor;
 
-      const statusBarContainer = document.createElement('div');
-      const vimMode = initVimMode(editor, statusBarContainer);
+      // Initialize Vim mode with error handling
+      try {
+        const vimMode = new VimMode(editor);
+        vimModeRef.current = vimMode;
+
+        // Define Vim commands
+        const defineVimCommands = () => {
+          if (vimMode) {
+            vimMode.defineEx('w', '', () => {
+              if (onSave) {
+                onSave(editor.getValue());
+              }
+            });
+
+            vimMode.defineEx('q', '', () => {
+              if (editorRef.current) {
+                editorRef.current.style.display = 'none'; // Hide the editor
+              }
+            });
+
+            vimMode.defineEx('wq', '', () => {
+              if (onSave) {
+                onSave(editor.getValue());
+              }
+              if (editorRef.current) {
+                editorRef.current.style.display = 'none'; // Hide the editor
+              }
+            });
+          } else {
+            console.error('VimMode object is not available');
+          }
+        };
+
+        defineVimCommands();
+
+      } catch (error) {
+        console.error('Error initializing VimMode:', error);
+      }
 
       editor.onDidChangeModelContent(() => {
         if (onChange) {
@@ -46,63 +82,16 @@ const MonacoEditor = forwardRef<any, MonacoEditorProps>(({ initialValue, languag
         }
       });
 
-      // Function to define Vim commands
-      const defineVimCommands = () => {
-        const Vim = (window as any).Vim;
-        if (Vim) {
-          Vim.defineEx('w', '', () => {
-            if (onSave) {
-              onSave(editor.getValue());
-            }
-          });
-
-          Vim.defineEx('q', '', () => {
-            if (editorRef.current) {
-              editorRef.current.style.display = 'none'; // Hide the editor
-            }
-          });
-
-          Vim.defineEx('wq', '', () => {
-            if (onSave) {
-              onSave(editor.getValue());
-            }
-            if (editorRef.current) {
-              editorRef.current.style.display = 'none'; // Hide the editor
-            }
-          });
-        } else {
-          console.error('Vim object is not available on the window');
-        }
-      };
-
-      // Ensure Vim commands are defined after Vim mode is initialized
-      // Retry every 100ms until Vim is available, up to a maximum of 10 retries
-      let retries = 0;
-      const maxRetries = 10;
-      const intervalId = setInterval(() => {
-        if ((window as any).Vim || retries >= maxRetries) {
-          clearInterval(intervalId);
-          if ((window as any).Vim) {
-            defineVimCommands();
-          } else {
-            console.error('Vim object was not available after maximum retries');
-          }
-        }
-        retries++;
-      }, 100);
-
       return () => {
-        vimMode.dispose();
+        if (vimModeRef.current) {
+          vimModeRef.current.dispose();
+        }
         editor.dispose();
       };
     }
   }, [initialValue, language, onChange, onSave]);
 
-  return <div
-    ref={editorRef} 
-    className="monaco-editor-container" 
-    style={{ height }} 
-  />;
+  return <div ref={editorRef} className="monaco-editor-container" style={{ height }} />;
 });
 
 export default MonacoEditor;

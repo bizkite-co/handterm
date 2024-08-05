@@ -17,13 +17,7 @@
   "dependencies": {
     "@aws-cdk/aws-apigatewayv2": "^1.204.0",
     "@aws-cdk/aws-apigatewayv2-integrations": "^1.204.0",
-    "@codemirror/commands": "^6.6.0",
-    "@codemirror/lang-javascript": "^6.2.2",
-    "@codemirror/lang-markdown": "^6.2.5",
-    "@codemirror/language": "^6.10.2",
-    "@codemirror/search": "^6.5.6",
-    "@codemirror/view": "^6.29.1",
-    "@replit/codemirror-vim": "^6.2.1",
+    "@monaco-editor/react": "^4.6.0",
     "@xterm/addon-fit": "^0.10.0",
     "@xterm/xterm": "^5.5.0",
     "amazon-cognito-identity-js": "^6.3.12",
@@ -39,6 +33,7 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "recast": "^0.23.9",
+    "vim-monaco": "^1.0.3",
     "vite-plugin-monaco-editor": "^1.1.0"
   },
   "devDependencies": {
