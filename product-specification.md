@@ -10,6 +10,7 @@ Vite, TypeScript, React, `@xterm/xterm`, HTML 5 canvas. Windows, VS Code, PowerS
 
 * Robust, expert-level React implementation. 
 * Prefer functional components and other modern React best practices.
+* Vim integration for file editing.
 
 ## Prompt Instructions
 
@@ -39,5 +40,4 @@ Vite, TypeScript, React, `@xterm/xterm`, HTML 5 canvas. Windows, VS Code, PowerS
 ## Current Issues
 
 * [ ] Can't resize canvas.
-* [ ] Doesn't scroll to bottom.
-* [ ] 
+* [X] ~~*Doesn't scroll to bottom.*~~ [2024-08-05]

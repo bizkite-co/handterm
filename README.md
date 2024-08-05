@@ -23,4 +23,4 @@ yarn
 * [ ] Incremental phrases 
     * [ ] Based on expertise.
     * [ ] Make it easy to test-forward to bypass levels.
-* [ ] 
+* [ ] Vim integration for file editing.

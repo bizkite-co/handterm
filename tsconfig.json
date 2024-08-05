@@ -26,9 +26,7 @@
     "typeRoots": ["./node_modules/@types", "./src/types"],
   },
   "include": [
-    "./src",
-    "src/shared",
-    "./src/types/elements.d.ts",
+    "./src/**/*",
   ],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

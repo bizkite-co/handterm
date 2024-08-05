@@ -12,6 +12,27 @@ interface MonacoEditorProps {
   height?: string;
 }
 
+// Configure Monaco environment
+if (typeof window !== 'undefined') {
+  (window as any).MonacoEnvironment = {
+    getWorkerUrl: function (_moduleId: string, label: string) {
+      if (label === 'json') {
+        return '/json.worker.js';
+      }
+      if (label === 'css') {
+        return '/css.worker.js';
+      }
+      if (label === 'html') {
+        return '/html.worker.js';
+      }
+      if (label === 'typescript' || label === 'javascript') {
+        return '/ts.worker.js';
+      }
+      return '/editor.worker.js';
+    },
+  };
+}
+
 const MonacoEditor = forwardRef<any, MonacoEditorProps>(({ initialValue, language, onChange, onSave, height = '400px' }, ref) => {
   const editorRef = useRef<HTMLDivElement>(null);
   const monacoEditorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
@@ -37,50 +58,46 @@ const MonacoEditor = forwardRef<any, MonacoEditorProps>(({ initialValue, languag
 
       monacoEditorRef.current = editor;
 
-      // Initialize Vim mode with error handling
-      try {
-        const vimMode = new VimMode(editor);
-        vimModeRef.current = vimMode;
-
-        // Define Vim commands
-        const defineVimCommands = () => {
-          if (vimMode) {
-            vimMode.defineEx('w', '', () => {
-              if (onSave) {
-                onSave(editor.getValue());
-              }
-            });
-
-            vimMode.defineEx('q', '', () => {
-              if (editorRef.current) {
-                editorRef.current.style.display = 'none'; // Hide the editor
-              }
-            });
-
-            vimMode.defineEx('wq', '', () => {
-              if (onSave) {
-                onSave(editor.getValue());
-              }
-              if (editorRef.current) {
-                editorRef.current.style.display = 'none'; // Hide the editor
-              }
-            });
-          } else {
-            console.error('VimMode object is not available');
-          }
-        };
-
-        defineVimCommands();
-
-      } catch (error) {
-        console.error('Error initializing VimMode:', error);
-      }
-
       editor.onDidChangeModelContent(() => {
         if (onChange) {
           onChange(editor.getValue());
         }
       });
+
+      const initializeVimMode = () => {
+        try {
+          const vimMode = new VimMode(editor);
+          vimModeRef.current = vimMode;
+
+          // Define Vim commands
+          vimMode.defineEx('w', '', () => {
+            if (onSave) {
+              onSave(editor.getValue());
+            }
+          });
+
+          vimMode.defineEx('q', '', () => {
+            if (editorRef.current) {
+              editorRef.current.style.display = 'none'; // Hide the editor
+            }
+          });
+
+          vimMode.defineEx('wq', '', () => {
+            if (onSave) {
+              onSave(editor.getValue());
+            }
+            if (editorRef.current) {
+              editorRef.current.style.display = 'none'; // Hide the editor
+            }
+          });
+
+        } catch (error) {
+          console.error('Error initializing VimMode:', error);
+        }
+      };
+
+      // Delay initialization to ensure the editor is fully loaded
+      setTimeout(initializeVimMode, 2000);
 
       return () => {
         if (vimModeRef.current) {
@@ -91,7 +108,12 @@ const MonacoEditor = forwardRef<any, MonacoEditorProps>(({ initialValue, languag
     }
   }, [initialValue, language, onChange, onSave]);
 
-  return <div ref={editorRef} className="monaco-editor-container" style={{ height }} />;
+  return (
+    <div>
+      <div ref={editorRef} className="monaco-editor-container" style={{ height }} />
+      <div id="status" className="vim-status-bar"></div>
+    </div>
+  );
 });
 
 export default MonacoEditor;
