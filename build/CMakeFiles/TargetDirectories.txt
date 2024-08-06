@@ -1,6 +1,0 @@
-C:/Users/xgenx/source/repos/handterm/build/CMakeFiles/lint.dir
-C:/Users/xgenx/source/repos/handterm/build/CMakeFiles/test.dir
-C:/Users/xgenx/source/repos/handterm/build/CMakeFiles/forcetest.dir
-C:/Users/xgenx/source/repos/handterm/build/CMakeFiles/docs.dir
-C:/Users/xgenx/source/repos/handterm/build/CMakeFiles/edit_cache.dir
-C:/Users/xgenx/source/repos/handterm/build/CMakeFiles/rebuild_cache.dir
