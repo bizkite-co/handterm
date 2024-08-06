@@ -3445,11 +3445,6 @@ monaco-editor@^0.50.0:
   resolved "https://registry.yarnpkg.com/monaco-editor/-/monaco-editor-0.50.0.tgz#44e62b124c8aed224e1d310bbbe6ffd6d5122413"
   integrity sha512-8CclLCmrRRh+sul7C08BmPBP3P8wVWfBHomsTcndxg5NRCEPfu/mc2AGU8k37ajjDVXcXFc12ORAMUkmk+lkFA==
 
-monaco-vim@^0.4.1:
-  version "0.4.1"
-  resolved "https://registry.yarnpkg.com/monaco-vim/-/monaco-vim-0.4.1.tgz#1113a2ca3d97a87b1d21a9b655879e6e97cd7ae9"
-  integrity sha512-+cy0TE9xarjLIgUexqxIEbat3K1l7WbiFSLZKAO2kYl1qFRvkeWn4ro/C4c6dK0i9+WQKUC4Dhu/nyCbZfA37w==
-
 ms@2.1.2:
   version "2.1.2"
   resolved "https://registry.yarnpkg.com/ms/-/ms-2.1.2.tgz#d09d1f357b443f493382a8eb3ccd183872ae6009"
@@ -4252,11 +4247,6 @@ v8-to-istanbul@^9.0.1:
     "@jridgewell/trace-mapping" "^0.3.12"
     "@types/istanbul-lib-coverage" "^2.0.1"
     convert-source-map "^2.0.0"
-
-vim-monaco@^1.0.3:
-  version "1.0.3"
-  resolved "https://registry.yarnpkg.com/vim-monaco/-/vim-monaco-1.0.3.tgz#11da58884f74f36ec49c3ac063d8bf9cbf016e78"
-  integrity sha512-zF5m6kBnTngD3AERb9qBbFcCZfhL0S4yqJmb/DO79EZz7AFWkwJRKOCATjF5lkU/iyt//eLq0KZaml+lOiXHXQ==
 
 vite-plugin-monaco-editor@^1.1.0:
   version "1.1.0"

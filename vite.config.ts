@@ -24,7 +24,8 @@ export default defineConfig({
   },
   base: '/',
   build: {
-    target: 'esnext'
+    target: 'esnext',
+    sourcemap: true,
   },
   resolve: {
     alias: {

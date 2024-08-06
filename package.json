@@ -28,13 +28,12 @@
 		"dotenv": "^16.4.5",
 		"monaco-editor": "^0.50.0",
 		"monaco-editor-webpack-plugin": "^7.1.0",
-		"monaco-vim": "^0.4.1",
 		"prettier-plugin-tailwind": "^2.2.12",
 		"react": "^18.2.0",
 		"react-dom": "^18.2.0",
 		"recast": "^0.23.9",
-		"vim-monaco": "^1.0.3",
-		"vite-plugin-monaco-editor": "^1.1.0"
+		"vite-plugin-monaco-editor": "^1.1.0",
+		"vim-monaco": "link:../vim-monaco"
 	},
 	"devDependencies": {
 		"@testing-library/react": "^16.0.0",

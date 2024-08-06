@@ -1,0 +1,15 @@
+/* src/components/MonacoEditor.css */
+.monaco-editor-container {
+  position: relative;
+  width: 100%;
+}
+
+.vim-status-bar {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  background-color: #2c2c2c;
+  color: white;
+  text-align: left;
+  padding: 5px;
+}
