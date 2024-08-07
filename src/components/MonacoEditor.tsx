@@ -27,34 +27,41 @@ const MonacoEditor = forwardRef<any, MonacoEditorProps>(({ initialValue, languag
   }));
 
   useEffect(() => {
-    if (editorRef.current) {
-      if (!editorRef.current) return;
-      const editor = monaco.editor.create(editorRef.current, {
-        value: initialValue,
-        language: language,
-        theme: 'vs-dark',
-        automaticLayout: true,
-      });
+    const initializeEditor = async () => {
+      await window.monacoReady;
 
-      editorInstanceRef.current = editor;
+      if (editorRef.current) {
+        const editor = monaco.editor.create(editorRef.current, {
+          value: initialValue,
+          language: language,
+          theme: 'vs-dark',
+          automaticLayout: true,
+        });
 
-      console.log('Monaco Editor created:', editor);
+        editorInstanceRef.current = editor;
 
-      // Ensure VimMode is loaded after editor creation
-      try {
-        const vimMode = new VimMode(editor);
-        vimModeRef.current = vimMode;
-        console.log('VimMode created:', vimMode);
-      } catch (error) {
-        console.error('Error initializing VimMode:', error);
-      }
+        console.log('Monaco Editor created:', editor);
 
-      return () => {
-        if (editorInstanceRef.current) {
-          editorInstanceRef.current.dispose();
+        // Ensure VimMode is loaded after editor creation
+        try {
+          if (window.monaco) {
+            console.log('window.monaco', window.monaco);
+            const vimMode = new VimMode(editor);
+            vimModeRef.current = vimMode;
+          }
+        } catch (error) {
+          console.error('Error initializing VimMode:', error);
         }
-      };
-    }
+
+        return () => {
+          if (editorInstanceRef.current) {
+            editorInstanceRef.current.dispose();
+          }
+        };
+      }
+    };
+
+    initializeEditor();
   }, [initialValue, language]);
 
   return (
