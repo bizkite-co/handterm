@@ -3,36 +3,34 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
-import dotenv from 'dotenv';
-import monacoEditorPlugin from 'vite-plugin-monaco-editor';
+import monacoEditorPlugin from 'vite-plugin-monaco-editor'
 
-dotenv.config();
-
-// Ensure monacoEditorPlugin is a function
-if (typeof monacoEditorPlugin !== 'function') {
-  throw new Error('Expected monacoEditorPlugin to be a function');
-}
-
-// https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
     react(),
     monacoEditorPlugin({
-      // You can specify the languages you need here
-      
+      languageWorkers: ['typescript', 'json', 'html', 'css'], // Use languageWorkers property
     }),
   ],
   base: '/',
   build: {
-    target: 'esnext'
+    target: 'esnext',
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          jsonWorker: ['monaco-editor/esm/vs/language/json/json.worker'],
+          cssWorker: ['monaco-editor/esm/vs/language/css/css.worker'],
+          htmlWorker: ['monaco-editor/esm/vs/language/html/html.worker'],
+          tsWorker: ['monaco-editor/esm/vs/language/typescript/ts.worker'],
+          editorWorker: ['monaco-editor/esm/vs/editor/editor.worker'],
+        },
+      },
+    },
   },
   resolve: {
     alias: {
       '/shared/': path.resolve(__dirname, '../shared/'),
-      '@codemirror/language': '@codemirror/language',
-      '@codemirror/search': '@codemirror/search',
-      '@codemirror/commands': '@codemirror/commands',
-      '@codemirror/lang-javascript': '@codemirror/lang-javascript', // Add this line
-    }
+      'monaco-editor': path.resolve(__dirname, 'node_modules/monaco-editor'),
+    },
   },
 })
