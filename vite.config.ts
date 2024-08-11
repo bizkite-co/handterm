@@ -2,12 +2,10 @@
 import { defineConfig, Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
-
 import monacoEditorPlugin, { type IMonacoEditorOpts } from 'vite-plugin-monaco-editor';
 
 // Access the actual function nested under default
 const monacoEditorPluginDefault = ((monacoEditorPlugin as any).default) as (options: IMonacoEditorOpts) => any;
-
 
 export default defineConfig({
   plugins: [
@@ -18,7 +16,9 @@ export default defineConfig({
     }),
   ],
   base: '/',
+  publicDir: 'public', // Ensure Vite serves static files from the dist directory
   build: {
+    outDir: 'public',
     target: 'esnext',
     rollupOptions: {
       output: {

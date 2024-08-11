@@ -1,5 +1,5 @@
 // src/components/MonacoEditor.tsx
-import React, { useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
+import { useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
 import * as monaco from 'monaco-editor';
 import './MonacoEditor.css'; // Import the CSS file
 
@@ -54,16 +54,7 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(
       // Define MonacoEnvironment configuration to load workers
       (window as any).MonacoEnvironment = {
         getWorkerUrl: function (_moduleId: string, label: string) {
-          let workerUrl = '/editor.worker.bundle.js';
-          if (label === 'json') {
-            workerUrl = '/json.worker.bundle.js';
-          } else if (label === 'css') {
-            workerUrl = '/css.worker.bundle.js';
-          } else if (label === 'html') {
-            workerUrl = '/html.worker.bundle.js';
-          } else if (label === 'typescript' || label === 'javascript') {
-            workerUrl = '/ts.worker.bundle.js';
-          }
+          let workerUrl = `/` + label + `.worker.bundle.js`;
           validateWorkerPath(workerUrl);
           return workerUrl;
         },
