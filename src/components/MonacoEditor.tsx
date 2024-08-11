@@ -23,7 +23,12 @@ const validateWorkerPath = async (url: string) => {
     if (!response.ok) {
       console.error(`Worker file not found at ${url}`);
     } else {
-      console.log(`Worker file found at ${url}`);
+      const contentType = response.headers.get('Content-Type');
+      if (contentType && contentType.includes('application/javascript')) {
+        console.log(`Worker file found at ${url} and is a valid JavaScript file.`);
+      } else {
+        console.error(`Worker file at ${url} is not a JavaScript file but a ${contentType}`);
+      }
     }
   } catch (error) {
     console.error(`Error fetching worker file at ${url}:`, error);
@@ -49,15 +54,15 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(
       // Define MonacoEnvironment configuration to load workers
       (window as any).MonacoEnvironment = {
         getWorkerUrl: function (_moduleId: string, label: string) {
-          let workerUrl = '/monacoeditorwork/editor.worker.bundle.js';
+          let workerUrl = '/editor.worker.bundle.js';
           if (label === 'json') {
-            workerUrl = '/monacoeditorwork/json.worker.bundle.js';
+            workerUrl = '/json.worker.bundle.js';
           } else if (label === 'css') {
-            workerUrl = '/monacoeditorwork/css.worker.bundle.js';
+            workerUrl = '/css.worker.bundle.js';
           } else if (label === 'html') {
-            workerUrl = '/monacoeditorwork/html.worker.bundle.js';
+            workerUrl = '/html.worker.bundle.js';
           } else if (label === 'typescript' || label === 'javascript') {
-            workerUrl = '/monacoeditorwork/ts.worker.bundle.js';
+            workerUrl = '/ts.worker.bundle.js';
           }
           validateWorkerPath(workerUrl);
           return workerUrl;

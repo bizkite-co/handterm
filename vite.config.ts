@@ -14,6 +14,7 @@ export default defineConfig({
     react(),
     monacoEditorPluginDefault({
       languageWorkers: ['typescript', 'json', 'html', 'css'],
+      publicPath: '/',
     }),
   ],
   base: '/',
