@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"yaml.schemas": {
+			"file:///c%3A/Users/xgenx/.vscode/extensions/atlassian.atlascode-2.9.1/resources/schemas/pipelines-schema.json": "bitbucket-pipelines.yml",
+			"https://json.schemastore.org/github-workflow.json": "file:///c%3A/Users/xgenx/source/repos/handex-react/.github/workflows/deploy.yml"
+		}
+	}
+}

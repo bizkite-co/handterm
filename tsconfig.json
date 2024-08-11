@@ -28,7 +28,7 @@
   "include": [
     "./src",
     "src/shared",
-    "./src/types/elements.d.ts",
+    "./src/types/elements.d.ts", "verifyWorkers.js",
   ],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

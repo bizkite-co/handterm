@@ -17,10 +17,10 @@ yarn
 ## Roadmap
 
 * [ ] Introduction to the Handex and the SVG notation.
-    * [ ] Put an ASCII "Handex" and an SVG for "Enter". Make them confirm by pressing the thumb tip. 
+    * [X] ~~*Put an ASCII "Handex" and an SVG for "Enter". Make them confirm by pressing the thumb tip.*~~ [2024-08-09] 
     * [ ] Put a backspace and tell them to try it.
-    * [ ] Make them type "asdf", showing the SVGs
+    * [X] ~~*Make them type "asdf", showing the SVGs*~~ [2024-08-09]
 * [ ] Incremental phrases 
-    * [ ] Based on expertise.
+    * [X] ~~*Based on expertise.*~~ [2024-08-09]
     * [ ] Make it easy to test-forward to bypass levels.
 * [ ] 

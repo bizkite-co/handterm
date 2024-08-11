@@ -17,6 +17,19 @@ interface MonacoEditorHandle {
   getValue: () => string;
 }
 
+const validateWorkerPath = async (url: string) => {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      console.error(`Worker file not found at ${url}`);
+    } else {
+      console.log(`Worker file found at ${url}`);
+    }
+  } catch (error) {
+    console.error(`Error fetching worker file at ${url}:`, error);
+  }
+};
+
 const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(
   ({ initialValue, language, onChange, onSave, height = "90vh" }, ref) => {
     const editorRef = useRef<HTMLDivElement>(null);
@@ -33,23 +46,22 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(
     }));
 
     useEffect(() => {
-      // Define MonacoEnvironment to load workers
+      // Define MonacoEnvironment configuration to load workers
       (window as any).MonacoEnvironment = {
         getWorkerUrl: function (_moduleId: string, label: string) {
+          let workerUrl = '/monacoeditorwork/editor.worker.bundle.js';
           if (label === 'json') {
-            return '/json.worker.bundle.js';
+            workerUrl = '/monacoeditorwork/json.worker.bundle.js';
+          } else if (label === 'css') {
+            workerUrl = '/monacoeditorwork/css.worker.bundle.js';
+          } else if (label === 'html') {
+            workerUrl = '/monacoeditorwork/html.worker.bundle.js';
+          } else if (label === 'typescript' || label === 'javascript') {
+            workerUrl = '/monacoeditorwork/ts.worker.bundle.js';
           }
-          if (label === 'css') {
-            return '/css.worker.bundle.js';
-          }
-          if (label === 'html') {
-            return '/html.worker.bundle.js';
-          }
-          if (label === 'typescript' || label === 'javascript') {
-            return '/ts.worker.bundle.js';
-          }
-          return '/editor.worker.bundle.js';
-        }
+          validateWorkerPath(workerUrl);
+          return workerUrl;
+        },
       };
 
       const loadMonacoEditor = async () => {
