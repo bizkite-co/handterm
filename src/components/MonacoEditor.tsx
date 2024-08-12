@@ -44,9 +44,17 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(
       editorRef.current = editor;
       monacoRef.current = monaco;
 
-      if (!vimModeRef.current) {
-        vimModeRef.current = initVimMode(editor, document.createElement('div'));
-      }
+      window.require.config({
+        paths: {
+          "monaco-vim": "https://unpkg.com/monaco-vim/dist/monaco-vim"
+        }
+      });
+
+      window.require(["monaco-vim"], function (MonacoVim) {
+        if (!vimModeRef.current) {
+          vimModeRef.current = MonacoVim.initVimMode(editor, document.createElement('div'));
+        }
+      });
 
       // Define Vim commands only once
       const defineVimCommands = () => {
