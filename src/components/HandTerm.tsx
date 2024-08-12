@@ -140,14 +140,17 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
   };
 
   handleEditSave = (content: string) => {
-    this.setState({ editMode: false });
-    // TODO: Save the changed content somewhere.
     this.props.auth.putFile(
       this.state.editFilePath,
       content,
       this.state.editFileExtension || 'md'
     );
-    this.writeOutput(this.state.editContent || '');
+    this.writeOutput(content || '');
+  }
+
+  handleEditorClose = () => {
+    this.setState({ editMode: false });
+    this.focusTerminal();
   }
 
   loadTutorialAchievements(): string[] {
@@ -1217,6 +1220,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
                   language={this.state.editLanguage}
                   onChange={this.handleEditChange}
                   onSave={this.handleEditSave}
+                  onClose={this.handleEditorClose}
                 />
               }
 

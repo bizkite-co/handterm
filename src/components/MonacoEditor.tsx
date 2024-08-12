@@ -7,11 +7,22 @@ interface MonacoEditorProps {
   language: 'javascript' | 'typescript' | 'markdown';
   onChange?: (value: string | undefined) => void;
   onSave?: (value: string) => void;
+  onClose?: () => void;
   height?: string;
 }
 
-const MonacoEditor: React.FC<MonacoEditorProps> = ({ initialValue, language, onChange, onSave, height = '90vh' }) => {
+declare global {
+  interface Window {
+    MonacoVim?: any;
+    require: {
+      config: (params: any) => void;
+    };
+  }
+}
+
+const MonacoEditor: React.FC<MonacoEditorProps> = ({ initialValue, language, onChange, onSave, onClose, height = '90vh' }) => {
   const editorRef = useRef<any>(null);
+  const statusNodeRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     return () => {
@@ -42,13 +53,10 @@ const MonacoEditor: React.FC<MonacoEditorProps> = ({ initialValue, language, onC
       }
     });
 
-    window.require(["monaco-vim"], function (MonacoVim: any) {
-      const statusNode = document.querySelector(".status-node") || document.createElement("div");
-      if (!document.body.contains(statusNode)) {
-        statusNode.className = "status-node";
-        document.body.appendChild(statusNode);
+    window.require(["monaco-vim"], (MonacoVim: any) => {
+      if (statusNodeRef.current) {
+        MonacoVim.initVimMode(editor, statusNodeRef.current);
       }
-      MonacoVim.initVimMode(editor, statusNode);
 
       // Define Vim commands
       const Vim = MonacoVim.VimMode.Vim;
@@ -59,14 +67,18 @@ const MonacoEditor: React.FC<MonacoEditorProps> = ({ initialValue, language, onC
       });
 
       Vim.defineEx('q', '', () => {
-        editor.getContainerDomNode().style.display = 'none';
+        if (onClose) {
+          onClose();
+        }
       });
 
       Vim.defineEx('wq', '', () => {
         if (onSave) {
           onSave(editor.getValue());
         }
-        editor.getContainerDomNode().style.display = 'none';
+        if (onClose) {
+          onClose();
+        }
       });
     });
   }
@@ -81,7 +93,7 @@ const MonacoEditor: React.FC<MonacoEditorProps> = ({ initialValue, language, onC
         onChange={onChange}
         theme="vs-dark"
       />
-      <div className="status-node"></div>
+      <div ref={statusNodeRef} className="status-node"></div>
     </>
   );
 };
