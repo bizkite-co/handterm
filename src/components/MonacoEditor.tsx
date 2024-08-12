@@ -19,7 +19,7 @@ interface MonacoEditorHandle {
 
 const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(
   ({ initialValue, language, onChange, onSave, height = '90vh' }, ref) => {
-    const editorRef = useRef<Editor.IStandaloneCodeEditor | null>(null);
+    const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
     const monacoRef = useRef<Monaco | null>(null);
     const vimModeRef = useRef<{ dispose: () => void } | null>(null);
 
@@ -40,7 +40,7 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(
       };
     }, []);
 
-    const handleEditorDidMount: OnMount = (editor, monaco) => {
+    const handleEditorDidMount: OnMount = (editor, monaco: Monaco) => {
       editorRef.current = editor;
       monacoRef.current = monaco;
 
