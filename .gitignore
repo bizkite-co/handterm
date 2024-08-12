@@ -27,3 +27,4 @@ public/images/glitch-parallax-bg
 .env
 *.pem
 .aider.*
+.aider*
