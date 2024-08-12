@@ -34,7 +34,7 @@ const MonacoEditor: React.FC<MonacoEditorProps> = ({ initialValue, language, onC
 
   function handleEditorDidMount(editor: any, monaco: any) {
     editorRef.current = editor;
-    editor.focus();
+    setTimeout(() => editor.focus(), 100);
 
     editor.addAction({
       id: "save-content",
