@@ -88,7 +88,6 @@ const MonacoEditor: React.FC<MonacoEditorProps> = ({ initialValue, language, onC
   return (
     <div className="monaco-editor-container">
       <Editor
-        onFocus={() => editorRef.current?.focus()}
         key={language}
         height={height}
         defaultLanguage={language}
