@@ -17,7 +17,7 @@
   "dependencies": {
     "@aws-cdk/aws-apigatewayv2": "^1.204.0",
     "@aws-cdk/aws-apigatewayv2-integrations": "^1.204.0",
-    "@monaco-editor/react": "^4.4.6", // Add this line
+    "@monaco-editor/react": "^4.4.6", 
     "@xterm/addon-fit": "^0.10.0",
     "@xterm/xterm": "^5.5.0",
     "amazon-cognito-identity-js": "^6.3.12",
