@@ -336,7 +336,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     }
   };
 
-  public handleCommand = (cmd: string) => {
+  public handleCommand = (cmd: string): void => {
     if (cmd && cmd !== 'Return (ENTER)') {
       this.setState(
         // Update the command history
