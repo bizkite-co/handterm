@@ -75,18 +75,8 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(
             }
           });
 
-          const defineVimCommands = async () => {
-            await new Promise<void>((resolve) => {
-              const checkVim = () => {
-                if ((window as any).Vim) {
-                  resolve();
-                } else {
-                  setTimeout(checkVim, 100);
-                }
-              };
-              checkVim();
-            });
-
+          // Define Vim commands only once
+          const defineVimCommands = () => {
             const Vim = (window as any).Vim;
             if (Vim) {
               Vim.defineEx('w', '', () => {
@@ -114,11 +104,16 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(
             }
           };
 
-          defineVimCommands();
+          // Ensure Vim commands are defined only once
+          if (!(window as any)._vimCommandsDefined) {
+            (window as any)._vimCommandsDefined = true;
+            defineVimCommands();
+          }
 
+          // Clean up function
           return () => {
             if (vimModeRef.current) vimModeRef.current.dispose();
-            editor.dispose();
+            if (monacoEditorRef.current) monacoEditorRef.current.dispose();
             if (statusBarContainer && statusBarContainer.parentNode) {
               statusBarContainer.parentNode.removeChild(statusBarContainer);
             }

@@ -32,4 +32,9 @@ export default defineConfig({
   worker: {
     format: 'es',
   },
+  server: {
+    headers: {
+      'Cache-Control': 'public, max-age=31536000',
+    },
+  },
 });
