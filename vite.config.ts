@@ -15,8 +15,11 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      // Remove monaco-editor alias
+      'monaco-editor': 'monaco-editor/esm/vs/editor/editor.api.js',
     },
+  },
+  optimizeDeps: {
+    include: ['monaco-editor/esm/vs/editor/editor.api.js'],
   },
   worker: {
     format: 'es',
