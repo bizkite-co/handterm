@@ -44,6 +44,26 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(
       editorRef.current = editor;
       monacoRef.current = monaco;
 
+      // setup key bindings before monaco-vim setup
+
+      // setup key bindings
+      editor.addAction({
+        // an unique identifier of the contributed action
+        id: "some-unique-id",
+        // a label of the action that will be presented to the user
+        label: "Some label!",
+        keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_S],
+
+        // the method that will be executed when the action is triggered.
+        run: function (editor) {
+          if (onSave) {
+            onSave(editor.getValue());
+          }
+          return null;
+        }
+      });
+
+      // setup monaco-vim
       window.require.config({
         paths: {
           "monaco-vim": "https://unpkg.com/monaco-vim/dist/monaco-vim"
@@ -51,14 +71,10 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(
       });
 
       window.require(["monaco-vim"], function (MonacoVim) {
-        if (!vimModeRef.current) {
-          const statusNode = document.createElement('div');
-          vimModeRef.current = MonacoVim.initVimMode(editor, statusNode);
-        }
-      });
+        const statusNode = document.createElement('div');
+        vimModeRef.current = MonacoVim.initVimMode(editor, statusNode);
 
-      // Define Vim commands only once
-      const defineVimCommands = () => {
+        // Define Vim commands
         const Vim = (window as any).Vim;
         if (Vim) {
           Vim.defineEx('w', '', () => {
@@ -84,13 +100,7 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(
         } else {
           console.error('Vim object is not available on the window');
         }
-      };
-
-      // Ensure Vim commands are defined only once
-      if (!(window as any)._vimCommandsDefined) {
-        (window as any)._vimCommandsDefined = true;
-        defineVimCommands();
-      }
+      });
     };
 
     return (
