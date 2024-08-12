@@ -26,3 +26,4 @@ dist-ssr
 public/images/glitch-parallax-bg
 .env
 *.pem
+.aider.*
