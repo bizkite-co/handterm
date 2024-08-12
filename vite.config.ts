@@ -1,24 +1,16 @@
 // vite.config.ts
-import { defineConfig, Plugin } from 'vite';
+import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
-import monacoEditorPlugin, { type IMonacoEditorOpts } from 'vite-plugin-monaco-editor';
-
-// Access the actual function nested under default
-const monacoEditorPluginDefault = ((monacoEditorPlugin as any).default) as (options: IMonacoEditorOpts) => any;
 
 export default defineConfig({
   plugins: [
-    react(),
-    monacoEditorPluginDefault({
-      languageWorkers: ['typescript', 'json', 'html', 'css'],
-      publicPath: '/',
-    }),
+    react()
   ],
   base: '/',
-  publicDir: 'public', // Ensure Vite serves static files from the dist directory
+  publicDir: 'public', // Serve static files from the public directory
   build: {
-    outDir: 'public',
+    outDir: 'dist', // Output directory for build files
     target: 'esnext',
     rollupOptions: {
       output: {
@@ -34,7 +26,6 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '/shared/': path.resolve(__dirname, '../shared/'),
       'monaco-editor': path.resolve(__dirname, 'node_modules/monaco-editor'),
     },
   },

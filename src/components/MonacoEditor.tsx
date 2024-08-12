@@ -11,32 +11,13 @@ interface MonacoEditorProps {
   height?: string;
 }
 
-// Custom type for the imperative handle
 interface MonacoEditorHandle {
   focus: () => void;
   getValue: () => string;
 }
 
-const validateWorkerPath = async (url: string) => {
-  try {
-    const response = await fetch(url);
-    if (!response.ok) {
-      console.error(`Worker file not found at ${url}`);
-    } else {
-      const contentType = response.headers.get('Content-Type');
-      if (contentType && contentType.includes('application/javascript')) {
-        console.log(`Worker file found at ${url} and is a valid JavaScript file.`);
-      } else {
-        console.error(`Worker file at ${url} is not a JavaScript file but a ${contentType}`);
-      }
-    }
-  } catch (error) {
-    console.error(`Error fetching worker file at ${url}:`, error);
-  }
-};
-
 const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(
-  ({ initialValue, language, onChange, onSave, height = "90vh" }, ref) => {
+  ({ initialValue, language, onChange, onSave, height = '90vh' }, ref) => {
     const editorRef = useRef<HTMLDivElement>(null);
     const monacoEditorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
     const vimModeRef = useRef<any>(null);
@@ -51,13 +32,20 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(
     }));
 
     useEffect(() => {
-      // Define MonacoEnvironment configuration to load workers
       (window as any).MonacoEnvironment = {
-        getWorkerUrl: function (_moduleId: string, label: string) {
-          let workerUrl = `/` + label + `.worker.bundle.js`;
-          validateWorkerPath(workerUrl);
-          return workerUrl;
-        },
+        getWorker: function (_moduleId: string, label: string) {
+          if (label === 'json') {
+            return new Worker(new URL('monaco-editor/esm/vs/language/json/json.worker.js', import.meta.url), { type: 'module' });
+          } else if (label === 'css') {
+            return new Worker(new URL('monaco-editor/esm/vs/language/css/css.worker.js', import.meta.url), { type: 'module' });
+          } else if (label === 'html') {
+            return new Worker(new URL('monaco-editor/esm/vs/language/html/html.worker.js', import.meta.url), { type: 'module' });
+          } else if (label === 'typescript' || label === 'javascript') {
+            return new Worker(new URL('monaco-editor/esm/vs/language/typescript/ts.worker.js', import.meta.url), { type: 'module' });
+          } else {
+            return new Worker(new URL('monaco-editor/esm/vs/editor/editor.worker.js', import.meta.url), { type: 'module' });
+          }
+        }
       };
 
       const loadMonacoEditor = async () => {
@@ -126,7 +114,6 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(
             }
           };
 
-          // Define Vim commands after ensuring Vim object is available
           defineVimCommands();
 
           return () => {
@@ -142,7 +129,6 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(
       loadMonacoEditor();
 
       return () => {
-        // Cleanup function
         if (vimModeRef.current) vimModeRef.current.dispose();
         if (monacoEditorRef.current) monacoEditorRef.current.dispose();
       };
