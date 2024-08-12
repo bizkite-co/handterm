@@ -20,6 +20,7 @@ import axios from 'axios';
 import { ENDPOINTS } from '../shared/endpoints';
 import { SpritePosition } from 'src/game/types/Position';
 import MonacoEditor from './MonacoEditor';
+import './MonacoEditor.css'; // Make sure to import the CSS
 
 export interface IHandTermProps {
   // Define the interface for your HandexTerm logic
@@ -95,7 +96,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
   public adapterRef = React.createRef<XtermAdapter>();
   private nextCharsDisplayRef: React.RefObject<NextCharsDisplay> = React.createRef();
   private terminalGameRef = React.createRef<Game>();
-  private editorRef = React.createRef<any>();
+  // Remove this line as we no longer need a ref for the editor
 
   private _persistence: IPersistence;
   public commandHistory: string[] = [];
@@ -1211,7 +1212,6 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
 
               {this.state.editMode &&
                 <MonacoEditor
-                  ref={this.editorRef}
                   initialValue={this.state.editContent}
                   language={this.state.editLanguage}
                   onChange={this.handleEditChange}
