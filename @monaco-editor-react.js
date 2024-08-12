@@ -32,7 +32,7 @@ const App = () => {
     });
 
     window.require(["monaco-vim"], function (MonacoVim) {
-      const statusNode = document.querySelector(".status-node");
+      const statusNode = document.querySelector(".status-node") || document.createElement('div');
       MonacoVim.initVimMode(editor, statusNode);
     });
   }
