@@ -15,11 +15,11 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      'monaco-editor': 'monaco-editor',
+      'monaco-editor': path.resolve(__dirname, 'node_modules/monaco-editor'),
     },
   },
   optimizeDeps: {
-    include: ['monaco-editor'],
+    include: ['monaco-editor/esm/vs/editor/editor.api'],
   },
   worker: {
     format: 'es',
@@ -29,7 +29,7 @@ export default defineConfig({
       'Cache-Control': 'public, max-age=31536000',
     },
     fs: {
-      allow: ['..'],
+      allow: ['..', path.resolve(__dirname, 'node_modules/monaco-editor')],
     },
   },
 });
