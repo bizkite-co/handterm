@@ -384,7 +384,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       const commandChords = [
         'DELETE (Backspace)', 'Return (ENTER)', 'UpArrow', 'LeftArrow', 'DownArrow', 'RightArrow'
       ].map(c => {
-        return <Chord displayChar={c} />
+        return <Chord key={c} displayChar={c} />
       });
       const commandChordsHtml = commandChords.map(element => {
         return ReactDOMServer.renderToStaticMarkup(element);
@@ -397,7 +397,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       // Write out all the spcieal characters to the output
       const specialChars = ['~', '`', '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '-', '_', '+', '=', '{', '[', '}', ']', '|', '\\', ':', ';', '"', "'", '<', '>', ',', '.', '?', '/'];
       const specialCharsHtml = specialChars.map(element => {
-        return ReactDOMServer.renderToStaticMarkup(<Chord displayChar={element} />);
+        return ReactDOMServer.renderToStaticMarkup(<Chord key={element} displayChar={element} />);
       }).join('');
       response = "<div class='chord-display-container'>" + specialCharsHtml + "</div>";
     }
@@ -779,19 +779,19 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     name = name ?? "slowest-characters";
     return (
       <table className="wpm-table">
-        <tbody>
+        <thead>
           <tr><th colSpan={2}>{name}</th></tr>
+        </thead>
+        <tbody>
           {wpms.map((wpm, index) => (
-            <React.Fragment key={index}>
-              <tr id={name} className="wpm-table-row" >
-                <td>{wpm.character
-                  .replace("\r", "\\r")
-                  .replace(" ", "\\s")
-                }
-                </td>
-                <td className="number">{wpm.wpm.toFixed(2)}</td>
-              </tr>
-            </React.Fragment>
+            <tr key={index} className="wpm-table-row">
+              <td>{wpm.character
+                .replace("\r", "\\r")
+                .replace(" ", "\\s")
+              }
+              </td>
+              <td className="number">{wpm.wpm.toFixed(2)}</td>
+            </tr>
           ))}
         </tbody>
       </table>

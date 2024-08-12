@@ -84,7 +84,7 @@ const MonacoEditor: React.FC<MonacoEditorProps> = ({ initialValue, language, onC
   }
 
   return (
-    <>
+    <div className="monaco-editor-container">
       <Editor
         height={height}
         defaultLanguage={language}
@@ -94,7 +94,7 @@ const MonacoEditor: React.FC<MonacoEditorProps> = ({ initialValue, language, onC
         theme="vs-dark"
       />
       <div ref={statusNodeRef} className="status-node"></div>
-    </>
+    </div>
   );
 };
 
