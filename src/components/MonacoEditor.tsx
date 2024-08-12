@@ -1,7 +1,8 @@
 // src/components/MonacoEditor.tsx
-import { useRef, forwardRef, useImperativeHandle } from 'react';
+import React, { useRef, forwardRef, useImperativeHandle, useEffect } from 'react';
 import Editor, { Monaco } from '@monaco-editor/react';
 import './MonacoEditor.css'; // Import the CSS file
+import { initVimMode } from 'monaco-vim';
 
 interface MonacoEditorProps {
   initialValue: string;
@@ -20,6 +21,7 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(
   ({ initialValue, language, onChange, onSave, height = '90vh' }, ref) => {
     const editorRef = useRef<any>(null);
     const monacoRef = useRef<Monaco | null>(null);
+    const vimModeRef = useRef<any>(null);
 
     useImperativeHandle(ref, () => ({
       focus: () => {
@@ -30,9 +32,21 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(
       },
     }));
 
+    useEffect(() => {
+      return () => {
+        if (vimModeRef.current) {
+          vimModeRef.current.dispose();
+        }
+      };
+    }, []);
+
     const handleEditorDidMount = (editor: any, monaco: Monaco) => {
       editorRef.current = editor;
       monacoRef.current = monaco;
+
+      if (!vimModeRef.current) {
+        vimModeRef.current = initVimMode(editor, document.createElement('div'));
+      }
 
       // Define Vim commands only once
       const defineVimCommands = () => {
