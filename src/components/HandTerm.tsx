@@ -415,12 +415,13 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       if (args.length === 0) {
         response = "Target WPM: " + this.state.targetWPM;
       } else {
-        const targetWPM: number = (parseInt(args[0], 10) as number);
+        const targetWPMString = args[0] || '';
+        const targetWPM: number = parseInt(targetWPMString, 10);
         if (!isNaN(targetWPM)) {
           this.setState({ targetWPM: targetWPM });
-          localStorage.setItem(LogKeys.TargetWPM, (targetWPM as number).toString());
+          localStorage.setItem(LogKeys.TargetWPM, targetWPM.toString());
           this.resetPhrasesAchieved();
-          response = "Target WPM set to " + (targetWPM as number).toString();
+          response = "Target WPM set to " + targetWPM.toString();
         } else {
           response = "Target WPM must be a number";
         }
