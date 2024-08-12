@@ -1,6 +1,6 @@
 // src/components/MonacoEditor.tsx
 import React, { useRef, forwardRef, useImperativeHandle, useEffect } from 'react';
-import Editor, { OnMount } from '@monaco-editor/react';
+import Editor, { OnMount, Monaco } from '@monaco-editor/react';
 import './MonacoEditor.css'; // Import the CSS file
 import { initVimMode } from 'monaco-vim';
 
@@ -40,7 +40,7 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(
       };
     }, []);
 
-    const handleEditorDidMount: OnMount = (editor, monaco) => {
+    const handleEditorDidMount: OnMount = (editor, monaco: Monaco) => {
       editorRef.current = editor;
       monacoRef.current = monaco;
 
