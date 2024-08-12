@@ -55,7 +55,7 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(
         keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_S],
 
         // the method that will be executed when the action is triggered.
-        run: function (editor) {
+        run: function (editor: { getValue: () => string; }) {
           if (onSave) {
             onSave(editor.getValue());
           }
