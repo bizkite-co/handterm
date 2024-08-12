@@ -34,6 +34,7 @@ const MonacoEditor: React.FC<MonacoEditorProps> = ({ initialValue, language, onC
 
   function handleEditorDidMount(editor: any, monaco: any) {
     editorRef.current = editor;
+    editor.focus();
 
     editor.addAction({
       id: "save-content",
@@ -53,6 +54,7 @@ const MonacoEditor: React.FC<MonacoEditorProps> = ({ initialValue, language, onC
       }
     });
 
+    // @ts-ignore
     window.require(["monaco-vim"], (MonacoVim: any) => {
       if (statusNodeRef.current) {
         MonacoVim.initVimMode(editor, statusNodeRef.current);
@@ -86,6 +88,7 @@ const MonacoEditor: React.FC<MonacoEditorProps> = ({ initialValue, language, onC
   return (
     <div className="monaco-editor-container">
       <Editor
+        onFocus={() => editorRef.current?.focus()}
         key={language}
         height={height}
         defaultLanguage={language}

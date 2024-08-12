@@ -149,8 +149,11 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
   }
 
   handleEditorClose = () => {
-    this.setState({ editMode: false });
-    this.focusTerminal();
+    this.setState({ editMode: false }, () => {
+      setTimeout(() => {
+        this.focusTerminal();
+      }, 100);
+    });
   }
 
   loadTutorialAchievements(): string[] {
@@ -325,15 +328,11 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
   }
 
   handleFocusEditor = () => {
-    if (this.editorRef.current) {
-      const editor = this.editorRef.current;
-      const timer = setInterval(() => {
-        editor.focus();
-        if (editor.editorView && editor.editorView.hasFocus) {
-          clearInterval(timer);
-        }
-      }, 500);
-    }
+    setTimeout(() => {
+      if (this.editorRef.current) {
+        this.editorRef.current.focus();
+      }
+    }, 100);
   };
 
   public handleCommand = (cmd: string): void => {
