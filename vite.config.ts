@@ -8,14 +8,14 @@ export default defineConfig({
     react()
   ],
   base: '/',
-  publicDir: 'public', // Serve static files from the public directory
+  publicDir: 'public',
   build: {
-    outDir: 'dist', // Output directory for build files
+    outDir: 'dist',
     target: 'esnext',
   },
   resolve: {
     alias: {
-      'monaco-editor': 'monaco-editor/esm/vs/editor/editor.api',
+      'monaco-editor': 'monaco-editor',
     },
   },
   optimizeDeps: {
@@ -27,6 +27,9 @@ export default defineConfig({
   server: {
     headers: {
       'Cache-Control': 'public, max-age=31536000',
+    },
+    fs: {
+      allow: ['..'],
     },
   },
 });
