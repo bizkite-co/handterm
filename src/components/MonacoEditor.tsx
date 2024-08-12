@@ -1,7 +1,6 @@
 // src/components/MonacoEditor.tsx
 import React, { useRef, forwardRef, useImperativeHandle, useEffect } from 'react';
-import Editor, { Monaco } from '@monaco-editor/react';
-import * as monaco from 'monaco-editor';
+import Editor, { OnMount } from '@monaco-editor/react';
 import './MonacoEditor.css'; // Import the CSS file
 import { initVimMode } from 'monaco-vim';
 
@@ -41,7 +40,7 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(
       };
     }, []);
 
-    const handleEditorDidMount = (editor: any, monaco: Monaco) => {
+    const handleEditorDidMount: OnMount = (editor, monaco) => {
       editorRef.current = editor;
       monacoRef.current = monaco;
 
@@ -76,31 +75,37 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(
         vimModeRef.current = MonacoVim.initVimMode(editor, statusNode);
 
         // Define Vim commands
-        const Vim = (window as any).Vim;
-        if (Vim) {
-          Vim.defineEx('w', '', () => {
-            if (onSave) {
-              onSave(editor.getValue());
-            }
-          });
+        window.require(["monaco-vim"], function (MonacoVim) {
+            const statusNode = document.createElement('div');
+            vimModeRef.current = MonacoVim.initVimMode(editor, statusNode);
 
-          Vim.defineEx('q', '', () => {
-            if (editorRef.current) {
-              editorRef.current.style.display = 'none'; // Hide the editor
-            }
-          });
+            // Define Vim commands
+            const Vim = (window as any).Vim;
+            if (Vim) {
+                Vim.defineEx('w', '', () => {
+                    if (onSave) {
+                        onSave(editor.getValue());
+                    }
+                });
 
-          Vim.defineEx('wq', '', () => {
-            if (onSave) {
-              onSave(editor.getValue());
+                Vim.defineEx('q', '', () => {
+                    if (editorRef.current) {
+                        editorRef.current.getContainerDomNode().style.display = 'none'; // Hide the editor
+                    }
+                });
+
+                Vim.defineEx('wq', '', () => {
+                    if (onSave) {
+                        onSave(editor.getValue());
+                    }
+                    if (editorRef.current) {
+                        editorRef.current.getContainerDomNode().style.display = 'none'; // Hide the editor
+                    }
+                });
+            } else {
+                console.error('Vim object is not available on the window');
             }
-            if (editorRef.current) {
-              editorRef.current.style.display = 'none'; // Hide the editor
-            }
-          });
-        } else {
-          console.error('Vim object is not available on the window');
-        }
+        });
       });
     };
 
