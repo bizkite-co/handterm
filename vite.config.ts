@@ -2,10 +2,28 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
+import fs from 'fs';
 
 export default defineConfig({
   plugins: [
-    react()
+    react(),
+    {
+      name: 'monaco-editor-css',
+      enforce: 'pre',
+      resolveId(source) {
+        if (source.endsWith('.css') && source.includes('monaco-editor')) {
+          return source;
+        }
+      },
+      load(id) {
+        if (id.endsWith('.css') && id.includes('monaco-editor')) {
+          const cssPath = path.resolve(__dirname, 'node_modules', id);
+          if (fs.existsSync(cssPath)) {
+            return fs.readFileSync(cssPath, 'utf-8');
+          }
+        }
+      },
+    },
   ],
   base: '/',
   publicDir: 'public',
@@ -34,23 +52,6 @@ export default defineConfig({
       'monaco-editor/esm/vs/language/css/css.worker',
       'monaco-editor/esm/vs/language/html/html.worker',
     ],
-    esbuildOptions: {
-      plugins: [
-        {
-          name: 'monaco-css-plugin',
-          setup(build) {
-            build.onResolve({ filter: /\.css$/, namespace: 'file' }, args => {
-              if (args.path.includes('monaco-editor')) {
-                return { path: args.path, namespace: 'monaco-css' }
-              }
-            })
-            build.onLoad({ filter: /.*/, namespace: 'monaco-css' }, async (args) => {
-              return { contents: '', loader: 'css' }
-            })
-          },
-        },
-      ],
-    },
   },
   worker: {
     format: 'es',
