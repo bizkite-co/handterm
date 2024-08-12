@@ -1,6 +1,7 @@
 // src/components/MonacoEditor.tsx
 import React, { useRef, forwardRef, useImperativeHandle, useEffect } from 'react';
 import Editor, { Monaco } from '@monaco-editor/react';
+import * as monaco from 'monaco-editor';
 import './MonacoEditor.css'; // Import the CSS file
 import { initVimMode } from 'monaco-vim';
 
