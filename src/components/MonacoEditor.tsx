@@ -19,16 +19,16 @@ interface MonacoEditorHandle {
 
 const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(
   ({ initialValue, language, onChange, onSave, height = '90vh' }, ref) => {
-    const editorRef = useRef<any>(null);
+    const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
     const monacoRef = useRef<Monaco | null>(null);
-    const vimModeRef = useRef<any>(null);
+    const vimModeRef = useRef<{ dispose: () => void } | null>(null);
 
     useImperativeHandle(ref, () => ({
       focus: () => {
         editorRef.current?.focus();
       },
       getValue: () => {
-        return editorRef.current?.getValue() || ''; // Provide a default value
+        return editorRef.current?.getValue() ?? ''; // Use nullish coalescing for default value
       },
     }));
 
@@ -52,7 +52,8 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(
 
       window.require(["monaco-vim"], function (MonacoVim) {
         if (!vimModeRef.current) {
-          vimModeRef.current = MonacoVim.initVimMode(editor, document.createElement('div'));
+          const statusNode = document.createElement('div');
+          vimModeRef.current = MonacoVim.initVimMode(editor, statusNode);
         }
       });
 
