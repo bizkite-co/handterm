@@ -4,7 +4,23 @@ import react from '@vitejs/plugin-react';
 import path from 'path';
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    {
+      name: 'monaco-editor-css',
+      enforce: 'pre',
+      resolveId(source) {
+        if (source.endsWith('.css') && source.includes('@monaco-editor')) {
+          return source;
+        }
+      },
+      load(id) {
+        if (id.endsWith('.css') && id.includes('@monaco-editor')) {
+          return '';
+        }
+      },
+    },
+  ],
   base: '/',
   publicDir: 'public',
   build: {
