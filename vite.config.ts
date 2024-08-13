@@ -29,7 +29,7 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          'monaco-editor': ['monaco-editor'],
+          'monaco-editor': ['@monaco-editor/react'],
         },
       },
     },
@@ -37,6 +37,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@monaco-editor/react': path.resolve(__dirname, 'node_modules/@monaco-editor/react'),
+      'monaco-editor': path.resolve(__dirname, 'node_modules/monaco-editor'),
     },
   },
   optimizeDeps: {
