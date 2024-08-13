@@ -7,16 +7,16 @@ export default defineConfig({
   plugins: [
     react(),
     {
-      name: 'monaco-editor-css',
+      name: 'monaco-editor-nls',
       enforce: 'pre',
-      resolveId(source) {
-        if (source.endsWith('.css') && source.includes('@monaco-editor')) {
-          return source;
+      resolveId(id) {
+        if (id.includes('monaco-editor/esm/vs/editor/editor.main.nls')) {
+          return 'virtual:monaco-editor-nls';
         }
       },
       load(id) {
-        if (id.endsWith('.css') && id.includes('@monaco-editor')) {
-          return '';
+        if (id === 'virtual:monaco-editor-nls') {
+          return `export default {};`;
         }
       },
     },
@@ -26,6 +26,13 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     target: 'esnext',
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'monaco-editor': ['monaco-editor'],
+        },
+      },
+    },
   },
   resolve: {
     alias: {
@@ -34,6 +41,23 @@ export default defineConfig({
   },
   optimizeDeps: {
     include: ['@monaco-editor/react'],
+    esbuildOptions: {
+      plugins: [
+        {
+          name: 'monaco-editor-css',
+          setup(build) {
+            build.onResolve({ filter: /\.css$/, namespace: 'file' }, args => {
+              if (args.path.includes('monaco-editor')) {
+                return { path: args.path, namespace: 'monaco-editor-css' };
+              }
+            });
+            build.onLoad({ filter: /.*/, namespace: 'monaco-editor-css' }, () => {
+              return { contents: '', loader: 'js' };
+            });
+          },
+        },
+      ],
+    },
   },
   server: {
     headers: {
