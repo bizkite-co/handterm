@@ -21,7 +21,7 @@
     "@xterm/addon-fit": "^0.10.0",
     "@xterm/xterm": "^5.5.0",
     "amazon-cognito-identity-js": "^6.3.12",
-    "axios": "^1.7.2",
+    "axios": "^1.7.4",
     "buffer": "^6.0.3",
     "canvas": "^2.11.2",
     "canvas-confetti": "^1.9.3",
