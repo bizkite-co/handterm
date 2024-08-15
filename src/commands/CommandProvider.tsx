@@ -9,13 +9,12 @@ interface CommandProviderProps {
   handTermRef: React.RefObject<HandTerm>;
 }
 
-export const CommandProvider: React.FC<CommandProviderProps> = (props: CommandProviderProps) => {
+export const CommandProvider: React.FC<CommandProviderProps> = ({ children, handTermRef }) => {
 
-  const [commandHistory ] = useState<string[]>([]);
-  
+  const [commandHistory] = useState<string[]>([]);
 
   const executeCommand = useCallback((commandName: string, args?: string[], switches?: Record<string, boolean | string>) => {
-    const handTerm = props.handTermRef.current;
+    const handTerm = handTermRef.current;
     if (!handTerm) {
       console.error('CommandProvider: handTermRef.current is NULL');
       return {status: 404, message: 'CommandProvider: handTermRef.current is NULL'};
@@ -26,16 +25,16 @@ export const CommandProvider: React.FC<CommandProviderProps> = (props: CommandPr
       return {status: 200, message: command.execute(commandName, args, switches, handTerm).message };
     }
     return { status: 404, message: `CommandProvider: Command not found: ${commandName}`};
-  }, []);
+  }, [handTermRef]);
 
   const appendToOutput = useCallback((element: React.ReactNode) => {
-    const handTerm = props.handTermRef.current;
+    const handTerm = handTermRef.current;
     if (!handTerm) {
       console.error('CommandProvider: handTermRef.current is NULL');
       return 'CommandProvider: handTermRef.current is NULL';
     }
     if(element) handTerm.writeOutput(element.toString());
-  }, []);
+  }, [handTermRef]);
 
 
   // Provide the context with the necessary values
@@ -43,11 +42,11 @@ export const CommandProvider: React.FC<CommandProviderProps> = (props: CommandPr
     commandHistory,
     executeCommand,
     appendToOutput: appendToOutput,
-  }), [commandHistory, executeCommand]);
+  }), [executeCommand]);
 
   return (
     <CommandContext.Provider value={contextValue}>
-      {props.children}
+      {children}
     </CommandContext.Provider>
   );
 };

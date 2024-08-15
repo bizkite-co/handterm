@@ -91,3 +91,6 @@
 
 # 2024-08-15 10:44:37.323630
 +Ok, that worked also. Now we are going to start working on more difficult ones. Let's do the least difficult first, but also keep in mind that if you think any of the components should be broken up into smaller components, or refactored in any way, also tell me about that.
+
+# 2024-08-15 10:49:05.693926
++Let's proceed to the next class component that we should convert to a functional componet, or any other refactors that you think would improve the quality of the code.
