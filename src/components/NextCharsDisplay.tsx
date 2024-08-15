@@ -5,8 +5,9 @@ import Timer from './Timer.js'; // Import the React component
 import ErrorDisplay from "./ErrorDisplay";
 import { Phrase } from "../utils/Phrase.js";
 
-interface NextCharsDisplayProps {
+export interface NextCharsDisplayProps {
     commandLine: string;
+    onTimerStatusChange: (status: boolean) => void;
     isInPhraseMode: boolean;
     newPhrase: string;
     onPhraseSuccess: (phrase: string) => void;
