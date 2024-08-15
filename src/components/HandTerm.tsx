@@ -10,7 +10,7 @@ import Game from '../game/Game';
 import ReactDOMServer from 'react-dom/server';
 import { ActionType } from '../game/types/ActionTypes';
 import Phrases from '../utils/Phrases';
-import WebCam, { WebCamProps } from '../utils/WebCam';
+import WebCam from '../utils/WebCam';
 import { CommandContext } from '../commands/CommandContext';
 import { Achievement, Achievements, MyResponse } from '../types/Types';
 import { TutorialComponent } from './TutorialComponent';
@@ -307,10 +307,6 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       this.adapterRef.current.terminalWrite(localStorage.getItem('currentCommand') || '');
     }
     this.scrollToBottom();
-
-    if (this.videoElementRef.current) {
-      this.webCam = new WebCam({ setOn: true });
-    }
 
     this.addTouchListeners();
 
@@ -1213,12 +1209,11 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
                 />
               )}
 
-              {/* TODO: Move this into JSX in the WebCam component */}
-              <video
-                ref={this.videoElementRef as React.RefObject<HTMLVideoElement>}
-                id="terminal-video"
-                hidden={!this.isShowVideo}
-              ></video>
+              {this.isShowVideo && (
+                <WebCam
+                  setOn={this.isShowVideo}
+                />
+              )}
             </div>
           );
         }}
