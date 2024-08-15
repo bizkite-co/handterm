@@ -1,6 +1,5 @@
 // HandexTerm.ts
 import { LogKeys, TimeHTML, CharDuration, CharWPM, TerminalCssClasses } from '../types/TerminalTypes';
-import { useRef } from 'react';
 import { IWPMCalculator, WPMCalculator } from '../utils/WPMCalculator';
 import { IPersistence, LocalStoragePersistence } from '../Persistence';
 import { createHTMLElementFromHTML } from '../utils/dom';
@@ -385,7 +384,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       const commandChords = [
         'DELETE (Backspace)', 'Return (ENTER)', 'UpArrow', 'LeftArrow', 'DownArrow', 'RightArrow'
       ].map(c => {
-        return <Chord key={c} displayChar={c} />;
+        return <Chord key={c} displayChar={c} />
       });
       const commandChordsHtml = commandChords.map(element => {
         return ReactDOMServer.renderToStaticMarkup(element);
@@ -398,7 +397,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       // Write out all the spcieal characters to the output
       const specialChars = ['~', '`', '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '-', '_', '+', '=', '{', '[', '}', ']', '|', '\\', ':', ';', '"', "'", '<', '>', ',', '.', '?', '/'];
       const specialCharsHtml = specialChars.map(element => {
-        return ReactDOMServer.renderToStaticMarkup(<Chord key={element} displayChar={element} />);
+        return ReactDOMServer.renderToStaticMarkup(<Chord key={element} displayChar={element} />)
       }).join('');
       response = "<div class='chord-display-container'>" + specialCharsHtml + "</div>";
     }
@@ -412,7 +411,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
         }, () => {
           this.handleFocusEditor();
         });
-      })();
+      })()
     }
 
     if (command === 'target') {
