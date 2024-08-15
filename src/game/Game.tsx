@@ -1,5 +1,5 @@
 // TerminalGame.ts
-import React, { TouchEventHandler, useState, useEffect, useRef } from 'react';
+import React, { TouchEventHandler, useState, useEffect, useRef, useImperativeHandle } from 'react';
 import { Zombie4 } from './Zombie4';
 import { Hero } from './Hero';
 import { Action, ActionType } from './types/ActionTypes';
@@ -23,6 +23,13 @@ interface IGameProps {
   onSetHeroAction: (action: ActionType) => void;
   onSetZombie4Action: (action: ActionType) => void;
   phrasesAchieved: string[];
+}
+
+export interface IGameHandle {
+  completeGame: () => void;
+  resetGame: () => void;
+  levelUp: (setLevelValue?: number | null) => void;
+  handleZombie4PositionChange: (position: SpritePosition) => void;
 }
 
 interface IGameState {
@@ -313,12 +320,6 @@ const Game = React.forwardRef<IGameHandle, IGameProps>(({
       />
     </div>
   );
-};
+});
 
 export default Game;
-interface IGameHandle {
-  completeGame: () => void;
-  resetGame: () => void;
-  levelUp: (setLevelValue?: number | null) => void;
-  handleZombie4PositionChange: (position: SpritePosition) => void;
-}

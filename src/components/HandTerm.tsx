@@ -4,7 +4,7 @@ import { IPersistence, LocalStoragePersistence } from '../Persistence';
 import { createHTMLElementFromHTML } from '../utils/dom';
 import React, { ContextType, TouchEventHandler } from 'react';
 import XtermAdapter, { XtermAdapterHandle } from './XtermAdapter';
-import NextCharsDisplay from './NextCharsDisplay';
+import NextCharsDisplay, { NextCharsDisplayHandle } from './NextCharsDisplay';
 import { Output } from './Output';
 import Game from '../game/Game';
 import ReactDOMServer from 'react-dom/server';
