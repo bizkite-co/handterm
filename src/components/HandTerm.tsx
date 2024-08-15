@@ -321,8 +321,8 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
 
   handleFocusEditor = () => {
     setTimeout(() => {
-      if (editorRef.current) {
-        editorRef.current.focus();
+      if (this.editorRef.current) {
+        this.editorRef.current.focus();
       }
     }, 100);
   };
