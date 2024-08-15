@@ -23,7 +23,11 @@ interface NextCharsDisplayState {
     phrase: Phrase;
 }
 
-const NextCharsDisplay = React.forwardRef<HTMLDivElement, NextCharsDisplayProps>(({
+export interface NextCharsDisplayHandle {
+    resetTimer: () => void;
+}
+
+const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, NextCharsDisplayProps>(({
     commandLine,
     onTimerStatusChange,
     isInPhraseMode,
