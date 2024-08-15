@@ -1,6 +1,6 @@
 import { TerminalCssClasses } from "../types/TerminalTypes.js";
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useImperativeHandle } from 'react';
 import Timer from './Timer.js'; // Import the React component
 import ErrorDisplay from "./ErrorDisplay";
 import { Phrase } from "../utils/Phrase.js";
@@ -31,6 +31,10 @@ const NextCharsDisplay = React.forwardRef<HTMLDivElement, NextCharsDisplayProps>
     onPhraseSuccess,
     onError
 }, ref) => {
+    useImperativeHandle(ref, () => ({
+        resetTimer,
+    }));
+
     const [isActive, setIsActive] = useState(false);
     const [mismatchedChar, setMismatchedChar] = useState<string | null>(null);
     const [mismatchedIsVisible, setMismatchedIsVisible] = useState(false);
