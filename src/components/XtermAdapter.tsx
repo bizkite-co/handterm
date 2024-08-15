@@ -18,7 +18,7 @@ interface XtermAdapterHandle {
   focusTerminal: () => void;
 }
 
-const XtermAdapter = forwardRef<XtermAdapterHandle, IXtermAdapterProps>(({
+const XtermAdapter = forwardRef<XtermAdapterHandle, IXtermAdapterProps>((props, ref) => {
   terminalElementRef,
   onAddCharacter,
   onRemoveCharacter,

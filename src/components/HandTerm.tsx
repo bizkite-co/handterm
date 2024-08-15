@@ -93,7 +93,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
   // Implement the interface methods
   private terminalElementRef = React.createRef<HTMLDivElement>();
 
-  public adapterRef = React.createRef<typeof XtermAdapter>();
+  public adapterRef = React.createRef<XtermAdapterHandle>();
   private nextCharsDisplayRef: React.RefObject<NextCharsDisplay> = React.createRef();
   private terminalGameRef = React.createRef<Game>();
   // Remove this line as we no longer need a ref for the editor
