@@ -70,3 +70,24 @@
 +2. You might be breaking the Rules of Hooks
 +3. You might have more than one copy of React in the same app
 +See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.```. I would like to convert my React class components to functional components incrementally while testing the results, and I would like your help identifying the components that would be easiest to convert first. At that point, I would like to start the conversion process.
+
+# 2024-08-15 09:50:15.975836
++My manual testing in the `yarn preview` environment indicate that your changes to `NextCharsDisplay.tsx` worked and it appears to be functioning normally. The next item on your list is `XtermAdapter.tsx`. Please convert that component now and then I will do a manual test. Automated testing is something I will need to include shortly, but if you think automated tests would improve this conversion process we could create tests now. If you have any other recommendations, based on your expert React/Node knowledge, I would like to hear that too.
+
+# 2024-08-15 10:08:49.793438
++The conversion of `XtermAdapter.tsx` was also successful. Now I would like to proceed to conversion of the `Game.tsx`, and then review which class components to target next.
+
+# 2024-08-15 10:37:13.017417
++My tests on that conversion also indicate that it was successful. What components should be converted next? And go ahead and start with the first one.
+
+# 2024-08-15 10:40:26.460332
++/drop src\components\NextCharsDisplay.tsx
+
+# 2024-08-15 10:40:44.981496
++/drop src\components\XtermAdapter.tsx
+
+# 2024-08-15 10:40:58.121603
++/drop src\game\Game.tsx
+
+# 2024-08-15 10:44:37.323630
++Ok, that worked also. Now we are going to start working on more difficult ones. Let's do the least difficult first, but also keep in mind that if you think any of the components should be broken up into smaller components, or refactored in any way, also tell me about that.
