@@ -1,5 +1,6 @@
 // HandexTerm.ts
 import { LogKeys, TimeHTML, CharDuration, CharWPM, TerminalCssClasses } from '../types/TerminalTypes';
+import { useRef } from 'react';
 import { IWPMCalculator, WPMCalculator } from '../utils/WPMCalculator';
 import { IPersistence, LocalStoragePersistence } from '../Persistence';
 import { createHTMLElementFromHTML } from '../utils/dom';
@@ -384,7 +385,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       const commandChords = [
         'DELETE (Backspace)', 'Return (ENTER)', 'UpArrow', 'LeftArrow', 'DownArrow', 'RightArrow'
       ].map(c => {
-        return <Chord key={c} displayChar={c} />
+        return <Chord key={c} displayChar={c} />;
       });
       const commandChordsHtml = commandChords.map(element => {
         return ReactDOMServer.renderToStaticMarkup(element);
@@ -785,11 +786,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
         <tbody>
           {wpms.map((wpm, index) => (
             <tr key={index} className="wpm-table-row">
-              <td>{wpm.character
-                .replace("\r", "\\r")
-                .replace(" ", "\\s")
-              }
-              </td>
+              <td>{wpm.character.replace("\r", "\\r").replace(" ", "\\s")}</td>
               <td className="number">{wpm.wpm.toFixed(2)}</td>
             </tr>
           ))}
@@ -1162,7 +1159,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
                 onTouchEnd={this.handleTouchEnd}
               />
               <Game
-                ref={terminalGameRef}
+                ref={this.terminalGameRef}
                 canvasHeight={this.state.canvasHeight}
                 canvasWidth={canvasWidth} // Use the width from terminalSize if available
                 isInPhraseMode={this.state.isInPhraseMode}
@@ -1175,10 +1172,9 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
                 phrasesAchieved={this.state.phrasesAchieved}
                 zombie4StartPosition={this.zombie4StartPostion}
               />
-              {this.state.isInPhraseMode
-                && this.state.phraseValue
-                && <NextCharsDisplay
-                  ref={nextCharsDisplayRef}
+              {this.state.isInPhraseMode && this.state.phraseValue && (
+                <NextCharsDisplay
+                  ref={this.nextCharsDisplayRef}
                   onTimerStatusChange={this.handleTimerStatusChange}
                   commandLine={this.state.commandLine}
                   isInPhraseMode={this.state.isInPhraseMode}
@@ -1186,24 +1182,24 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
                   onPhraseSuccess={this.handlePhraseSuccess}
                   onError={this.handlePhraseError}
                 />
-              }
+              )}
 
-              {this.state.lastTypedCharacter &&
+              {this.state.lastTypedCharacter && (
                 <Chord displayChar={this.state.lastTypedCharacter} />
-              }
+              )}
 
-              {Array.isArray(this.state.nextAchievement?.phrase)
-                && TutorialComponent
-                && <TutorialComponent
-                  achievement={this.state.nextAchievement}
-                  isInTutorial={this.state.isInTutorial}
-                  includeReturn={true}
-                />
-              }
+              {Array.isArray(this.state.nextAchievement?.phrase) &&
+                TutorialComponent && (
+                  <TutorialComponent
+                    achievement={this.state.nextAchievement}
+                    isInTutorial={this.state.isInTutorial}
+                    includeReturn={true}
+                  />
+                )}
 
-              {!this.state.editMode &&
+              {!this.state.editMode && (
                 <XtermAdapter
-                  ref={adapterRef}
+                  ref={this.adapterRef}
                   terminalElement={this.terminalElementRef.current}
                   terminalElementRef={this.terminalElementRef}
                   terminalFontSize={this.currentFontSize}
@@ -1212,9 +1208,9 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
                   onTouchStart={this.handleTouchStart}
                   onTouchEnd={this.handleTouchEnd}
                 />
-              }
+              )}
 
-              {this.state.editMode &&
+              {this.state.editMode && (
                 <MonacoEditor
                   initialValue={this.state.editContent}
                   language={this.state.editLanguage}
@@ -1222,15 +1218,14 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
                   onSave={this.handleEditSave}
                   onClose={this.handleEditorClose}
                 />
-              }
+              )}
 
               {/* TODO: Move this into JSX in the WebCam component */}
               <video
                 ref={this.videoElementRef as React.RefObject<HTMLVideoElement>}
                 id="terminal-video"
                 hidden={!this.isShowVideo}
-              >
-              </video>
+              ></video>
             </div>
           );
         }}
