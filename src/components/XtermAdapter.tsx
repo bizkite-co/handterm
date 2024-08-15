@@ -13,6 +13,7 @@ interface IXtermAdapterProps {
   onTouchEnd: React.TouchEventHandler<HTMLDivElement>;
   terminalFontSize: number;
   getTerminalSize: () => { width: number; height: number } | undefined;
+  getTerminalSize: () => { width: number; height: number } | undefined;
 }
 
 export interface XtermAdapterHandle {
@@ -49,6 +50,7 @@ const XtermAdapter = forwardRef<XtermAdapterHandle, IXtermAdapterProps>((props, 
   useImperativeHandle(ref, () => ({
     scrollBottom,
     focusTerminal,
+    getTerminalSize,
     getTerminalSize,
   }));
 
