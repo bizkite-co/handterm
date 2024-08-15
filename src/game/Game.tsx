@@ -56,7 +56,7 @@ interface ICharacterRefMethods {
   draw: (context: CanvasRenderingContext2D, position: SpritePosition) => number;
 }
 
-const Game = React.forwardRef<IGameHandle, IGameProps>(({
+const Game = React.forwardRef<IGameHandle, IGameProps>((props, ref) => {
   canvasHeight,
   canvasWidth,
   isInPhraseMode,

@@ -95,7 +95,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
   public adapterRef = React.createRef<XtermAdapterHandle>();
   private nextCharsDisplayRef: React.RefObject<NextCharsDisplayHandle> = React.createRef();
   private editorRef: React.RefObject<ReturnType<typeof MonacoEditor>> = React.createRef();
-  private terminalGameRef = React.createRef<ReturnType<typeof Game>>();
+  private terminalGameRef: React.RefObject<IGameHandle> = React.createRef();
   // Remove this line as we no longer need a ref for the editor
 
   private _persistence: IPersistence;
