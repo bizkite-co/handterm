@@ -237,7 +237,7 @@ const XtermAdapter = forwardRef<XtermAdapterHandle, IXtermAdapterProps>(({
 
   return (
     <div
-      ref={terminalElementRef}
+      ref={ref}
       id={TerminalCssClasses.Terminal}
       className={TerminalCssClasses.Terminal}
     />
