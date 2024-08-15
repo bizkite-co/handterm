@@ -25,6 +25,7 @@ interface NextCharsDisplayState {
 
 export interface NextCharsDisplayHandle {
     resetTimer: () => void;
+    cancelTimer: () => void;
 }
 
 const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, NextCharsDisplayProps>(({
@@ -37,6 +38,7 @@ const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, NextCharsDispl
 }, ref) => {
     useImperativeHandle(ref, () => ({
         resetTimer,
+        cancelTimer
     }));
 
     const [isActive, setIsActive] = useState(false);
@@ -194,36 +196,12 @@ const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, NextCharsDispl
         return result;
     };
 
-    const sayText = (e: KeyboardEvent) => {
-        const eventTarget = e.target as HTMLInputElement;
-        if (!eventTarget || !eventTarget.value) return;
-        let text = eventTarget.value;
-        const char = e.key;
-        if (!char) return;
-        if (!voiceSynth.current) {
-            voiceSynth.current = window.speechSynthesis;
-        }
-        if (voiceSynth.current.speaking) {
-            voiceSynth.current.cancel();
-        }
-        if (char?.match(/^[a-z0-9]$/i)) {
-            text = char;
-        } else if (char === "Backspace") {
-            text = "delete";
-        } else if (char === "Enter") {
-            text = text;
-        } else {
-            const textSplit = text.trim().split(' ');
-            text = textSplit[textSplit.length - 1];
-        }
-        const utterThis = new SpeechSynthesisUtterance(text);
-        utterThis.pitch = 1;
-        utterThis.rate = 0.7;
-        voiceSynth.current.speak(utterThis);
-    };
-
     return (
-        <div id="next-chars" hidden={!isInPhraseMode} ref={ref}>
+        <div 
+            ref={ref}
+            id="next-chars" 
+            hidden={!isInPhraseMode} 
+        >
             {mismatchedChar && (
                 <ErrorDisplay
                     isVisible={mismatchedIsVisible}
