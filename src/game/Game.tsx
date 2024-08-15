@@ -49,7 +49,7 @@ interface ICharacterRefMethods {
   draw: (context: CanvasRenderingContext2D, position: SpritePosition) => number;
 }
 
-const Game: React.FC<IGameProps> = ({
+const Game = React.forwardRef<IGameHandle, IGameProps>(({
   canvasHeight,
   canvasWidth,
   isInPhraseMode,
@@ -61,7 +61,7 @@ const Game: React.FC<IGameProps> = ({
   onSetHeroAction,
   onSetZombie4Action,
   phrasesAchieved,
-}) => {
+}, ref) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const heroRef = useRef<ICharacterRefMethods>(null);
   const zombie4Ref = useRef<ICharacterRefMethods>(null);
@@ -260,6 +260,19 @@ const Game: React.FC<IGameProps> = ({
     }
   }, [context]);
 
+  useImperativeHandle(ref, () => ({
+    completeGame,
+    resetGame: () => {
+      setZombie4Position(zombie4StartPosition);
+      setIsPhraseComplete(false);
+      setTextScrollX(canvasWidth);
+    },
+    levelUp,
+    handleZombie4PositionChange: (position: SpritePosition) => {
+      setZombie4Position(position);
+    },
+  }));
+
   return (
     <div
       id={TerminalCssClasses.TerminalGame}
@@ -303,3 +316,9 @@ const Game: React.FC<IGameProps> = ({
 };
 
 export default Game;
+interface IGameHandle {
+  completeGame: () => void;
+  resetGame: () => void;
+  levelUp: (setLevelValue?: number | null) => void;
+  handleZombie4PositionChange: (position: SpritePosition) => void;
+}
