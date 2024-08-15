@@ -23,14 +23,14 @@ interface NextCharsDisplayState {
     phrase: Phrase;
 }
 
-const NextCharsDisplay: React.FC<NextCharsDisplayProps> = ({
+const NextCharsDisplay = React.forwardRef<HTMLDivElement, NextCharsDisplayProps>(({
     commandLine,
     onTimerStatusChange,
     isInPhraseMode,
     newPhrase,
     onPhraseSuccess,
     onError
-}) => {
+}, ref) => {
     const [isActive, setIsActive] = useState(false);
     const [mismatchedChar, setMismatchedChar] = useState<string | null>(null);
     const [mismatchedIsVisible, setMismatchedIsVisible] = useState(false);
@@ -215,7 +215,7 @@ const NextCharsDisplay: React.FC<NextCharsDisplayProps> = ({
     };
 
     return (
-        <div id="next-chars" hidden={!isInPhraseMode}>
+        <div id="next-chars" hidden={!isInPhraseMode} ref={ref}>
             {mismatchedChar && (
                 <ErrorDisplay
                     isVisible={mismatchedIsVisible}
