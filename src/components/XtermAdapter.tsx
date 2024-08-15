@@ -1,29 +1,27 @@
-// XtermAdapter.ts
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useImperativeHandle, forwardRef } from 'react';
 import { Terminal } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
 import { TerminalCssClasses } from '../types/TerminalTypes';
 import { XtermAdapterConfig } from './XtermAdapterConfig';
-
 
 interface IXtermAdapterProps {
   terminalElement: HTMLElement | null;
   terminalElementRef: React.RefObject<HTMLElement>;
   onAddCharacter: (character: string) => void;
   onRemoveCharacter: (command: string) => void;
-  onTouchStart: TouchEventHandler<HTMLDivElement>;
-  onTouchEnd: TouchEventHandler<HTMLDivElement>;
+  onTouchStart: React.TouchEventHandler<HTMLDivElement>;
+  onTouchEnd: React.TouchEventHandler<HTMLDivElement>;
   terminalFontSize: number;
 }
 
-const XtermAdapter: React.FC<IXtermAdapterProps> = ({
+const XtermAdapter = forwardRef<unknown, IXtermAdapterProps>(({
   terminalElementRef,
   onAddCharacter,
   onRemoveCharacter,
   onTouchStart,
   onTouchEnd,
   terminalFontSize,
-}) => {
+}, ref) => {
   const terminal = useRef(new Terminal(XtermAdapterConfig));
   const fitAddon = useRef(new FitAddon());
   const onDataDisposable = useRef<import("@xterm/xterm").IDisposable | null>(null);
@@ -46,6 +44,10 @@ const XtermAdapter: React.FC<IXtermAdapterProps> = ({
     terminal.current.focus();
     terminal.current.scrollToBottom();
   };
+
+  useImperativeHandle(ref, () => ({
+    focusTerminal,
+  }));
 
   const appendTempPassword = (passwordChar: string) => {
     tempPassword.current += passwordChar;
@@ -236,6 +238,6 @@ const XtermAdapter: React.FC<IXtermAdapterProps> = ({
       className={TerminalCssClasses.Terminal}
     />
   );
-};
+});
 
 export default XtermAdapter;
