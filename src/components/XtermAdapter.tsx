@@ -4,7 +4,7 @@ import { FitAddon } from '@xterm/addon-fit';
 import { TerminalCssClasses } from '../types/TerminalTypes';
 import { XtermAdapterConfig } from './XtermAdapterConfig';
 
-export interface IXtermAdapterProps {
+export interface XtermAdapterHandle {
   terminalElement: HTMLElement | null;
   terminalElementRef: React.RefObject<HTMLElement>;
   onAddCharacter: (character: string) => void;
@@ -12,15 +12,12 @@ export interface IXtermAdapterProps {
   onTouchStart: React.TouchEventHandler<HTMLDivElement>;
   onTouchEnd: React.TouchEventHandler<HTMLDivElement>;
   terminalFontSize: number;
+  focusTerminal: () => void;
+  scrollBottom: () => void;
   getTerminalSize: () => { width: number; height: number } | undefined;
 }
 
-export interface XtermAdapterHandle {
-  focusTerminal: () => void;
-  scrollBottom: () => void;
-}
-
-const XtermAdapter = forwardRef<XtermAdapterHandle, IXtermAdapterProps>((props, ref) => {
+const XtermAdapter = forwardRef<XtermAdapterHandle, XtermAdapterHandle>((props, ref) => {
   const { terminalElementRef, onAddCharacter, onRemoveCharacter, onTouchStart, onTouchEnd, terminalFontSize } = props;
   const divRef = useRef<HTMLDivElement>(null);
   const terminal = useRef(new Terminal(XtermAdapterConfig));
