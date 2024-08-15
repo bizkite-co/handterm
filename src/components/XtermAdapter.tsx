@@ -53,9 +53,9 @@ const XtermAdapter = forwardRef<XtermAdapterHandle, IXtermAdapterProps>(({
     focusTerminal,
   }));
 
-  return {
+  useImperativeHandle(ref, () => ({
     focusTerminal,
-  };
+  }));
 
   const appendTempPassword = (passwordChar: string) => {
     tempPassword.current += passwordChar;
