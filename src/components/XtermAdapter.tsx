@@ -12,6 +12,7 @@ interface IXtermAdapterProps {
   onTouchStart: React.TouchEventHandler<HTMLDivElement>;
   onTouchEnd: React.TouchEventHandler<HTMLDivElement>;
   terminalFontSize: number;
+  getTerminalSize: () => { width: number; height: number } | undefined;
 }
 
 export interface XtermAdapterHandle {
@@ -47,6 +48,7 @@ const XtermAdapter = forwardRef<XtermAdapterHandle, IXtermAdapterProps>((props, 
   useImperativeHandle(ref, () => ({
     scrollBottom,
     focusTerminal,
+    getTerminalSize,
   }));
 
   const appendTempPassword = (passwordChar: string) => {
