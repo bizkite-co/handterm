@@ -1,6 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 
-interface WebCamProps {
+export interface WebCamProps {
     setOn: boolean;
 }
 
