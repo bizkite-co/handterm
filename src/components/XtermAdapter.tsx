@@ -259,7 +259,7 @@ const XtermAdapter = forwardRef<XtermAdapterHandle, IXtermAdapterProps>((props, 
       className={TerminalCssClasses.Terminal}
       onTouchStart={onTouchStart}
       onTouchEnd={onTouchEnd}
-    ></div>
+    />
   );
 });
 
