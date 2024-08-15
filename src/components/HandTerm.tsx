@@ -250,7 +250,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     this._persistence = new LocalStoragePersistence();
     const initialCanvasHeight = localStorage.getItem('canvasHeight') || '100';
     const nextAchievement = this.getNextTutorialAchievement();
-    const editorRef = useRef<HTMLElement | null>(null);
+    const editorRef = React.createRef<HTMLElement>();
     this.state = {
       outputElements: this.getCommandResponseHistory().slice(-1),
       isInPhraseMode: false,
