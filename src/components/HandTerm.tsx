@@ -101,7 +101,6 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
   public commandHistory: string[] = [];
   private wpmCalculator: IWPMCalculator = new WPMCalculator();
   private videoElementRef: React.RefObject<HTMLVideoElement> = React.createRef();
-  private webCam: WebCamProps | null = null;
   private static readonly commandHistoryLimit = 120;
   private isDebug: boolean = false;
   private heroRunTimeoutId: number | null = null;
@@ -1132,7 +1131,6 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
 
   public toggleVideo = (): boolean => {
     this.isShowVideo = !this.isShowVideo;
-    this.webCam?.toggleVideo(this.isShowVideo);
     return this.isShowVideo;
   }
 
