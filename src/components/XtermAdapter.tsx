@@ -61,6 +61,13 @@ const XtermAdapter = forwardRef<XtermAdapterHandle, IXtermAdapterProps>((props, 
 
   useImperativeHandle(ref, () => ({
     terminalElement: terminalElementRef.current,
+    terminalElement: terminalElementRef.current,
+    terminalElementRef,
+    onAddCharacter,
+    onRemoveCharacter,
+    onTouchStart,
+    onTouchEnd,
+    terminalFontSize,
     scrollBottom,
     focusTerminal,
     getTerminalSize,
