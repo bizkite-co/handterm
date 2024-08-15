@@ -20,7 +20,11 @@ declare global {
   }
 }
 
-const MonacoEditor = forwardRef<any, MonacoEditorProps>(({ initialValue, language, onChange, onSave, onClose, height = '90vh' }, ref) => {
+export interface MonacoEditorHandle {
+  focus: () => void;
+}
+
+const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(({ initialValue, language, onChange, onSave, onClose, height = '90vh' }, ref) => {
   const editorRef = useRef<any>(null);
   const statusNodeRef = useRef<HTMLDivElement>(null);
 
