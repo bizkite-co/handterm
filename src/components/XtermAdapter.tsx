@@ -15,6 +15,13 @@ export interface XtermAdapterHandle {
   focusTerminal: () => void;
   scrollBottom: () => void;
   getTerminalSize: () => { width: number; height: number } | undefined;
+  prompt: () => void;
+  getCurrentCommand: () => string;
+  terminalReset: () => void;
+  terminalWrite: (data: string) => void;
+  appendTempPassword: (passwordChar: string) => void;
+  resetTempPassword: () => void;
+  getTempPassword: () => string;
 }
 
 const XtermAdapter = forwardRef<XtermAdapterHandle, IXtermAdapterProps>((props, ref) => {
@@ -54,6 +61,13 @@ const XtermAdapter = forwardRef<XtermAdapterHandle, IXtermAdapterProps>((props, 
     scrollBottom,
     focusTerminal,
     getTerminalSize,
+    prompt,
+    getCurrentCommand,
+    terminalReset,
+    terminalWrite,
+    appendTempPassword,
+    resetTempPassword,
+    getTempPassword,
   }));
 
   const appendTempPassword = (passwordChar: string) => {
