@@ -16,6 +16,7 @@ interface IXtermAdapterProps {
 
 export interface XtermAdapterHandle {
   focusTerminal: () => void;
+  scrollBottom: () => void;
 }
 
 const XtermAdapter = forwardRef<XtermAdapterHandle, IXtermAdapterProps>((props, ref) => {
@@ -44,6 +45,7 @@ const XtermAdapter = forwardRef<XtermAdapterHandle, IXtermAdapterProps>((props, 
   };
 
   useImperativeHandle(ref, () => ({
+    scrollBottom,
     focusTerminal,
   }));
 
