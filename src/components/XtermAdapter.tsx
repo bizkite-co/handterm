@@ -19,13 +19,7 @@ interface XtermAdapterHandle {
 }
 
 const XtermAdapter = forwardRef<XtermAdapterHandle, IXtermAdapterProps>((props, ref) => {
-  terminalElementRef,
-  onAddCharacter,
-  onRemoveCharacter,
-  onTouchStart,
-  onTouchEnd,
-  terminalFontSize,
-}, ref) => {
+  const { terminalElementRef, onAddCharacter, onRemoveCharacter, onTouchStart, onTouchEnd, terminalFontSize } = props;
   const terminal = useRef(new Terminal(XtermAdapterConfig));
   const fitAddon = useRef(new FitAddon());
   const onDataDisposable = useRef<import("@xterm/xterm").IDisposable | null>(null);
