@@ -1227,7 +1227,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
           );
         }}
       </CommandContext.Consumer>
-    )
+    );
   }
 }
 
