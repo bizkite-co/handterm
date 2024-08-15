@@ -1,13 +1,10 @@
 // XtermAdapter.ts
-import React, { TouchEventHandler } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Terminal } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
 import { TerminalCssClasses } from '../types/TerminalTypes';
 import { XtermAdapterConfig } from './XtermAdapterConfig';
 
-interface IXtermAdapterState {
-
-}
 
 interface IXtermAdapterProps {
   terminalElement: HTMLElement | null;
@@ -19,190 +16,159 @@ interface IXtermAdapterProps {
   terminalFontSize: number;
 }
 
-export class XtermAdapter extends React.Component<IXtermAdapterProps, IXtermAdapterState> {
-  private terminal: Terminal;
-  public terminalRef: React.RefObject<HTMLElement>;
-  private promptDelimiter: string = '$';
-  private promptLength: number = 0;
-  public isShowVideo: boolean = false;
-  private fitAddon = new FitAddon();
-  private isDebug: boolean = false;
-  private onDataDisposable: import("@xterm/xterm").IDisposable | null = null;
-  private tempPassword: string = '';
+const XtermAdapter: React.FC<IXtermAdapterProps> = ({
+  terminalElementRef,
+  onAddCharacter,
+  onRemoveCharacter,
+  onTouchStart,
+  onTouchEnd,
+  terminalFontSize,
+}) => {
+  const terminal = useRef(new Terminal(XtermAdapterConfig));
+  const fitAddon = useRef(new FitAddon());
+  const onDataDisposable = useRef<import("@xterm/xterm").IDisposable | null>(null);
+  const tempPassword = useRef('');
+  const promptDelimiter = '$';
+  const promptLength = useRef(0);
+  const isDebug = useRef(false);
 
-  constructor(props: IXtermAdapterProps) {
-    super(props);
-    const { terminalElementRef } = props;
-    this.terminalRef = terminalElementRef;
-    this.state = {
-    }
-    this.terminal = new Terminal(XtermAdapterConfig);
-    this.onDataHandler = this.onDataHandler.bind(this);
-
-  }
-
-  initializeTerminal() {
-    const { terminalElementRef } = this.props;
+  const initializeTerminal = () => {
     if (terminalElementRef?.current) {
-      this.terminalRef = terminalElementRef;
-      this.terminal.open(terminalElementRef.current);
-      this.terminal.loadAddon(this.fitAddon);
-      this.fitAddon.fit();
-      this.terminal.write('\x1b[4h');
-      this.focusTerminal();
-      // Other terminal initialization code...
+      terminal.current.open(terminalElementRef.current);
+      terminal.current.loadAddon(fitAddon.current);
+      fitAddon.current.fit();
+      terminal.current.write('\x1b[4h');
+      focusTerminal();
     }
-  }
+  };
 
-  public focusTerminal() {
-    // Logic to focus the terminal goes here
-    this.terminal.focus();
-    this.terminal.scrollToBottom();
-  }
-  public appendTempPassword(passwordChar: string) {
-    this.tempPassword += passwordChar;
-  }
-  public resetTempPassword() {
-    this.tempPassword = '';
-  }
-  public getTempPassword() {
-    return this.tempPassword;
-  }
+  const focusTerminal = () => {
+    terminal.current.focus();
+    terminal.current.scrollToBottom();
+  };
 
-  terminalReset(): void {
-    this.terminal.reset();
-  }
+  const appendTempPassword = (passwordChar: string) => {
+    tempPassword.current += passwordChar;
+  };
 
-  terminalWrite(data: string): void {
+  const resetTempPassword = () => {
+    tempPassword.current = '';
+  };
+
+  const getTempPassword = () => {
+    return tempPassword.current;
+  };
+
+  const terminalReset = () => {
+    terminal.current.reset();
+  };
+
+  const terminalWrite = (data: string) => {
     if (!data) return;
-    if (!this.terminal) return;
-    this.terminal.write(data);
-  }
+    terminal.current.write(data);
+  };
 
-  getTerminalText(): string {
-    return this.getCurrentCommand();
-  }
+  const getTerminalText = () => {
+    return getCurrentCommand();
+  };
 
-  handleResize = () => {
-    // Assuming fitAddon is stored as a class member
-    this.fitAddon?.fit();
-  }
-  componentDidMount() {
-    const { terminalElementRef } = this.props;
+  const handleResize = () => {
+    fitAddon.current?.fit();
+  };
+
+  useEffect(() => {
     if (terminalElementRef?.current) {
-      this.initializeTerminal();
+      initializeTerminal();
     } else {
       console.error('terminalElementRef.current is NULL');
     }
-    this.onDataDisposable = this.terminal.onData(this.onDataHandler);
-    this.terminal.onCursorMove(() => {
-    })
-    // this.loadCommandHistory();
-    this.setViewPortOpacity();
-    this.terminal.focus();
-    this.prompt();
-    window.addEventListener('resize', this.handleResize);
-    this.scrollBottom()
-    this.focusTerminal();
-  }
+    onDataDisposable.current = terminal.current.onData(onDataHandler);
+    terminal.current.onCursorMove(() => {});
+    setViewPortOpacity();
+    terminal.current.focus();
+    prompt();
+    window.addEventListener('resize', handleResize);
+    scrollBottom();
+    focusTerminal();
 
-  scrollBottom = () => {
-    this.terminal.scrollToBottom();
-  }
+    return () => {
+      if (onDataDisposable.current) {
+        onDataDisposable.current.dispose();
+      }
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [terminalElementRef]);
 
-  componentDidUpdate(_prevProps: Readonly<IXtermAdapterProps>): void {
-    // if (_prevProps.terminalElementRef?.current !== this.props.terminalElementRef?.current) {
-    //   this.initializeTerminal();
-    // }
-    this.focusTerminal();
-    this.scrollBottom();
-  }
+  const scrollBottom = () => {
+    terminal.current.scrollToBottom();
+  };
 
-  componentWillUnmount(): void {
-    if (this.onDataDisposable) {
-      this.onDataDisposable.dispose();
-    }
-    window.removeEventListener('resize', this.handleResize);
-  }
-
-  setCursorMode(terminal: Terminal) {
+  const setCursorMode = (terminal: Terminal) => {
     terminal.options.cursorBlink = true;
     terminal.options.cursorStyle = 'block';
     terminal.write('\x1b[4h');
-  }
+  };
 
-  handleBackSpaceAndNavigation(data: string): boolean {
+  const handleBackSpaceAndNavigation = (data: string): boolean => {
     let result = false;
     if (data.charCodeAt(0) === 127) {
-      if (this.isCursorOnPrompt()) return true;
-      this.tempPassword = this.tempPassword.slice(0, -1);
-      // If the y is greater than zero and the x is 0, move to the end of the previous line
-      if (this.terminal.buffer.active.cursorY > 0 && this.terminal.buffer.active.cursorX === 0) {
-        // Attempt to move up one line, to the right far enough, then back one, and delete
-        this.terminal.write('\x1b[A\x1b[999C\x1b[D\x1b[P');
+      if (isCursorOnPrompt()) return true;
+      tempPassword.current = tempPassword.current.slice(0, -1);
+      if (terminal.current.buffer.active.cursorY > 0 && terminal.current.buffer.active.cursorX === 0) {
+        terminal.current.write('\x1b[A\x1b[999C\x1b[D\x1b[P');
       } else {
-        // For all other cases, move the cursor left one position and delete the character there
-        this.terminal.write('\x1b[D\x1b[P');
+        terminal.current.write('\x1b[D\x1b[P');
       }
-      this.props.onRemoveCharacter(this.getCurrentCommand().slice(0, -1));
+      onRemoveCharacter(getCurrentCommand().slice(0, -1));
       result = true;
     }
     return result;
-  }
+  };
 
-  isCursorOnPrompt(): boolean {
-    const isFirstLine = this.terminal.buffer.active.cursorY === 0;
-    const isLeftOfPromptChar = this.terminal.buffer.active.cursorX < this.promptLength;
+  const isCursorOnPrompt = (): boolean => {
+    const isFirstLine = terminal.current.buffer.active.cursorY === 0;
+    const isLeftOfPromptChar = terminal.current.buffer.active.cursorX < promptLength.current;
     return isFirstLine && isLeftOfPromptChar;
-  }
-  isCursorOnFirstLine(): boolean {
-    return this.terminal.buffer.active.cursorY === 0;
-  }
+  };
 
-  onDataHandler(data: string): void {
-    // TODO: Move business logic to HandexTerm and just leave `@xterm/xterm.js` handling features in here.
+  const isCursorOnFirstLine = (): boolean => {
+    return terminal.current.buffer.active.cursorY === 0;
+  };
+
+  const onDataHandler = (data: string): void => {
     const charCodes = data.split('').map(char => char.charCodeAt(0)).join(',');
-    if (this.isDebug) {
-      console.info('onDataHandler', data, charCodes, this.terminal.buffer.active.cursorX, this.terminal.buffer.active.cursorY);
+    if (isDebug.current) {
+      console.info('onDataHandler', data, charCodes, terminal.current.buffer.active.cursorX, terminal.current.buffer.active.cursorY);
     }
-    // Set the cursor mode on the terminal
-    this.setCursorMode(this.terminal);
-    // Handle Backspace and Navigation keys
-    if (this.handleBackSpaceAndNavigation(data)) return;
-    if (data.charCodeAt(0) === 27) { // escape and navigation characters
-      // TODO: Abstract out the prompt area no-nav-to.
+    setCursorMode(terminal.current);
+    if (handleBackSpaceAndNavigation(data)) return;
+    if (data.charCodeAt(0) === 27) {
       if (data.charCodeAt(1) === 91) {
         if (data.length > 2) {
-          if (data.charCodeAt(2) === 72) { // HOME
-            // TODO: Handle Home key
-            this.terminal.write(`\x1b[${this.promptLength + 1}G`);
+          if (data.charCodeAt(2) === 72) {
+            terminal.current.write(`\x1b[${promptLength.current + 1}G`);
             return;
           }
         }
-        if (data.charCodeAt(2) === 65 && this.isCursorOnFirstLine()) {
-          // UP Arrow
-          // TODO: Handle UP Arrow key command history.
-          this.props.onAddCharacter('ArrowUp')
+        if (data.charCodeAt(2) === 65 && isCursorOnFirstLine()) {
+          onAddCharacter('ArrowUp');
           return;
         }
-        if (
-          data.charCodeAt(2) === 68
-          && this.isCursorOnPrompt()
-        ) { return; }
+        if (data.charCodeAt(2) === 68 && isCursorOnPrompt()) {
+          return;
+        }
       }
     }
-    this.props.onAddCharacter(data);
-  }
+    onAddCharacter(data);
+  };
 
-  private setViewPortOpacity(): void {
+  const setViewPortOpacity = (): void => {
     const viewPort = document.getElementsByClassName('xterm-viewport')[0] as HTMLDivElement;
     viewPort.style.opacity = "0.0";
-  }
+  };
 
-  public getCurrentCommand(): string {
-    const buffer = this.terminal.buffer.active;
-    // Assuming the command prompt starts at the top of the terminal (line 0)
-    // Adjust the starting line accordingly if your prompt starts elsewhere
+  const getCurrentCommand = (): string => {
+    const buffer = terminal.current.buffer.active;
     let command = '';
     for (let i = 0; i <= buffer.cursorY; i++) {
       const line = buffer.getLine(i);
@@ -210,44 +176,40 @@ export class XtermAdapter extends React.Component<IXtermAdapterProps, IXtermAdap
         command += line.translateToString(true);
       }
     }
-    const promptEndIndex = command.indexOf(this.promptDelimiter) + 1;
+    const promptEndIndex = command.indexOf(promptDelimiter) + 1;
     return command.substring(promptEndIndex).trimStart();
-    // return command;
-  }
+  };
 
-  prompt(user: string = 'guest', host: string = 'handex.io') {
-    this.terminal.reset();
-    const promptText = `\x1b[1;34m${user}@${host} \x1b[0m\x1b[1;32m~${this.promptDelimiter}\x1b[0m `;
-    this.promptLength = promptText.length - 21;
-    this.terminal.write(promptText);
-    // this.promptLength = this.terminal.buffer.active.cursorX;
-  }
-  promptLogin() {
-    this.terminal.writeln('Welcome to Handex Term!');
-    this.terminal.writeln('Login:');
-    this.terminal.write('Username: ');
+  const prompt = (user: string = 'guest', host: string = 'handex.io') => {
+    terminal.current.reset();
+    const promptText = `\x1b[1;34m${user}@${host} \x1b[0m\x1b[1;32m~${promptDelimiter}\x1b[0m `;
+    promptLength.current = promptText.length - 21;
+    terminal.current.write(promptText);
+  };
+
+  const promptLogin = () => {
+    terminal.current.writeln('Welcome to Handex Term!');
+    terminal.current.writeln('Login:');
+    terminal.current.write('Username: ');
     let username = '';
     let password = '';
     let isUsernameComplete = false;
 
-    this.terminal.onKey(({ key, domEvent }) => {
+    terminal.current.onKey(({ key, domEvent }) => {
       const char = domEvent.key;
 
-      if (key === 'Enter') { // Enter key
+      if (key === 'Enter') {
         if (isUsernameComplete) {
-          // Here you would call the login function with username and password
-          // and handle the authentication result.
-          this.terminal.writeln('');
+          terminal.current.writeln('');
         } else {
           isUsernameComplete = true;
-          this.terminal.writeln('');
-          this.terminal.write('Password: ');
+          terminal.current.writeln('');
+          terminal.current.write('Password: ');
         }
       } else if (key.charCodeAt(0) === 127) {
-        if (this.isCursorOnPrompt()) return true;
-        this.terminal.write('\x1b[D\x1b[P');
+        if (isCursorOnPrompt()) return true;
+        terminal.current.write('\x1b[D\x1b[P');
       } else {
-        // Append typed character to 'username' or 'password'
         if (isUsernameComplete) {
           password += char;
         } else {
@@ -255,28 +217,25 @@ export class XtermAdapter extends React.Component<IXtermAdapterProps, IXtermAdap
         }
       }
     });
-  }
+  };
 
-  public getTerminalSize(): { width: number; height: number } | undefined {
-    if (this.terminalRef.current) {
+  const getTerminalSize = (): { width: number; height: number } | undefined => {
+    if (terminalElementRef.current) {
       return {
-        width: this.terminalRef.current.clientWidth,
-        height: this.terminalRef.current.clientHeight,
+        width: terminalElementRef.current.clientWidth,
+        height: terminalElementRef.current.clientHeight,
       };
     }
     return undefined;
-  }
+  };
 
-  render() {
-    // Use state and refs in your render method
-    return (
-      <>
-        <div
-          ref={this.terminalRef as React.RefObject<HTMLDivElement>}
-          id={TerminalCssClasses.Terminal}
-          className={TerminalCssClasses.Terminal}
-        />
-      </>
-    );
-  }
-}
+  return (
+    <div
+      ref={terminalElementRef as React.RefObject<HTMLDivElement>}
+      id={TerminalCssClasses.Terminal}
+      className={TerminalCssClasses.Terminal}
+    />
+  );
+};
+
+export default XtermAdapter;
