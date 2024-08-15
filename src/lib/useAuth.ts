@@ -5,17 +5,11 @@ import axios from 'axios';
 import { ENDPOINTS } from '../shared/endpoints';
 import { MyResponse } from 'src/types/Types';
 
-const API_URL = ENDPOINTS.api.BaseUrl;
-
-const baseConfig = {
-  headers: {
-    "Content-Type": "application/json",
-  },
-  withCredentials: true, // Correctly positioned and boolean value
-};
 
 export const useAuth = () => {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+
+  const API_URL = ENDPOINTS.api.BaseUrl;
 
   useEffect(() => {
     // Optionally check session validity on hook mount
@@ -33,6 +27,12 @@ export const useAuth = () => {
     }
   };
 
+  const baseConfig = {
+    headers: {
+      "Content-Type": "application/json",
+    },
+    withCredentials: true, // Correctly positioned and boolean value
+  };
   const signUp = async (username: string, password: string, email: string) => {
     if (!username || !password || !email) {
       throw new Error('All fields are required');
@@ -142,7 +142,7 @@ export const useAuth = () => {
       // Prepare the query parameters
       const params = {
         key: key,
-        limit: limit, 
+        limit: limit,
       };
       // Make the request with the params object
       const response = await axios.get(`${API_URL}${ENDPOINTS.api.GetLog}`, {

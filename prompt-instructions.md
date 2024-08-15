@@ -2,6 +2,7 @@
 
 * Include background on why each React best practice is chosen and why it might be important.
 * Suggest AWS CLI and other commands rather than using a GUI. 
+* Do not include the `cdk/` in any analysis. That directory is a `IaC` code project for constructing server-side features only.
 
 ## Product Specification
 

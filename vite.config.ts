@@ -26,6 +26,7 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     target: 'esnext',
+    sourcemap: true, // Enable source maps
     rollupOptions: {
       output: {
         manualChunks: {

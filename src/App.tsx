@@ -9,6 +9,7 @@ const App = () => {
   const containerRef = React.createRef<HTMLDivElement>();
   const [containerWidth, setContainerWidth] = React.useState<number>(0);
   const handexTermRef = useRef<HandTerm>(null);
+  const auth = useAuth();
 
   useEffect(() => {
     const w = getContainerWidth();
@@ -26,18 +27,9 @@ const App = () => {
         handexTermRef.current.adapterRef.current.focusTerminal();
 
         if (event instanceof MouseEvent || (event instanceof TouchEvent && event.touches.length === 1)) {
-          handexTermRef.current.adapterRef.current.focusTerminal();
-
           setTimeout(() => {
-            if (
-              handexTermRef.current &&
-              handexTermRef.current.adapterRef.current
-            ) {
-              handexTermRef.current.adapterRef.current.focusTerminal();
-            }
+            handexTermRef.current?.adapterRef.current?.focusTerminal();
           }, 1000);
-          // type a character to trigger the focus event
-          // handexTermRef.current.adapterRef.current.terminalWrite('a');
         }
       }
     };
@@ -71,7 +63,7 @@ const App = () => {
       <div ref={containerRef}>
         <HandTerm
           ref={handexTermRef}
-          auth={useAuth()}
+          auth={auth}
           terminalWidth={containerWidth}
         />
       </div>
