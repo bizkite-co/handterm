@@ -7,7 +7,6 @@ import { Phrase } from "../utils/Phrase.js";
 
 interface NextCharsDisplayProps {
     commandLine: string;
-    onTimerStatusChange: (isActive: boolean) => void;
     isInPhraseMode: boolean;
     newPhrase: string;
     onPhraseSuccess: (phrase: string) => void;
@@ -33,7 +32,6 @@ const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, NextCharsDispl
         cancelTimer
     }));
 
-    const [isActive, setIsActive] = useState(false);
     const [mismatchedChar, setMismatchedChar] = useState<string | null>(null);
     const [mismatchedIsVisible, setMismatchedIsVisible] = useState(false);
     const [nextChars, setNextChars] = useState(newPhrase);
@@ -42,9 +40,7 @@ const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, NextCharsDispl
     const nextCharsRef = useRef<HTMLPreElement>(null);
     const nextCharsRateRef = useRef<HTMLDivElement>(null);
     const timerRef = useRef<any>(null);
-    const voiceSynth = useRef<SpeechSynthesis>(window.speechSynthesis);
     const wpmRef = useRef<HTMLSpanElement>(null);
-    const isTestMode = useRef(localStorage.getItem('testMode') === 'true');
 
     const nextCharsLength = 60;
 
@@ -109,10 +105,6 @@ const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, NextCharsDispl
         if (nextCharsRef.current) nextCharsRef.current.innerText = phrase.value.join('');
     };
 
-    const reset = (): void => {
-        setNext('');
-        if (nextCharsRef.current) nextCharsRef.current.hidden = true;
-    };
 
     const getNextCharacters = (stringBeingTested: string): string => {
         const nextIndex = getFirstNonMatchingChar(stringBeingTested);
@@ -137,10 +129,6 @@ const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, NextCharsDispl
         return nextChordHTML;
     };
 
-    const cancel = () => {
-        if (wpmRef.current) wpmRef.current.innerText = '0';
-        setNext('');
-    };
 
     const testInput = (stringBeingTested: string) => {
         startTimer();
