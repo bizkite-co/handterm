@@ -1,0 +1,72 @@
+
+# 2024-08-14 15:45:32.409163
++When I run `yarn dev` I get this error: ```Warning: Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:
++1. You might have mismatching versions of React and the renderer (such as React DOM)
++2. You might be breaking the Rules of Hooks
++3. You might have more than one copy of React in the same app
++See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.
++chunk-QJTFJ6OV.js?v=de05379f:136
++Uncaught TypeError TypeError: Cannot read properties of null (reading 'useState')
++    at useState (localhost5173/node_modules/.vite/deps/chunk-QJTFJ6OV.js?v=de05379f:1066:29)
++    at App (c:\Users\xgenx\source\repos\handterm\src\App.tsx:10:53)
++    at renderWithHooks (localhost5173/node_modules/.vite/deps/chunk-PJEEZAML.js?v=05636b87:11548:26)
++    at mountIndeterminateComponent (localhost5173/node_modules/.vite/deps/chunk-PJEEZAML.js?v=05636b87:14926:21)
++    at beginWork (localhost5173/node_modules/.vite/deps/chunk-PJEEZAML.js?v=05636b87:15914:22)
++    at callCallback2 (localhost5173/node_modules/.vite/deps/chunk-PJEEZAML.js?v=05636b87:3674:22)
++    at invokeGuardedCallbackDev (localhost5173/node_modules/.vite/deps/chunk-PJEEZAML.js?v=05636b87:3699:24)
++    at invokeGuardedCallback (localhost5173/node_modules/.vite/deps/chunk-PJEEZAML.js?v=05636b87:3733:39)
++    at beginWork$1 (localhost5173/node_modules/.vite/deps/chunk-PJEEZAML.js?v=05636b87:19765:15)
++    at performUnitOfWork (localhost5173/node_modules/.vite/deps/chunk-PJEEZAML.js?v=05636b87:19198:20)
++    at workLoopSync (localhost5173/node_modules/.vite/deps/chunk-PJEEZAML.js?v=05636b87:19137:13)
++    at renderRootSync (localhost5173/node_modules/.vite/deps/chunk-PJEEZAML.js?v=05636b87:19116:15)
++    at performConcurrentWorkOnRoot (localhost5173/node_modules/.vite/deps/chunk-PJEEZAML.js?v=05636b87:18678:83)
++    at workLoop (localhost5173/node_modules/.vite/deps/chunk-PJEEZAML.js?v=05636b87:197:42)
++    at flushWork (localhost5173/node_modules/.vite/deps/chunk-PJEEZAML.js?v=05636b87:176:22)
++    at performWorkUntilDeadline (localhost5173/node_modules/.vite/deps/chunk-PJEEZAML.js?v=05636b87:384:29)
++    --- postMessage ---
++    at schedulePerformWorkUntilDeadline (localhost5173/node_modules/.vite/deps/chunk-PJEEZAML.js?v=05636b87:407:18)
++    at requestHostCallback (localhost5173/node_modules/.vite/deps/chunk-PJEEZAML.js?v=05636b87:418:13)
++    at unstable_scheduleCallback (localhost5173/node_modules/.vite/deps/chunk-PJEEZAML.js?v=05636b87:330:15)
++    at scheduleCallback$1 (localhost5173/node_modules/.vite/deps/chunk-PJEEZAML.js?v=05636b87:19826:22)
++    at ensureRootIsScheduled (localhost5173/node_modules/.vite/deps/chunk-PJEEZAML.js?v=05636b87:18652:31)
++    at scheduleUpdateOnFiber (localhost5173/node_modules/.vite/deps/chunk-PJEEZAML.js?v=05636b87:18562:13)
++    at updateContainer (localhost5173/node_modules/.vite/deps/chunk-PJEEZAML.js?v=05636b87:20776:13)
++    at ReactDOMHydrationRoot.render.ReactDOMRoot.render (localhost5173/node_modules/.vite/deps/chunk-PJEEZAML.js?v=05636b87:21116:11)
++    at <anonymous> (c:\Users\xgenx\source\repos\handterm\src\main.tsx:13:57)
++    --- await ---
++    at <anonymous> (c:\Users\xgenx\source\repos\handterm\src\main.tsx:16:1)
++chunk-QJTFJ``` when I try to load the web page.
+
+# 2024-08-14 15:58:01.193120
++This app started throwing this error: ```App-CJLh-4Bo.js:31 
++ Uncaught (in promise) 
++TypeError: Cannot read properties of undefined (reading 'prototype')
++    at ba (App-CJLh-4Bo.js:31:17710)
++    at App-CJLh-4Bo.js:31:17865
++    at App-CJLh-4Bo.js:31:18011
++``` today, when I run `yarn preview` and load the website in the browser. I've tried checkout out several code commits from the last few days and then running `rm node_modules -force -recurse;rm yarn.lock;yarn cache clean;yarn install;yarn preview;` to fully refresh the environment but I keep getting the exact same error, even when going back to a commit from 2 days ago. What could be causing this error and how can I make sure I have fully reverted code to the working state, which was as recent as earlier today? 
+
+# 2024-08-14 16:03:58.852640
++/undo
+
+# 2024-08-14 16:04:29.311120
++/drop cd
+
+# 2024-08-14 16:04:38.574697
++/drop cdk\package.json
+
+# 2024-08-14 16:32:19.095397
++The `cdk/` is a `IaC` for AWS server-side features and won't affect the `HandTerm` site loading. I am still getting this error in the browser when I run the site in `yarn preview`: ```Uncaught TypeError TypeError: Cannot read properties of undefined (reading 'prototype')
++    at ba (localhost4173/assets/App-CAV4a1QX.js:31:17710)
++    at <anonymous> (localhost4173/assets/App-CAV4a1QX.js:31:17865)
++    at <anonymous> (localhost4173/assets/App-CAV4a1QX.js:31:18011)
++    --- await ---
++    at <anonymous> (localhost4173/assets/index-HQcxr3Gc.js:18:2836)```. How can I debug errors that occur in `yarn preview`? Is there any way to inspect where that error is coming from in the source code?
+
+# 2024-08-15 09:24:33.764210
++I get this error in the browser when this site is running in `yarn dev`. I think it's because I have a mixture of React functional components and React class components. ```CommandProvider.tsx:14 
++ Warning: Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:
++1. You might have mismatching versions of React and the renderer (such as React DOM)
++2. You might be breaking the Rules of Hooks
++3. You might have more than one copy of React in the same app
++See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.```. I would like to convert my React class components to functional components incrementally while testing the results, and I would like your help identifying the components that would be easiest to convert first. At that point, I would like to start the conversion process.
