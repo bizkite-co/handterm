@@ -230,6 +230,6 @@ const NextCharsDisplay = React.forwardRef<HTMLDivElement, NextCharsDisplayProps>
             </pre>
         </div>
     );
-};
+});
 
 export default NextCharsDisplay;
