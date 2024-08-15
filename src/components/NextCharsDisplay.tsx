@@ -1,6 +1,6 @@
 import { TerminalCssClasses } from "../types/TerminalTypes.js";
 
-import React, { createRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Timer from './Timer.js'; // Import the React component
 import ErrorDisplay from "./ErrorDisplay";
 import { Phrase } from "../utils/Phrase.js";
@@ -23,313 +23,213 @@ interface NextCharsDisplayState {
     phrase: Phrase;
 }
 
-export class NextCharsDisplay extends React.Component<NextCharsDisplayProps, NextCharsDisplayState> {
+const NextCharsDisplay: React.FC<NextCharsDisplayProps> = ({
+    commandLine,
+    onTimerStatusChange,
+    isInPhraseMode,
+    newPhrase,
+    onPhraseSuccess,
+    onError
+}) => {
+    const [isActive, setIsActive] = useState(false);
+    const [mismatchedChar, setMismatchedChar] = useState<string | null>(null);
+    const [mismatchedIsVisible, setMismatchedIsVisible] = useState(false);
+    const [nextChars, setNextChars] = useState(newPhrase);
+    const [phrase, setPhrase] = useState(new Phrase(newPhrase.split('')));
 
-    private _nextCharsRef: React.RefObject<HTMLPreElement>;
-    private _nextCharsRateRef: React.RefObject<HTMLDivElement>;
+    const nextCharsRef = useRef<HTMLPreElement>(null);
+    const nextCharsRateRef = useRef<HTMLDivElement>(null);
+    const timerRef = useRef<any>(null);
+    const voiceSynth = useRef<SpeechSynthesis>(window.speechSynthesis);
+    const wpmRef = useRef<HTMLSpanElement>(null);
+    const isTestMode = useRef(localStorage.getItem('testMode') === 'true');
 
-    private _timerRef: React.RefObject<any>;
-    private voiceSynth: SpeechSynthesis;
-    private _wpmRef: React.RefObject<HTMLSpanElement>;
-    public isTestMode: boolean;
+    const nextCharsLength = 60;
 
-
-    private _nextCharsLength: number = 60;
-
-    constructor(props: NextCharsDisplayProps) {
-        super(props);
-        this.voiceSynth = window.speechSynthesis as SpeechSynthesis;
-        this._nextCharsRef = React.createRef<HTMLPreElement>();
-        this._nextCharsRateRef = React.createRef<HTMLDivElement>();
-        this._wpmRef = React.createRef();
-        this.isTestMode = localStorage.getItem('testMode') == 'true';
-        this._timerRef = createRef();
-        this.state = {
-            mismatchedChar: null,
-            mismatchedIsVisible: false,
-            nextChars: this.props.newPhrase,
-            nextCharsIsVisible: false,
-            isActive: false,
-            phrase: new Phrase(this.props.newPhrase.split('')),
+    useEffect(() => {
+        if (isInPhraseMode) {
+            setPhrase(new Phrase(newPhrase.split('')));
         }
-    }
+    }, [isInPhraseMode, newPhrase]);
 
-    componentDidMount() {
-        if (this.props.isInPhraseMode) {
-            this.setState({
-                phrase: new Phrase(this.props.newPhrase.split(''))
-            })
-        }
-    }
+    useEffect(() => {
+        const nextChars = getNextCharacters(commandLine);
+        setNextChars(nextChars);
+        handleCommandLineChange(commandLine);
+    }, [commandLine]);
 
-    componentDidUpdate(prevProps: NextCharsDisplayProps) {
-        if (this.props.newPhrase !== prevProps.newPhrase) {
-            if (this.props.isInPhraseMode) {
-                this.setState({
-                    phrase: new Phrase(this.props.newPhrase.split('')),
-                    nextChars: this.props.newPhrase
-                })
-            }
-        }
-        // Check if the commandLine prop has changed
-        if (this.props.commandLine !== prevProps.commandLine) {
-            // Handle the new commandLine prop, for example by setting state
-            const nextChars = this.getNextCharacters(this.props.commandLine);
-
-            this.setState({ nextChars: nextChars });
-
-            // Or perform any other actions necessary to respond to the change
-            this.handleCommandLineChange(this.props.commandLine);
-        }
-    }
-
-    handleCommandLineChange(newCommandLine: string) {
-        this.testInput(newCommandLine);
-    }
-
-
-    showError = (char: string, charIndex: number) => {
-        this.setState({
-            mismatchedChar: char,
-            mismatchedIsVisible: true
-        })
-        this.props.onError(charIndex);
+    const handleCommandLineChange = (newCommandLine: string) => {
+        testInput(newCommandLine);
     };
 
-    hideError = () => {
-        this.setState({
-            mismatchedChar: null,
-            mismatchedIsVisible: false
-        })
-        this.props.onError(undefined);
+    const showError = (char: string, charIndex: number) => {
+        setMismatchedChar(char);
+        setMismatchedIsVisible(true);
+        onError(charIndex);
     };
 
-    handleSuccess = () => {
-        this.setState(
-            {
-                isActive: false,
-                mismatchedChar: '',
-                mismatchedIsVisible: false,
-                nextChars: '',
-            });
-        this.props.onPhraseSuccess(this.state.phrase.value.join(''));
+    const hideError = () => {
+        setMismatchedChar(null);
+        setMismatchedIsVisible(false);
+        onError(undefined);
     };
 
+    const handleSuccess = () => {
+        setIsActive(false);
+        setMismatchedChar('');
+        setMismatchedIsVisible(false);
+        setNextChars('');
+        onPhraseSuccess(phrase.value.join(''));
+    };
 
-    stopTimer() {
-        if (this._timerRef.current) {
-            this._timerRef.current.stop();
+    const stopTimer = () => {
+        if (timerRef.current) {
+            timerRef.current.stop();
         }
-    }
-    startTImer() {
-        if (this._timerRef.current) {
-            this._timerRef.current.start();
+    };
+
+    const startTimer = () => {
+        if (timerRef.current) {
+            timerRef.current.start();
         }
-    }
-    resetTimer() {
-        if (this._timerRef.current) {
-            this._timerRef.current.reset();
+    };
+
+    const resetTimer = () => {
+        if (timerRef.current) {
+            timerRef.current.reset();
         }
-    }
+    };
 
-    cancelTimer = () => {
-        if (this._timerRef.current) {
-            this._timerRef.current.reset();
+    const cancelTimer = () => {
+        if (timerRef.current) {
+            timerRef.current.reset();
         }
-        if (this._nextCharsRef.current) this._nextCharsRef.current.innerText = this.state.phrase.value.join('');
-    }
+        if (nextCharsRef.current) nextCharsRef.current.innerText = phrase.value.join('');
+    };
 
-    reset(): void {
-        this.setNext('');
-        if (this._nextCharsRef?.current) this._nextCharsRef.current.hidden = true;
-    }
+    const reset = (): void => {
+        setNext('');
+        if (nextCharsRef.current) nextCharsRef.current.hidden = true;
+    };
 
-    public get nextChars(): HTMLElement | null {
-        return this._nextCharsRef?.current;
-    }
+    const getNextCharacters = (stringBeingTested: string): string => {
+        const nextIndex = getFirstNonMatchingChar(stringBeingTested);
+        const nextChars = phrase.value.join('').substring(nextIndex, nextIndex + nextCharsLength);
+        return nextChars || stringBeingTested.substring(nextIndex, nextIndex + nextCharsLength);
+    };
 
-    set wpm(wpm: string) {
-        if (this._wpmRef.current) this._wpmRef.current.innerText = wpm;
-    }
-
-    get phrase(): Phrase {
-        return this.state.phrase;
-    }
-
-    public get nextCharsRate(): HTMLElement | null {
-        return this._nextCharsRateRef.current;
-    }
-
-
-    set phrase(phrase: HTMLInputElement) {
-        this.setState({ phrase: new Phrase(phrase.value.split('')) });
-    }
-
-    getNextCharacters(stringBeingTested: string): string {
-        const nextIndex = this.getFirstNonMatchingChar(stringBeingTested);
-        const nextChars = this.state.phrase.value.join('').substring(nextIndex, nextIndex + this._nextCharsLength);
-        return nextChars || stringBeingTested.substring(nextIndex, nextIndex + this._nextCharsLength);
-    }
-
-    private setNext = (testPhrase: string): HTMLElement | null => {
-        const nextIndex = this.getFirstNonMatchingChar(testPhrase);
+    const setNext = (testPhrase: string): HTMLElement | null => {
+        const nextIndex = getFirstNonMatchingChar(testPhrase);
         if (nextIndex < 0) {
             return null;
         }
-        // Remove the outstanding class from the previous chord.
 
-        if (nextIndex > this.state.phrase.value.length - 1) {
+        if (nextIndex > phrase.value.length - 1) {
             return null;
         }
 
-        this.setState({ nextChars: this.getNextCharacters(testPhrase) });
+        setNextChars(getNextCharacters(testPhrase));
 
-        const nextChordHTML = this.state.phrase.chordsHTML[nextIndex] as HTMLElement;
+        const nextChordHTML = phrase.chordsHTML[nextIndex] as HTMLElement;
 
         return nextChordHTML;
     };
 
-    cancel = () => {
-        if (this.wpm) this.wpm = '0';
-        // clear error class from all chords
-        this.setNext('');
-    }
+    const cancel = () => {
+        if (wpmRef.current) wpmRef.current.innerText = '0';
+        setNext('');
+    };
 
-    testInput = (stringBeingTested: string) => {
+    const testInput = (stringBeingTested: string) => {
+        startTimer();
 
-        this.startTImer();
-
-        const nextChordHTML = this.setNext(stringBeingTested);
+        const nextChordHTML = setNext(stringBeingTested);
         if (nextChordHTML) {
             nextChordHTML.classList.remove("error");
         }
 
-        // TODO: de-overlap this and comparePhrase
         if (stringBeingTested.length === 0) {
-            // stop timer
-            // const chordImageHolderChild = this._chordImageHolderRef.current?.firstChild as HTMLImageElement;
-            // if (chordImageHolderChild) chordImageHolderChild.hidden = true;
-            this.cancelTimer();
+            cancelTimer();
             return;
         }
 
-        if (stringBeingTested
-            == this.state.phrase.value.join('')
-                .trim().substring(0, stringBeingTested.length)
-        ) {
-            // if (this._testArea) this._testArea.style.border = "4px solid #FFF3";
-            this.hideError();
-
-            // TODO: This should update the actual display
-            // TODO: Make sure why nextChars is already updated here and remove this if condition or update it.
-            // this.state.nextChars = this.getNextCharacters(inputString, this.state.phrase.value);
-        }
-        else {
-            // #MISMATCHED
-            const firstNonMatchingChar = this.getFirstNonMatchingChar(stringBeingTested);
-            const mismatchedChar = this.state.phrase.value[firstNonMatchingChar];
-            // TODO: Fix lookup for ENTER, ESCAPE, BACKSPACE, TAB, DELETE, etc.
-            // const mismatchedCharCode = this.state.phrase.chords.find(c => c.key == mismatchedChar)?.chordCode || '';
-            this.setState({
-                mismatchedIsVisible: true,
-                mismatchedChar,
-            });
-            this.showError(mismatchedChar, firstNonMatchingChar);
-
-            // const chordImageHolderChild = this._chordImageHolder?.firstChild as HTMLImageElement;
-            // if (chordImageHolderChild) chordImageHolderChild.hidden = false;
+        if (stringBeingTested === phrase.value.join('').trim().substring(0, stringBeingTested.length)) {
+            hideError();
+        } else {
+            const firstNonMatchingChar = getFirstNonMatchingChar(stringBeingTested);
+            const mismatchedChar = phrase.value[firstNonMatchingChar];
+            setMismatchedIsVisible(true);
+            setMismatchedChar(mismatchedChar);
+            showError(mismatchedChar, firstNonMatchingChar);
         }
 
-        if (stringBeingTested.trim() == this.state.phrase.value.join('').trim()) {
-            // SUCCESS 
-            // SHOW completion indication
-            this.stopTimer();
-            this.handleSuccess();
+        if (stringBeingTested.trim() === phrase.value.join('').trim()) {
+            stopTimer();
+            handleSuccess();
             return;
         }
-    }
+    };
 
-    private getFirstNonMatchingChar = (stringBeingTested: string): number => {
-        if (!this.state.phrase.value) return 0;
-        const sourcePhrase = this.state.phrase.value;
-        if (!stringBeingTested || stringBeingTested.length == 0) {
+    const getFirstNonMatchingChar = (stringBeingTested: string): number => {
+        if (!phrase.value) return 0;
+        const sourcePhrase = phrase.value;
+        if (!stringBeingTested || stringBeingTested.length === 0) {
             return 0;
         }
-        var result = 0;
+        let result = 0;
         for (let i = 0; i < stringBeingTested.length; i++) {
             if (stringBeingTested[i] !== sourcePhrase[i]) {
                 return i;
             }
             result++;
-        };
+        }
         return result;
     };
 
-    sayText = (e: KeyboardEvent) => {
+    const sayText = (e: KeyboardEvent) => {
         const eventTarget = e.target as HTMLInputElement;
-        // Get the input element value
         if (!eventTarget || !eventTarget.value) return;
         let text = eventTarget.value;
-        // Get the key that was pressed
         const char = e.key;
-        // If no key was pressed, return
         if (!char) return;
-        // If the speechSynthesis object is not defined, return
-        if (!this.voiceSynth) {
-            this.voiceSynth = window.speechSynthesis;
+        if (!voiceSynth.current) {
+            voiceSynth.current = window.speechSynthesis;
         }
-        // If speaking, cancel the speech
-        if (this.voiceSynth.speaking) {
-            this.voiceSynth.cancel();
+        if (voiceSynth.current.speaking) {
+            voiceSynth.current.cancel();
         }
-        // If the key is a-z or 0-9, use that as the text
         if (char?.match(/^[a-z0-9]$/i)) {
             text = char;
-        }
-        // If the key is Backspace, say "delete"
-        else if (char == "Backspace") {
+        } else if (char === "Backspace") {
             text = "delete";
-        }
-        // If the key is Enter, say the text
-        else if (char == "Enter") {
+        } else if (char === "Enter") {
             text = text;
-        }
-        // If the key is not one of the above, get the last word in the text
-        else {
+        } else {
             const textSplit = text.trim().split(' ');
             text = textSplit[textSplit.length - 1];
         }
-        // Create a new speech utterance
-        var utterThis = new SpeechSynthesisUtterance(text);
-        // Set the pitch and rate
+        const utterThis = new SpeechSynthesisUtterance(text);
         utterThis.pitch = 1;
         utterThis.rate = 0.7;
-        // Speak the text
-        this.voiceSynth.speak(utterThis);
-    }
+        voiceSynth.current.speak(utterThis);
+    };
 
-    render() {
-        
-        return (
-            <div id="next-chars" hidden={!this.props.isInPhraseMode}>
-                {/* ...other components */}
-                {this.state.mismatchedChar
-                    && <ErrorDisplay
-                        isVisible={this.state.mismatchedIsVisible}
-                        mismatchedChar={this.state.mismatchedChar}
-                    />
-                }
-                <Timer
-                    ref={this._timerRef}
+    return (
+        <div id="next-chars" hidden={!isInPhraseMode}>
+            {mismatchedChar && (
+                <ErrorDisplay
+                    isVisible={mismatchedIsVisible}
+                    mismatchedChar={mismatchedChar}
                 />
-                <div id={TerminalCssClasses.NextCharsRate} ref={this._nextCharsRateRef}></div>
-                <span id={TerminalCssClasses.WPM} ref={this._wpmRef}></span>
-                <pre id={TerminalCssClasses.NextChars} ref={this._nextCharsRef} >
-                    {this.state.nextChars}
-                </pre>
-            </div>
-        );
-    }
-}
+            )}
+            <Timer ref={timerRef} />
+            <div id={TerminalCssClasses.NextCharsRate} ref={nextCharsRateRef}></div>
+            <span id={TerminalCssClasses.WPM} ref={wpmRef}></span>
+            <pre id={TerminalCssClasses.NextChars} ref={nextCharsRef}>
+                {nextChars}
+            </pre>
+        </div>
+    );
+};
 
 export default NextCharsDisplay;
