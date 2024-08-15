@@ -97,3 +97,512 @@
 
 # 2024-08-15 11:00:13.762765
 +Ok, let's try to convert the `WebCam.ts`. It is currently a class component, but also it accepts an `HTMLVideoElement` as a parameter. The React way would probably indicate that we should make the `WebCam.ts` class component into a `WebCam.tsx` functional component that renders it's own `HTMLVideoElement`. Is that correct? How can we do that?
+
+# 2024-08-15 11:16:44.185372
++Ok, I have reviewed the remaining class components and some of them might never have to be converted so I would like to now focus on the grand main target of conversion, the `HandTerm.tsx`. This is a significantly larger and more complex component. I would like you to analyze it and pull out anything that should be moved to a different component or a project library. Break it into smaller components, of that would be optimal and then convert it into a functional compoent. That is just a suggestion of the process you should use. If you think it would be easier to convert the whole thing to a functional component first, then do that. And we can do this conversion in a series of conversions, testing the results between each conversion, if that would be easier or more reliable.
+
+# 2024-08-15 12:49:21.651125
++I am getting several linting errors now in `HandTerm.tsx`. I think they are all related to the components that we converted to functional components. ```[{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/HandTerm.tsx",
++"owner": "typescript",
++"code": "2614",
++"severity": 8,
++"message": "Module '\"../utils/WebCam\"' has no exported member 'IWebCam'. Did you mean to use 'import IWebCam from \"../utils/WebCam\"' instead?",
++"source": "ts",
++"startLineNumber": 14,
++"startColumn": 10,
++"endLineNumber": 14,
++"endColumn": 17
++},{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/HandTerm.tsx",
++"owner": "typescript",
++"code": "2614",
++"severity": 8,
++"message": "Module '\"../utils/WebCam\"' has no exported member 'WebCam'. Did you mean to use 'import WebCam from \"../utils/WebCam\"' instead?",
++"source": "ts",
++"startLineNumber": 14,
++"startColumn": 19,
++"endLineNumber": 14,
++"endColumn": 25
++},{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/HandTerm.tsx",
++"owner": "typescript",
++"code": "2749",
++"severity": 8,
++"message": "'XtermAdapter' refers to a value, but is being used as a type here. Did you mean 'typeof XtermAdapter'?",
++"source": "ts",
++"startLineNumber": 96,
++"startColumn": 39,
++"endLineNumber": 96,
++"endColumn": 51
++},{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/HandTerm.tsx",
++"owner": "typescript",
++"code": "2749",
++"severity": 8,
++"message": "'NextCharsDisplay' refers to a value, but is being used as a type here. Did you mean 'typeof NextCharsDisplay'?",
++"source": "ts",
++"startLineNumber": 97,
++"startColumn": 48,
++"endLineNumber": 97,
++"endColumn": 64
++},{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/HandTerm.tsx",
++"owner": "typescript",
++"code": "2749",
++"severity": 8,
++"message": "'Game' refers to a value, but is being used as a type here. Did you mean 'typeof Game'?",
++"source": "ts",
++"startLineNumber": 98,
++"startColumn": 45,
++"endLineNumber": 98,
++"endColumn": 49
++},{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/HandTerm.tsx",
++"owner": "typescript",
++"code": "2339",
++"severity": 8,
++"message": "Property 'editorRef' does not exist on type 'HandTerm'.",
++"source": "ts",
++"startLineNumber": 253,
++"startColumn": 10,
++"endLineNumber": 253,
++"endColumn": 19
++},{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/HandTerm.tsx",
++"owner": "typescript",
++"code": "2339",
++"severity": 8,
++"message": "Property 'editorRef' does not exist on type 'HandTerm'.",
++"source": "ts",
++"startLineNumber": 332,
++"startColumn": 16,
++"endLineNumber": 332,
++"endColumn": 25
++},{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/HandTerm.tsx",
++"owner": "typescript",
++"code": "2339",
++"severity": 8,
++"message": "Property 'editorRef' does not exist on type 'HandTerm'.",
++"source": "ts",
++"startLineNumber": 333,
++"startColumn": 14,
++"endLineNumber": 333,
++"endColumn": 23
++},{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/HandTerm.tsx",
++"owner": "typescript",
++"code": "2322",
++"severity": 8,
++"message": "Type '{ ref: RefObject<Game>; canvasHeight: number; canvasWidth: number; isInPhraseMode: boolean; heroActionType: ActionType; zombie4ActionType: ActionType; ... 5 more ...; zombie4StartPosition: SpritePosition; }' is not assignable to type 'IntrinsicAttributes & IGameProps'.\n  Property 'ref' does not exist on type 'IntrinsicAttributes & IGameProps'.",
++"source": "ts",
++"startLineNumber": 1164,
++"startColumn": 17,
++"endLineNumber": 1164,
++"endColumn": 20
++},{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/HandTerm.tsx",
++"owner": "typescript",
++"code": "2322",
++"severity": 8,
++"message": "Type '{ ref: RefObject<NextCharsDisplay>; onTimerStatusChange: (isActive: boolean) => void; commandLine: string; isInPhraseMode: true; newPhrase: string; onPhraseSuccess: (phrase: string) => void; onError: (errorIndex: number | undefined) => void; }' is not assignable to type 'IntrinsicAttributes & NextCharsDisplayProps'.\n  Property 'ref' does not exist on type 'IntrinsicAttributes & NextCharsDisplayProps'.",
++"source": "ts",
++"startLineNumber": 1180,
++"startColumn": 19,
++"endLineNumber": 1180,
++"endColumn": 22
++},{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/HandTerm.tsx",
++"owner": "typescript",
++"code": "2322",
++"severity": 8,
++"message": "Type '{ ref: RefObject<XtermAdapter>; terminalElement: HTMLDivElement | null; terminalElementRef: RefObject<HTMLDivElement>; terminalFontSize: number; onAddCharacter: (character: string) => number | undefined; onRemoveCharacter: (command: string) => void; onTouchStart: TouchEventHandler<...>; onTouchEnd: TouchEventHandler...' is not assignable to type 'IntrinsicAttributes & IXtermAdapterProps'.\n  Property 'ref' does not exist on type 'IntrinsicAttributes & IXtermAdapterProps'.",
++"source": "ts",
++"startLineNumber": 1205,
++"startColumn": 19,
++"endLineNumber": 1205,
++"endColumn": 22
++},{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/HandTerm.tsx",
++"owner": "typescript",
++"code": "2322",
++"severity": 8,
++"message": "Type '(content: string) => void' is not assignable to type '(value: string | undefined) => void'.\n  Types of parameters 'content' and 'value' are incompatible.\n    Type 'string | undefined' is not assignable to type 'string'.\n      Type 'undefined' is not assignable to type 'string'.",
++"source": "ts",
++"startLineNumber": 1220,
++"startColumn": 19,
++"endLineNumber": 1220,
++"endColumn": 27,
++"relatedInformation": [
++{
++"startLineNumber": 8,
++"startColumn": 3,
++"endLineNumber": 8,
++"endColumn": 11,
++"message": "The expected type comes from property 'onChange' which is declared here on type 'IntrinsicAttributes & MonacoEditorProps'",
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/MonacoEditor.tsx"
++}
++]
++}]```
+
+# 2024-08-15 12:51:20.424668
++I am getting several linting error now in `HandTerm.tsx`: ```[{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/HandTerm.tsx",
++"owner": "typescript",
++"code": "2749",
++"severity": 8,
++"message": "'XtermAdapter' refers to a value, but is being used as a type here. Did you mean 'typeof XtermAdapter'?",
++"source": "ts",
++"startLineNumber": 96,
++"startColumn": 39,
++"endLineNumber": 96,
++"endColumn": 51
++},{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/HandTerm.tsx",
++"owner": "typescript",
++"code": "2749",
++"severity": 8,
++"message": "'NextCharsDisplay' refers to a value, but is being used as a type here. Did you mean 'typeof NextCharsDisplay'?",
++"source": "ts",
++"startLineNumber": 97,
++"startColumn": 48,
++"endLineNumber": 97,
++"endColumn": 64
++},{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/HandTerm.tsx",
++"owner": "typescript",
++"code": "2749",
++"severity": 8,
++"message": "'Game' refers to a value, but is being used as a type here. Did you mean 'typeof Game'?",
++"source": "ts",
++"startLineNumber": 98,
++"startColumn": 45,
++"endLineNumber": 98,
++"endColumn": 49
++},{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/HandTerm.tsx",
++"owner": "typescript",
++"code": "2304",
++"severity": 8,
++"message": "Cannot find name 'IWebCam'.",
++"source": "ts",
++"startLineNumber": 105,
++"startColumn": 19,
++"endLineNumber": 105,
++"endColumn": 26
++},{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/HandTerm.tsx",
++"owner": "typescript",
++"code": "2304",
++"severity": 8,
++"message": "Cannot find name 'useRef'.",
++"source": "ts",
++"startLineNumber": 253,
++"startColumn": 23,
++"endLineNumber": 253,
++"endColumn": 29
++},{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/HandTerm.tsx",
++"owner": "typescript",
++"code": "7009",
++"severity": 8,
++"message": "'new' expression, whose target lacks a construct signature, implicitly has an 'any' type.",
++"source": "ts",
++"startLineNumber": 316,
++"startColumn": 21,
++"endLineNumber": 316,
++"endColumn": 61
++},{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/HandTerm.tsx",
++"owner": "typescript",
++"code": "2345",
++"severity": 8,
++"message": "Argument of type 'HTMLVideoElement' is not assignable to parameter of type 'WebCamProps'.\n  Property 'setOn' is missing in type 'HTMLVideoElement' but required in type 'WebCamProps'.",
++"source": "ts",
++"startLineNumber": 316,
++"startColumn": 32,
++"endLineNumber": 316,
++"endColumn": 60,
++"relatedInformation": [
++{
++"startLineNumber": 4,
++"startColumn": 5,
++"endLineNumber": 4,
++"endColumn": 10,
++"message": "'setOn' is declared here.",
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/utils/WebCam.tsx"
++}
++]
++},{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/HandTerm.tsx",
++"owner": "typescript",
++"code": "2301",
++"severity": 8,
++"message": "Initializer of instance member variable 'handleFocusEditor' cannot reference identifier 'editorRef' declared in the constructor.",
++"source": "ts",
++"startLineNumber": 332,
++"startColumn": 11,
++"endLineNumber": 332,
++"endColumn": 20
++},{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/HandTerm.tsx",
++"owner": "typescript",
++"code": "2301",
++"severity": 8,
++"message": "Initializer of instance member variable 'handleFocusEditor' cannot reference identifier 'editorRef' declared in the constructor.",
++"source": "ts",
++"startLineNumber": 333,
++"startColumn": 9,
++"endLineNumber": 333,
++"endColumn": 18
++},{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/HandTerm.tsx",
++"owner": "typescript",
++"code": "2322",
++"severity": 8,
++"message": "Type '{ ref: any; canvasHeight: number; canvasWidth: number; isInPhraseMode: boolean; heroActionType: ActionType; zombie4ActionType: ActionType; onSetHeroAction: (newAction: ActionType) => void; ... 4 more ...; zombie4StartPosition: SpritePosition; }' is not assignable to type 'IntrinsicAttributes & IGameProps'.\n  Property 'ref' does not exist on type 'IntrinsicAttributes & IGameProps'.",
++"source": "ts",
++"startLineNumber": 1164,
++"startColumn": 17,
++"endLineNumber": 1164,
++"endColumn": 20
++},{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/HandTerm.tsx",
++"owner": "typescript",
++"code": "2663",
++"severity": 8,
++"message": "Cannot find name 'terminalGameRef'. Did you mean the instance member 'this.terminalGameRef'?",
++"source": "ts",
++"startLineNumber": 1164,
++"startColumn": 22,
++"endLineNumber": 1164,
++"endColumn": 37
++},{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/HandTerm.tsx",
++"owner": "typescript",
++"code": "2322",
++"severity": 8,
++"message": "Type '{ ref: any; onTimerStatusChange: (isActive: boolean) => void; commandLine: string; isInPhraseMode: true; newPhrase: string; onPhraseSuccess: (phrase: string) => void; onError: (errorIndex: number | undefined) => void; }' is not assignable to type 'IntrinsicAttributes & NextCharsDisplayProps'.\n  Property 'ref' does not exist on type 'IntrinsicAttributes & NextCharsDisplayProps'.",
++"source": "ts",
++"startLineNumber": 1180,
++"startColumn": 19,
++"endLineNumber": 1180,
++"endColumn": 22
++},{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/HandTerm.tsx",
++"owner": "typescript",
++"code": "2663",
++"severity": 8,
++"message": "Cannot find name 'nextCharsDisplayRef'. Did you mean the instance member 'this.nextCharsDisplayRef'?",
++"source": "ts",
++"startLineNumber": 1180,
++"startColumn": 24,
++"endLineNumber": 1180,
++"endColumn": 43
++},{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/HandTerm.tsx",
++"owner": "typescript",
++"code": "2322",
++"severity": 8,
++"message": "Type '{ ref: any; terminalElement: HTMLDivElement | null; terminalElementRef: RefObject<HTMLDivElement>; terminalFontSize: number; onAddCharacter: (character: string) => number | undefined; onRemoveCharacter: (command: string) => void; onTouchStart: TouchEventHandler<...>; onTouchEnd: TouchEventHandler<...>; }' is not assignable to type 'IntrinsicAttributes & IXtermAdapterProps'.\n  Property 'ref' does not exist on type 'IntrinsicAttributes & IXtermAdapterProps'.",
++"source": "ts",
++"startLineNumber": 1205,
++"startColumn": 19,
++"endLineNumber": 1205,
++"endColumn": 22
++},{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/HandTerm.tsx",
++"owner": "typescript",
++"code": "2663",
++"severity": 8,
++"message": "Cannot find name 'adapterRef'. Did you mean the instance member 'this.adapterRef'?",
++"source": "ts",
++"startLineNumber": 1205,
++"startColumn": 24,
++"endLineNumber": 1205,
++"endColumn": 34
++},{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/HandTerm.tsx",
++"owner": "typescript",
++"code": "6133",
++"severity": 4,
++"message": "'editorRef' is declared but its value is never read.",
++"source": "ts",
++"startLineNumber": 253,
++"startColumn": 11,
++"endLineNumber": 253,
++"endColumn": 20,
++"tags": [
++1
++]
++}]```
+
+# 2024-08-15 12:54:45.646525
++I am getting some linting errors now: ```[{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/HandTerm.tsx",
++"owner": "typescript",
++"code": "2749",
++"severity": 8,
++"message": "'XtermAdapter' refers to a value, but is being used as a type here. Did you mean 'typeof XtermAdapter'?",
++"source": "ts",
++"startLineNumber": 96,
++"startColumn": 39,
++"endLineNumber": 96,
++"endColumn": 51
++},{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/HandTerm.tsx",
++"owner": "typescript",
++"code": "2749",
++"severity": 8,
++"message": "'NextCharsDisplay' refers to a value, but is being used as a type here. Did you mean 'typeof NextCharsDisplay'?",
++"source": "ts",
++"startLineNumber": 97,
++"startColumn": 48,
++"endLineNumber": 97,
++"endColumn": 64
++},{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/HandTerm.tsx",
++"owner": "typescript",
++"code": "2749",
++"severity": 8,
++"message": "'Game' refers to a value, but is being used as a type here. Did you mean 'typeof Game'?",
++"source": "ts",
++"startLineNumber": 98,
++"startColumn": 45,
++"endLineNumber": 98,
++"endColumn": 49
++},{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/HandTerm.tsx",
++"owner": "typescript",
++"code": "2304",
++"severity": 8,
++"message": "Cannot find name 'IWebCam'.",
++"source": "ts",
++"startLineNumber": 105,
++"startColumn": 19,
++"endLineNumber": 105,
++"endColumn": 26
++},{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/HandTerm.tsx",
++"owner": "typescript",
++"code": "2304",
++"severity": 8,
++"message": "Cannot find name 'useRef'.",
++"source": "ts",
++"startLineNumber": 253,
++"startColumn": 23,
++"endLineNumber": 253,
++"endColumn": 29
++}]```
+
+# 2024-08-15 12:58:32.906132
++I am getting this linting error: ```[{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/HandTerm.tsx",
++"owner": "typescript",
++"code": "2749",
++"severity": 8,
++"message": "'XtermAdapter' refers to a value, but is being used as a type here. Did you mean 'typeof XtermAdapter'?",
++"source": "ts",
++"startLineNumber": 97,
++"startColumn": 39,
++"endLineNumber": 97,
++"endColumn": 51
++}]```
+
+# 2024-08-15 13:17:33.227884
++I am getting this linting error: ```[{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/App.tsx",
++"owner": "typescript",
++"code": "2339",
++"severity": 8,
++"message": "Property 'focusTerminal' does not exist on type 'FC<IXtermAdapterProps>'.",
++"source": "ts",
++"startLineNumber": 27,
++"startColumn": 50,
++"endLineNumber": 27,
++"endColumn": 63
++}]```
+
+# 2024-08-15 13:29:24.719590
++/drop src\components\Chord.tsx
+
+# 2024-08-15 13:29:55.160831
++/drop src\commands\CommandProvider.tsx 
+
+# 2024-08-15 13:30:21.221744
++/drop src\components\ErrorDisplay.tsx
+
+# 2024-08-15 13:32:54.853241
++I am still getting this linting error: ```[{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/App.tsx",
++"owner": "typescript",
++"code": "2339",
++"severity": 8,
++"message": "Property 'focusTerminal' does not exist on type 'ForwardRefExoticComponent<IXtermAdapterProps & RefAttributes<unknown>>'.",
++"source": "ts",
++"startLineNumber": 27,
++"startColumn": 50,
++"endLineNumber": 27,
++"endColumn": 63
++}]```
+
+# 2024-08-15 13:38:07.791949
++I am getting this linting error: ```[{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/HandTerm.tsx",
++"owner": "typescript",
++"code": "2304",
++"severity": 8,
++"message": "Cannot find name 'IWebCam'.",
++"source": "ts",
++"startLineNumber": 106,
++"startColumn": 19,
++"endLineNumber": 106,
++"endColumn": 26
++}]```
+
+# 2024-08-15 13:50:48.229286
++I am getting this linting error: ```[{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/HandTerm.tsx",
++"owner": "typescript",
++"code": "2322",
++"severity": 8,
++"message": "Type 'RefObject<ForwardRefExoticComponent<IXtermAdapterProps & RefAttributes<XtermAdapterHandle>>>' is not assignable to type 'LegacyRef<XtermAdapterHandle> | undefined'.\n  Type 'RefObject<ForwardRefExoticComponent<IXtermAdapterProps & RefAttributes<XtermAdapterHandle>>>' is not assignable to type 'RefObject<XtermAdapterHandle>'.\n    Property 'focusTerminal' is missing in type 'ForwardRefExoticComponent<IXtermAdapterProps & RefAttributes<XtermAdapterHandle>>' but required in type 'XtermAdapterHandle'.",
++"source": "ts",
++"startLineNumber": 1199,
++"startColumn": 19,
++"endLineNumber": 1199,
++"endColumn": 22,
++"relatedInformation": [
++{
++"startLineNumber": 18,
++"startColumn": 3,
++"endLineNumber": 18,
++"endColumn": 16,
++"message": "'focusTerminal' is declared here.",
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/XtermAdapter.tsx"
++},
++{
++"startLineNumber": 303,
++"startColumn": 9,
++"endLineNumber": 303,
++"endColumn": 12,
++"message": "The expected type comes from property 'ref' which is declared here on type 'IntrinsicAttributes & IXtermAdapterProps & RefAttributes<XtermAdapterHandle>'",
++"resource": "/c:/Users/xgenx/source/repos/handterm/node_modules/@types/react/index.d.ts"
++}
++]
++}]```
+
+# 2024-08-15 13:54:45.094370
++That fixed a lot of errors, but I am getting this error now: ```[{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/HandTerm.tsx",
++"owner": "typescript",
++"code": "7009",
++"severity": 8,
++"message": "'new' expression, whose target lacks a construct signature, implicitly has an 'any' type.",
++"source": "ts",
++"startLineNumber": 315,
++"startColumn": 21,
++"endLineNumber": 315,
++"endColumn": 48
++}]```

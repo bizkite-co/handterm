@@ -11,7 +11,6 @@ import ReactDOMServer from 'react-dom/server';
 import { ActionType } from '../game/types/ActionTypes';
 import Phrases from '../utils/Phrases';
 import WebCam, { WebCamProps } from '../utils/WebCam';
-import { useRef } from 'react';
 import { CommandContext } from '../commands/CommandContext';
 import { Achievement, Achievements, MyResponse } from '../types/Types';
 import { TutorialComponent } from './TutorialComponent';
@@ -250,7 +249,6 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     this._persistence = new LocalStoragePersistence();
     const initialCanvasHeight = localStorage.getItem('canvasHeight') || '100';
     const nextAchievement = this.getNextTutorialAchievement();
-    const editorRef = React.createRef<HTMLElement>();
     this.state = {
       outputElements: this.getCommandResponseHistory().slice(-1),
       isInPhraseMode: false,
