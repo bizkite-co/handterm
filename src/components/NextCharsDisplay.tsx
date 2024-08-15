@@ -14,14 +14,6 @@ interface NextCharsDisplayProps {
     onError: (error: number | undefined) => void;
 }
 
-interface NextCharsDisplayState {
-    isActive: boolean;
-    mismatchedChar: string | null;
-    mismatchedIsVisible: boolean;
-    nextChars: string;
-    nextCharsIsVisible: boolean;
-    phrase: Phrase;
-}
 
 export interface NextCharsDisplayHandle {
     resetTimer: () => void;
