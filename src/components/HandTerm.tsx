@@ -250,7 +250,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     this._persistence = new LocalStoragePersistence();
     const initialCanvasHeight = localStorage.getItem('canvasHeight') || '100';
     const nextAchievement = this.getNextTutorialAchievement();
-    const editorRef = useRef(null);
+    const editorRef = useRef<HTMLElement | null>(null);
     this.state = {
       outputElements: this.getCommandResponseHistory().slice(-1),
       isInPhraseMode: false,
@@ -313,7 +313,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     this.scrollToBottom();
 
     if (this.videoElementRef.current) {
-      this.webCam = new WebCam(this.videoElementRef.current);
+      this.webCam = new WebCam({ setOn: true });
     }
 
     this.addTouchListeners();
