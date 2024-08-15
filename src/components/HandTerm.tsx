@@ -11,7 +11,7 @@ import Game from '../game/Game';
 import ReactDOMServer from 'react-dom/server';
 import { ActionType } from '../game/types/ActionTypes';
 import Phrases from '../utils/Phrases';
-import WebCam from '../utils/WebCam';
+import WebCam, { WebCamProps } from '../utils/WebCam';
 import { useRef } from 'react';
 import { CommandContext } from '../commands/CommandContext';
 import { Achievement, Achievements, MyResponse } from '../types/Types';
@@ -103,7 +103,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
   public commandHistory: string[] = [];
   private wpmCalculator: IWPMCalculator = new WPMCalculator();
   private videoElementRef: React.RefObject<HTMLVideoElement> = React.createRef();
-  private webCam: IWebCam | null = null;
+  private webCam: WebCamProps | null = null;
   private static readonly commandHistoryLimit = 120;
   private isDebug: boolean = false;
   private heroRunTimeoutId: number | null = null;
