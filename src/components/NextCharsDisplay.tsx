@@ -35,6 +35,7 @@ const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, NextCharsDispl
 
     const [mismatchedChar, setMismatchedChar] = useState<string | null>(null);
     const [mismatchedIsVisible, setMismatchedIsVisible] = useState(false);
+    const [isActive, setIsActive] = useState(false);
     const [nextChars, setNextChars] = useState(newPhrase);
     const [phrase, setPhrase] = useState(new Phrase(newPhrase.split('')));
 
