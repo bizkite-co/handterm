@@ -1,5 +1,5 @@
 // src/components/MonacoEditor.tsx
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useImperativeHandle, forwardRef } from 'react';
 import Editor from "@monaco-editor/react";
 
 interface MonacoEditorProps {
@@ -20,11 +20,19 @@ declare global {
   }
 }
 
-const MonacoEditor: React.FC<MonacoEditorProps> = ({ initialValue, language, onChange, onSave, onClose, height = '90vh' }) => {
+const MonacoEditor = forwardRef<any, MonacoEditorProps>(({ initialValue, language, onChange, onSave, onClose, height = '90vh' }, ref) => {
   const editorRef = useRef<any>(null);
   const statusNodeRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
+  useImperativeHandle(ref, () => ({
+    focus: () => {
+      if (editorRef.current) {
+        editorRef.current.focus();
+      }
+    }
+  }));
+
+  useEffect(() => { 
     return () => {
       if (window.MonacoVim) {
         window.MonacoVim.VimMode.Vim.dispose();
@@ -99,6 +107,6 @@ const MonacoEditor: React.FC<MonacoEditorProps> = ({ initialValue, language, onC
       <div ref={statusNodeRef} className="status-node"></div>
     </div>
   );
-};
+});
 
 export default MonacoEditor;
