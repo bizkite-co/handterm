@@ -1189,7 +1189,6 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
               {!this.state.editMode && (
                 <XtermAdapter
                   ref={this.adapterRef}
-                  terminalElement={this.terminalElementRef.current}
                   terminalElementRef={this.terminalElementRef}
                   terminalFontSize={this.currentFontSize}
                   onAddCharacter={this.handleCharacter}
