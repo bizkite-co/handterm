@@ -14,7 +14,11 @@ interface IXtermAdapterProps {
   terminalFontSize: number;
 }
 
-const XtermAdapter = forwardRef<unknown, IXtermAdapterProps>(({
+interface XtermAdapterHandle {
+  focusTerminal: () => void;
+}
+
+const XtermAdapter = forwardRef<XtermAdapterHandle, IXtermAdapterProps>(({
   terminalElementRef,
   onAddCharacter,
   onRemoveCharacter,
@@ -48,6 +52,10 @@ const XtermAdapter = forwardRef<unknown, IXtermAdapterProps>(({
   useImperativeHandle(ref, () => ({
     focusTerminal,
   }));
+
+  return {
+    focusTerminal,
+  };
 
   const appendTempPassword = (passwordChar: string) => {
     tempPassword.current += passwordChar;
