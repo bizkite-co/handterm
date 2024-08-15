@@ -1,8 +1,17 @@
-import React, { useEffect, useRef, useImperativeHandle, forwardRef } from 'react';
+import React, { useEffect, useRef, useImperativeHandle, forwardRef, TouchEventHandler } from 'react';
 import { Terminal } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
 import { TerminalCssClasses } from '../types/TerminalTypes';
 import { XtermAdapterConfig } from './XtermAdapterConfig';
+
+export interface IXtermAdapterProps {
+  terminalElementRef: React.RefObject<HTMLElement>;
+  onAddCharacter: (character: string) => void;
+  onRemoveCharacter: (command: string) => void;
+  onTouchStart: TouchEventHandler<HTMLDivElement>;
+  onTouchEnd: TouchEventHandler<HTMLDivElement>;
+  terminalFontSize: number;
+}
 
 export interface XtermAdapterHandle {
   terminalElement: HTMLElement | null;
@@ -52,12 +61,6 @@ const XtermAdapter = forwardRef<XtermAdapterHandle, IXtermAdapterProps>((props, 
 
   useImperativeHandle(ref, () => ({
     terminalElement: terminalElementRef.current,
-    terminalElementRef,
-    onAddCharacter,
-    onRemoveCharacter,
-    onTouchStart,
-    onTouchEnd,
-    terminalFontSize,
     scrollBottom,
     focusTerminal,
     getTerminalSize,
