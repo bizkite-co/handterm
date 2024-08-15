@@ -1,5 +1,3 @@
-import { allChords } from "../allChords";
-
 export interface ChordProps {
     displayChar: string;
 }
