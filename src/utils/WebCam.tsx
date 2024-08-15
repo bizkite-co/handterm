@@ -48,7 +48,7 @@ const WebCam: React.FC<WebCamProps> = ({ setOn }) => {
         };
     }, [setOn]);
 
-    return <video ref={videoRef} />;
+    return <video ref={videoRef} style={{ width: '100%', height: 'auto' }} />;
 };
 
 export default WebCam;
