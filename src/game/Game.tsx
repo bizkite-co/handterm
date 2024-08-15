@@ -283,7 +283,7 @@ const Game = React.forwardRef<IGameHandle, IGameProps>((props, ref) => {
 
   return (
     <div
-      id={TerminalCssClasses.TerminalGame}
+      id="terminal-game"
       hidden={!isInPhraseMode}
       style={{ position: "relative", height: canvasHeight }}
     >
