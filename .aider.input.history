@@ -94,3 +94,6 @@
 
 # 2024-08-15 10:49:05.693926
 +Let's proceed to the next class component that we should convert to a functional componet, or any other refactors that you think would improve the quality of the code.
+
+# 2024-08-15 11:00:13.762765
++Ok, let's try to convert the `WebCam.ts`. It is currently a class component, but also it accepts an `HTMLVideoElement` as a parameter. The React way would probably indicate that we should make the `WebCam.ts` class component into a `WebCam.tsx` functional component that renders it's own `HTMLVideoElement`. Is that correct? How can we do that?
