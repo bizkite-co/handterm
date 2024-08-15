@@ -17,7 +17,7 @@ export interface XtermAdapterHandle {
   getTerminalSize: () => { width: number; height: number } | undefined;
 }
 
-const XtermAdapter = forwardRef<XtermAdapterHandle, XtermAdapterHandle>((props, ref) => {
+const XtermAdapter = forwardRef<XtermAdapterHandle, IXtermAdapterProps>((props, ref) => {
   const { terminalElementRef, onAddCharacter, onRemoveCharacter, onTouchStart, onTouchEnd, terminalFontSize } = props;
   const divRef = useRef<HTMLDivElement>(null);
   const terminal = useRef(new Terminal(XtermAdapterConfig));
