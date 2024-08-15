@@ -3,7 +3,7 @@ import { IWPMCalculator, WPMCalculator } from '../utils/WPMCalculator';
 import { IPersistence, LocalStoragePersistence } from '../Persistence';
 import { createHTMLElementFromHTML } from '../utils/dom';
 import React, { ContextType, TouchEventHandler } from 'react';
-import XtermAdapter from './XtermAdapter';
+import XtermAdapter, { XtermAdapterHandle } from './XtermAdapter';
 import NextCharsDisplay from './NextCharsDisplay';
 import { Output } from './Output';
 import Game from '../game/Game';

@@ -14,7 +14,7 @@ interface IXtermAdapterProps {
   terminalFontSize: number;
 }
 
-interface XtermAdapterHandle {
+export interface XtermAdapterHandle {
   focusTerminal: () => void;
 }
 
