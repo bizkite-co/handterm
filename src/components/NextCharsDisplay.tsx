@@ -197,8 +197,7 @@ const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, NextCharsDispl
     };
 
     return (
-        <div 
-            ref={ref}
+        <div
             id="next-chars" 
             hidden={!isInPhraseMode} 
         >
