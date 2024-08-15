@@ -11,7 +11,7 @@ import Game from '../game/Game';
 import ReactDOMServer from 'react-dom/server';
 import { ActionType } from '../game/types/ActionTypes';
 import Phrases from '../utils/Phrases';
-import { IWebCam, WebCam } from '../utils/WebCam';
+import WebCam from '../utils/WebCam';
 import { CommandContext } from '../commands/CommandContext';
 import { Achievement, Achievements, MyResponse } from '../types/Types';
 import { TutorialComponent } from './TutorialComponent';
@@ -250,7 +250,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     this._persistence = new LocalStoragePersistence();
     const initialCanvasHeight = localStorage.getItem('canvasHeight') || '100';
     const nextAchievement = this.getNextTutorialAchievement();
-    this.editorRef = React.createRef();
+    const editorRef = useRef(null);
     this.state = {
       outputElements: this.getCommandResponseHistory().slice(-1),
       isInPhraseMode: false,
@@ -329,8 +329,8 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
 
   handleFocusEditor = () => {
     setTimeout(() => {
-      if (this.editorRef.current) {
-        this.editorRef.current.focus();
+      if (editorRef.current) {
+        editorRef.current.focus();
       }
     }, 100);
   };
@@ -1161,7 +1161,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
                 onTouchEnd={this.handleTouchEnd}
               />
               <Game
-                ref={this.terminalGameRef}
+                ref={terminalGameRef}
                 canvasHeight={this.state.canvasHeight}
                 canvasWidth={canvasWidth} // Use the width from terminalSize if available
                 isInPhraseMode={this.state.isInPhraseMode}
@@ -1177,7 +1177,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
               {this.state.isInPhraseMode
                 && this.state.phraseValue
                 && <NextCharsDisplay
-                  ref={this.nextCharsDisplayRef}
+                  ref={nextCharsDisplayRef}
                   onTimerStatusChange={this.handleTimerStatusChange}
                   commandLine={this.state.commandLine}
                   isInPhraseMode={this.state.isInPhraseMode}
@@ -1202,7 +1202,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
 
               {!this.state.editMode &&
                 <XtermAdapter
-                  ref={this.adapterRef}
+                  ref={adapterRef}
                   terminalElement={this.terminalElementRef.current}
                   terminalElementRef={this.terminalElementRef}
                   terminalFontSize={this.currentFontSize}
@@ -1217,7 +1217,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
                 <MonacoEditor
                   initialValue={this.state.editContent}
                   language={this.state.editLanguage}
-                  onChange={this.handleEditChange}
+                  onChange={(value) => this.handleEditChange(value || '')}
                   onSave={this.handleEditSave}
                   onClose={this.handleEditorClose}
                 />
