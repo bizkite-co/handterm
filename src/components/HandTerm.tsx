@@ -100,7 +100,6 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
   private _persistence: IPersistence;
   public commandHistory: string[] = [];
   private wpmCalculator: IWPMCalculator = new WPMCalculator();
-  private videoElementRef: React.RefObject<HTMLVideoElement> = React.createRef();
   private static readonly commandHistoryLimit = 120;
   private isDebug: boolean = false;
   private heroRunTimeoutId: number | null = null;
