@@ -231,7 +231,7 @@ const XtermAdapter = forwardRef<XtermAdapterHandle, IXtermAdapterProps>((props, 
 
   return (
     <div
-      ref={terminalElementRef}
+      ref={ref}
       id={TerminalCssClasses.Terminal}
       className={TerminalCssClasses.Terminal}
       onTouchStart={onTouchStart}
