@@ -57,18 +57,19 @@ interface ICharacterRefMethods {
 }
 
 const Game = React.forwardRef<IGameHandle, IGameProps>((props, ref) => {
-  canvasHeight,
-  canvasWidth,
-  isInPhraseMode,
-  heroActionType,
-  zombie4ActionType,
-  zombie4StartPosition,
-  onTouchStart,
-  onTouchEnd,
-  onSetHeroAction,
-  onSetZombie4Action,
-  phrasesAchieved,
-}, ref) => {
+  const {
+    canvasHeight,
+    canvasWidth,
+    isInPhraseMode,
+    heroActionType,
+    zombie4ActionType,
+    zombie4StartPosition,
+    onTouchStart,
+    onTouchEnd,
+    onSetHeroAction,
+    onSetZombie4Action,
+    phrasesAchieved,
+  } = props;
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const heroRef = useRef<ICharacterRefMethods>(null);
   const zombie4Ref = useRef<ICharacterRefMethods>(null);
