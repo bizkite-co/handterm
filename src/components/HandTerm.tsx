@@ -276,7 +276,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
   };
 
   public handleCommand = (cmd: string): void => {
-    UpdateCommandHistory({ cmd, state: this.state, setState: this.setState });
+    UpdateCommandHistory({ cmd, state: this.state, setState: (newState: any) => this.setState(newState) });
 
     if (cmd === 'tut') {
       this.resetTutorialAchievementState();

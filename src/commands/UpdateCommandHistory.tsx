@@ -11,12 +11,12 @@ interface UpdateCommandHistoryProps {
 const UpdateCommandHistory: React.FC<UpdateCommandHistoryProps> = ({ cmd, state,
     setState }) => {
     if (cmd && cmd !== 'Return (ENTER)') {
-        setState({
-            ...state,
-            commandHistory: [cmd, ...state.commandHistory],
+        setState((prevState: any) => ({
+            ...prevState,
+            commandHistory: [cmd, ...prevState.commandHistory],
             commandHistoryIndex: -1,
             commandHistoryFilter: null
-        });
+        }));
         saveCommandHistory(state.commandHistory);
         return <CommandOutput output="Command history updated" status={200} />;
     }
