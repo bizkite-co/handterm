@@ -107,8 +107,7 @@ const XtermAdapter = forwardRef<XtermAdapterHandle, IXtermAdapterProps>((props, 
     if (terminalElementRef.current) {
       initializeTerminal();
     } else {
-      console.log('terminalElementRef.current is NULL');
-      debugger;
+      console.error('terminalElementRef.current is NULL');
       return; // Exit early if the ref is not set
     }
     onDataDisposable.current = terminal.current.onData(onDataHandler);

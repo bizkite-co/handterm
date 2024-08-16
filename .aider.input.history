@@ -1680,3 +1680,43 @@
 +    at <anonymous> (localhost4173/assets/index-TEAeK-Ts.js:18:2804)
 +    --- await ---
 +    at <anonymous> (localhost4173/assets/index-TEAeK-Ts.js:18:2834)```
+
+# 2024-08-15 18:44:56.828390
++I am getting this error when running `yarn dev`: ```GET http://localhost:5173/src/utils/WebCam.ts net::ERR_ABORTED 404 (Not Found)```, but there is no such import being used in the `HandTerm.tsx`. I've closed and reopened the browser and I've restarted `yarn dev`. How can I make sure I am looking at the freshest code when I switch between `yarn dev` and `yarn preview`?
+
+# 2024-08-15 18:50:19.436655
++Incognito worked. The site is running now. This is my current `launch.json`: ```        {
++            "type": "msedge",
++            "request": "launch",
++            "name": "Launch Edge",
++            "url": "http://localhost:5173",
++            "webRoot": "${workspaceFolder}",
++            "sourceMaps": true,
++            "resolveSourceMapLocations": [
++                "${workspaceFolder}/**",
++                "!**/node_modules/**"
++            ],
++            "sourceMapPathOverrides": {
++                "webpack:///./*": "${webRoot}/*",
++                "webpack:///*": "*",
++                "webpack:///src/*": "${webRoot}/src/*"
++            },
++            "runtimeArgs": [
++                "--preserve-symlinks"
++            ]
++        },```, Is there any way to make it use Incognito or to clear the cache?
+
+# 2024-08-15 18:52:06.635068
++/drop src\components\NextCharsDisplay.tsx
+
+# 2024-08-15 18:52:20.373429
++/drop src\components\MonacoEditor.tsx
+
+# 2024-08-15 18:52:33.881246
++/drop src\types\importMeta.d.ts
+
+# 2024-08-15 18:52:42.534417
++/drop tsconfig.json
+
+# 2024-08-15 18:52:50.897305
++/drop src\game\Game.tsx
