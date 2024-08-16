@@ -7,11 +7,10 @@ import { SpritePosition } from './types/Position';
 import { layers, getLevelCount } from './Level';
 import { Sprite } from './sprites/Sprite';
 import { IParallaxLayer, ParallaxLayer } from './ParallaxLayer';
-import { TerminalCssClasses } from '../types/TerminalTypes';
 import ScrollingTextLayer from './ScrollingTextLayer';
 import confetti from 'canvas-confetti';
 
-interface IGameProps {
+export interface IGameProps {
   canvasHeight: number
   canvasWidth: number
   isInPhraseMode: boolean
@@ -30,24 +29,6 @@ export interface IGameHandle {
   resetGame: () => void;
   levelUp: (setLevelValue?: number | null) => void;
   handleZombie4PositionChange: (position: SpritePosition) => void;
-}
-
-interface IGameState {
-  currentLevel: number;
-  heroPosition: SpritePosition;
-  heroReady: boolean;
-  zombie4Position: SpritePosition;
-  zombie4Ready: boolean;
-  context: CanvasRenderingContext2D | null;
-  contextBackground: CanvasRenderingContext2D | null;
-  idleStartTime: number | null; // in milliseconds
-  backgroundOffsetX: number;
-  isPhraseComplete: boolean;
-  textScrollX: number;
-  isTextScrolling: boolean;
-  layers: IParallaxLayer[];
-  isInScrollMode: boolean;
-  textToScroll: string;
 }
 
 interface ICharacterRefMethods {
