@@ -1741,3 +1741,56 @@
 +I would like you to deeply analyze the `HandTerm.tsx` to determine what code and be factored out, and then to move that code to a new file or an existing file of a suitable one already exists, and then to relink the function to `HandTerm.tsx` and make sure it's not still calling the function with `this.`. 
 +
 +I would like to move one function per git commit, and to make sure that the refactor is complete and still functioning before moving on to another function or component.
+
+# 2024-08-16 12:10:05.258480
++I think you're trying to do too much at once. For instance, you create this find-replace: ```<<<<<<< SEARCH
++   public handleCommand = (cmd: string): void => {
++     if (cmd && cmd !== 'Return (ENTER)') {
++       this.setState(
++         // Update the command history
++         // TODO: Find out why this is conflicting with localStorage and storing old 
++ cleaned out history.
++         prevState => ({
++           commandHistory: [cmd, ...prevState.commandHistory],
++           commandHistoryIndex: -1,
++           commandHistoryFilter: null
++         }),
++         () => saveCommandHistory(this.state.commandHistory)
++       );
++     }
++
++     if (cmd === 'tut') {
++       this.resetTutorialAchievementState();
++     }
++
++     // TODO: handle achievement unlocks
++     if (this.state.isInTutorial || cmd === 'tut') {
++       // Unlock the next achievement and decide if we are still in tutorial mode    
++       if (cmd === '') cmd = 'Return (ENTER)';
++       if (this.state.nextAchievement?.phrase.join('') === cmd
++       ) {
++         this.unlockAchievement(cmd);
++       }
++     }
++ =======
++ import React, { useState } from 'react';
++ import handleCommand from '../utils/commandHandlers';
++ import CommandOutput from '../components/CommandOutput';
++
++ const HandTerm: React.FC<IHandTermProps> = (props) => {
++   const [state, setState] = useState<IHandTermState>({
++     // Initial state
++   });
++
++   const handleCommandWrapper = (cmd: string) => {
++     return handleCommand(cmd, state, setState, props);
++   };
++
++   // Rest of the component logic
++ };
++
++ export default HandTerm;
++ >>>>>>> REPLACE```, which searches for too much including the outer `handleCommand()`, and then tries to replace even more too much by replacing the `HandTerm` function and the file imports. The find-replace failed and I had to undo. I think we will get much better results by moving in smaller increments. Can we just implement the `CommandOutput` and `commandHandlers` first, and link that in to the `HandTerm` and see if we can do that without raising errors?
+
+# 2024-08-16 12:17:35.692531
++You are misunderstanding the `handleCommand()`. It contains far more than three `if` conditions, but you keep performing a search on the first three if conditions without the function close bracket, but then replacing it with a function which includes the function close bracket. Also, we agreed to create the `CommandOutput` and `commandHandlers` _before_ migrating functions into them, and then linking the new compenents in to the `HandTerm` as necessary, and then I can test that no errors are cause and then we can proceed further.
