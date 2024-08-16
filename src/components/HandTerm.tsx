@@ -812,10 +812,11 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     if (!this.commandHistory) { this.commandHistory = []; }
     const commandResponse = commandResponseElement.outerHTML;
     const characterAverages = this.averageWpmByCharacter(charWpms.filter(wpm => wpm.durationMilliseconds > 1));
-    const slowestCharacters = <WpmTable
-      characterAverages
-        .sort((a, b) => a.wpm - b.wpm)
-        .slice(0, 5), "slow-chars"
+    const slowestCharacters = (
+      <WpmTable
+        wpms={characterAverages.sort((a, b) => a.wpm - b.wpm).slice(0, 5)}
+        name="slow-chars"
+      />
     );
 
     const slowestCharactersHTML = ReactDOMServer.renderToStaticMarkup(slowestCharacters);
