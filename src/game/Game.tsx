@@ -45,8 +45,6 @@ const Game = React.forwardRef<IGameHandle, IGameProps>((props, ref) => {
     heroActionType,
     zombie4ActionType,
     zombie4StartPosition,
-    onTouchStart,
-    onTouchEnd,
     onSetHeroAction,
     onSetZombie4Action,
     phrasesAchieved,
