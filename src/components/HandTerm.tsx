@@ -15,13 +15,14 @@ import { CommandContext } from '../commands/CommandContext';
 import { Achievement, MyResponse } from '../types/Types';
 import { TutorialComponent } from './TutorialComponent';
 import { Chord } from './Chord';
-import { SpritePosition } from 'src/game/types/Position';
+import { SpritePosition } from '../game/types/Position';
 import MonacoEditor, { MonacoEditorHandle } from './MonacoEditor';
 import WpmTable from './WpmTable';
 import './MonacoEditor.css'; // Make sure to import the CSS
 import { loadCommandHistory, parseCommand, saveCommandHistory } from '../utils/commandUtils';
 import { getNextTutorialAchievement, loadTutorialAchievements, saveAchievements } from '../utils/achievementUtils';
 import { getNthPhraseNotAchieved, getPhrasesAchieved, getPhrasesNotAchieved, resetPhrasesAchieved } from '../utils/phraseUtils';
+import UpdateCommandHistory from '../commands/UpdateCommandHistory';
 
 export interface IHandTermProps {
   // Define the interface for your HandexTerm logic
@@ -287,6 +288,8 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
         () => saveCommandHistory(this.state.commandHistory)
       );
     }
+
+    UpdateCommandHistory({ cmd, state: this.state, setState: this.setState });
 
     if (cmd === 'tut') {
       this.resetTutorialAchievementState();
