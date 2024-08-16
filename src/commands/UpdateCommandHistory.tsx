@@ -1,15 +1,15 @@
 import React from 'react';
 import CommandOutput from '../components/CommandOutput';
+import { saveCommandHistory } from '../utils/commandUtils';
 
 interface UpdateCommandHistoryProps {
     cmd: string;
     state: any;
     setState: (state: any) => void;
-    saveCommandHistory: (history: string[]) => void;
 }
 
 const UpdateCommandHistory: React.FC<UpdateCommandHistoryProps> = ({ cmd, state,
-    setState, saveCommandHistory }) => {
+    setState }) => {
     if (cmd && cmd !== 'Return (ENTER)') {
         setState({
             ...state,
