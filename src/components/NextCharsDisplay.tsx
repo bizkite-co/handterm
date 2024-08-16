@@ -7,7 +7,6 @@ import { Phrase } from "../utils/Phrase.js";
 
 export interface NextCharsDisplayProps {
     commandLine: string;
-    onTimerStatusChange: (status: boolean) => void;
     isInPhraseMode: boolean;
     newPhrase: string;
     onPhraseSuccess: (phrase: string) => void;
@@ -22,7 +21,6 @@ export interface NextCharsDisplayHandle {
 
 const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, NextCharsDisplayProps>(({
     commandLine,
-    onTimerStatusChange,
     isInPhraseMode,
     newPhrase,
     onPhraseSuccess,
