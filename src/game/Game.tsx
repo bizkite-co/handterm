@@ -64,11 +64,8 @@ const Game = React.forwardRef<IGameHandle, IGameProps>((props, ref) => {
   const [context, setContext] = useState<CanvasRenderingContext2D | null>(null);
   const [backgroundOffsetX, setBackgroundOffsetX] = useState(0);
   const [isPhraseComplete, setIsPhraseComplete] = useState(false);
-  const [textScrollX, setTextScrollX] = useState(canvasWidth);
   const [isTextScrolling, setIsTextScrolling] = useState(false);
   const [layersState, setLayersState] = useState<IParallaxLayer[]>(layers[0]);
-  const [isInScrollMode, setIsInScrollMode] = useState(true);
-  const [textToScroll, setTextToScroll] = useState("Terminal Velocity!");
 
   const getLevel = () => currentLevel;
   const setLevel = (newLevel: number) => {
