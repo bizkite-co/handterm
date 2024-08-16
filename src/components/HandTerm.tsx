@@ -12,7 +12,7 @@ import { ActionType } from '../game/types/ActionTypes';
 import Phrases from '../utils/Phrases';
 import WebCam from '../utils/WebCam';
 import { CommandContext } from '../commands/CommandContext';
-import { Achievement, Achievements, MyResponse } from '../types/Types';
+import { Achievement, MyResponse } from '../types/Types';
 import { TutorialComponent } from './TutorialComponent';
 import { Chord } from './Chord';
 import axios from 'axios';
@@ -21,6 +21,8 @@ import { SpritePosition } from 'src/game/types/Position';
 import MonacoEditor, { MonacoEditorHandle } from './MonacoEditor';
 import WpmTable from './WpmTable';
 import './MonacoEditor.css'; // Make sure to import the CSS
+import { parseCommand } from 'src/utils/commandUtils';
+import { getNextTutorialAchievement, loadTutorialAchievements, saveAchievements } from 'src/utils/achievementUtils';
 
 export interface IHandTermProps {
   // Define the interface for your HandexTerm logic
@@ -155,23 +157,11 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     });
   }
 
-  loadTutorialAchievements(): string[] {
-    const storedAchievements = localStorage.getItem('achievements');
-    return storedAchievements ? JSON.parse(storedAchievements) : [];
-  }
-
-  saveAchievements(achievementPhrase: string) {
-    const storedAchievementString: string = localStorage.getItem('achievements') || '';
-    let storedAchievements = storedAchievementString ? JSON.parse(storedAchievementString) : [];
-    storedAchievements.push(achievementPhrase);
-    localStorage.setItem('achievements', JSON.stringify(storedAchievements));
-  }
-
   resetTutorialAchievements() {
     localStorage.removeItem('achievements');
     this.setState({
       unlockedAchievements: [],
-      nextAchievement: this.getNextTutorialAchievement(),
+      nextAchievement: getNextTutorialAchievement(),
       isInTutorial: true
     });
   }
@@ -181,13 +171,6 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     const response = await axios.post(`${ENDPOINTS.api.BaseUrl}/saveDocument`, documentData);
     return response.data; // Handle the response accordingly
   };
-
-  getNextTutorialAchievement(): Achievement | null {
-    const unlockedAchievements = this.loadTutorialAchievements() || [];
-    const nextAchievement = Achievements
-      .find(a => !unlockedAchievements.some(ua => ua === a.phrase.join('')));
-    return nextAchievement || null;
-  }
 
   public focusTerminal() {
     if (this.adapterRef.current) {
@@ -247,7 +230,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     super(IHandexTermProps);
     this._persistence = new LocalStoragePersistence();
     const initialCanvasHeight = localStorage.getItem('canvasHeight') || '100';
-    const nextAchievement = this.getNextTutorialAchievement();
+    const nextAchievement = getNextTutorialAchievement();
     this.state = {
       outputElements: this.getCommandResponseHistory().slice(-1),
       isInPhraseMode: false,
@@ -264,7 +247,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       terminalSize: undefined,
       terminalFontSize: 17,
       canvasHeight: parseInt(initialCanvasHeight),
-      unlockedAchievements: this.loadTutorialAchievements(),
+      unlockedAchievements: loadTutorialAchievements(),
       nextAchievement: nextAchievement,
       isInTutorial: true,
       commandHistory: this.loadCommandHistory(),
@@ -354,7 +337,8 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
         this.unlockAchievement(cmd);
       }
     }
-    const { command, args, switches } = this.parseCommand(cmd);
+
+    const { command, args, switches } = parseCommand(cmd);
     if (this.context) {
       const output = this.context
         .executeCommand(
@@ -364,6 +348,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
         );
       if (output.status === 200) return;
     }
+
     let status = 404;
     let response = "Command not found.";
     this.terminalGameRef.current?.resetGame();
@@ -697,9 +682,9 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     this.setState(prevState => {
       const unlockedAchievements = prevState.unlockedAchievements;
       if (this.state.nextAchievement?.phrase.join('') === achievementPhrase) {
-        this.saveAchievements(achievementPhrase);
+        saveAchievements(achievementPhrase);
       }
-      const nextAchievement = this.getNextTutorialAchievement();
+      const nextAchievement = getNextTutorialAchievement();
       return {
         ...prevState,
         achievements: unlockedAchievements,
@@ -708,42 +693,6 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       };
     });
   };
-
-  private parseCommand(input: string): { command: string, args: string[], switches: Record<string, boolean | string> } {
-    const parts = input.split(/\s+/); // Split by whitespace
-    const command = parts.shift(); // The first element is the command
-    const args = [];
-    const switches: Record<string, boolean | string> = {};
-
-    if (command) {
-      for (let i = 0; i < parts.length; i++) {
-        const part = parts[i];
-        if (part.startsWith('--')) {
-          const switchAssignmentIndex = part.indexOf('=');
-          if (switchAssignmentIndex > -1) {
-            // It's a switch with an explicit value
-            const switchName = part.substring(2, switchAssignmentIndex);
-            const switchValue = part.substring(switchAssignmentIndex + 1);
-            switches[switchName] = switchValue;
-          } else {
-            // It's a boolean switch or a switch with a value that's the next part
-            const switchName = part.substring(2);
-            // Look ahead to see if the next part is a value for this switch
-            if (i + 1 < parts.length && !parts[i + 1].startsWith('--')) {
-              switches[switchName] = parts[++i]; // Use the next part as the value and increment i
-            } else {
-              switches[switchName] = true; // No value provided, treat it as a boolean switch
-            }
-          }
-        } else {
-          // It's an argument
-          args.push(part);
-        }
-      }
-    }
-
-    return { command: command || '', args, switches };
-  }
 
   getCommandResponseHistory(): string[] {
     let keys: string[] = [];
