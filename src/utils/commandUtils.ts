@@ -1,6 +1,15 @@
+import { LogKeys } from "../types/TerminalTypes";
+
 export const commandTextToHTML = (text: string): string => {
   return text.replace(/\n/g, '<br/>');
 };
+
+export const loadCommandHistory = () => {
+  return JSON.parse(localStorage.getItem(LogKeys.CommandHistory) || '[]');
+}
+export const saveCommandHistory = (commandHistory: any) => {
+  localStorage.setItem(LogKeys.CommandHistory, JSON.stringify(commandHistory));
+}
 
 export const parseCommand = (input: string): { command: string, args: string[], switches: Record<string, boolean | string> } => {
   const parts = input.split(/\s+/); // Split by whitespace

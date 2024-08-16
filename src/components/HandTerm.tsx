@@ -15,14 +15,13 @@ import { CommandContext } from '../commands/CommandContext';
 import { Achievement, MyResponse } from '../types/Types';
 import { TutorialComponent } from './TutorialComponent';
 import { Chord } from './Chord';
-import axios from 'axios';
-import { ENDPOINTS } from '../shared/endpoints';
 import { SpritePosition } from 'src/game/types/Position';
 import MonacoEditor, { MonacoEditorHandle } from './MonacoEditor';
 import WpmTable from './WpmTable';
 import './MonacoEditor.css'; // Make sure to import the CSS
-import { parseCommand } from '../utils/commandUtils';
+import { loadCommandHistory, parseCommand, saveCommandHistory } from '../utils/commandUtils';
 import { getNextTutorialAchievement, loadTutorialAchievements, saveAchievements } from '../utils/achievementUtils';
+import { getNthPhraseNotAchieved, getPhrasesAchieved, getPhrasesNotAchieved } from '../utils/phraseUtils';
 
 export interface IHandTermProps {
   // Define the interface for your HandexTerm logic
@@ -119,7 +118,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
   private heroActionTimeoutId: number | null = null;
   private zombie4StartPostion: SpritePosition = { leftX: -50, topY: 0 }
 
-  public handlePhraseError = (errorIndex: number | undefined) => {
+  public handlePhraseErrorState = (errorIndex: number | undefined) => {
     this.setState({ errorCharIndex: errorIndex });
   };
 
@@ -157,7 +156,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     });
   }
 
-  resetTutorialAchievements() {
+  resetTutorialAchievementState() {
     localStorage.removeItem('achievements');
     this.setState({
       unlockedAchievements: [],
@@ -166,11 +165,6 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     });
   }
 
-  saveDocument = async (documentData: any) => {
-    //  TODO: Replace this with your actual API endpoint
-    const response = await axios.post(`${ENDPOINTS.api.BaseUrl}/saveDocument`, documentData);
-    return response.data; // Handle the response accordingly
-  };
 
   public focusTerminal() {
     if (this.adapterRef.current) {
@@ -178,25 +172,6 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     }
   }
 
-  private getPhrasesAchieved() {
-    const storedPhrasesAchieved = localStorage.getItem('phrasesAchieved');
-
-    const phrasesAchieved = JSON.parse(storedPhrasesAchieved || '[]').map((phrase: string) => {
-      const [wpm, phraseName] = phrase.split(':');
-      return { wpm, phraseName };
-    });
-    return phrasesAchieved;
-  }
-
-  getPhrasesNotAchieved = () => {
-    const phrasesAchieved = this.getPhrasesAchieved().map((phrase: { wpm: number; phraseName: string }) => phrase.phraseName);
-    return Phrases.phrases.filter((phrase) => !phrasesAchieved.includes(phrase.key));
-  }
-
-  getNthPhraseNotAchieved = (n: number) => {
-    const phrasesNotAchieved = this.getPhrasesNotAchieved();
-    return phrasesNotAchieved[n];
-  }
 
   private savePhrasesAchieved(phraseName: string, wpmAverage: number) {
     const wpmPhraseName = Math.round(wpmAverage) + ':' + phraseName;
@@ -237,7 +212,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       phraseValue: '', // Initial value
       phraseName: '',
       phraseIndex: 0,
-      phrasesAchieved: this.getPhrasesAchieved()
+      phrasesAchieved: getPhrasesAchieved()
         .map((phrase: { wpm: number; phraseName: string }) => phrase.phraseName),
       targetWPM: this.loadTargetWPM(),
       isActive: false,
@@ -250,7 +225,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       unlockedAchievements: loadTutorialAchievements(),
       nextAchievement: nextAchievement,
       isInTutorial: true,
-      commandHistory: this.loadCommandHistory(),
+      commandHistory: loadCommandHistory(),
       commandHistoryIndex: -1,
       commandHistoryFilter: null,
       isInSvgMode: false,
@@ -266,13 +241,6 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     }
     this.loadDebugValue();
     this.loadFontSize();
-  }
-
-  loadCommandHistory() {
-    return JSON.parse(localStorage.getItem(LogKeys.CommandHistory) || '[]');
-  }
-  saveCommandHistory(commandHistory: any) {
-    localStorage.setItem(LogKeys.CommandHistory, JSON.stringify(commandHistory));
   }
 
   scrollToBottom() {
@@ -320,12 +288,12 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
           commandHistoryIndex: -1,
           commandHistoryFilter: null
         }),
-        () => this.saveCommandHistory(this.state.commandHistory)
+        () => saveCommandHistory(this.state.commandHistory)
       );
     }
 
     if (cmd === 'tut') {
-      this.resetTutorialAchievements();
+      this.resetTutorialAchievementState();
     }
 
     // TODO: handle achievement unlocks
@@ -409,7 +377,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
 
     if (command === 'show') {
       if (args.length === 0) {
-        response = this.getPhrasesAchieved().map((phrase: { wpm: number; phraseName: string; }) => `${phrase.wpm}:${phrase.phraseName}`).join('<br/>');
+        response = getPhrasesAchieved().map((phrase: { wpm: number; phraseName: string; }) => `${phrase.wpm}:${phrase.phraseName}`).join('<br/>');
         status = 200;
       }
     }
@@ -847,7 +815,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
   private handlePhraseComplete = () => {
 
     let newPhraseIndex = (this.state.phraseIndex) % Phrases.phrases.length;
-    let newPhrase = this.getPhrasesNotAchieved()[newPhraseIndex];
+    let newPhrase = getPhrasesNotAchieved()[newPhraseIndex];
     this.setState({
       phraseIndex: newPhraseIndex + 1,
       phraseValue: newPhrase.value,
@@ -863,7 +831,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     const newPhrase
       = phraseName && phraseName != "" && Phrases.getPhraseByKey(phraseName)
         ? Phrases.getPhraseByKey(phraseName)
-        : this.getNthPhraseNotAchieved(this.state.phraseIndex);
+        : getNthPhraseNotAchieved(this.state.phraseIndex);
 
     this.setState((prevState) => {
       return {
@@ -1101,7 +1069,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
                   isInPhraseMode={this.state.isInPhraseMode}
                   newPhrase={this.state.phraseValue}
                   onPhraseSuccess={this.handlePhraseSuccess}
-                  onError={this.handlePhraseError}
+                  onError={this.handlePhraseErrorState}
                 />
               )}
 
