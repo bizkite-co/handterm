@@ -63,6 +63,7 @@ const Game = React.forwardRef<IGameHandle, IGameProps>((props, ref) => {
   const [backgroundOffsetX, setBackgroundOffsetX] = useState(0);
   const [isPhraseComplete, setIsPhraseComplete] = useState(false);
   const [isTextScrolling, setIsTextScrolling] = useState(false);
+  const textToScroll = "Your scrolling text here"; // Define textToScroll
   const [layersState, setLayersState] = useState<IParallaxLayer[]>(layers[0]);
 
   const getLevel = () => currentLevel;
