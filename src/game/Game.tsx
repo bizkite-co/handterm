@@ -47,7 +47,6 @@ const Game = React.forwardRef<IGameHandle, IGameProps>((props, ref) => {
     zombie4StartPosition,
     onSetHeroAction,
     onSetZombie4Action,
-    phrasesAchieved,
   } = props;
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const heroRef = useRef<ICharacterRefMethods>(null);
@@ -57,12 +56,17 @@ const Game = React.forwardRef<IGameHandle, IGameProps>((props, ref) => {
   const heroXPercent = 0.23;
 
   const [currentLevel, setCurrentLevel] = useState(1);
+  const [isInScrollMode, setIsInScrollMode] = useState(false); // Define isInScrollMode
   const [heroPosition, setHeroPosition] = useState<SpritePosition>({ leftX: canvasWidth * heroXPercent, topY: 30 });
   const [zombie4Position, setZombie4Position] = useState<SpritePosition>(zombie4StartPosition);
   const [context, setContext] = useState<CanvasRenderingContext2D | null>(null);
   const [backgroundOffsetX, setBackgroundOffsetX] = useState(0);
   const [isPhraseComplete, setIsPhraseComplete] = useState(false);
   const [isTextScrolling, setIsTextScrolling] = useState(false);
+  const setTextScrollX = (value: number) => {
+    // Implement the logic for setTextScrollX
+    console.log("Setting text scroll X to:", value);
+  };
   const textToScroll = "Your scrolling text here"; // Define textToScroll
   const [layersState, setLayersState] = useState<IParallaxLayer[]>(layers[0]);
 
