@@ -5,7 +5,7 @@ import { TerminalCssClasses } from '../types/TerminalTypes';
 import { XtermAdapterConfig } from './XtermAdapterConfig';
 
 export interface IXtermAdapterProps {
-  terminalElementRef: React.RefObject<HTMLElement>;
+  terminalElementRef: React.RefObject<HTMLDivElement>;
   onAddCharacter: (character: string) => void;
   onRemoveCharacter: (command: string) => void;
   onTouchStart: TouchEventHandler<HTMLDivElement>;
