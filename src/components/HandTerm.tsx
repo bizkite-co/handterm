@@ -668,7 +668,8 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       }
 
       this.terminalWrite(character);
-      let command = this.adapterRef.current?.getCurrentCommand() + character;
+      let command = this.adapterRef.current?.getCurrentCommand() ?? '';
+      command += character;
 
       this.setState({
         commandLine: command,
