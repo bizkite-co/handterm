@@ -276,19 +276,6 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
   };
 
   public handleCommand = (cmd: string): void => {
-    if (cmd && cmd !== 'Return (ENTER)') {
-      this.setState(
-        // Update the command history
-        // TODO: Find out why this is conflicting with localStorage and storing old cleaned out history.
-        prevState => ({
-          commandHistory: [cmd, ...prevState.commandHistory],
-          commandHistoryIndex: -1,
-          commandHistoryFilter: null
-        }),
-        () => saveCommandHistory(this.state.commandHistory)
-      );
-    }
-
     UpdateCommandHistory({ cmd, state: this.state, setState: this.setState });
 
     if (cmd === 'tut') {
