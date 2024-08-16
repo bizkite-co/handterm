@@ -3,6 +3,7 @@
 import { LogKeys } from '../types/TerminalTypes';
 import HandTerm from '../components/HandTerm';
 import { ICommand } from './ICommand';
+import { saveCommandHistory } from '../utils/commandUtils';
 
 export const cleanCommand: ICommand = {
     name: 'clean',
@@ -30,7 +31,7 @@ export const cleanCommand: ICommand = {
             }
         }
 
-        handTerm.saveCommandHistory(commandHistory);
+        saveCommandHistory(commandHistory);
         localStorage.setItem(LogKeys.CommandHistory, JSON.stringify(commandHistory));
         handTerm.terminalReset();
         handTerm.prompt();

@@ -1794,3 +1794,78 @@
 
 # 2024-08-16 12:17:35.692531
 +You are misunderstanding the `handleCommand()`. It contains far more than three `if` conditions, but you keep performing a search on the first three if conditions without the function close bracket, but then replacing it with a function which includes the function close bracket. Also, we agreed to create the `CommandOutput` and `commandHandlers` _before_ migrating functions into them, and then linking the new compenents in to the `HandTerm` as necessary, and then I can test that no errors are cause and then we can proceed further.
+
+# 2024-08-16 14:08:18.494290
++Ok, we have not had much productivity with you creating the search-replace code on the `HandTerm`. I have gone ahead and create some of the code features you suggested. Now I need your help implementing the first one properly so we can proceed from there and see if that suffices. I've created this file: ```import React from 'react';
++import CommandOutput from '../components/CommandOutput';
++import { saveCommandHistory } from '../utils/commandUtils';
++
++interface UpdateCommandHistoryProps {
++    cmd: string;
++    state: any;
++    setState: (state: any) => void;
++}
++
++const UpdateCommandHistory: React.FC<UpdateCommandHistoryProps> = ({ cmd, state,
++    setState }) => {
++    if (cmd && cmd !== 'Return (ENTER)') {
++        setState({
++            ...state,
++            commandHistory: [cmd, ...state.commandHistory],
++            commandHistoryIndex: -1,
++            commandHistoryFilter: null
++        });
++        saveCommandHistory(state.commandHistory);
++        return <CommandOutput output="Command history updated" status={200} />;
++    }
++    return null;
++};
++
++export default UpdateCommandHistory;```. It doesn't have any linting errors. Now, I want to implement it in `HandTerm.handleCommand()`. I still have the existing `if` condition that it will replace, and then I've tried my understanding of how I might call the `UpdateCommandHistory`, but I don't know if I've done that right. Here is what the top part of the `handleCommand()` looks like now: ```  public handleCommand = (cmd: string): void => {
++    if (cmd && cmd !== 'Return (ENTER)') {
++      this.setState(
++        // Update the command history
++        // TODO: Find out why this is conflicting with localStorage and storing old cleaned out history.
++        prevState => ({
++          commandHistory: [cmd, ...prevState.commandHistory],
++          commandHistoryIndex: -1,
++          commandHistoryFilter: null
++        }),
++        () => saveCommandHistory(this.state.commandHistory)
++      );
++    }
++
++    UpdateCommandHistory({ cmd, state: this.state, setState: this.setState });
++
++    if (cmd === 'tut') {
++      this.resetTutorialAchievementState();
++    }
++
++    // TODO: handle achievement unlocks
++    if (this.state.isInTutorial || cmd === 'tut') {
++      // Unlock the next achievement and decide if we are still in tutorial mode
++      if (cmd === '') cmd = 'Return (ENTER)';
++      if (this.state.nextAchievement?.phrase.join('') === cmd
++      ) {
++        this.unlockAchievement(cmd);
++      }
++    }```. I have to make sure that the rest of the `handleCommand()` can still run after I call the `UpdateCommandHistory()`. 
+
+# 2024-08-16 14:30:31.392752
++/add src\commands\UpdateCommandHistory.tsx
+
+# 2024-08-16 14:31:44.001030
++I've implemented the change you suggested, but now I am getting this error in the browser when I try to execute a command: ```react.development.js:354 
++ Uncaught 
++TypeError: Cannot read properties of undefined (reading 'updater')
++    at Component.setState (react.development.js:354:8)
++    at UpdateCommandHistory (UpdateCommandHistory.tsx:14:9)
++    at HandTerm.handleCommand (HandTerm.tsx:279:5)
++    at handleCharacter (HandTerm.tsx:601:12)
++    at onDataHandler (XtermAdapter.tsx:190:5)
++    at t2.EventEmitter.fire (EventEmitter.ts:55:16)
++    at EventEmitter.ts:72:23
++    at t2.EventEmitter.fire (EventEmitter.ts:55:16)
++    at t2.CoreService.triggerDataEvent (CoreService.ts:77:18)
++    at P._keyDown (Terminal.ts:1072:22)
++```
