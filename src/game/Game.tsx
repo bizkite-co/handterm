@@ -62,13 +62,13 @@ const Game = React.forwardRef<IGameHandle, IGameProps>((props, ref) => {
   const [context, setContext] = useState<CanvasRenderingContext2D | null>(null);
   const [backgroundOffsetX, setBackgroundOffsetX] = useState(0);
   const [isPhraseComplete, setIsPhraseComplete] = useState(false);
-  const [isTextScrolling, setIsTextScrolling] = useState(false);
+  const [isTextScrolling, setIsTextScrolling] = useState(false); // Ensure isTextScrolling is defined
   const setTextScrollX = (value: number) => {
     // Implement the logic for setTextScrollX
     console.log("Setting text scroll X to:", value);
   };
-  const textToScroll = "Your scrolling text here"; // Define textToScroll
-  const [layersState, setLayersState] = useState<IParallaxLayer[]>(layers[0]);
+  const textToScroll = "Your scrolling text here"; // Ensure textToScroll is defined
+  const [layersState, setLayersState] = useState<IParallaxLayer[]>(layers[0]); // Ensure layersState is defined
 
   const getLevel = () => currentLevel;
   const setLevel = (newLevel: number) => {
