@@ -23,6 +23,7 @@ import { loadCommandHistory, parseCommand, saveCommandHistory } from '../utils/c
 import { getNextTutorialAchievement, loadTutorialAchievements, saveAchievements } from '../utils/achievementUtils';
 import { getNthPhraseNotAchieved, getPhrasesAchieved, getPhrasesNotAchieved, resetPhrasesAchieved } from '../utils/phraseUtils';
 import UpdateCommandHistory from '../commands/UpdateCommandHistory';
+import HelpCommand from '../commands/HelpCommand';
 
 export interface IHandTermProps {
   // Define the interface for your HandexTerm logic
