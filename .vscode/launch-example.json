@@ -1,0 +1,25 @@
+{
+    "configurations": [
+        {
+            "type": "msedge",
+            "request": "launch",
+            "name": "Launch Edge",
+            "url": "http://localhost:5173",
+            "webRoot": "${workspaceFolder}",
+            "sourceMaps": true,
+            "resolveSourceMapLocations": [
+                "${workspaceFolder}/**",
+                "!**/node_modules/**"
+            ],
+            "sourceMapPathOverrides": {
+                "webpack:///./*": "${webRoot}/*",
+                "webpack:///*": "*",
+                "webpack:///src/*": "${webRoot}/src/*"
+            },
+            "runtimeArgs": [
+                "--preserve-symlinks",
+                "--inprivate"
+            ]
+        }
+    ]
+}
