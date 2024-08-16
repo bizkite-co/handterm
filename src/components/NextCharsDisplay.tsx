@@ -1,7 +1,7 @@
 import { TerminalCssClasses } from "../types/TerminalTypes.js";
 
 import React, { useState, useEffect, useRef, useImperativeHandle } from 'react';
-import Timer from './Timer.js'; // Import the React component
+import Timer from './Timer'; // Import the React component
 import ErrorDisplay from "./ErrorDisplay";
 import { Phrase } from "../utils/Phrase.js";
 
@@ -186,9 +186,9 @@ const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, NextCharsDispl
                 />
             )}
             <Timer ref={timerRef} />
-            <div id={TerminalCssClasses.NextCharsRate} ref={nextCharsRateRef}></div>
-            <span id={TerminalCssClasses.WPM} ref={wpmRef}></span>
-            <pre id={TerminalCssClasses.NextChars} ref={nextCharsRef}>
+            <div id={TerminalCssClasses.NextCharsRate || 'next-chars-rate'} ref={nextCharsRateRef}></div>
+            <span id={TerminalCssClasses.WPM || 'wpm'} ref={wpmRef}></span>
+            <pre id={TerminalCssClasses.NextChars || 'next-chars'} ref={nextCharsRef}>
                 {nextChars}
             </pre>
         </div>
