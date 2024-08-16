@@ -106,7 +106,6 @@ const Game = React.forwardRef<IGameHandle, IGameProps>((props, ref) => {
     setZombie4ToDeathThenResetPosition();
     triggerConfettiCannon();
     setIsPhraseComplete(true);
-    setTextScrollX(canvasWidth);
   };
 
   const setZombie4ToDeathThenResetPosition = () => {
@@ -120,7 +119,6 @@ const Game = React.forwardRef<IGameHandle, IGameProps>((props, ref) => {
       setZombie4Action('Walk');
       setZombie4Position(zombie4StartPosition);
       setIsPhraseComplete(false);
-      setTextScrollX(canvasWidth);
       zombie4DeathTimeout.current = null;
     }, 3000);
   };
