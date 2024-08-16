@@ -61,7 +61,6 @@ const XtermAdapter = forwardRef<XtermAdapterHandle, IXtermAdapterProps>((props, 
 
   useImperativeHandle(ref, () => ({
     terminalElement: terminalElementRef.current,
-    terminalElement: terminalElementRef.current,
     terminalElementRef,
     onAddCharacter,
     onRemoveCharacter,
@@ -99,10 +98,6 @@ const XtermAdapter = forwardRef<XtermAdapterHandle, IXtermAdapterProps>((props, 
   const terminalWrite = (data: string) => {
     if (!data) return;
     terminal.current.write(data);
-  };
-
-  const getTerminalText = () => {
-    return getCurrentCommand();
   };
 
   const handleResize = () => {
@@ -218,38 +213,6 @@ const XtermAdapter = forwardRef<XtermAdapterHandle, IXtermAdapterProps>((props, 
     const promptText = `\x1b[1;34m${user}@${host} \x1b[0m\x1b[1;32m~${promptDelimiter}\x1b[0m `;
     promptLength.current = promptText.length - 21;
     terminal.current.write(promptText);
-  };
-
-  const promptLogin = () => {
-    terminal.current.writeln('Welcome to Handex Term!');
-    terminal.current.writeln('Login:');
-    terminal.current.write('Username: ');
-    let username = '';
-    let password = '';
-    let isUsernameComplete = false;
-
-    terminal.current.onKey(({ key, domEvent }) => {
-      const char = domEvent.key;
-
-      if (key === 'Enter') {
-        if (isUsernameComplete) {
-          terminal.current.writeln('');
-        } else {
-          isUsernameComplete = true;
-          terminal.current.writeln('');
-          terminal.current.write('Password: ');
-        }
-      } else if (key.charCodeAt(0) === 127) {
-        if (isCursorOnPrompt()) return true;
-        terminal.current.write('\x1b[D\x1b[P');
-      } else {
-        if (isUsernameComplete) {
-          password += char;
-        } else {
-          username += char;
-        }
-      }
-    });
   };
 
   const getTerminalSize = (): { width: number; height: number } | undefined => {
