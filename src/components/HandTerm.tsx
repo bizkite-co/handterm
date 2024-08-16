@@ -21,8 +21,8 @@ import { SpritePosition } from 'src/game/types/Position';
 import MonacoEditor, { MonacoEditorHandle } from './MonacoEditor';
 import WpmTable from './WpmTable';
 import './MonacoEditor.css'; // Make sure to import the CSS
-import { parseCommand } from 'src/utils/commandUtils';
-import { getNextTutorialAchievement, loadTutorialAchievements, saveAchievements } from 'src/utils/achievementUtils';
+import { parseCommand } from '../utils/commandUtils';
+import { getNextTutorialAchievement, loadTutorialAchievements, saveAchievements } from '../utils/achievementUtils';
 
 export interface IHandTermProps {
   // Define the interface for your HandexTerm logic

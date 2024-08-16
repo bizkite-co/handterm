@@ -1,4 +1,4 @@
-import { Achievements } from "src/types/Types";
+import { Achievements } from "../types/Types";
 
   export const loadTutorialAchievements = (): string[] => {
     const storedAchievements = localStorage.getItem('achievements');
