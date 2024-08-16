@@ -286,10 +286,12 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     if (this.state.isInTutorial || cmd === 'tut') {
       // Unlock the next achievement and decide if we are still in tutorial mode
       if (cmd === '') cmd = 'Return (ENTER)';
-      if (this.state.nextAchievement?.phrase.join('') === cmd
-      ) {
-        this.unlockAchievement(cmd);
-      }
+      UnlockAchievement({
+        achievementPhrase: cmd,
+        nextAchievement: this.state.nextAchievement,
+        unlockedAchievements: this.state.unlockedAchievements,
+        setState: (newState: any) => this.setState(newState)
+      });
     }
 
     const { command, args, switches } = parseCommand(cmd);
@@ -311,15 +313,8 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
 
     if (command === 'help' || command === '411') {
       status = 200;
-      const commandChords = [
-        'DELETE (Backspace)', 'Return (ENTER)', 'UpArrow', 'LeftArrow', 'DownArrow', 'RightArrow'
-      ].map(c => {
-        return <Chord key={c} displayChar={c} />;
-      });
-      const commandChordsHtml = commandChords.map(element => {
-        return ReactDOMServer.renderToStaticMarkup(element);
-      }).join('');
-      response = "<div class='chord-display-container'>" + commandChordsHtml + "</div>";
+      const helpResponse = <HelpCommand command={command} />;
+      response = ReactDOMServer.renderToStaticMarkup(helpResponse);
     }
 
     if (command === 'special') {
