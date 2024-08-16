@@ -212,7 +212,6 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
 
   getNthPhraseNotAchieved = (n: number) => {
     const phrasesNotAchieved = this.getPhrasesNotAchieved();
-    console.log("Nth phrase not achieved:", n, phrasesNotAchieved[n]);
     return phrasesNotAchieved[n];
   }
 

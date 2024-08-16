@@ -1,5 +1,4 @@
 import React from 'react';
-import ReactDOMServer from 'react-dom/server';
 
 type CharWPM = {
     character: string;
@@ -29,29 +28,6 @@ const averageWpmByCharacter = (charWpms: CharWPM[]) => {
         wpm: totalWpm / count,
         durationMilliseconds: 0, // You may want to handle duration aggregation differently
     }));
-}
-
-const WpmsToHTML = (wpms: CharWPM[], name: string | undefined) => {
-    name = name ?? "slowest-characters";
-    return (
-        <table className="wpm-table">
-            <tbody>
-                <tr><th colSpan={2}>{name}</th></tr>
-                {wpms.map((wpm, index) => (
-                    <React.Fragment key={index}>
-                        <tr id={name} className="wpm-table-row" >
-                            <td>{wpm.character
-                                .replace("\r", "\\r")
-                                .replace(" ", "\\s")
-                            }
-                            </td>
-                            <td className="number">{wpm.wpm.toFixed(2)}</td>
-                        </tr>
-                    </React.Fragment>
-                ))}
-            </tbody>
-        </table>
-    );
 }
 
 export const SlowestCharactersDisplay: React.FC<SlowestCharactersDisplayProps> = ({ charWpms }) => {
