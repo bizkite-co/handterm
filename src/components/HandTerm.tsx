@@ -19,6 +19,7 @@ import axios from 'axios';
 import { ENDPOINTS } from '../shared/endpoints';
 import { SpritePosition } from 'src/game/types/Position';
 import MonacoEditor, { MonacoEditorHandle } from './MonacoEditor';
+import WpmTable from './WpmTable';
 import './MonacoEditor.css'; // Make sure to import the CSS
 
 export interface IHandTermProps {
@@ -766,24 +767,6 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
 
 
 
-  private WpmsToHTML(wpms: CharWPM[], name: string | undefined) {
-    name = name ?? "slowest-characters";
-    return (
-      <table className="wpm-table">
-        <thead>
-          <tr><th colSpan={2}>{name}</th></tr>
-        </thead>
-        <tbody>
-          {wpms.map((wpm, index) => (
-            <tr key={index} className="wpm-table-row">
-              <td>{wpm.character.replace("\r", "\\r").replace(" ", "\\s")}</td>
-              <td className="number">{wpm.wpm.toFixed(2)}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    );
-  }
 
   averageWpmByCharacter(charWpms: CharWPM[]): CharWPM[] {
     const charGroups: Record<string, { totalWpm: number, count: number }> = {};
@@ -829,7 +812,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     if (!this.commandHistory) { this.commandHistory = []; }
     const commandResponse = commandResponseElement.outerHTML;
     const characterAverages = this.averageWpmByCharacter(charWpms.filter(wpm => wpm.durationMilliseconds > 1));
-    const slowestCharacters = this.WpmsToHTML(
+    const slowestCharacters = <WpmTable
       characterAverages
         .sort((a, b) => a.wpm - b.wpm)
         .slice(0, 5), "slow-chars"
