@@ -104,7 +104,7 @@ const XtermAdapter = forwardRef<XtermAdapterHandle, IXtermAdapterProps>((props, 
   };
 
   useEffect(() => {
-    if (terminalElementRef?.current) {
+    if (terminalElementRef.current) {
       initializeTerminal();
     } else {
       console.error('terminalElementRef.current is NULL');
