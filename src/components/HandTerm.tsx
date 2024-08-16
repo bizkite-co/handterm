@@ -21,7 +21,7 @@ import WpmTable from './WpmTable';
 import './MonacoEditor.css'; // Make sure to import the CSS
 import { loadCommandHistory, parseCommand, saveCommandHistory } from '../utils/commandUtils';
 import { getNextTutorialAchievement, loadTutorialAchievements, saveAchievements } from '../utils/achievementUtils';
-import { getNthPhraseNotAchieved, getPhrasesAchieved, getPhrasesNotAchieved } from '../utils/phraseUtils';
+import { getNthPhraseNotAchieved, getPhrasesAchieved, getPhrasesNotAchieved, resetPhrasesAchieved } from '../utils/phraseUtils';
 
 export interface IHandTermProps {
   // Define the interface for your HandexTerm logic
@@ -190,10 +190,6 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     if (matchingStoredPhrases.length > 0) return;
     storedPhrasesAchieved.push(wpmPhraseName);
     localStorage.setItem('phrasesAchieved', JSON.stringify(storedPhrasesAchieved));
-  }
-
-  private resetPhrasesAchieved() {
-    localStorage.removeItem('phrasesAchieved');
   }
 
   private loadTargetWPM(): number {
@@ -367,7 +363,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
         if (!isNaN(targetWPM)) {
           this.setState({ targetWPM: targetWPM });
           localStorage.setItem(LogKeys.TargetWPM, targetWPM.toString());
-          this.resetPhrasesAchieved();
+          resetPhrasesAchieved();
           response = "Target WPM set to " + targetWPM.toString();
         } else {
           response = "Target WPM must be a number";

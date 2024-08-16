@@ -19,3 +19,7 @@ export const getNthPhraseNotAchieved = (n: number) => {
     const phrasesNotAchieved = getPhrasesNotAchieved();
     return phrasesNotAchieved[n];
 }
+
+export const resetPhrasesAchieved = () => {
+    localStorage.removeItem('phrasesAchieved');
+}
