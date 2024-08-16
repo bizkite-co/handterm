@@ -17,6 +17,7 @@ export interface IGameProps {
   heroActionType: ActionType
   zombie4ActionType: ActionType
   zombie4StartPosition: SpritePosition
+  isInScrollMode: boolean;
   onTouchStart: TouchEventHandler<HTMLDivElement>;
   onTouchEnd: TouchEventHandler<HTMLDivElement>;
   onSetHeroAction: (action: ActionType) => void;
@@ -56,7 +57,6 @@ const Game = React.forwardRef<IGameHandle, IGameProps>((props, ref) => {
   const heroXPercent = 0.23;
 
   const [currentLevel, setCurrentLevel] = useState(1);
-  const [isInScrollMode, setIsInScrollMode] = useState(false); // Define isInScrollMode
   const [heroPosition, setHeroPosition] = useState<SpritePosition>({ leftX: canvasWidth * heroXPercent, topY: 30 });
   const [zombie4Position, setZombie4Position] = useState<SpritePosition>(zombie4StartPosition);
   const [context, setContext] = useState<CanvasRenderingContext2D | null>(null);
