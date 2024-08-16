@@ -35,7 +35,6 @@ export interface XtermAdapterHandle {
 
 const XtermAdapter = forwardRef<XtermAdapterHandle, IXtermAdapterProps>((props, ref) => {
   const { terminalElementRef, onAddCharacter, onRemoveCharacter, onTouchStart, onTouchEnd, terminalFontSize } = props;
-  const divRef = useRef<HTMLDivElement>(null);
   const terminal = useRef(new Terminal(XtermAdapterConfig));
   const fitAddon = useRef(new FitAddon());
   const onDataDisposable = useRef<import("@xterm/xterm").IDisposable | null>(null);
