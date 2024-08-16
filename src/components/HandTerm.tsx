@@ -24,6 +24,7 @@ import { getNextTutorialAchievement, loadTutorialAchievements, saveAchievements 
 import { getNthPhraseNotAchieved, getPhrasesAchieved, getPhrasesNotAchieved, resetPhrasesAchieved } from '../utils/phraseUtils';
 import UpdateCommandHistory from '../commands/UpdateCommandHistory';
 import HelpCommand from '../commands/HelpCommand';
+import UnlockAchievement from '../commands/UnlockAchievement';
 
 export interface IHandTermProps {
   // Define the interface for your HandexTerm logic
