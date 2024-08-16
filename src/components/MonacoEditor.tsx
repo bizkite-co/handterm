@@ -1,5 +1,5 @@
 // src/components/MonacoEditor.tsx
-import React, { useRef, useEffect, useImperativeHandle, forwardRef } from 'react';
+import { useRef, useEffect, useImperativeHandle, forwardRef } from 'react';
 import Editor from "@monaco-editor/react";
 
 interface MonacoEditorProps {

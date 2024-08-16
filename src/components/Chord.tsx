@@ -5,7 +5,7 @@ export interface ChordProps {
 import React from 'react';
 import { allChords } from "../allChords";
 
-const Chord: React.FC<ChordProps> = ({ displayChar }) => {
+export const Chord: React.FC<ChordProps> = ({ displayChar }) => {
     let foundChord = Array.from(allChords).find(x => {
         return x.key.replace('&#x2581;', ' ') === displayChar;
     });
@@ -26,4 +26,3 @@ const Chord: React.FC<ChordProps> = ({ displayChar }) => {
     );
 };
 
-export default Chord;

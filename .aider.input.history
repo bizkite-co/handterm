@@ -606,3 +606,1077 @@
 +"endLineNumber": 315,
 +"endColumn": 48
 +}]```
+
+# 2024-08-15 14:25:27.260790
++I am getting this linting error: ```[{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/HandTerm.tsx",
++"owner": "typescript",
++"code": "2304",
++"severity": 8,
++"message": "Cannot find name 'XtermAdapterHandle'.",
++"source": "ts",
++"startLineNumber": 95,
++"startColumn": 39,
++"endLineNumber": 95,
++"endColumn": 57
++}]```
+
+# 2024-08-15 14:31:24.535981
++/drop src\utils\WebCam.tsx
+
+# 2024-08-15 14:31:51.386653
++/undo
+
+# 2024-08-15 14:38:06.429357
++I am getting a bunch of errors like this: ```[{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/HandTerm.tsx",
++"owner": "typescript",
++"code": "2339",
++"severity": 8,
++"message": "Property 'scrollBottom' does not exist on type 'XtermAdapterHandle'.",
++"source": "ts",
++"startLineNumber": 296,
++"startColumn": 31,
++"endLineNumber": 296,
++"endColumn": 43
++}]```
+
+# 2024-08-15 14:40:54.804995
++I am getting this and a bunch of related errors on missing properties on `XtermAdapterHandle`: ```[{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/HandTerm.tsx",
++"owner": "typescript",
++"code": "2339",
++"severity": 8,
++"message": "Property 'getTerminalSize' does not exist on type 'XtermAdapterHandle'.",
++"source": "ts",
++"startLineNumber": 302,
++"startColumn": 44,
++"endLineNumber": 302,
++"endColumn": 59
++}]```
+
+# 2024-08-15 14:43:26.295593
++I am getting this linting error: ```[{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/HandTerm.tsx",
++"owner": "typescript",
++"code": "2339",
++"severity": 8,
++"message": "Property 'getTerminalSize' does not exist on type 'XtermAdapterHandle'.",
++"source": "ts",
++"startLineNumber": 302,
++"startColumn": 44,
++"endLineNumber": 302,
++"endColumn": 59
++}]```
+
+# 2024-08-15 14:47:23.569145
++I am still getting this: ```[{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/HandTerm.tsx",
++"owner": "typescript",
++"code": "2339",
++"severity": 8,
++"message": "Property 'getTerminalSize' does not exist on type 'XtermAdapterHandle'.",
++"source": "ts",
++"startLineNumber": 302,
++"startColumn": 44,
++"endLineNumber": 302,
++"endColumn": 59
++}]```, and I think you are confusing these two objects. Maybe they should be combined? ```export interface IXtermAdapterProps {
++  terminalElement: HTMLElement | null;
++  terminalElementRef: React.RefObject<HTMLElement>;
++  onAddCharacter: (character: string) => void;
++  onRemoveCharacter: (command: string) => void;
++  onTouchStart: React.TouchEventHandler<HTMLDivElement>;
++  onTouchEnd: React.TouchEventHandler<HTMLDivElement>;
++  terminalFontSize: number;
++  getTerminalSize: () => { width: number; height: number } | undefined;
++}
++
++export interface XtermAdapterHandle {
++  focusTerminal: () => void;
++  scrollBottom: () => void;
++}```
+
+# 2024-08-15 14:49:35.234048
++This: ```  useImperativeHandle(ref, () => ({
++    scrollBottom,
++    focusTerminal,
++    getTerminalSize,
++  }));``` is giving me the error: ```Type '{ scrollBottom: () => void; focusTerminal: () => void; getTerminalSize: () => { width: number; height: number; } | undefined; }' is missing the following properties from type 'XtermAdapterHandle': terminalElement, terminalElementRef, onAddCharacter, onRemoveCharacter, and 3 more.ts(2740)
++index.d.ts(2042, 81): The expected type comes from the return type of this signature.```
+
+# 2024-08-15 14:50:50.706967
++I am getting these linting errors: ```[{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/HandTerm.tsx",
++"owner": "typescript",
++"code": "2339",
++"severity": 8,
++"message": "Property 'prompt' does not exist on type 'XtermAdapterHandle'.",
++"source": "ts",
++"startLineNumber": 523,
++"startColumn": 30,
++"endLineNumber": 523,
++"endColumn": 36
++},{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/HandTerm.tsx",
++"owner": "typescript",
++"code": "2339",
++"severity": 8,
++"message": "Property 'prompt' does not exist on type 'XtermAdapterHandle'.",
++"source": "ts",
++"startLineNumber": 540,
++"startColumn": 30,
++"endLineNumber": 540,
++"endColumn": 36
++},{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/HandTerm.tsx",
++"owner": "typescript",
++"code": "2339",
++"severity": 8,
++"message": "Property 'getCurrentCommand' does not exist on type 'XtermAdapterHandle'.",
++"source": "ts",
++"startLineNumber": 545,
++"startColumn": 53,
++"endLineNumber": 545,
++"endColumn": 70
++},{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/HandTerm.tsx",
++"owner": "typescript",
++"code": "2339",
++"severity": 8,
++"message": "Property 'terminalReset' does not exist on type 'XtermAdapterHandle'.",
++"source": "ts",
++"startLineNumber": 606,
++"startColumn": 32,
++"endLineNumber": 606,
++"endColumn": 45
++},{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/HandTerm.tsx",
++"owner": "typescript",
++"code": "2339",
++"severity": 8,
++"message": "Property 'prompt' does not exist on type 'XtermAdapterHandle'.",
++"source": "ts",
++"startLineNumber": 607,
++"startColumn": 32,
++"endLineNumber": 607,
++"endColumn": 38
++},{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/HandTerm.tsx",
++"owner": "typescript",
++"code": "2339",
++"severity": 8,
++"message": "Property 'getCurrentCommand' does not exist on type 'XtermAdapterHandle'.",
++"source": "ts",
++"startLineNumber": 610,
++"startColumn": 90,
++"endLineNumber": 610,
++"endColumn": 107
++},{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/HandTerm.tsx",
++"owner": "typescript",
++"code": "2339",
++"severity": 8,
++"message": "Property 'getCurrentCommand' does not exist on type 'XtermAdapterHandle'.",
++"source": "ts",
++"startLineNumber": 658,
++"startColumn": 46,
++"endLineNumber": 658,
++"endColumn": 63
++},{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/HandTerm.tsx",
++"owner": "typescript",
++"code": "2339",
++"severity": 8,
++"message": "Property 'getCurrentCommand' does not exist on type 'XtermAdapterHandle'.",
++"source": "ts",
++"startLineNumber": 670,
++"startColumn": 46,
++"endLineNumber": 670,
++"endColumn": 63
++},{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/HandTerm.tsx",
++"owner": "typescript",
++"code": "2339",
++"severity": 8,
++"message": "Property 'terminalReset' does not exist on type 'XtermAdapterHandle'.",
++"source": "ts",
++"startLineNumber": 909,
++"startColumn": 30,
++"endLineNumber": 909,
++"endColumn": 43
++},{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/HandTerm.tsx",
++"owner": "typescript",
++"code": "2339",
++"severity": 8,
++"message": "Property 'prompt' does not exist on type 'XtermAdapterHandle'.",
++"source": "ts",
++"startLineNumber": 910,
++"startColumn": 30,
++"endLineNumber": 910,
++"endColumn": 36
++},{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/HandTerm.tsx",
++"owner": "typescript",
++"code": "2339",
++"severity": 8,
++"message": "Property 'terminalReset' does not exist on type 'XtermAdapterHandle'.",
++"source": "ts",
++"startLineNumber": 1002,
++"startColumn": 30,
++"endLineNumber": 1002,
++"endColumn": 43
++},{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/HandTerm.tsx",
++"owner": "typescript",
++"code": "2339",
++"severity": 8,
++"message": "Property 'prompt' does not exist on type 'XtermAdapterHandle'.",
++"source": "ts",
++"startLineNumber": 1006,
++"startColumn": 30,
++"endLineNumber": 1006,
++"endColumn": 36
++},{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/HandTerm.tsx",
++"owner": "typescript",
++"code": "2339",
++"severity": 8,
++"message": "Property 'terminalWrite' does not exist on type 'XtermAdapterHandle'.",
++"source": "ts",
++"startLineNumber": 1010,
++"startColumn": 30,
++"endLineNumber": 1010,
++"endColumn": 43
++},{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/HandTerm.tsx",
++"owner": "typescript",
++"code": "2339",
++"severity": 8,
++"message": "Property 'appendTempPassword' does not exist on type 'XtermAdapterHandle'.",
++"source": "ts",
++"startLineNumber": 1014,
++"startColumn": 30,
++"endLineNumber": 1014,
++"endColumn": 48
++},{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/HandTerm.tsx",
++"owner": "typescript",
++"code": "2339",
++"severity": 8,
++"message": "Property 'resetTempPassword' does not exist on type 'XtermAdapterHandle'.",
++"source": "ts",
++"startLineNumber": 1017,
++"startColumn": 30,
++"endLineNumber": 1017,
++"endColumn": 47
++},{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/HandTerm.tsx",
++"owner": "typescript",
++"code": "2339",
++"severity": 8,
++"message": "Property 'getTempPassword' does not exist on type 'XtermAdapterHandle'.",
++"source": "ts",
++"startLineNumber": 1020,
++"startColumn": 37,
++"endLineNumber": 1020,
++"endColumn": 52
++}]```
+
+# 2024-08-15 14:52:14.243724
++That worked. Now I am getting these errors: ```[{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/HandTerm.tsx",
++"owner": "typescript",
++"code": "2304",
++"severity": 8,
++"message": "Cannot find name 'editorRef'.",
++"source": "ts",
++"startLineNumber": 323,
++"startColumn": 11,
++"endLineNumber": 323,
++"endColumn": 20
++},{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/HandTerm.tsx",
++"owner": "typescript",
++"code": "2304",
++"severity": 8,
++"message": "Cannot find name 'editorRef'.",
++"source": "ts",
++"startLineNumber": 324,
++"startColumn": 9,
++"endLineNumber": 324,
++"endColumn": 18
++}]```
+
+# 2024-08-15 14:53:13.924829
++/undo
+
+# 2024-08-15 14:55:30.766544
++I am getting this linting error: ```[{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/XtermAdapter.tsx",
++"owner": "typescript",
++"code": "2304",
++"severity": 8,
++"message": "Cannot find name 'IXtermAdapterProps'.",
++"source": "ts",
++"startLineNumber": 27,
++"startColumn": 53,
++"endLineNumber": 27,
++"endColumn": 71
++}]```
+
+# 2024-08-15 14:57:12.424893
++/undo
+
+# 2024-08-15 14:59:46.164156
++I am getting this linting error: ```[{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/XtermAdapter.tsx",
++"owner": "typescript",
++"code": "2304",
++"severity": 8,
++"message": "Cannot find name 'IXtermAdapterProps'.",
++"source": "ts",
++"startLineNumber": 27,
++"startColumn": 53,
++"endLineNumber": 27,
++"endColumn": 71
++}]```. The `XtermAdapter` is declared like this: ```const XtermAdapter = forwardRef<XtermAdapterHandle, IXtermAdapterProps>((props, ref) => {
++  const { terminalElementRef, onAddCharacter, onRemoveCharacter, onTouchStart, onTouchEnd, terminalFontSize } = props;``` but those properties are already in the `XtermAdapterHandle`, so I think we should use them from there.
+
+# 2024-08-15 15:03:12.750166
++/undo
+
+# 2024-08-15 15:05:49.244640
++I am getting this linting error: ```[{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/XtermAdapter.tsx",
++"owner": "typescript",
++"code": "2304",
++"severity": 8,
++"message": "Cannot find name 'IXtermAdapterProps'.",
++"source": "ts",
++"startLineNumber": 27,
++"startColumn": 53,
++"endLineNumber": 27,
++"endColumn": 71
++}]```. The `XtermAdapter` is declared like this: ```const XtermAdapter = forwardRef<XtermAdapterHandle, IXtermAdapterProps>((props, ref) => {
++  const { terminalElementRef, onAddCharacter, onRemoveCharacter, onTouchStart, onTouchEnd, terminalFontSize } = props;``` but those properties are already in the `XtermAdapterHandle`, so if we create a new IXtermAdapterProps for thos properties, we need to remove them from the XtermAdapterHandle. Or, if we combine the two, we need to update the component signature and destructuring of the props on the first row of the component code block. Please consider which option would be the better option.
+
+# 2024-08-15 15:07:27.109228
++Now I am getting this error: ```[{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/XtermAdapter.tsx",
++"owner": "typescript",
++"code": "2740",
++"severity": 8,
++"message": "Type '{ terminalElement: HTMLElement | null; scrollBottom: () => void; focusTerminal: () => void; getTerminalSize: () => { width: number; height: number; } | undefined; prompt: (user?: string, host?: string) => void; ... 5 more ...; getTempPassword: () => string; }' is missing the following properties from type 'XtermAdapterHandle': terminalElementRef, onAddCharacter, onRemoveCharacter, onTouchStart, and 2 more.",
++"source": "ts",
++"startLineNumber": 62,
++"startColumn": 34,
++"endLineNumber": 74,
++"endColumn": 5,
++"relatedInformation": [
++{
++"startLineNumber": 2042,
++"startColumn": 81,
++"endLineNumber": 2042,
++"endColumn": 88,
++"message": "The expected type comes from the return type of this signature.",
++"resource": "/c:/Users/xgenx/source/repos/handterm/node_modules/@types/react/index.d.ts"
++}
++]
++}]```
+
+# 2024-08-15 15:09:33.915141
++I am getting this error: ```[{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/HandTerm.tsx",
++"owner": "typescript",
++"code": "2322",
++"severity": 8,
++"message": "Type '{ ref: RefObject<XtermAdapterHandle>; terminalElement: HTMLDivElement | null; terminalElementRef: RefObject<HTMLDivElement>; ... 4 more ...; onTouchEnd: TouchEventHandler<...>; }' is not assignable to type 'IntrinsicAttributes & IXtermAdapterProps & RefAttributes<XtermAdapterHandle>'.\n  Property 'terminalElement' does not exist on type 'IntrinsicAttributes & IXtermAdapterProps & RefAttributes<XtermAdapterHandle>'. Did you mean 'terminalElementRef'?",
++"source": "ts",
++"startLineNumber": 1192,
++"startColumn": 19,
++"endLineNumber": 1192,
++"endColumn": 34
++}]``` on this codeblock ```{!this.state.editMode && (
++                <XtermAdapter
++                  ref={this.adapterRef}
++                  terminalElement={this.terminalElementRef.current}
++                  terminalElementRef={this.terminalElementRef}
++                  terminalFontSize={this.currentFontSize}
++                  onAddCharacter={this.handleCharacter}
++                  onRemoveCharacter={this.handleRemoveCharacter}
++                  onTouchStart={this.handleTouchStart}
++                  onTouchEnd={this.handleTouchEnd}
++                />
++              )}```, where it looks like there might be some duplication.
+
+# 2024-08-15 15:17:59.582839
++I am getting this error: ```[{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/HandTerm.tsx",
++"owner": "typescript",
++"code": "2322",
++"severity": 8,
++"message": "Type '{ ref: RefObject<NextCharsDisplay>; onTimerStatusChange: (isActive: boolean) => void; commandLine: string; isInPhraseMode: true; newPhrase: string; onPhraseSuccess: (phrase: string) => void; onError: (errorIndex: number | undefined) => void; }' is not assignable to type 'IntrinsicAttributes & NextCharsDisplayProps'.\n  Property 'ref' does not exist on type 'IntrinsicAttributes & NextCharsDisplayProps'.",
++"source": "ts",
++"startLineNumber": 1166,
++"startColumn": 19,
++"endLineNumber": 1166,
++"endColumn": 22
++}]```
+
+# 2024-08-15 15:23:10.733832
++I am getting these errors, which might be related to our conversion of these components to functional components: ```[{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/HandTerm.tsx",
++"owner": "typescript",
++"code": "2749",
++"severity": 8,
++"message": "'NextCharsDisplay' refers to a value, but is being used as a type here. Did you mean 'typeof NextCharsDisplay'?",
++"source": "ts",
++"startLineNumber": 96,
++"startColumn": 48,
++"endLineNumber": 96,
++"endColumn": 64
++},{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/HandTerm.tsx",
++"owner": "typescript",
++"code": "2749",
++"severity": 8,
++"message": "'MonacoEditor' refers to a value, but is being used as a type here. Did you mean 'typeof MonacoEditor'?",
++"source": "ts",
++"startLineNumber": 97,
++"startColumn": 38,
++"endLineNumber": 97,
++"endColumn": 50
++},{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/HandTerm.tsx",
++"owner": "typescript",
++"code": "2749",
++"severity": 8,
++"message": "'Game' refers to a value, but is being used as a type here. Did you mean 'typeof Game'?",
++"source": "ts",
++"startLineNumber": 98,
++"startColumn": 45,
++"endLineNumber": 98,
++"endColumn": 49
++},{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/HandTerm.tsx",
++"owner": "typescript",
++"code": "2322",
++"severity": 8,
++"message": "Type '{ ref: RefObject<Game>; canvasHeight: number; canvasWidth: number; isInPhraseMode: boolean; heroActionType: ActionType; zombie4ActionType: ActionType; ... 5 more ...; zombie4StartPosition: SpritePosition; }' is not assignable to type 'IntrinsicAttributes & IGameProps'.\n  Property 'ref' does not exist on type 'IntrinsicAttributes & IGameProps'.",
++"source": "ts",
++"startLineNumber": 1151,
++"startColumn": 17,
++"endLineNumber": 1151,
++"endColumn": 20
++}]```
+
+# 2024-08-15 15:26:54.778906
++I am getting these linting errors now: ```Property 'completeGame' does not exist on type 'string | number | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal'.
++  Property 'completeGame' does not exist on type 'string'.``` and ```[{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/HandTerm.tsx",
++"owner": "typescript",
++"code": "2339",
++"severity": 8,
++"message": "Property 'focus' does not exist on type 'string | number | true | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal'.\n  Property 'focus' does not exist on type 'string'.",
++"source": "ts",
++"startLineNumber": 325,
++"startColumn": 32,
++"endLineNumber": 325,
++"endColumn": 37
++},{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/HandTerm.tsx",
++"owner": "typescript",
++"code": "2339",
++"severity": 8,
++"message": "Property 'resetGame' does not exist on type 'string | number | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal'.\n  Property 'resetGame' does not exist on type 'string'.",
++"source": "ts",
++"startLineNumber": 369,
++"startColumn": 35,
++"endLineNumber": 369,
++"endColumn": 44
++},{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/HandTerm.tsx",
++"owner": "typescript",
++"code": "2339",
++"severity": 8,
++"message": "Property 'levelUp' does not exist on type 'string | number | true | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal'.\n  Property 'levelUp' does not exist on type 'string'.",
++"source": "ts",
++"startLineNumber": 487,
++"startColumn": 37,
++"endLineNumber": 487,
++"endColumn": 44
++},{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/HandTerm.tsx",
++"owner": "typescript",
++"code": "2339",
++"severity": 8,
++"message": "Property 'handleZombie4PositionChange' does not exist on type 'string | number | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal'.\n  Property 'handleZombie4PositionChange' does not exist on type 'string'.",
++"source": "ts",
++"startLineNumber": 497,
++"startColumn": 37,
++"endLineNumber": 497,
++"endColumn": 64
++},{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/HandTerm.tsx",
++"owner": "typescript",
++"code": "2339",
++"severity": 8,
++"message": "Property 'cancelTimer' does not exist on type 'string | number | true | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal'.\n  Property 'cancelTimer' does not exist on type 'string'.",
++"source": "ts",
++"startLineNumber": 516,
++"startColumn": 76,
++"endLineNumber": 516,
++"endColumn": 87
++}]```
+
+# 2024-08-15 15:34:36.577740
++I am getting this error: ```[{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/HandTerm.tsx",
++"owner": "typescript",
++"code": "2339",
++"severity": 8,
++"message": "Property 'resetTimer' does not exist on type 'string | number | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal'.\n  Property 'resetTimer' does not exist on type 'string'.",
++"source": "ts",
++"startLineNumber": 126,
++"startColumn": 41,
++"endLineNumber": 126,
++"endColumn": 51
++}]```. I can see this function in the `NextCharsDisplay` ```    const resetTimer = () => {
++        if (timerRef.current) {
++            timerRef.current.reset();
++        }
++    };``` but I'm not sure how it's supposed to be exposed from the functional component. 
+
+# 2024-08-15 15:37:50.618321
++I am still getting this: ```[{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/HandTerm.tsx",
++"owner": "typescript",
++"code": "2339",
++"severity": 8,
++"message": "Property 'resetTimer' does not exist on type 'string | number | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal'.\n  Property 'resetTimer' does not exist on type 'string'.",
++"source": "ts",
++"startLineNumber": 126,
++"startColumn": 41,
++"endLineNumber": 126,
++"endColumn": 51
++}]```. I think it might have to do with how we are declaring it `private nextCharsDisplayRef: React.RefObject<ReturnType<typeof NextCharsDisplay>> = React.createRef();`
+
+# 2024-08-15 16:09:34.121573
++I am getting this linting error: ```[{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/HandTerm.tsx",
++"owner": "typescript",
++"code": "2339",
++"severity": 8,
++"message": "Property 'resetGame' does not exist on type 'string | number | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal'.\n  Property 'resetGame' does not exist on type 'string'.",
++"source": "ts",
++"startLineNumber": 369,
++"startColumn": 35,
++"endLineNumber": 369,
++"endColumn": 44
++}]``` but I can see this ```export interface IGameHandle {
++  completeGame: () => void;
++  resetGame: () => void;
++  levelUp: (setLevelValue?: number | null) => void;
++  handleZombie4PositionChange: (position: SpritePosition) => void;
++}```
+
+# 2024-08-15 16:19:28.509823
++I am getting this error: ```[{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/NextCharsDisplay.tsx",
++"owner": "typescript",
++"code": "2322",
++"severity": 8,
++"message": "Type 'ForwardedRef<NextCharsDisplayHandle>' is not assignable to type 'LegacyRef<HTMLDivElement> | undefined'.\n  Type '(instance: NextCharsDisplayHandle | null) => void' is not assignable to type 'LegacyRef<HTMLDivElement> | undefined'.\n    Type '(instance: NextCharsDisplayHandle | null) => void' is not assignable to type '(instance: HTMLDivElement | null) => void'.\n      Types of parameters 'instance' and 'instance' are incompatible.\n        Type 'HTMLDivElement | null' is not assignable to type 'NextCharsDisplayHandle | null'.\n          Type 'HTMLDivElement' is missing the following properties from type 'NextCharsDisplayHandle': resetTimer, cancelTimer",
++"source": "ts",
++"startLineNumber": 201,
++"startColumn": 13,
++"endLineNumber": 201,
++"endColumn": 16,
++"relatedInformation": [
++{
++"startLineNumber": 303,
++"startColumn": 9,
++"endLineNumber": 303,
++"endColumn": 12,
++"message": "The expected type comes from property 'ref' which is declared here on type 'DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>'",
++"resource": "/c:/Users/xgenx/source/repos/handterm/node_modules/@types/react/index.d.ts"
++}
++]
++}]```
+
+# 2024-08-15 16:20:44.715278
++I am getting this error: ```[{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/HandTerm.tsx",
++"owner": "typescript",
++"code": "2339",
++"severity": 8,
++"message": "Property 'focus' does not exist on type 'string | number | true | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal'.\n  Property 'focus' does not exist on type 'string'.",
++"source": "ts",
++"startLineNumber": 325,
++"startColumn": 32,
++"endLineNumber": 325,
++"endColumn": 37
++}]```
+
+# 2024-08-15 16:31:53.396750
++I am getting this error: ```[{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/HandTerm.tsx",
++"owner": "typescript",
++"code": "2339",
++"severity": 8,
++"message": "Property 'focus' does not exist on type 'string | number | true | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal'.\n  Property 'focus' does not exist on type 'string'.",
++"source": "ts",
++"startLineNumber": 325,
++"startColumn": 32,
++"endLineNumber": 325,
++"endColumn": 37
++}]```. and I can see this inside the `MonacoEditor`: ```  useImperativeHandle(ref, () => ({
++    focus: () => {
++      if (editorRef.current) {
++        editorRef.current.focus();
++      }
++    }
++  }));```, but I don't see any `focus()` in the props or any other way of exporting it.
+
+# 2024-08-15 16:45:07.797704
++I am getting this error: ```[{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/NextCharsDisplay.tsx",
++"owner": "typescript",
++"code": "6196",
++"severity": 4,
++"message": "'NextCharsDisplayState' is declared but never used.",
++"source": "ts",
++"startLineNumber": 17,
++"startColumn": 11,
++"endLineNumber": 17,
++"endColumn": 32,
++"tags": [
++1
++]
++}]```. I think we were supposed to pull out the State interfaces when we changed these modules from class components to functional components.
+
+# 2024-08-15 16:47:12.451140
++I am getting these linting errors: ```[{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/NextCharsDisplay.tsx",
++"owner": "typescript",
++"code": "6133",
++"severity": 4,
++"message": "'onTimerStatusChange' is declared but its value is never read.",
++"source": "ts",
++"startLineNumber": 25,
++"startColumn": 5,
++"endLineNumber": 25,
++"endColumn": 24,
++"tags": [
++1
++]
++},{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/NextCharsDisplay.tsx",
++"owner": "typescript",
++"code": "6133",
++"severity": 4,
++"message": "'isActive' is declared but its value is never read.",
++"source": "ts",
++"startLineNumber": 36,
++"startColumn": 12,
++"endLineNumber": 36,
++"endColumn": 20,
++"tags": [
++1
++]
++},{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/NextCharsDisplay.tsx",
++"owner": "typescript",
++"code": "6133",
++"severity": 4,
++"message": "'voiceSynth' is declared but its value is never read.",
++"source": "ts",
++"startLineNumber": 45,
++"startColumn": 11,
++"endLineNumber": 45,
++"endColumn": 21,
++"tags": [
++1
++]
++},{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/NextCharsDisplay.tsx",
++"owner": "typescript",
++"code": "6133",
++"severity": 4,
++"message": "'isTestMode' is declared but its value is never read.",
++"source": "ts",
++"startLineNumber": 47,
++"startColumn": 11,
++"endLineNumber": 47,
++"endColumn": 21,
++"tags": [
++1
++]
++},{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/NextCharsDisplay.tsx",
++"owner": "typescript",
++"code": "6133",
++"severity": 4,
++"message": "'reset' is declared but its value is never read.",
++"source": "ts",
++"startLineNumber": 112,
++"startColumn": 11,
++"endLineNumber": 112,
++"endColumn": 16,
++"tags": [
++1
++]
++},{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/NextCharsDisplay.tsx",
++"owner": "typescript",
++"code": "6133",
++"severity": 4,
++"message": "'cancel' is declared but its value is never read.",
++"source": "ts",
++"startLineNumber": 140,
++"startColumn": 11,
++"endLineNumber": 140,
++"endColumn": 17,
++"tags": [
++1
++]
++}]```
+
+# 2024-08-15 16:55:42.954920
++I'm getting this error: ```[{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/NextCharsDisplay.tsx",
++"owner": "typescript",
++"code": "2304",
++"severity": 8,
++"message": "Cannot find name 'setIsActive'.",
++"source": "ts",
++"startLineNumber": 77,
++"startColumn": 9,
++"endLineNumber": 77,
++"endColumn": 20
++}]```. I'm not sure if we accidently removed the `isActive` or of that was something we no longer needed since we changed it to a functional component.
+
+# 2024-08-15 17:06:42.540083
++I am getting this error: ```[{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/NextCharsDisplay.tsx",
++"owner": "typescript",
++"code": "6133",
++"severity": 4,
++"message": "'onTimerStatusChange' is declared but its value is never read.",
++"source": "ts",
++"startLineNumber": 25,
++"startColumn": 5,
++"endLineNumber": 25,
++"endColumn": 24,
++"tags": [
++1
++]
++}]```
+
+# 2024-08-15 17:17:00.849780
++I am getting these errors: ```[{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/game/Game.tsx",
++"owner": "typescript",
++"code": "6133",
++"severity": 4,
++"message": "'onTouchStart' is declared but its value is never read.",
++"source": "ts",
++"startLineNumber": 48,
++"startColumn": 5,
++"endLineNumber": 48,
++"endColumn": 17,
++"tags": [
++1
++]
++},{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/game/Game.tsx",
++"owner": "typescript",
++"code": "6133",
++"severity": 4,
++"message": "'onTouchEnd' is declared but its value is never read.",
++"source": "ts",
++"startLineNumber": 49,
++"startColumn": 5,
++"endLineNumber": 49,
++"endColumn": 15,
++"tags": [
++1
++]
++},{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/game/Game.tsx",
++"owner": "typescript",
++"code": "6133",
++"severity": 4,
++"message": "'phrasesAchieved' is declared but its value is never read.",
++"source": "ts",
++"startLineNumber": 52,
++"startColumn": 5,
++"endLineNumber": 52,
++"endColumn": 20,
++"tags": [
++1
++]
++},{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/game/Game.tsx",
++"owner": "typescript",
++"code": "6133",
++"severity": 4,
++"message": "'textScrollX' is declared but its value is never read.",
++"source": "ts",
++"startLineNumber": 67,
++"startColumn": 10,
++"endLineNumber": 67,
++"endColumn": 21,
++"tags": [
++1
++]
++},{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/game/Game.tsx",
++"owner": "typescript",
++"code": "6133",
++"severity": 4,
++"message": "'setIsInScrollMode' is declared but its value is never read.",
++"source": "ts",
++"startLineNumber": 70,
++"startColumn": 26,
++"endLineNumber": 70,
++"endColumn": 43,
++"tags": [
++1
++]
++},{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/game/Game.tsx",
++"owner": "typescript",
++"code": "6133",
++"severity": 4,
++"message": "'setTextToScroll' is declared but its value is never read.",
++"source": "ts",
++"startLineNumber": 71,
++"startColumn": 24,
++"endLineNumber": 71,
++"endColumn": 39,
++"tags": [
++1
++]
++}]```
+
+# 2024-08-15 17:18:08.310708
++/undo
+
+# 2024-08-15 17:25:39.697509
++I am not sure if these are properties that got accidently dropped when we refactored to functional components or if they aren't supposed to be included. ```[{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/game/Game.tsx",
++"owner": "typescript",
++"code": "2304",
++"severity": 8,
++"message": "Cannot find name 'isInScrollMode'.",
++"source": "ts",
++"startLineNumber": 171,
++"startColumn": 9,
++"endLineNumber": 171,
++"endColumn": 23
++},{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/game/Game.tsx",
++"owner": "typescript",
++"code": "2304",
++"severity": 8,
++"message": "Cannot find name 'setTextScrollX'.",
++"source": "ts",
++"startLineNumber": 251,
++"startColumn": 7,
++"endLineNumber": 251,
++"endColumn": 21
++},{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/game/Game.tsx",
++"owner": "typescript",
++"code": "6133",
++"severity": 4,
++"message": "'phrasesAchieved' is declared but its value is never read.",
++"source": "ts",
++"startLineNumber": 50,
++"startColumn": 5,
++"endLineNumber": 50,
++"endColumn": 20,
++"tags": [
++1
++]
++}]```
+
+# 2024-08-15 17:32:04.168045
++I am getting this error: ```[{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/game/Game.tsx",
++"owner": "typescript",
++"code": "6133",
++"severity": 4,
++"message": "'setIsInScrollMode' is declared but its value is never read.",
++"source": "ts",
++"startLineNumber": 59,
++"startColumn": 26,
++"endLineNumber": 59,
++"endColumn": 43,
++"tags": [
++1
++]
++}]```, on this line `const [isInScrollMode, setIsInScrollMode] = useState(false);`. I don't see where `isInScrollMode` gets set. Was it supposed to be passed in from `HandTerm`?
+
+# 2024-08-15 17:49:56.701210
++I am getting this linting error: `[{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/Chord.tsx",
++"owner": "typescript",
++"code": "2339",
++"severity": 8,
++"message": "Property 'env' does not exist on type 'ImportMeta'.",
++"source": "ts",
++"startLineNumber": 23,
++"startColumn": 65,
++"endLineNumber": 23,
++"endColumn": 68
++}]`
+
+# 2024-08-15 17:53:07.811544
++When I build and run the project with `yarn preview` I get this error when the page loads: ```terminalElementRef.current is NULL
++App-Cv5I3rHf.js:9
++TypeError: Cannot read properties of undefined (reading 'style')
++    at F (:9:4762)
++    at :9:3579
++    at el (:24:24164)
++    at Yn (:24:42048)
++    at :24:40403
++    at E (:9:1562)
++    at MessagePort.rt (http://localhost:4173/assets/client-B_cqH32F.js:9:1930) {stack: 'TypeError: Cannot read properties of undefinealhost:4173/assets/client-B_cqH32F.js:9:1930)', message: "Cannot read properties of undefined (reading 'style')"}
++
++client-B_cqH32F.js:24
++Uncaught TypeError TypeError: Cannot read properties of undefined (reading 'style')
++    at F (localhost4173/assets/App-Cv5I3rHf.js:9:4762)
++    at <anonymous> (localhost4173/assets/App-Cv5I3rHf.js:9:3579)
++    at el (localhost4173/assets/client-B_cqH32F.js:24:24164)
++    at Yn (localhost4173/assets/client-B_cqH32F.js:24:42048)
++    at <anonymous> (localhost4173/assets/client-B_cqH32F.js:24:40403)
++    at E (localhost4173/assets/client-B_cqH32F.js:9:1562)
++    at rt (localhost4173/assets/client-B_cqH32F.js:9:1930)
++    --- postMessage ---
++    at lt (localhost4173/assets/client-B_cqH32F.js:9:2142)
++    at rt (localhost4173/assets/client-B_cqH32F.js:9:1948)
++    --- postMessage ---
++    at lt (localhost4173/assets/client-B_cqH32F.js:9:2142)
++    at ol (localhost4173/assets/client-B_cqH32F.js:9:2217)
++    at e.unstable_scheduleCallback (localhost4173/assets/client-B_cqH32F.js:9:3690)
++    at Sa (localhost4173/assets/client-B_cqH32F.js:24:47289)
++    at ce (localhost4173/assets/client-B_cqH32F.js:24:34176)
++    at Te (localhost4173/assets/client-B_cqH32F.js:24:33720)
++    at rl (localhost4173/assets/client-B_cqH32F.js:24:51215)
++    at ll.render.vu.render (localhost4173/assets/client-B_cqH32F.js:24:51793)
++    at <anonymous> (localhost4173/assets/index-TEAeK-Ts.js:18:2804)
++    --- await ---
++    at <anonymous> (localhost4173/assets/index-TEAeK-Ts.js:18:2834)```
+
+# 2024-08-15 17:56:58.787226
++I am getting this linting error: ```[{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/XtermAdapter.tsx",
++"owner": "typescript",
++"code": "2322",
++"severity": 8,
++"message": "Type 'RefObject<HTMLElement>' is not assignable to type 'LegacyRef<HTMLDivElement> | undefined'.\n  Type 'RefObject<HTMLElement>' is not assignable to type 'RefObject<HTMLDivElement>'.\n    Property 'align' is missing in type 'HTMLElement' but required in type 'HTMLDivElement'.",
++"source": "ts",
++"startLineNumber": 230,
++"startColumn": 7,
++"endLineNumber": 230,
++"endColumn": 10,
++"relatedInformation": [
++{
++"startLineNumber": 10000,
++"startColumn": 5,
++"endLineNumber": 10000,
++"endColumn": 10,
++"message": "'align' is declared here.",
++"resource": "/c:/Users/xgenx/.vscode-insiders/extensions/ms-vscode.vscode-typescript-next-5.6.20240814/node_modules/typescript/lib/lib.dom.d.ts"
++},
++{
++"startLineNumber": 303,
++"startColumn": 9,
++"endLineNumber": 303,
++"endColumn": 12,
++"message": "The expected type comes from property 'ref' which is declared here on type 'DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>'",
++"resource": "/c:/Users/xgenx/source/repos/handterm/node_modules/@types/react/index.d.ts"
++}
++]
++}]```
+
+# 2024-08-15 18:14:12.083403
++Now, when I build and then `yarn preview` I get this error: ```terminalElementRef.current is NULL
++App-Cv5I3rHf.js:9
++TypeError: Cannot read properties of undefined (reading 'style')
++    at F (:9:4762)
++    at :9:3579
++    at el (:24:24164)
++    at Yn (:24:42048)
++    at :24:40403
++    at E (:9:1562)
++    at MessagePort.rt (http://localhost:4173/assets/client-B_cqH32F.js:9:1930) {stack: 'TypeError: Cannot read properties of undefinealhost:4173/assets/client-B_cqH32F.js:9:1930)', message: "Cannot read properties of undefined (reading 'style')"}
++
++client-B_cqH32F.js:24
++Uncaught TypeError TypeError: Cannot read properties of undefined (reading 'style')
++    at F (localhost4173/assets/App-Cv5I3rHf.js:9:4762)
++    at <anonymous> (localhost4173/assets/App-Cv5I3rHf.js:9:3579)
++    at el (localhost4173/assets/client-B_cqH32F.js:24:24164)
++    at Yn (localhost4173/assets/client-B_cqH32F.js:24:42048)
++    at <anonymous> (localhost4173/assets/client-B_cqH32F.js:24:40403)
++    at E (localhost4173/assets/client-B_cqH32F.js:9:1562)
++    at rt (localhost4173/assets/client-B_cqH32F.js:9:1930)
++    --- postMessage ---
++    at lt (localhost4173/assets/client-B_cqH32F.js:9:2142)
++    at rt (localhost4173/assets/client-B_cqH32F.js:9:1948)
++    --- postMessage ---
++    at lt (localhost4173/assets/client-B_cqH32F.js:9:2142)
++    at ol (localhost4173/assets/client-B_cqH32F.js:9:2217)
++    at e.unstable_scheduleCallback (localhost4173/assets/client-B_cqH32F.js:9:3690)
++    at Sa (localhost4173/assets/client-B_cqH32F.js:24:47289)
++    at ce (localhost4173/assets/client-B_cqH32F.js:24:34176)
++    at Te (localhost4173/assets/client-B_cqH32F.js:24:33720)
++    at rl (localhost4173/assets/client-B_cqH32F.js:24:51215)
++    at ll.render.vu.render (localhost4173/assets/client-B_cqH32F.js:24:51793)
++    at <anonymous> (localhost4173/assets/index-TEAeK-Ts.js:18:2804)
++    --- await ---
++    at <anonymous> (localhost4173/assets/index-TEAeK-Ts.js:18:2834)```
+
+# 2024-08-15 18:16:06.391542
++/undo
+
+# 2024-08-15 18:16:33.812377
++Now, when I build and then `yarn preview` I get this error: ```terminalElementRef.current is NULL
++App-Cv5I3rHf.js:9
++TypeError: Cannot read properties of undefined (reading 'style')
++    at F (:9:4762)
++    at :9:3579
++    at el (:24:24164)
++    at Yn (:24:42048)
++    at :24:40403
++    at E (:9:1562)
++    at MessagePort.rt (http://localhost:4173/assets/client-B_cqH32F.js:9:1930) {stack: 'TypeError: Cannot read properties of undefinealhost:4173/assets/client-B_cqH32F.js:9:1930)', message: "Cannot read properties of undefined (reading 'style')"}
++
++client-B_cqH32F.js:24
++Uncaught TypeError TypeError: Cannot read properties of undefined (reading 'style')
++    at F (localhost4173/assets/App-Cv5I3rHf.js:9:4762)
++    at <anonymous> (localhost4173/assets/App-Cv5I3rHf.js:9:3579)
++    at el (localhost4173/assets/client-B_cqH32F.js:24:24164)
++    at Yn (localhost4173/assets/client-B_cqH32F.js:24:42048)
++    at <anonymous> (localhost4173/assets/client-B_cqH32F.js:24:40403)
++    at E (localhost4173/assets/client-B_cqH32F.js:9:1562)
++    at rt (localhost4173/assets/client-B_cqH32F.js:9:1930)
++    --- postMessage ---
++    at lt (localhost4173/assets/client-B_cqH32F.js:9:2142)
++    at rt (localhost4173/assets/client-B_cqH32F.js:9:1948)
++    --- postMessage ---
++    at lt (localhost4173/assets/client-B_cqH32F.js:9:2142)
++    at ol (localhost4173/assets/client-B_cqH32F.js:9:2217)
++    at e.unstable_scheduleCallback (localhost4173/assets/client-B_cqH32F.js:9:3690)
++    at Sa (localhost4173/assets/client-B_cqH32F.js:24:47289)
++    at ce (localhost4173/assets/client-B_cqH32F.js:24:34176)
++    at Te (localhost4173/assets/client-B_cqH32F.js:24:33720)
++    at rl (localhost4173/assets/client-B_cqH32F.js:24:51215)
++    at ll.render.vu.render (localhost4173/assets/client-B_cqH32F.js:24:51793)
++    at <anonymous> (localhost4173/assets/index-TEAeK-Ts.js:18:2804)
++    --- await ---
++    at <anonymous> (localhost4173/assets/index-TEAeK-Ts.js:18:2834)```

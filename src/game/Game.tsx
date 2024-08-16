@@ -17,7 +17,6 @@ export interface IGameProps {
   heroActionType: ActionType
   zombie4ActionType: ActionType
   zombie4StartPosition: SpritePosition
-  isInScrollMode: boolean;
   onTouchStart: TouchEventHandler<HTMLDivElement>;
   onTouchEnd: TouchEventHandler<HTMLDivElement>;
   onSetHeroAction: (action: ActionType) => void;
@@ -168,7 +167,7 @@ const Game = React.forwardRef<IGameHandle, IGameProps>((props, ref) => {
       }));
     }
 
-    if (isInScrollMode && heroDx !== 0) {
+    if (heroDx !== 0) {
       setBackgroundOffsetX(prev => prev + heroDx);
 
       if (heroPosition.leftX >= characterReachThreshold) {
@@ -248,7 +247,6 @@ const Game = React.forwardRef<IGameHandle, IGameProps>((props, ref) => {
     resetGame: () => {
       setZombie4Position(zombie4StartPosition);
       setIsPhraseComplete(false);
-      setTextScrollX(canvasWidth);
     },
     levelUp,
     handleZombie4PositionChange: (position: SpritePosition) => {

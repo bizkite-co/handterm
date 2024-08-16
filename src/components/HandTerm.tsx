@@ -14,11 +14,11 @@ import WebCam from '../utils/WebCam';
 import { CommandContext } from '../commands/CommandContext';
 import { Achievement, Achievements, MyResponse } from '../types/Types';
 import { TutorialComponent } from './TutorialComponent';
-import Chord from './Chord';
+import { Chord } from './Chord';
 import axios from 'axios';
 import { ENDPOINTS } from '../shared/endpoints';
 import { SpritePosition } from 'src/game/types/Position';
-import MonacoEditor from './MonacoEditor';
+import MonacoEditor, { MonacoEditorHandle } from './MonacoEditor';
 import './MonacoEditor.css'; // Make sure to import the CSS
 
 export interface IHandTermProps {
@@ -1164,7 +1164,6 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
               {this.state.isInPhraseMode && this.state.phraseValue && (
                 <NextCharsDisplay
                   ref={this.nextCharsDisplayRef}
-                  onTimerStatusChange={this.handleTimerStatusChange}
                   commandLine={this.state.commandLine}
                   isInPhraseMode={this.state.isInPhraseMode}
                   newPhrase={this.state.phraseValue}
