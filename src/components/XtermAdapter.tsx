@@ -15,7 +15,7 @@ export interface IXtermAdapterProps {
 
 export interface XtermAdapterHandle {
   terminalElement: HTMLElement | null;
-  terminalElementRef: React.RefObject<HTMLElement>;
+  terminalElementRef: React.RefObject<HTMLDivElement>;
   onAddCharacter: (character: string) => void;
   onRemoveCharacter: (command: string) => void;
   onTouchStart: React.TouchEventHandler<HTMLDivElement>;
