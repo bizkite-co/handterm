@@ -1,6 +1,6 @@
 import React from 'react';
 import { Achievement } from '../types/Types';
-import { getNextTutorialAchievement } from '../utils/achievementUtils';
+import { getNextTutorialAchievement, saveAchievements } from '../utils/achievementUtils';
 
 interface UnlockAchievementProps {
     achievementPhrase: string;
@@ -9,14 +9,25 @@ interface UnlockAchievementProps {
     setState: (state: any) => void;
 }
 
-const UnlockAchievement: React.FC<UnlockAchievementProps> = ({ achievementPhrase, nextAchievement, unlockedAchievements, setState }) => {
-    if (nextAchievement?.phrase.join('') === achievementPhrase) {
-        const updatedAchievements = [...unlockedAchievements, achievementPhrase];
+const UnlockAchievement: React.FC<UnlockAchievementProps> = ({
+    achievementPhrase, nextAchievement, unlockedAchievements, setState
+}) => {
+    if (
+        nextAchievement?.phrase.join('') === achievementPhrase
+    ) {
+
+        if (achievementPhrase === '') achievementPhrase = 'Return (ENTER)';
+        const updatedAchievements = [
+            ...unlockedAchievements,
+            achievementPhrase
+        ];
+        saveAchievements(achievementPhrase);
+        const nextTutorialAchievement = getNextTutorialAchievement();
         setState((prevState: any) => ({
             ...prevState,
             unlockedAchievements: updatedAchievements,
-            nextAchievement: getNextTutorialAchievement(),
-            isInTutorial: getNextTutorialAchievement() ? true : false
+            nextAchievement: nextTutorialAchievement,
+            isInTutorial: nextTutorialAchievement ? true : false
         }));
     }
     return null;

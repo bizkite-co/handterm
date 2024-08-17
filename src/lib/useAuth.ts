@@ -33,6 +33,7 @@ export const useAuth = () => {
     },
     withCredentials: true, // Correctly positioned and boolean value
   };
+
   const signUp = async (username: string, password: string, email: string) => {
     if (!username || !password || !email) {
       throw new Error('All fields are required');
@@ -45,6 +46,7 @@ export const useAuth = () => {
       throw error;
     }
   };
+
   const refreshTokenIfNeeded = async (): Promise<MyResponse<number>> => {
     let response: MyResponse<number> = { status: 200, error: [], message: 'Token refresh' };
     const accessToken = localStorage.getItem('AccessToken');
@@ -82,6 +84,7 @@ export const useAuth = () => {
     }
     return response; // Token is valid and not expired
   };
+
   const setExpiresAt = (expiresIn: string) => {
     const expiresAt = getExpiresAt(expiresIn);
     if (expiresAt) localStorage.setItem('ExpiresAt', expiresAt);
@@ -96,8 +99,10 @@ export const useAuth = () => {
   const getAuthConfig = async (): Promise<MyResponse<any>> => {
     // Ensure refreshTokenIfNeeded is awaited to complete the refresh before proceeding
     const refreshResponse = await refreshTokenIfNeeded();
-    if (refreshResponse.status !== 200) return refreshResponse;
-
+    if (refreshResponse.status !== 200) {
+      console.error('Error refreshing access token:', refreshResponse.error);
+      return refreshResponse;
+    }
     const accessToken = localStorage.getItem('AccessToken');
     if (!accessToken) {
       throw new Error('No access token found');

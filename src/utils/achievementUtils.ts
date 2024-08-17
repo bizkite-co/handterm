@@ -8,6 +8,8 @@ export const loadTutorialAchievements = (): string[] => {
 export const saveAchievements = (achievementPhrase: string) => {
     const storedAchievementString: string = localStorage.getItem('achievements') || '';
     let storedAchievements = storedAchievementString ? JSON.parse(storedAchievementString) : [];
+    // Don't add duplicate achievements
+    if(storedAchievements.includes(achievementPhrase)) return;
     storedAchievements.push(achievementPhrase);
     localStorage.setItem('achievements', JSON.stringify(storedAchievements));
 }

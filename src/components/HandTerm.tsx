@@ -20,7 +20,7 @@ import MonacoEditor, { MonacoEditorHandle } from './MonacoEditor';
 import WpmTable from './WpmTable';
 import './MonacoEditor.css'; // Make sure to import the CSS
 import { loadCommandHistory, parseCommand } from '../utils/commandUtils';
-import { getNextTutorialAchievement, loadTutorialAchievements, saveAchievements } from '../utils/achievementUtils';
+import { getNextTutorialAchievement, loadTutorialAchievements } from '../utils/achievementUtils';
 import { getNthPhraseNotAchieved, getPhrasesAchieved, getPhrasesNotAchieved, resetPhrasesAchieved } from '../utils/phraseUtils';
 import UpdateCommandHistory from '../commands/UpdateCommandHistory';
 import HelpCommand from '../commands/HelpCommand';
@@ -288,10 +288,8 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       this.resetTutorialAchievementState();
     }
 
-    // TODO: handle achievement unlocks
     if (this.state.isInTutorial || cmd === 'tut') {
       // Unlock the next achievement and decide if we are still in tutorial mode
-      if (cmd === '') cmd = 'Return (ENTER)';
       UnlockAchievement({
         achievementPhrase: cmd,
         nextAchievement: this.state.nextAchievement,
@@ -335,7 +333,9 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
 
     if (command === 'edit') {
       (async () => {
-        const fileContent = await this.props.auth.getFile(this.state.editFilePath, this.state.editFileExtension);
+        const fileContent = await this.props.auth.getFile(
+          this.state.editFilePath, this.state.editFileExtension
+        );
         this.setState({
           editContent: fileContent.data,
           editMode: true,
@@ -633,22 +633,6 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     return charDuration.durationMilliseconds;
   }
 
-  unlockAchievement = (achievementPhrase: string) => {
-    this.setState(prevState => {
-      const unlockedAchievements = prevState.unlockedAchievements;
-      if (this.state.nextAchievement?.phrase.join('') === achievementPhrase) {
-        saveAchievements(achievementPhrase);
-      }
-      const nextAchievement = getNextTutorialAchievement();
-      return {
-        ...prevState,
-        achievements: unlockedAchievements,
-        nextAchievement: nextAchievement,
-        isInTutorial: nextAchievement ? true : false
-      };
-    });
-  };
-
   getCommandResponseHistory(): string[] {
     let keys: string[] = [];
     let commandHistory: string[] = [];
@@ -668,9 +652,6 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     }
     return commandHistory;
   }
-
-
-
 
   averageWpmByCharacter(charWpms: CharWPM[]): CharWPM[] {
     const charGroups: Record<string, { totalWpm: number, count: number }> = {};
