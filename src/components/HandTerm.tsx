@@ -19,7 +19,7 @@ import { SpritePosition } from '../game/types/Position';
 import MonacoEditor, { MonacoEditorHandle } from './MonacoEditor';
 import WpmTable from './WpmTable';
 import './MonacoEditor.css'; // Make sure to import the CSS
-import { loadCommandHistory, parseCommand, saveCommandHistory } from '../utils/commandUtils';
+import { loadCommandHistory, parseCommand } from '../utils/commandUtils';
 import { getNextTutorialAchievement, loadTutorialAchievements, saveAchievements } from '../utils/achievementUtils';
 import { getNthPhraseNotAchieved, getPhrasesAchieved, getPhrasesNotAchieved, resetPhrasesAchieved } from '../utils/phraseUtils';
 import UpdateCommandHistory from '../commands/UpdateCommandHistory';
@@ -278,7 +278,11 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
   };
 
   public handleCommand = (cmd: string): void => {
-    UpdateCommandHistory({ cmd, state: this.state, setState: (newState: any) => this.setState(newState) });
+    UpdateCommandHistory({ 
+      cmd, 
+      state: this.state, 
+      setState: (newState: any) => this.setState(newState) 
+    });
 
     if (cmd === 'tut') {
       this.resetTutorialAchievementState();

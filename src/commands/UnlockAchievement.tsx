@@ -1,5 +1,6 @@
 import React from 'react';
 import { Achievement } from '../types/Types';
+import { getNextTutorialAchievement } from '../utils/achievementUtils';
 
 interface UnlockAchievementProps {
     achievementPhrase: string;

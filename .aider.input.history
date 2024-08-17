@@ -1869,3 +1869,6 @@
 +    at t2.CoreService.triggerDataEvent (CoreService.ts:77:18)
 +    at P._keyDown (Terminal.ts:1072:22)
 +```
+
+# 2024-08-16 14:51:58.211024
++Ok, that seems to have worked. Now I would like you to look at additional functions within `handCommand()` that we could similarly factor out into another componet like `UpdateCommandHistory()`.
