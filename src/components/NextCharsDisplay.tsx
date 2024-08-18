@@ -179,19 +179,19 @@ const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, NextCharsDispl
 
     return (
         <div
-            id={TerminalCssClasses.NextChars || 'next-chars'} 
+            id={TerminalCssClasses.NextChars} 
             hidden={!isInPhraseMode} 
         >
             {mismatchedChar && mismatchedIsVisible && (
                 <ErrorDisplay
                     isVisible={mismatchedIsVisible}
-                    mismatchedChar={mismatchedChar}
+                    mismatchedChar={mismatchedChar ?? ''}
                 />
             )}
             <Timer ref={timerRef} />
-            <div id={TerminalCssClasses.NextCharsRate || 'next-chars-rate'} ref={nextCharsRateRef}></div>
-            <span id={TerminalCssClasses.WPM || 'wpm'} ref={wpmRef}></span>
-            <pre id={TerminalCssClasses.NextChars || 'next-chars'} ref={nextCharsRef}>
+            <div id={TerminalCssClasses.NextCharsRate} ref={nextCharsRateRef}></div>
+            <span id={TerminalCssClasses.WPM} ref={wpmRef}></span>
+            <pre id={TerminalCssClasses.NextChars} ref={nextCharsRef}>
                 {nextChars}
             </pre>
         </div>
