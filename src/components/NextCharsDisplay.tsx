@@ -174,10 +174,10 @@ const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, NextCharsDispl
 
     return (
         <div
-            id="next-chars" 
+            id={TerminalCssClasses.Terminal || 'next-chars'} 
             hidden={!isInPhraseMode} 
         >
-            {mismatchedChar && (
+            {mismatchedChar && mismatchedIsVisible && (
                 <ErrorDisplay
                     isVisible={mismatchedIsVisible}
                     mismatchedChar={mismatchedChar}
