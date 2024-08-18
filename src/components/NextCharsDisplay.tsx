@@ -34,7 +34,7 @@ const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, NextCharsDispl
     const [mismatchedChar, setMismatchedChar] = useState<string | null>(null);
     const [mismatchedIsVisible, setMismatchedIsVisible] = useState(false);
     const [nextChars, setNextChars] = useState(newPhrase);
-    const [phrase, setPhrase] = useState(new Phrase(newPhrase.split('')));
+    const [phrase, setPhrase] = useState<Phrase>(new Phrase(newPhrase.split('')));
 
     const nextCharsRef = useRef<HTMLPreElement>(null);
     const nextCharsRateRef = useRef<HTMLDivElement>(null);
@@ -44,10 +44,8 @@ const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, NextCharsDispl
     const nextCharsLength = 60;
 
     useEffect(() => {
-        if (isInPhraseMode) {
-            setPhrase(new Phrase(newPhrase.split('')));
-        }
-    }, [isInPhraseMode, newPhrase]);
+        setPhrase(new Phrase(newPhrase.split('')));
+    }, [newPhrase]);
 
     useEffect(() => {
         const nextChars = getNextCharacters(commandLine);
