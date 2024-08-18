@@ -43,6 +43,7 @@ const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, NextCharsDispl
 
     useEffect(() => {
         setPhrase(new Phrase(newPhrase.split('')));
+        setNextChars(newPhrase);
     }, [newPhrase]);
 
     useEffect(() => {
