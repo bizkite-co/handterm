@@ -46,16 +46,76 @@ const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, NextCharsDispl
     }, [newPhrase]);
 
     useEffect(() => {
-        const nextChars = getNextCharacters(commandLine);
-        if (typeof nextChars === 'string') {
-            setNextChars(nextChars);
-        }
         handleCommandLineChange(commandLine);
     }, [commandLine]);
 
-    const handleCommandLineChange = (newCommandLine: string) => {
-        testInput(newCommandLine);
+    const handleCommandLineChange = (stringBeingTested: string) => {
+        startTimer();
+
+        const nextIndex = getFirstNonMatchingChar(stringBeingTested);
+        if (nextIndex < 0) {
+            return null;
+        }
+
+        if (nextIndex > phrase.value.length) {
+            return null;
+        }
+
+        const nextCharactersString = getNextCharacters(stringBeingTested);
+        setNextChars(nextCharactersString);
+
+        const nextChordHTML = phrase.chordsHTML[nextIndex] as HTMLElement;
+
+        if (nextChordHTML) {
+            nextChordHTML.classList.remove("error");
+        }
+
+        if (stringBeingTested.length === 0) {
+            cancelTimer();
+            return;
+        }
+
+        if (stringBeingTested === phrase.value.join('').trim().substring(0, stringBeingTested.length)) {
+            hideError();
+        } else {
+            const firstNonMatchingChar = getFirstNonMatchingChar(stringBeingTested);
+            const mismatchedChar = phrase.value[firstNonMatchingChar];
+            setMismatchedIsVisible(true);
+            setMismatchedChar(mismatchedChar);
+            showError(mismatchedChar, firstNonMatchingChar);
+        }
+
+        if (stringBeingTested.trim() === phrase.value.join('').trim()) {
+            stopTimer();
+            handleSuccess();
+            return;
+        }
     };
+
+    const getNextCharacters = (stringBeingTested: string): string => {
+        const nextIndex = getFirstNonMatchingChar(stringBeingTested);
+        const result = phrase.value.join('').substring(nextIndex);
+        return result;
+    };
+
+    const getFirstNonMatchingChar = (stringBeingTested: string): number => {
+        if (!phrase.value) return 0;
+        const sourcePhrase = phrase.value;
+        const sourcePhraseString = sourcePhrase.join('');
+        if (stringBeingTested === sourcePhraseString) return sourcePhraseString.length;
+        if (!stringBeingTested || stringBeingTested.length === 0) {
+            return 0;
+        }
+        let result = 0;
+        for (let i = 0; i < stringBeingTested.length; i++) {
+            if (stringBeingTested[i] !== sourcePhrase[i]) {
+                return i;
+            }
+            result++;
+        }
+        return result;
+    };
+
 
     const showError = (char: string, charIndex: number) => {
         setMismatchedChar(char);
@@ -99,80 +159,6 @@ const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, NextCharsDispl
             timerRef.current.reset();
         }
         if (nextCharsRef.current) nextCharsRef.current.innerText = phrase.value.join('');
-    };
-
-
-    const getNextCharacters = (stringBeingTested: string): string => {
-        const nextIndex = getFirstNonMatchingChar(stringBeingTested);
-        if (nextIndex < 0) {
-            return '';
-        }
-        const nextChars = phrase.value.join('').substring(nextIndex);
-        return nextChars || '';
-    };
-
-    const setNext = (testPhrase: string): HTMLElement | null => {
-        const nextIndex = getFirstNonMatchingChar(testPhrase);
-        if (nextIndex < 0) {
-            return null;
-        }
-
-        if (nextIndex > phrase.value.length - 1) {
-            return null;
-        }
-
-        setNextChars(getNextCharacters(testPhrase));
-
-        const nextChordHTML = phrase.chordsHTML[nextIndex] as HTMLElement;
-
-        return nextChordHTML;
-    };
-
-    const testInput = (stringBeingTested: string) => {
-        startTimer();
-
-        const nextChordHTML = setNext(stringBeingTested);
-        if (nextChordHTML) {
-            nextChordHTML.classList.remove("error");
-        }
-
-        if (stringBeingTested.length === 0) {
-            cancelTimer();
-            return;
-        }
-
-        if (stringBeingTested === phrase.value.join('').trim().substring(0, stringBeingTested.length)) {
-            hideError();
-        } else {
-            const firstNonMatchingChar = getFirstNonMatchingChar(stringBeingTested);
-            const mismatchedChar = phrase.value[firstNonMatchingChar];
-            setMismatchedIsVisible(true);
-            setMismatchedChar(mismatchedChar);
-            showError(mismatchedChar, firstNonMatchingChar);
-        }
-
-        if (stringBeingTested.trim() === phrase.value.join('').trim()) {
-            stopTimer();
-            handleSuccess();
-            return;
-        }
-    };
-
-    const getFirstNonMatchingChar = (stringBeingTested: string): number => {
-        if (!phrase.value) return 0;
-        if (stringBeingTested === phrase.value.join('').trim()) return -1;
-        const sourcePhrase = phrase.value;
-        if (!stringBeingTested || stringBeingTested.length === 0) {
-            return 0;
-        }
-        let result = 0;
-        for (let i = 0; i < stringBeingTested.length; i++) {
-            if (stringBeingTested[i] !== sourcePhrase[i]) {
-                return i;
-            }
-            result++;
-        }
-        return result;
     };
 
     return (

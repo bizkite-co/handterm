@@ -807,7 +807,6 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
         isInPhraseMode: true,
         phraseValue: newPhrase.value,
         phraseName: newPhrase.key,
-        commandLine: newPhrase.value
       }
     });
     // this.props.onNewPhrase(newPhrase); 
