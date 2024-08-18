@@ -41,8 +41,6 @@ const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, NextCharsDispl
     const timerRef = useRef<any>(null);
     const wpmRef = useRef<HTMLSpanElement>(null);
 
-    const nextCharsLength = 60;
-
     useEffect(() => {
         setPhrase(new Phrase(newPhrase.split('')));
     }, [newPhrase]);

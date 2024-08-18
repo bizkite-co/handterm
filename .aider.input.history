@@ -1872,3 +1872,16 @@
 
 # 2024-08-16 14:51:58.211024
 +Ok, that seems to have worked. Now I would like you to look at additional functions within `handCommand()` that we could similarly factor out into another componet like `UpdateCommandHistory()`.
+
+# 2024-08-18 06:27:25.086254
++/add src\components\NextCharsDisplay.tsx
+
+# 2024-08-18 06:30:29.534227
++My `phrase` state is not defined when `NextCharsDisplay` is initiated. You and I converted this from a React class component and I think we might have skipped a step. The `phrase` is not defined when `getNextCharacters()` is first called, for instance.
+
+# 2024-08-18 08:40:15.713730
++It looks like the problem I am actully having is that, while `phrase` is defined and has a `.value:string`, and while `getNextCharacters()` returns a string value, the `const nextChars` is not set in this code block: ```    useEffect(() => {
++        const nextChars = getNextCharacters(commandLine);
++        setNextChars(nextChars);
++        handleCommandLineChange(commandLine);
++    }, [commandLine]);```
