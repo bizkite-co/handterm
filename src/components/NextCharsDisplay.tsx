@@ -33,7 +33,7 @@ const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, NextCharsDispl
 
     const [mismatchedChar, setMismatchedChar] = useState<string | null>(null);
     const [mismatchedIsVisible, setMismatchedIsVisible] = useState(false);
-    const [nextChars, setNextChars] = useState(newPhrase);
+    const [nextChars, setNextChars] = useState<string>(newPhrase);
     const [phrase, setPhrase] = useState<Phrase>(new Phrase(newPhrase.split('')));
 
     const nextCharsRef = useRef<HTMLPreElement>(null);
