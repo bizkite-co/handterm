@@ -104,8 +104,9 @@ const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, NextCharsDispl
 
     const getNextCharacters = (stringBeingTested: string): string => {
         const nextIndex = getFirstNonMatchingChar(stringBeingTested);
-        const nextChars = phrase.value.join('').substring(nextIndex, nextIndex + nextCharsLength);
-        return nextChars || stringBeingTested.substring(nextIndex, nextIndex + nextCharsLength);
+        const nextChars = phrase.value.join('').substring(nextIndex);
+        const result =  nextChars || stringBeingTested.substring(nextIndex);
+        return result;
     };
 
     const setNext = (testPhrase: string): HTMLElement | null => {
@@ -124,7 +125,6 @@ const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, NextCharsDispl
 
         return nextChordHTML;
     };
-
 
     const testInput = (stringBeingTested: string) => {
         startTimer();
@@ -158,6 +158,7 @@ const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, NextCharsDispl
 
     const getFirstNonMatchingChar = (stringBeingTested: string): number => {
         if (!phrase.value) return 0;
+        if (stringBeingTested === phrase.value.join('').trim()) return -1;
         const sourcePhrase = phrase.value;
         if (!stringBeingTested || stringBeingTested.length === 0) {
             return 0;
