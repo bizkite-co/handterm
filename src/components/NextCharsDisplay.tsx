@@ -49,7 +49,9 @@ const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, NextCharsDispl
 
     useEffect(() => {
         const nextChars = getNextCharacters(commandLine);
-        setNextChars(nextChars);
+        if (typeof nextChars === 'string') {
+            setNextChars(nextChars);
+        }
         handleCommandLineChange(commandLine);
     }, [commandLine]);
 
@@ -104,9 +106,11 @@ const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, NextCharsDispl
 
     const getNextCharacters = (stringBeingTested: string): string => {
         const nextIndex = getFirstNonMatchingChar(stringBeingTested);
+        if (nextIndex < 0) {
+            return '';
+        }
         const nextChars = phrase.value.join('').substring(nextIndex);
-        const result =  nextChars || stringBeingTested.substring(nextIndex);
-        return result;
+        return nextChars || '';
     };
 
     const setNext = (testPhrase: string): HTMLElement | null => {
