@@ -174,7 +174,7 @@ const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, NextCharsDispl
 
     return (
         <div
-            id={TerminalCssClasses.Terminal || 'next-chars'} 
+            id={TerminalCssClasses.NextChars || 'next-chars'} 
             hidden={!isInPhraseMode} 
         >
             {mismatchedChar && mismatchedIsVisible && (
