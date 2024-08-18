@@ -12,11 +12,11 @@ interface UnlockAchievementProps {
 const UnlockAchievement: React.FC<UnlockAchievementProps> = ({
     achievementPhrase, nextAchievement, unlockedAchievements, setState
 }) => {
+    if (achievementPhrase === '') achievementPhrase = 'Return (ENTER)';
     if (
         nextAchievement?.phrase.join('') === achievementPhrase
     ) {
 
-        if (achievementPhrase === '') achievementPhrase = 'Return (ENTER)';
         const updatedAchievements = [
             ...unlockedAchievements,
             achievementPhrase
