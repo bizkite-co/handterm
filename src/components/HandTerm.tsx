@@ -537,7 +537,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
             console.error(error);
           }
           else {
-            this.terminalWrite("Password changed successfully!" + result);
+            this.terminalWrite(`Password changed successfully! Status: ${result}`);
           }
           this.isInChangePasswordMode = false;
           this.terminalReset();

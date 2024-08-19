@@ -13,6 +13,7 @@ const WebCam: React.FC<WebCamProps> = ({ setOn }) => {
 
         videoElement.autoplay = true;
         videoElement.muted = true;
+        videoElement.id = 'terminal-video';
         videoElement.setAttribute('playsinline', '');
         videoElement.setAttribute('webkit-playsinline', '');
         videoElement.setAttribute('x5-playsinline', '');
