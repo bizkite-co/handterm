@@ -51,6 +51,7 @@ export interface IHandTermProps {
     getFile: (key: string, extension: string) => Promise<MyResponse<any>>;
     putFile: (key: string, content: string, extension: string) => Promise<MyResponse<any>>;
     listLog: () => Promise<MyResponse<any>>;
+    getExpiresAt: () => string;
     // Add other properties returned by useAuth here
   };
 }
@@ -147,7 +148,9 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       this.state.editFilePath,
       content,
       this.state.editFileExtension || 'md'
-    );
+    ).catch((error) => {
+      this.writeOutput(`Error saving file: ${error.message}`);
+    });
     this.writeOutput(content || '');
   }
 
@@ -332,6 +335,15 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     }
 
     if (command === 'edit') {
+      const expiresAtString = this.props.auth.getExpiresAt();
+      if(!expiresAtString) {
+        response = "You must login to edit files.";
+        this.writeOutput(response);
+        status = 401;
+        this.setState({ editMode: false });
+        this.adapterRef.current?.prompt();
+        return;
+      }
       (async () => {
         const fileContent = await this.props.auth.getFile(
           this.state.editFilePath, this.state.editFileExtension
@@ -409,7 +421,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     }
 
     if (command === 'login') {
-      response = "Logging in...";
+      response = "Logging in...\nType your password at the prompt. \"*\* will be displayed as you type.";
       const commandSlices = cmd.split(' ');
       if (commandSlices.length < 2) {
         response = "Please provide a username.";
@@ -500,10 +512,10 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
         (async () => {
           try {
             const result = await this.props.auth.login(this.tempUserName, this.getTempPassword());
-            this.terminalWrite("Login successful! Status: " + JSON.stringify(result.status));
+            this.terminalWrite(`Login successful! Status: ${JSON.stringify(result.status)}<br />`);
             this.prompt();
           } catch (error: any) {
-            this.terminalWrite("Login failed: " + error.message);
+            this.terminalWrite(`Login failed: ${error.message}<br />`);
           } finally {
             this.tempUserName = '';
             this.terminalReset();
