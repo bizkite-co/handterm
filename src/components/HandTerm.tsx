@@ -556,6 +556,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
         isInPhraseMode: false,
         commandLine: ''
       });
+      this.writeOutput('');
       this.adapterRef.current?.terminalReset();
       this.adapterRef.current?.prompt();
     }
