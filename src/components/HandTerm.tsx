@@ -52,6 +52,7 @@ export interface IHandTermProps {
     putFile: (key: string, content: string, extension: string) => Promise<MyResponse<any>>;
     listLog: () => Promise<MyResponse<any>>;
     getExpiresAt: () => string;
+    refreshTokenIfNeeded: () => Promise<MyResponse<any>>;
     // Add other properties returned by useAuth here
   };
 }
@@ -281,10 +282,10 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
   };
 
   public handleCommand = (cmd: string): void => {
-    UpdateCommandHistory({ 
-      cmd, 
-      state: this.state, 
-      setState: (newState: any) => this.setState(newState) 
+    UpdateCommandHistory({
+      cmd,
+      state: this.state,
+      setState: (newState: any) => this.setState(newState)
     });
 
     if (cmd === 'tut') {
@@ -336,7 +337,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
 
     if (command === 'edit') {
       const expiresAtString = this.props.auth.getExpiresAt();
-      if(!expiresAtString) {
+      if (!expiresAtString) {
         response = "You must login to edit files.";
         this.writeOutput(response);
         status = 401;
@@ -421,6 +422,23 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     }
 
     if (command === 'login') {
+      const expiresAtString = this.props.auth.getExpiresAt();
+      if (expiresAtString) {
+        if (new Date(parseInt(expiresAtString, 10)) > new Date()) {
+          status = 200;
+          response = "Already logged in.";
+          this.adapterRef.current?.prompt();
+          return;
+        }
+        else{
+          // refresh token and see if that worked.
+          this.props.auth.refreshTokenIfNeeded().then(() => {
+            status = 200;
+            response = "Already logged in.";
+            this.adapterRef.current?.prompt();
+          });
+        }
+      }
       response = "Logging in...<br />Type your password at the prompt. \"*\" will be displayed as you type.";
       const commandSlices = cmd.split(' ');
       if (commandSlices.length < 2) {
@@ -1052,11 +1070,9 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
                   onError={this.handlePhraseErrorState}
                 />
               )}
-
               {this.state.lastTypedCharacter && (
                 <Chord displayChar={this.state.lastTypedCharacter} />
               )}
-
               {Array.isArray(this.state.nextAchievement?.phrase) &&
                 TutorialComponent && (
                   <TutorialComponent
@@ -1064,8 +1080,8 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
                     isInTutorial={this.state.isInTutorial}
                     includeReturn={true}
                   />
-                )}
-
+                )
+              }
               {!this.state.editMode && (
                 <XtermAdapter
                   ref={this.adapterRef}
@@ -1077,7 +1093,6 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
                   onTouchEnd={this.handleTouchEnd}
                 />
               )}
-
               {this.state.editMode && (
                 <MonacoEditor
                   initialValue={this.state.editContent}
@@ -1087,7 +1102,6 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
                   onClose={this.handleEditorClose}
                 />
               )}
-
               {this.isShowVideo && (
                 <WebCam
                   setOn={this.isShowVideo}

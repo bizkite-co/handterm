@@ -86,10 +86,16 @@ export const useAuth = () => {
   };
 
   const setExpiresAt = (expiresIn: string) => {
-    const expiresAt = getExpiresAt(expiresIn);
+    const expiresAt = expiresInToExpiresAt(expiresIn);
     if (expiresAt) localStorage.setItem('ExpiresAt', expiresAt);
   }
-  const getExpiresAt = (expiresIn: string) => {
+
+  const getExpiresAt = () => {
+    const expiresAt = localStorage.getItem('ExpiresAt');
+    if (!expiresAt) return null;
+    return expiresAt;
+  }
+  const expiresInToExpiresAt = (expiresIn: string) => {
     const expiresInNumber = parseInt(expiresIn);
     if (isNaN(expiresInNumber)) return null;
     const expiresAt = new Date().getTime() + expiresInNumber * 1000;
@@ -267,5 +273,5 @@ export const useAuth = () => {
     }
   };
 
-  return { isLoggedIn, login: signIn, logout: signOut, signUp, getUser, checkSession, changePassword, setUser, saveLog, getLog, listLog, getFile, putFile, getExpiresAt };
+  return { isLoggedIn, login: signIn, logout: signOut, signUp, getUser, checkSession, changePassword, setUser, saveLog, getLog, listLog, getFile, putFile, getExpiresAt, refreshTokenIfNeeded };
 };
