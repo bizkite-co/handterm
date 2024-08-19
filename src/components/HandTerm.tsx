@@ -421,7 +421,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     }
 
     if (command === 'login') {
-      response = "Logging in...\nType your password at the prompt. \"*\* will be displayed as you type.";
+      response = "Logging in...<br />Type your password at the prompt. \"*\" will be displayed as you type.";
       const commandSlices = cmd.split(' ');
       if (commandSlices.length < 2) {
         response = "Please provide a username.";
@@ -512,10 +512,10 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
         (async () => {
           try {
             const result = await this.props.auth.login(this.tempUserName, this.getTempPassword());
-            this.terminalWrite(`Login successful! Status: ${JSON.stringify(result.status)}<br />`);
+            this.writeOutput(`Login successful! Status: ${JSON.stringify(result.status)}`);
             this.prompt();
           } catch (error: any) {
-            this.terminalWrite(`Login failed: ${error.message}<br />`);
+            this.writeOutput(`Login failed: ${error.message}`);
           } finally {
             this.tempUserName = '';
             this.terminalReset();
@@ -537,7 +537,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
             console.error(error);
           }
           else {
-            this.terminalWrite(`Password changed successfully! Status: ${result}`);
+            this.writeOutput(`Password changed successfully! Status: ${result}`);
           }
           this.isInChangePasswordMode = false;
           this.terminalReset();
