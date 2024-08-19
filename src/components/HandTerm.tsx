@@ -390,7 +390,11 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
             const userResponse: any = await this.props.auth.getUser();
 
             if (userResponse.status === 200) {
-              this.writeOutput(`Fetched userId: ` + userResponse.data.userId.split('-').slice(-1)[0] + ` username: ` + userResponse.data.content);
+              const content = userResponse.data.content.replaceAll('\n', '<br />');
+              this.writeOutput(
+                `Fetched userId: ` + userResponse.data.userId.split('-').slice(-1)[0] + 
+                ` name: ` + userResponse.data.username + `<br/>` +
+                ` index: ` + content);
             } else {
               this.writeOutput(userResponse.error.join('<br/>'));
             }
