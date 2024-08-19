@@ -433,9 +433,10 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
         else{
           // refresh token and see if that worked.
           this.props.auth.refreshTokenIfNeeded().then(() => {
-            status = 200;
-            response = "Already logged in.";
+            this.writeOutput("You are already logged in.")
+            this.inLoginProcess = false;
             this.adapterRef.current?.prompt();
+            return;
           });
         }
       }
