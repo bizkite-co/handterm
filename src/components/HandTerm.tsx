@@ -288,7 +288,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       setState: (newState: any) => this.setState(newState)
     });
 
-    if (cmd === 'tut') {
+    if (cmd === 'tut' && !this.state.isInTutorial) {
       this.resetTutorialAchievementState();
     }
 

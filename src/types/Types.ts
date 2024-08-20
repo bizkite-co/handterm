@@ -59,5 +59,6 @@ export const Achievements: Achievement[] = [
   { prompt: 'Type `hjkl;`. Notice that it requires finger-grasp only.', phrase: 'hjkl;'.split(''), unlocked: false },
   { prompt: 'Press the thumb tip followed by a finger tip to type numbers 1-4', phrase: '01234'.split(''), unlocked: false },
   { prompt: 'Many characters require combinations followed by releasing all keys. Type `zxcv` and we\'ll show corrections as you type.', phrase: 'zxcv'.split(''), unlocked: false },
+  { prompt: 'Remember this one so that you can restart this tutorial', phrase: 'tut'.split(''), unlocked: false },
   { prompt: 'Type `play` to play a guided typing game with chord-hints.', phrase: 'play'.split(''), unlocked: false },
 ]
