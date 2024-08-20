@@ -25,6 +25,7 @@ import { getNthPhraseNotAchieved, getPhrasesAchieved, getPhrasesNotAchieved, res
 import UpdateCommandHistory from '../commands/UpdateCommandHistory';
 import HelpCommand from '../commands/HelpCommand';
 import UnlockAchievement from '../commands/UnlockAchievement';
+import SpecialCommand from '../commands/SpecialCommand';
 
 export interface IHandTermProps {
   // Define the interface for your HandexTerm logic
@@ -328,11 +329,8 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     if (command === 'special') {
       status = 200;
       // Write out all the spcieal characters to the output
-      const specialChars = ['~', '`', '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '-', '_', '+', '=', '{', '[', '}', ']', '|', '\\', ':', ';', '"', "'", '<', '>', ',', '.', '?', '/'];
-      const specialCharsHtml = specialChars.map(element => {
-        return ReactDOMServer.renderToStaticMarkup(<Chord key={element} displayChar={element} />);
-      }).join('');
-      response = "<div class='chord-display-container'>" + specialCharsHtml + "</div>";
+      const specialCharsHtml = ReactDOMServer.renderToStaticMarkup(<SpecialCommand />);
+      response = specialCharsHtml;
     }
 
     if (command === 'edit') {
