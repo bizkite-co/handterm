@@ -343,6 +343,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
         this.adapterRef.current?.prompt();
         return;
       }
+      response = `Editing ${this.state.editFilePath}.${this.state.editFileExtension}`;
       (async () => {
         const fileContent = await this.props.auth.getFile(
           this.state.editFilePath, this.state.editFileExtension
