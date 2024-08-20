@@ -432,6 +432,15 @@ div.view-line {
   background: #0000;
 }
 
+div.view-line > span {
+  background: #0009;
+  display: inline-block;
+}
+
 div.monaco-editor-container > section > div > div > div.overflow-guard > div.margin {
   background: #0005;
+}
+
+#root > div > div > div.monaco-editor-container > section > div > div > div.overflow-guard > div.minimap.slider-mouseover > canvas.minimap-decorations-layer {
+  background: #0000;
 }
