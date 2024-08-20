@@ -396,3 +396,42 @@ div.terminal {
 div.cm-content {
   background-color: #0009;
 }
+
+/* Monaco editor styling */
+
+#root > div > div > div.monaco-editor-container {
+  background: #0000;
+}
+
+#root > div > div > div.monaco-editor-container > section {
+  background: #0000;
+}
+#root > div > div > div.monaco-editor-container > section > div {
+  background: #0000;
+}
+#root > div > div > div.monaco-editor-container > section > div > div {
+  background: #0000;
+}
+#root > div > div > div.monaco-editor-container > section > div > div > div.overflow-guard {
+  background: #0000;
+}
+
+#root > div > div > div.monaco-editor-container > section > div > div > div.overflow-guard > div.monaco-scrollable-element.editor-scrollable.vs-dark > {
+  background: #0000;
+}
+
+#root > div > div > div.monaco-editor-container > section > div > div > div.overflow-guard > div.monaco-scrollable-element.editor-scrollable.vs-dark > div.lines-content.monaco-editor-background {
+  background: #0000;
+}
+
+#root > div > div > div.monaco-editor-container > section > div > div > div.overflow-guard > div.monaco-scrollable-element.editor-scrollable.vs-dark > div.lines-content.monaco-editor-background > div.view-lines.monaco-mouse-cursor-text {
+  background: #0000;
+}
+
+div.view-line {
+  background: #0000;
+}
+
+div.monaco-editor-container > section > div > div > div.overflow-guard > div.margin {
+  background: #0005;
+}
