@@ -88,8 +88,8 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(({ initia
       });
 
       Vim.defineEx('vid', '', () => {
-        if (props.toggleVideo) {
-          props.toggleVideo();
+        if (toggleVideo) {
+          toggleVideo();
         }
       });
     });
