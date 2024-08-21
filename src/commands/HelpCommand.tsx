@@ -9,7 +9,13 @@ interface HelpCommandProps {
 const HelpCommand: React.FC<HelpCommandProps> = ({ command }) => {
     if (command === 'help' || command === '411') {
         const commandChords = [
-            'DELETE (Backspace)', 'Return (ENTER)', 'UpArrow', 'LeftArrow', 'DownArrow', 'RightArrow'
+            'DELETE (Backspace)', 
+            'Return (ENTER)', 
+            'UpArrow', 
+            'LeftArrow', 
+            'DownArrow', 
+            'RightArrow',
+            'ESCAPE',
         ].map(c => {
             return <Chord key={c} displayChar={c} />;
         });
