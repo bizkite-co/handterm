@@ -59,11 +59,6 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(({ initia
         }
         return null;
       }
-      Vim.defineEx('vid', '', () => {
-        if (props.toggleVideo) {
-          props.toggleVideo();
-        }
-      });
     });
 
     window.require.config({
@@ -92,12 +87,9 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(({ initia
         }
       });
 
-      Vim.defineEx('wq', '', () => {
-        if (onSave) {
-          onSave(editor.getValue());
-        }
-        if (onClose) {
-          onClose();
+      Vim.defineEx('vid', '', () => {
+        if (props.toggleVideo) {
+          props.toggleVideo();
         }
       });
     });
