@@ -382,7 +382,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       }
     }
 
-    if (command.startsWith('profile')) {
+    if (command.startsWith('cat')) {
       if (args.length === 0) {
 
         (async () => {
