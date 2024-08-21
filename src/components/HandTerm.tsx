@@ -1072,7 +1072,6 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
                   newPhrase={this.state.phraseValue}
                   onPhraseSuccess={this.handlePhraseSuccess}
                   onError={this.handlePhraseErrorState}
-                  toggleVideo={this.toggleVideo}
                 />
               )}
               {this.state.lastTypedCharacter && (
