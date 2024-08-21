@@ -1106,6 +1106,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
                   onSave={this.handleEditSave}
                   onClose={this.handleEditorClose}
                   toggleVideo={this.toggleVideo}
+                  toggleVideo={this.toggleVideo}
                 />
               )}
               {this.isShowVideo && (

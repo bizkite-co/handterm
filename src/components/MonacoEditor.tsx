@@ -25,7 +25,7 @@ export interface MonacoEditorHandle {
   focus: () => void;
 }
 
-const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(({ initialValue, language, onChange, onSave, onClose, height = '80vh' }, ref) => {
+const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(({ initialValue, language, onChange, onSave, onClose, height = '80vh', toggleVideo }, ref) => {
   const editorRef = useRef<any>(null);
   const statusNodeRef = useRef<HTMLDivElement>(null);
 
