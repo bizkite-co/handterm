@@ -90,6 +90,7 @@ export interface IHandTermState {
   editLanguage: LanguageType;
   editFilePath: string;
   editFileExtension: string;
+  isShowVideo: boolean;
 }
 
 class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
@@ -115,7 +116,6 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
   private heroSummersaultTimeoutId: number | null = null;
   private lastTouchDistance: number | null = null;
   private currentFontSize: number = 17;
-  isShowVideo: any;
   outputRef = React.createRef<HTMLDivElement>();
   private inLoginProcess: boolean = false;
   private tempUserName: string = '';
@@ -242,6 +242,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       // Default edit file path
       editFilePath: "_index",
       editFileExtension: "md",
+      isShowVideo: false
     }
     this.loadDebugValue();
     this.loadFontSize();
@@ -1029,8 +1030,10 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
   }
 
   public toggleVideo = (): boolean => {
-    this.isShowVideo = !this.isShowVideo;
-    return this.isShowVideo;
+    this.setState((prevState) => ({
+      isShowVideo: !prevState.isShowVideo
+    }))
+    return !this.state.isShowVideo;
   }
 
   public render() {
@@ -1107,9 +1110,9 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
                   toggleVideo={this.toggleVideo}
                 />
               )}
-              {this.isShowVideo && (
+              {this.state.isShowVideo && (
                 <WebCam
-                  setOn={this.isShowVideo}
+                  setOn={this.state.isShowVideo}
                 />
               )}
             </div>
