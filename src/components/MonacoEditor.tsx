@@ -9,6 +9,7 @@ interface MonacoEditorProps {
   onSave?: (value: string) => void;
   onClose?: () => void;
   height?: string;
+  toggleVideo?: () => boolean;
 }
 
 declare global {
@@ -58,6 +59,11 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(({ initia
         }
         return null;
       }
+      Vim.defineEx('vid', '', () => {
+        if (props.toggleVideo) {
+          props.toggleVideo();
+        }
+      });
     });
 
     window.require.config({
