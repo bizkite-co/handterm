@@ -54,6 +54,7 @@ export interface IHandTermProps {
     listLog: () => Promise<MyResponse<any>>;
     getExpiresAt: () => string;
     refreshTokenIfNeeded: () => Promise<MyResponse<any>>;
+    initiateGitHubAuth: () => void;
     // Add other properties returned by useAuth here
   };
 }
@@ -392,7 +393,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
             if (userResponse.status === 200) {
               const content = userResponse.data.content.replaceAll('\n', '<br />');
               this.writeOutput(
-                `Fetched userId: ` + userResponse.data.userId.split('-').slice(-1)[0] + 
+                `Fetched userId: ` + userResponse.data.userId.split('-').slice(-1)[0] +
                 ` name: ` + userResponse.data.username + `<br/>` +
                 ` index: ` + content);
             } else {
@@ -407,6 +408,13 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
         const content = args.join(' ');
         this.props.auth.setUser(content);
       }
+    }
+
+    if (command === 'github') {
+      status = 200;
+      response = "Opening github.com for you to authenticate there.";
+      this.props.auth.initiateGitHubAuth();
+      return;
     }
 
     if (command === 'signup') {
@@ -434,7 +442,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
           this.adapterRef.current?.prompt();
           return;
         }
-        else{
+        else {
           // refresh token and see if that worked.
           this.props.auth.refreshTokenIfNeeded().then(() => {
             this.writeOutput("You are already logged in.")
@@ -535,7 +543,11 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
         (async () => {
           try {
             const result = await this.props.auth.login(this.tempUserName, this.getTempPassword());
-            this.writeOutput(`Login successful! Status: ${JSON.stringify(result.status)}`);
+            if (result.status === 200) {
+              this.writeOutput(`Login successful! Status: ${JSON.stringify(result.status)}`);
+            } else{
+              this.writeOutput(`Login failed! Status: ${JSON.stringify(result.status)}<br />${result.message}`);
+            }
             this.prompt();
           } catch (error: any) {
             this.writeOutput(`Login failed: ${error.message}`);

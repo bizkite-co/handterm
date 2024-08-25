@@ -46,6 +46,11 @@ export const useAuth = () => {
       throw error;
     }
   };
+  const initiateGitHubAuth = () => {
+    const githubAuthUrl = `${API_URL}/github_auth`;
+    // Redirect the user to the GitHub authorization URL        
+    window.location.href = githubAuthUrl;
+  };
 
   const refreshTokenIfNeeded = async (): Promise<MyResponse<number>> => {
     let response: MyResponse<number> = { status: 200, error: [], message: 'Token refresh' };
@@ -273,5 +278,5 @@ export const useAuth = () => {
     }
   };
 
-  return { isLoggedIn, login: signIn, logout: signOut, signUp, getUser, checkSession, changePassword, setUser, saveLog, getLog, listLog, getFile, putFile, getExpiresAt, refreshTokenIfNeeded };
+  return { isLoggedIn, login: signIn, logout: signOut, signUp, getUser, checkSession, changePassword, setUser, saveLog, getLog, listLog, getFile, putFile, getExpiresAt, refreshTokenIfNeeded, initiateGitHubAuth };
 };
