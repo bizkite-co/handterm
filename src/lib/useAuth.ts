@@ -179,6 +179,8 @@ export const useAuth = () => {
   const getFile = async (key: string, extension: string = 'json'): Promise<MyResponse<any>> => {
     try {
       const authConfig = await getAuthConfig();
+      if(authConfig.status !== 200) return authConfig;
+
       const response = await axios.get(`${API_URL}${ENDPOINTS.api.GetFile}`, {
         headers: authConfig.data.headers, // Assuming authConfig.data contains headers
         params: { key, extension }

@@ -5,6 +5,9 @@
 		},
 		{
 			"path": "../handterm-cdk"
+		},
+		{
+			"path": "../handterm-wiki"
 		}
 	],
 	"settings": {

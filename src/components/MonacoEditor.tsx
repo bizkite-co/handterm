@@ -86,6 +86,14 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(({ initia
           onClose();
         }
       });
+      Vim.defineEx('wq', '', () => {
+        if (onSave) {
+          onSave(editor.getValue());
+        }
+        if (onClose) {
+          onClose();
+        }
+      })
 
       Vim.defineEx('vid', '', () => {
         if (toggleVideo) {
