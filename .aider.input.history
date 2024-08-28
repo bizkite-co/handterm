@@ -1888,3 +1888,70 @@
 
 # 2024-08-28 07:36:35.940956
 +I had to revert several of your changes again because they caused duplicate import statements and other errors. Now we still have your first two commits for solving this feature. The `componentDidMount()` runs when the page is first loaded, but doesn't seem to run when the HTTP 302 is redirected back from the GitHub authentication process. I am unfamiliar with how a React app is supposed to intercept such an interaction in code. Is the `HandTerm.tsx` class component the proper way to intercept the request?
+
+# 2024-08-28 10:49:44.119491
++/add src/components/Prompt.tsx
+
+# 2024-08-28 10:50:45.981069
++I want to use `Prompt.tsx` as a React functional component that I can use in the `HandTerm`, but I am getting linting errors, including: ```[{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/HandTerm.tsx",
++"owner": "typescript",
++"code": "2786",
++"severity": 8,
++"message": "'Prompt' cannot be used as a JSX component.\n  Its type '(domain: string, username: string, timestamp: string, githubUsername: string) => JSX.Element' is not a valid JSX element type.\n    Type '(domain: string, username: string, timestamp: string, githubUsername: string) => JSX.Element' is not assignable to type '(props: any, deprecatedLegacyContext?: any) => ReactNode'.\n      Target signature provides too few arguments. Expected 4 or more, but got 2.",
++"source": "ts",
++"startLineNumber": 1134,
++"startColumn": 16,
++"endLineNumber": 1134,
++"endColumn": 22
++}]```
+
+# 2024-08-28 10:51:39.468443
++Now I am just getting these linting errors: ```[{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/HandTerm.tsx",
++"owner": "typescript",
++"code": "2322",
++"severity": 8,
++"message": "Type 'string | null' is not assignable to type 'string'.\n  Type 'null' is not assignable to type 'string'.",
++"source": "ts",
++"startLineNumber": 1138,
++"startColumn": 17,
++"endLineNumber": 1138,
++"endColumn": 31,
++"relatedInformation": [
++{
++"startLineNumber": 8,
++"startColumn": 5,
++"endLineNumber": 8,
++"endColumn": 19,
++"message": "The expected type comes from property 'githubUsername' which is declared here on type 'IntrinsicAttributes & PromptProps'",
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/Prompt.tsx"
++}
++]
++}]```
+
+# 2024-08-28 10:56:16.354712
++Now I am getting this error: ```[{
++"resource": "/c:/Users/xgenx/source/repos/handterm/src/components/HandTerm.tsx",
++"owner": "typescript",
++"code": "2322",
++"severity": 8,
++"message": "Type '{ ref: RefObject<HTMLDivElement>; username: string; domain: string; githubUsername: string | null; timestamp: string; }' is not assignable to type 'IntrinsicAttributes & PromptProps'.\n  Property 'ref' does not exist on type 'IntrinsicAttributes & PromptProps'.",
++"source": "ts",
++"startLineNumber": 1135,
++"startColumn": 17,
++"endLineNumber": 1135,
++"endColumn": 20
++}]```
+
+# 2024-08-28 14:16:56.914046
++I am trying to use font-awesome to show the GitHub logo in my TUI with this: `<i className="fa fa-github" aria-hidden="true"></i>` but it is not showing up.
+
+# 2024-08-28 14:18:13.565709
++/run npm install @fortawesome/fontawesome-svg-core @fortawesome/free-brands-svg-icons @fortawesome/react-fontawesome
+
+# 2024-08-28 14:20:25.613525
++Why do you keep trying to use NPM? I am using Yarn.
+
+# 2024-08-28 14:28:07.482681
++I looked a the unicode flag you added instead of the GitHub font-awesome icon and it's just a blue flag. It doesn't look anything like the GitHub logo. Is there a unicode character that looks like the GitHub logo? I have used Yarn to add font-awesome to my project, but now I need to add the HTML you removed back in.

@@ -13,7 +13,7 @@ import confetti from 'canvas-confetti';
 export interface IGameProps {
   canvasHeight: number
   canvasWidth: number
-  isInPhraseMode: boolean
+  isInGameMode: boolean
   heroActionType: ActionType
   zombie4ActionType: ActionType
   zombie4StartPosition: SpritePosition
@@ -41,7 +41,7 @@ const Game = React.forwardRef<IGameHandle, IGameProps>((props, ref) => {
   const {
     canvasHeight,
     canvasWidth,
-    isInPhraseMode,
+    isInGameMode: isInPhraseMode,
     heroActionType,
     zombie4ActionType,
     zombie4StartPosition,

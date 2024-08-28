@@ -200,6 +200,24 @@ div.terminal {
     }
 }
 
+pre#prompt {
+    margin: 0;
+    font-size: var(--terminal-font-size);
+    font-family: var(--terminal-font-family);
+    font-weight: 600;
+    color: lightgreen;
+    clear: both;
+    .user {
+        color: magenta;
+    }
+    .domain {
+        color: yellow;
+    }
+    .github {
+        color: cyan;
+    }
+}
+
 .hidden-canvas {
     visibility: hidden;
     position: absolute;

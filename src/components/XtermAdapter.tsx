@@ -208,10 +208,10 @@ const XtermAdapter = forwardRef<XtermAdapterHandle, IXtermAdapterProps>((props, 
     return command.substring(promptEndIndex).trimStart();
   };
 
-  const prompt = (user: string = 'guest', host: string = 'handex.io') => {
+  const prompt = () => {
     terminal.current.reset();
-    const promptText = `\x1b[1;34m${user}@${host} \x1b[0m\x1b[1;32m~${promptDelimiter}\x1b[0m `;
-    promptLength.current = promptText.length - 21;
+    const promptText = `~${promptDelimiter} `;
+    promptLength.current = promptText.length +2;
     terminal.current.write(promptText);
   };
 

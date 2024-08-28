@@ -65,7 +65,7 @@ type LanguageType = "javascript" | "typescript" | "markdown";
 export interface IHandTermState {
   // Define the interface for your HandexTerm state
   outputElements: React.ReactNode[];
-  isInPhraseMode: boolean;
+  isInGameMode: boolean;
   phraseValue: string;
   phraseName: string;
   phraseIndex: number;
@@ -112,7 +112,6 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
   private nextCharsDisplayRef: React.RefObject<NextCharsDisplayHandle> = React.createRef();
   private editorRef: React.RefObject<MonacoEditorHandle> = React.createRef();
   private terminalGameRef: React.RefObject<IGameHandle> = React.createRef();
-  private promptRef = React.createRef<HTMLDivElement>();
   // Remove this line as we no longer need a ref for the editor
 
   private _persistence: IPersistence;
@@ -156,7 +155,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       // Reset timer
       this.nextCharsDisplayRef.current?.resetTimer();
     }
-    if (this.state.isInPhraseMode) {
+    if (this.state.isInGameMode) {
       this.setState({
         commandLine: command,
       });
@@ -234,11 +233,11 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     const initialCanvasHeight = localStorage.getItem('canvasHeight') || '100';
     const nextAchievement = getNextTutorialAchievement();
     this.state = {
-      domain: 'handterm',
+      domain: 'handterm.io',
       username: null,
-      timestamp: new Date().toLocaleTimeString(),
+      timestamp: new Date().toTimeString().split('(')[0],
       outputElements: this.getCommandResponseHistory().slice(-1),
-      isInPhraseMode: false,
+      isInGameMode: false,
       phraseValue: '', // Initial value
       phraseName: '',
       phraseIndex: 0,
@@ -348,7 +347,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     let response = "Command not found.";
     this.terminalGameRef.current?.resetGame();
     this.scrollToBottom();
-    this.setState({ isInPhraseMode: false, commandLine: '' });
+    this.setState({ isInGameMode: false, commandLine: '' });
 
     if (command === 'help' || command === '411') {
       status = 200;
@@ -525,9 +524,9 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     }
 
     if (this.nextCharsDisplayRef.current) this.nextCharsDisplayRef.current.cancelTimer();
-    if (this.state.isInPhraseMode) {
+    if (this.state.isInGameMode) {
       response = '';
-      this.setState({ isInPhraseMode: false });
+      this.setState({ isInGameMode: false });
     }
     // Clear the terminal after processing the command
     // TODO: reset timer
@@ -616,7 +615,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     if (character.charCodeAt(0) === 3) { // Ctrl+C
       localStorage.setItem(LogKeys.CurrentCommand, '');
       this.setState({
-        isInPhraseMode: false,
+        isInGameMode: false,
         commandLine: ''
       });
       this.writeOutput('');
@@ -676,13 +675,12 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       localStorage.setItem('currentCommand', '');
       this.terminalReset();
       this.handleCommand(command);
-    } else if (this.state.isInPhraseMode) {
+    } else if (this.state.isInGameMode) {
       // # IN PHRASE MODE
-
+      // TODO: How is Game success handeled here?
       if (this.state.errorCharIndex) {
 
       }
-
       this.terminalWrite(character);
       let command = this.adapterRef.current?.getCurrentCommand() ?? '';
       command += character;
@@ -858,6 +856,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
 
   private handlePhraseComplete = () => {
 
+    localStorage.setItem('currentCommand', '');
     let newPhraseIndex = (this.state.phraseIndex) % Phrases.phrases.length;
     let newPhrase = getPhrasesNotAchieved()[newPhraseIndex];
     this.setState({
@@ -867,6 +866,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     });
     if (this.nextCharsDisplayRef.current) this.nextCharsDisplayRef.current.cancelTimer();
     this.terminalGameRef.current?.completeGame();
+    this.adapterRef.current?.terminalReset();
   }
 
   private setNewPhrase = (phraseName: string) => {
@@ -880,7 +880,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     this.setState((prevState) => {
       return {
         ...prevState,
-        isInPhraseMode: true,
+        isInGameMode: true,
         phraseValue: newPhrase.value,
         phraseName: newPhrase.key,
       }
@@ -1099,7 +1099,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
                 ref={this.terminalGameRef}
                 canvasHeight={this.state.canvasHeight}
                 canvasWidth={canvasWidth} // Use the width from terminalSize if available
-                isInPhraseMode={this.state.isInPhraseMode}
+                isInGameMode={this.state.isInGameMode}
                 heroActionType={this.state.heroAction}
                 zombie4ActionType={this.state.zombie4Action}
                 onSetHeroAction={this.setHeroAction}
@@ -1109,11 +1109,11 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
                 phrasesAchieved={this.state.phrasesAchieved}
                 zombie4StartPosition={this.zombie4StartPostion}
               />
-              {this.state.isInPhraseMode && this.state.phraseValue && (
+              {this.state.isInGameMode && this.state.phraseValue && (
                 <NextCharsDisplay
                   ref={this.nextCharsDisplayRef}
                   commandLine={this.state.commandLine}
-                  isInPhraseMode={this.state.isInPhraseMode}
+                  isInPhraseMode={this.state.isInGameMode}
                   newPhrase={this.state.phraseValue}
                   onPhraseSuccess={this.handlePhraseSuccess}
                   onError={this.handlePhraseErrorState}
