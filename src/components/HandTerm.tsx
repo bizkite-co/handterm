@@ -131,8 +131,8 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       const urlParams = new URLSearchParams(window.location.search);
       const githubAuth = urlParams.get('githubAuth');
       const githubUsername = urlParams.get('githubUsername');
-
-      if (githubAuth === 'success' && githubUsername) {
+      if(!githubUsername) return;
+      if (githubAuth === 'success') {
         localStorage.setItem('githubUsername', githubUsername);
         window.history.replaceState({}, document.title, window.location.pathname);
         this.writeOutput(`GitHub authentication successful. Welcome, ${githubUsername}!`);
