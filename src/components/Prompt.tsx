@@ -8,7 +8,7 @@ interface PromptProps {
     githubUsername: string | null;
 }
 
-const githubLogo = '\uf09b';
+const githubLogo = '\u2691'; // Unicode character for a flag, which can represent GitHub
 
 export const Prompt: React.FC<PromptProps> = ({ domain, username, timestamp, githubUsername }) => {
     return (
@@ -18,9 +18,7 @@ export const Prompt: React.FC<PromptProps> = ({ domain, username, timestamp, git
             <span className="domain">@{domain}</span>
             {githubUsername &&
                 <span className="github">
-                    <span className="github-logo">
-                        <i className="fa fa-github" aria-hidden="true"></i>
-                    </span> {githubUsername}
+                    <span className="github-logo">{githubLogo}</span> {githubUsername}
                 </span>
             }
         </pre>
