@@ -1132,12 +1132,11 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
                 )
               }
               <Prompt 
-                ref={this.promptRef}
                 username={this.state.username || 'guest'}
                 domain={this.state.domain || 'handterm'}
                 githubUsername={this.state.githubUsername} 
                 timestamp={this.state.timestamp}
-                />
+              />
               {!this.state.editMode && (
                 <XtermAdapter
                   ref={this.adapterRef}
