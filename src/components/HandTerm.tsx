@@ -92,6 +92,7 @@ export interface IHandTermState {
   editFilePath: string;
   editFileExtension: string;
   isShowVideo: boolean;
+  githubAuthHandled: boolean;
 }
 
 class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
@@ -126,14 +127,17 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
   private zombie4StartPostion: SpritePosition = { leftX: -50, topY: 0 }
 
   private handleGitHubAuth = () => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const githubAuth = urlParams.get('githubAuth');
-    const githubUsername = urlParams.get('githubUsername');
+    if (!this.state.githubAuthHandled) {
+      const urlParams = new URLSearchParams(window.location.search);
+      const githubAuth = urlParams.get('githubAuth');
+      const githubUsername = urlParams.get('githubUsername');
 
-    if (githubAuth === 'success' && githubUsername) {
-      localStorage.setItem('githubUsername', githubUsername);
-      window.history.replaceState({}, document.title, window.location.pathname);
-      this.writeOutput(`GitHub authentication successful. Welcome, ${githubUsername}!`);
+      if (githubAuth === 'success' && githubUsername) {
+        localStorage.setItem('githubUsername', githubUsername);
+        window.history.replaceState({}, document.title, window.location.pathname);
+        this.writeOutput(`GitHub authentication successful. Welcome, ${githubUsername}!`);
+        this.setState({ githubAuthHandled: true });
+      }
     }
   }
 
@@ -255,7 +259,8 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       // Default edit file path
       editFilePath: "_index",
       editFileExtension: "md",
-      isShowVideo: false
+      isShowVideo: false,
+      githubAuthHandled: false
     }
     this.loadDebugValue();
     this.loadFontSize();
@@ -1065,6 +1070,8 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     const { terminalSize } = this.state;
     const canvasWidth = terminalSize ? terminalSize.width : 800;
     // canvas height does not need to match terminal height
+
+    this.handleGitHubAuth();
 
     return (
       <CommandContext.Consumer>
