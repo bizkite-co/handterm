@@ -136,7 +136,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       const urlParams = new URLSearchParams(window.location.search);
       const githubAuth = urlParams.get('githubAuth');
       const githubUsername = urlParams.get('githubUsername');
-      if(!githubUsername) return;
+      if (!githubUsername) return;
       if (githubAuth === 'success') {
         localStorage.setItem('githubUsername', githubUsername);
         window.history.replaceState({}, document.title, window.location.pathname);
@@ -293,6 +293,10 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
 
     this.addTouchListeners();
 
+    this.handleGitHubAuth();
+  }
+
+  componentDidUpdate(_prevProps: Readonly<IHandTermProps>, _prevState: Readonly<IHandTermState>, _snapshot?: any): void {
     this.handleGitHubAuth();
   }
 
@@ -572,7 +576,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
             const result = await this.props.auth.login(this.tempUserName, this.getTempPassword());
             if (result.status === 200) {
               this.writeOutput(`Login successful! Status: ${JSON.stringify(result.status)}`);
-            } else{
+            } else {
               this.writeOutput(`Login failed! Status: ${JSON.stringify(result.status)}<br />${result.message}`);
             }
             this.prompt();
@@ -1081,8 +1085,6 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     const canvasWidth = terminalSize ? terminalSize.width : 800;
     // canvas height does not need to match terminal height
 
-    this.handleGitHubAuth();
-
     return (
       <CommandContext.Consumer>
         {(context) => {
@@ -1131,10 +1133,10 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
                   />
                 )
               }
-              <Prompt 
+              <Prompt
                 username={this.state.username || 'guest'}
                 domain={this.state.domain || 'handterm'}
-                githubUsername={this.state.githubUsername} 
+                githubUsername={this.state.githubUsername}
                 timestamp={this.state.timestamp}
               />
               {!this.state.editMode && (
