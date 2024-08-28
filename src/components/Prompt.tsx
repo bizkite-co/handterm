@@ -5,13 +5,13 @@ interface PromptProps {
     domain: string;
     username: string;
     timestamp: string;
-    githubUsername: string;
+    githubUsername: string | null;
 }
 
 export const Prompt: React.FC<PromptProps> = ({ domain, username, timestamp, githubUsername }) => {
     return (
         <pre id={TerminalCssClasses.Prompt}>
-            <span className="domain">{domain}</span> <span className="user">{username}@{githubUsername}</span> <span className="timestamp">{timestamp}</span>
+            <span className="domain">{domain}</span> <span className="user">{username}{githubUsername ? `@${githubUsername}` : ''}</span> <span className="timestamp">{timestamp}</span>
         </pre>
     )
 }
