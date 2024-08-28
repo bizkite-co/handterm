@@ -2,7 +2,7 @@ import { LogKeys, TimeHTML, CharDuration, CharWPM, TerminalCssClasses } from '..
 import { IWPMCalculator, WPMCalculator } from '../utils/WPMCalculator';
 import { IPersistence, LocalStoragePersistence } from '../Persistence';
 import { createHTMLElementFromHTML } from '../utils/dom';
-import React, { ContextType, TouchEventHandler, useEffect } from 'react';
+import React, { ContextType, TouchEventHandler } from 'react';
 import XtermAdapter, { XtermAdapterHandle } from './XtermAdapter';
 import NextCharsDisplay, { NextCharsDisplayHandle } from './NextCharsDisplay';
 import { Output } from './Output';
