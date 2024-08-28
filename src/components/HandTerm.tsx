@@ -26,6 +26,7 @@ import UpdateCommandHistory from '../commands/UpdateCommandHistory';
 import HelpCommand from '../commands/HelpCommand';
 import UnlockAchievement from '../commands/UnlockAchievement';
 import SpecialCommand from '../commands/SpecialCommand';
+import { Prompt } from './Prompt';
 
 export interface IHandTermProps {
   // Define the interface for your HandexTerm logic
@@ -93,6 +94,10 @@ export interface IHandTermState {
   editFileExtension: string;
   isShowVideo: boolean;
   githubAuthHandled: boolean;
+  githubUsername: string | null;
+  username: string | null;
+  domain: string;
+  timestamp: string;
 }
 
 class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
@@ -107,6 +112,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
   private nextCharsDisplayRef: React.RefObject<NextCharsDisplayHandle> = React.createRef();
   private editorRef: React.RefObject<MonacoEditorHandle> = React.createRef();
   private terminalGameRef: React.RefObject<IGameHandle> = React.createRef();
+  private promptRef = React.createRef<HTMLDivElement>();
   // Remove this line as we no longer need a ref for the editor
 
   private _persistence: IPersistence;
@@ -136,7 +142,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
         localStorage.setItem('githubUsername', githubUsername);
         window.history.replaceState({}, document.title, window.location.pathname);
         this.writeOutput(`GitHub authentication successful. Welcome, ${githubUsername}!`);
-        this.setState({ githubAuthHandled: true });
+        this.setState({ githubAuthHandled: true, githubUsername: githubUsername });
       }
     }
   }
@@ -228,6 +234,9 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     const initialCanvasHeight = localStorage.getItem('canvasHeight') || '100';
     const nextAchievement = getNextTutorialAchievement();
     this.state = {
+      domain: 'handterm',
+      username: null,
+      timestamp: new Date().toLocaleTimeString(),
       outputElements: this.getCommandResponseHistory().slice(-1),
       isInPhraseMode: false,
       phraseValue: '', // Initial value
@@ -260,7 +269,8 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       editFilePath: "_index",
       editFileExtension: "md",
       isShowVideo: false,
-      githubAuthHandled: false
+      githubAuthHandled: false,
+      githubUsername: localStorage.getItem('githubUsername') || null,
     }
     this.loadDebugValue();
     this.loadFontSize();
@@ -1121,6 +1131,13 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
                   />
                 )
               }
+              <Prompt 
+                ref={this.promptRef}
+                username={this.state.username || 'guest'}
+                domain={this.state.domain || 'handterm'}
+                githubUsername={this.state.githubUsername} 
+                timestamp={this.state.timestamp}
+                />
               {!this.state.editMode && (
                 <XtermAdapter
                   ref={this.adapterRef}
