@@ -1088,7 +1088,13 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     return (
       <CommandContext.Consumer>
         {(context) => {
-          this.context = context;
+          if (context !== this.context) {
+            // Update context in a safe way
+            setTimeout(() => {
+              this.context = context;
+              this.forceUpdate();
+            }, 0);
+          }
           return (
             <div className="terminal-container">
               <Output
