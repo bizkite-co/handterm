@@ -2,7 +2,7 @@ import { LogKeys, TimeHTML, CharDuration, CharWPM, TerminalCssClasses } from '..
 import { IWPMCalculator, WPMCalculator } from '../utils/WPMCalculator';
 import { IPersistence, LocalStoragePersistence } from '../Persistence';
 import { createHTMLElementFromHTML } from '../utils/dom';
-import React, { ContextType, TouchEventHandler } from 'react';
+import React, { ContextType, TouchEventHandler, useEffect } from 'react';
 import XtermAdapter, { XtermAdapterHandle } from './XtermAdapter';
 import NextCharsDisplay, { NextCharsDisplayHandle } from './NextCharsDisplay';
 import { Output } from './Output';
@@ -124,6 +124,18 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
   private isInChangePasswordMode: boolean = false;
   private heroActionTimeoutId: number | null = null;
   private zombie4StartPostion: SpritePosition = { leftX: -50, topY: 0 }
+
+  private handleGitHubAuth = () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const githubAuth = urlParams.get('githubAuth');
+    const githubUsername = urlParams.get('githubUsername');
+
+    if (githubAuth === 'success' && githubUsername) {
+      localStorage.setItem('githubUsername', githubUsername);
+      window.history.replaceState({}, document.title, window.location.pathname);
+      this.writeOutput(`GitHub authentication successful. Welcome, ${githubUsername}!`);
+    }
+  }
 
   public handlePhraseErrorState = (errorIndex: number | undefined) => {
     this.setState({ errorCharIndex: errorIndex });
@@ -267,6 +279,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
 
     this.addTouchListeners();
 
+    this.handleGitHubAuth();
   }
 
   componentWillUnmount(): void {
