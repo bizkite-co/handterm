@@ -55,7 +55,7 @@ export const useAuth = () => {
       }
 
       // Assuming the user data contains a unique identifier, like a Cognito user ID
-      const userId = userResponse.data.sub || userResponse.data.username;
+      const userId = userResponse.data.userId;
 
       // Create a state parameter that includes the user ID
       const state = btoa(JSON.stringify({ userId }));

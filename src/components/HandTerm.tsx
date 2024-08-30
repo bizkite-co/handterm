@@ -56,6 +56,7 @@ export interface IHandTermProps {
     getExpiresAt: () => string;
     refreshTokenIfNeeded: () => Promise<MyResponse<any>>;
     initiateGitHubAuth: () => void;
+    listRecentRepos: () => Promise<MyResponse<any>>
     // Add other properties returned by useAuth here
   };
 }
@@ -141,7 +142,10 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
         localStorage.setItem('githubUsername', githubUsername);
         window.history.replaceState({}, document.title, window.location.pathname);
         this.writeOutput(`GitHub authentication successful. Welcome, ${githubUsername}!`);
-        this.setState({ githubAuthHandled: true, githubUsername: githubUsername });
+        this.setState({ 
+          githubAuthHandled: true, 
+          githubUsername: githubUsername 
+        });
       }
     }
   }
@@ -444,7 +448,15 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     if (command === 'github') {
       status = 200;
       response = "Opening github.com for you to authenticate there.";
-      this.props.auth.initiateGitHubAuth();
+      if (!this.state.githubAuthHandled) {
+        this.props.auth.initiateGitHubAuth();
+      } else {
+        this.props.auth.listRecentRepos().then((repos) => {
+          console.log("repos: ", repos);
+          this.writeOutput(repos.data);
+        });
+      }
+
       return;
     }
 

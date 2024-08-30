@@ -16,7 +16,8 @@ export const Prompt: React.FC<PromptProps> = ({ domain, username, timestamp, git
             <span className="domain">@{domain}</span>
             {githubUsername &&
                 <span className="github">
-                    <i className="fa fa-github" aria-hidden="true"></i> {githubUsername}
+                    <i className="fa fa-github" aria-hidden="true"></i> 
+                    {githubUsername}
                 </span>
             }
         </pre>
