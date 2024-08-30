@@ -46,11 +46,29 @@ export const useAuth = () => {
       throw error;
     }
   };
-  const initiateGitHubAuth = () => {
-    // TODO: Add auth credentials so the userId can be forwarded to the GitHub API to be included in the callback.
-    const githubAuthUrl = `${API_URL}/github_auth`;
-    // Redirect the user to the GitHub authorization URL        
-    window.location.href = githubAuthUrl;
+  const initiateGitHubAuth = async () => {
+    try {
+      // Get the current user's Cognito ID
+      const userResponse = await getUser();
+      if (userResponse.status !== 200 || !userResponse.data) {
+        throw new Error('Failed to get current user information');
+      }
+
+      // Assuming the user data contains a unique identifier, like a Cognito user ID
+      const userId = userResponse.data.sub || userResponse.data.username;
+
+      // Create a state parameter that includes the user ID
+      const state = btoa(JSON.stringify({ userId }));
+
+      // Construct the GitHub auth URL with the state parameter
+      const githubAuthUrl = `${API_URL}/github_auth?state=${encodeURIComponent(state)}`;
+
+      // Redirect the user to the GitHub authorization URL
+      window.location.href = githubAuthUrl;
+    } catch (error) {
+      console.error('Failed to initiate GitHub authentication:', error);
+      // Handle the error appropriately (e.g., show an error message to the user)
+    }
   };
 
   const refreshTokenIfNeeded = async (): Promise<MyResponse<number>> => {
