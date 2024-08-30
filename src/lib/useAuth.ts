@@ -47,6 +47,7 @@ export const useAuth = () => {
     }
   };
   const initiateGitHubAuth = () => {
+    // TODO: Add auth credentials so the userId can be forwarded to the GitHub API to be included in the callback.
     const githubAuthUrl = `${API_URL}/github_auth`;
     // Redirect the user to the GitHub authorization URL        
     window.location.href = githubAuthUrl;
@@ -211,9 +212,23 @@ export const useAuth = () => {
     try {
       const authConfig = await getAuthConfig();
       const response = await axios.get(`${API_URL}${ENDPOINTS.api.ListLog}`, authConfig.data);
+      // if(response.error === 'GITHUB_TOKEN_NOT_FOUND') {
+      //   initiateGitHubAuth();
+      // }
       return response.data;
     } catch (error) {
       console.error('Error fetching log:', error);
+      return null;
+    }
+  }
+
+  const listRecentRepos = async () => {
+    try {
+      const authConfig = await getAuthConfig();
+      const response = await axios.get(`${API_URL}${ENDPOINTS.api.ListRecentRepos}`, authConfig.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching recent repos:', error);
       return null;
     }
   }
@@ -280,5 +295,5 @@ export const useAuth = () => {
     }
   };
 
-  return { isLoggedIn, login: signIn, logout: signOut, signUp, getUser, checkSession, changePassword, setUser, saveLog, getLog, listLog, getFile, putFile, getExpiresAt, refreshTokenIfNeeded, initiateGitHubAuth };
+  return { isLoggedIn, login: signIn, logout: signOut, signUp, getUser, checkSession, changePassword, setUser, saveLog, getLog, listLog, getFile, putFile, getExpiresAt, refreshTokenIfNeeded, initiateGitHubAuth, listRecentRepos };
 };
