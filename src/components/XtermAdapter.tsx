@@ -174,7 +174,7 @@ const XtermAdapter = forwardRef<XtermAdapterHandle, IXtermAdapterProps>((props, 
       if (data.charCodeAt(1) === 91) {
         if (data.length > 2) {
           if (data.charCodeAt(2) === 72) {
-            terminal.current.write(`\x1b[${promptLength.current + 1}G`);
+            terminal.current.write(`\x1b[${promptLength.current}G`);
             return;
           }
         }
