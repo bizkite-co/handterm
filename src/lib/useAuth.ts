@@ -282,6 +282,8 @@ export const useAuth = () => {
       localStorage.setItem('RefreshToken', response.data.RefreshToken);
       localStorage.setItem('IdToken', response.data.IdToken);
       localStorage.setItem('SignedInAs', username);
+      // TODO: if GitHub linked, set githubAuthHandled to true
+
       setExpiresAt(response.data.ExpiresIn);
       return { data: response.data, message: 'Login successful', status: 200, error: [] }; // Contains username, attributes, etc. response.data; // Return session data if needed
     } catch (error) {
