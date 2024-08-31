@@ -275,17 +275,39 @@ export const useAuth = () => {
     }
     try {
       const response = await axios.post(`${API_URL}${ENDPOINTS.api.SignIn}`, { username, password });
-      // The API should set an HttpOnly cookie directly, no need to handle tokens here
       console.log('Login successful:', response.data);
       setIsLoggedIn(true);
       localStorage.setItem('AccessToken', response.data.AccessToken);
       localStorage.setItem('RefreshToken', response.data.RefreshToken);
       localStorage.setItem('IdToken', response.data.IdToken);
       localStorage.setItem('SignedInAs', username);
-      // TODO: if GitHub linked, set githubAuthHandled to true
 
       setExpiresAt(response.data.ExpiresIn);
-      return { data: response.data, message: 'Login successful', status: 200, error: [] }; // Contains username, attributes, etc. response.data; // Return session data if needed
+
+      // Fetch user attributes
+      const userResponse = await getUser();
+      if (userResponse.status === 200 && userResponse.data) {
+        const userData = userResponse.data;
+        
+        // Store GitHub-related information
+        if (userData['custom:github_token']) {
+          localStorage.setItem('GitHubToken', userData['custom:github_token']);
+        }
+        if (userData['custom:github_id']) {
+          localStorage.setItem('GitHubId', userData['custom:github_id']);
+        }
+        // You might want to store the GitHub username if it's available in the user attributes
+        if (userData['custom:github_username']) {
+          localStorage.setItem('GitHubUsername', userData['custom:github_username']);
+        }
+
+        // Set githubAuthHandled to true if GitHub is linked
+        if (userData['custom:github_token'] && userData['custom:github_id']) {
+          localStorage.setItem('githubAuthHandled', 'true');
+        }
+      }
+
+      return { data: response.data, message: 'Login successful', status: 200, error: [] };
     } catch (error) {
       return {
         status: 401,
