@@ -41,6 +41,7 @@ export interface IHandTermProps {
       email: string,
       callback: (error: any, result: any) => void
     ) => void;
+    verify: (username: string, code: string, callback: (error: any, result: any) => void) => void;
     getUser: () => Promise<MyResponse<any>>;
     setUser: (profile: string) => void;
     saveLog: (key: string, content: string, extension: string) => Promise<MyResponse<any>>;
@@ -448,12 +449,14 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     if (command === 'github') {
       status = 200;
       response = "Opening github.com for you to authenticate there.";
-      if (!this.state.githubAuthHandled) {
+      if (!this.state.githubUsername) {
         this.props.auth.initiateGitHubAuth();
       } else {
-        this.props.auth.listRecentRepos().then((repos) => {
+        this.props.auth.listRecentRepos().then((repos: any) => {
           console.log("repos: ", repos);
-          this.writeOutput(repos.data);
+          const repoNames = Array.from(repos).map((repo: any) => repo.name).join('<br/>');
+          console.log("repoNames: ", repoNames);
+          this.writeOutput(repoNames);
         });
       }
 
@@ -461,9 +464,9 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     }
 
     if (command === 'signup') {
-      response = "Signing up...";
+      response = "Signing up. Enter <username> <password> <email> (without <>)";
       const commandSlices = cmd.split(' ');
-      this.props.auth.signUp(commandSlices[1], commandSlices[2], commandSlices[1], (error, result) => {
+      this.props.auth.signUp(commandSlices[1], commandSlices[2], commandSlices[3], (error, result) => {
         if (error) {
           console.error(error);
           response = "Error signing up." + result;
@@ -474,6 +477,26 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
           status = 200;
         }
       })
+    }
+
+    if( command === 'verify') {
+      const commandSlices = cmd.split(' ');
+      if (commandSlices.length < 3) {
+        response = "Please provide a username and verification code.";
+        status = 400;
+      } else {
+        this.props.auth.verify(commandSlices[1], commandSlices[2], (error, result) => {
+          if (error) {
+            console.error(error);
+            response = "Error verifying username." + result;
+            status = 500;
+          }
+          else {
+            response = "Verification successful!" + result;
+            status = 200;
+          }
+        })
+      }
     }
 
     if (command === 'login') {

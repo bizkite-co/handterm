@@ -46,6 +46,20 @@ export const useAuth = () => {
       throw error;
     }
   };
+
+  const verify = async (username: string, code: string) => {
+    if (!username || !code) {
+      throw new Error('All fields are required');
+    }
+    try {
+      await axios.post(`${API_URL}${ENDPOINTS.api.ConfirmSignUp}`, { username, code }, baseConfig);
+      // Handle verification logic (e.g., auto-login or redirect to login page)
+      setIsLoggedIn(true);
+    } catch (error) {
+      console.error('Verification failed:', error);
+      throw error;
+    }
+  }
   const initiateGitHubAuth = async () => {
     try {
       // Get the current user's Cognito ID
@@ -337,5 +351,5 @@ export const useAuth = () => {
     }
   };
 
-  return { isLoggedIn, login: signIn, logout: signOut, signUp, getUser, checkSession, changePassword, setUser, saveLog, getLog, listLog, getFile, putFile, getExpiresAt, refreshTokenIfNeeded, initiateGitHubAuth, listRecentRepos };
+  return { isLoggedIn, login: signIn, logout: signOut, signUp, getUser, checkSession, changePassword, setUser, saveLog, getLog, listLog, getFile, putFile, getExpiresAt, refreshTokenIfNeeded, initiateGitHubAuth, listRecentRepos, verify };
 };
