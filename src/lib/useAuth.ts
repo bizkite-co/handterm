@@ -52,6 +52,7 @@ export const useAuth = () => {
       throw new Error('All fields are required');
     }
     try {
+      
       await axios.post(`${API_URL}${ENDPOINTS.api.ConfirmSignUp}`, { username, code }, baseConfig);
       // Handle verification logic (e.g., auto-login or redirect to login page)
       setIsLoggedIn(true);
@@ -302,7 +303,6 @@ export const useAuth = () => {
       const userResponse = await getUser();
       if (userResponse.status === 200 && userResponse.data) {
         const userData = userResponse.data;
-        
         // Store GitHub-related information
         if (userData['custom:github_token']) {
           localStorage.setItem('GitHubToken', userData['custom:github_token']);
@@ -314,7 +314,6 @@ export const useAuth = () => {
         if (userData['custom:github_username']) {
           localStorage.setItem('GitHubUsername', userData['custom:github_username']);
         }
-
         // Set githubAuthHandled to true if GitHub is linked
         if (userData['custom:github_token'] && userData['custom:github_id']) {
           localStorage.setItem('githubAuthHandled', 'true');

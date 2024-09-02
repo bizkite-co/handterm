@@ -421,17 +421,15 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
 
     if (command.startsWith('cat')) {
       if (args.length === 0) {
-
+        status = 200;
+        const filename = command.split(' ')[1] || '_index';
         (async () => {
           try {
-            const userResponse: any = await this.props.auth.getUser();
+            const userResponse: any = await this.props.auth.getFile(filename, 'md');
 
             if (userResponse.status === 200) {
-              const content = userResponse.data.content.replaceAll('\n', '<br />');
-              this.writeOutput(
-                `Fetched userId: ` + userResponse.data.userId.split('-').slice(-1)[0] +
-                ` name: ` + userResponse.data.username + `<br/>` +
-                ` index: ` + content);
+              const content = userResponse.data.replaceAll('\n', '<br />');
+              this.writeOutput(content);
             } else {
               this.writeOutput(userResponse.error.join('<br/>'));
             }
@@ -444,6 +442,14 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
         const content = args.join(' ');
         this.props.auth.setUser(content);
       }
+    }
+
+    if (command === 'profile') {
+      status = 200;
+      this.props.auth.getUser().then((user: any) => {
+        this.writeOutput(JSON.stringify(user));
+      });
+      return;
     }
 
     if (command === 'github') {
