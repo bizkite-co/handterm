@@ -211,7 +211,7 @@ const XtermAdapter = forwardRef<XtermAdapterHandle, IXtermAdapterProps>((props, 
   const prompt = () => {
     terminal.current.reset();
     const promptText = `~${promptDelimiter} `;
-    promptLength.current = promptText.length +2;
+    promptLength.current = promptText.length +1;
     terminal.current.write(promptText);
   };
 
