@@ -16,6 +16,17 @@ export const useAuth = () => {
 
   }, []);
 
+  useEffect(() => {
+    if(!isLoggedIn) {
+      localStorage.removeItem('AccessToken');
+      localStorage.removeItem('RefreshToken');
+      localStorage.removeItem('IdToken');
+      localStorage.removeItem('ExpiresAt');
+      localStorage.removeItem('SignedInAs');
+      localStorage.removeItem('githubUsername');
+    }
+  }, [isLoggedIn]);
+
   const checkSession = async () => {
     try {
       // This could be a call to a `/session` endpoint that verifies the session
@@ -269,7 +280,7 @@ export const useAuth = () => {
   const getUser = async (): Promise<MyResponse<any>> => {
     try {
       // Make the request with the Access Token
-      const authConfig = await getAuthConfig();
+      const authConfig = await getAuthConfig()
       if (authConfig.status !== 200) return authConfig;
       const request = axios.get(`${API_URL}${ENDPOINTS.api.GetUser}`, authConfig.data);
       const response = await request;
@@ -304,12 +315,6 @@ export const useAuth = () => {
       if (userResponse.status === 200 && userResponse.data) {
         const userData = userResponse.data;
         // Store GitHub-related information
-        if (userData['custom:github_token']) {
-          localStorage.setItem('GitHubToken', userData['custom:github_token']);
-        }
-        if (userData['custom:github_id']) {
-          localStorage.setItem('GitHubId', userData['custom:github_id']);
-        }
         // You might want to store the GitHub username if it's available in the user attributes
         if (userData['custom:github_username']) {
           localStorage.setItem('GitHubUsername', userData['custom:github_username']);
@@ -333,7 +338,9 @@ export const useAuth = () => {
 
   const signOut = async () => {
     try {
-      await axios.get(`${API_URL}${ENDPOINTS.api.SignOut}`);
+      const authConfig = await getAuthConfig()
+      if (authConfig.status !== 200) return authConfig;
+      axios.get(`${API_URL}${ENDPOINTS.api.SignOut}`, authConfig.data);
       setIsLoggedIn(false);
     } catch (error) {
       console.error('Logout failed:', error);
@@ -343,7 +350,9 @@ export const useAuth = () => {
 
   const changePassword = async (oldPassword: string, newPassword: string) => {
     try {
-      await axios.post(`${API_URL}${ENDPOINTS.api.ChangePassword}`, { oldPassword, newPassword });
+      const authConfig = await getAuthConfig()
+      if (authConfig.status !== 200) return authConfig;
+      await axios.post(`${API_URL}${ENDPOINTS.api.ChangePassword}`, { oldPassword, newPassword }, authConfig.data);
     } catch (error) {
       console.error('Password change failed:', error);
       throw error;

@@ -535,6 +535,14 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       }
     }
 
+    if (command === 'logout') {
+      status = 200;
+      response = "Logging out...";
+      this.props.auth.logout();
+      this.adapterRef.current?.prompt();
+      return;
+    }
+
     if (command.startsWith('level')) {
       if (!this.terminalGameRef.current) return;
       let levelNum = command.match(/\d+/);
