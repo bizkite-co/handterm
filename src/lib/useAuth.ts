@@ -8,17 +8,20 @@ import { LogKeys } from '../types/TerminalTypes';
 
 
 export const useAuth = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() => {
+    const storedValue = localStorage.getItem('isLoggedIn') === 'true';
+    console.log('Initial isLoggedIn value:', storedValue);
+    return storedValue;
+  });
 
   const API_URL = ENDPOINTS.api.BaseUrl;
 
   useEffect(() => {
-    // Optionally check session validity on hook mount
-
-  }, []);
-
-  useEffect(() => {
-    if(!isLoggedIn) {
+    console.log('isLoggedIn changed:', isLoggedIn);
+    if (isLoggedIn) {
+      localStorage.setItem('isLoggedIn', 'true');
+    } else {
+      localStorage.removeItem('isLoggedIn');
       localStorage.removeItem('AccessToken');
       localStorage.removeItem('RefreshToken');
       localStorage.removeItem('IdToken');
@@ -28,11 +31,18 @@ export const useAuth = () => {
     }
   }, [isLoggedIn]);
 
+  useEffect(() => {
+    if (isLoggedIn) {
+      console.log('Checking session...');
+      checkSession();
+    }
+  }, []);
+
   const checkSession = async () => {
     try {
-      // This could be a call to a `/session` endpoint that verifies the session
-      await axios.get(`${API_URL}${ENDPOINTS.api.CheckSession}`, baseConfig);
-      setIsLoggedIn(true);
+      const config = await getAuthConfig();
+      console.log('Session check result:', config.status === 200);
+      setIsLoggedIn(config.status === 200 ? true : false);
     } catch (error) {
       console.error('Session check failed:', error);
       setIsLoggedIn(false);
@@ -318,6 +328,7 @@ export const useAuth = () => {
       const response = await axios.post(`${API_URL}${ENDPOINTS.api.SignIn}`, { username, password });
       console.log('Login successful:', response.data);
       setIsLoggedIn(true);
+      localStorage.setItem('isLoggedIn', 'true');
       localStorage.setItem('AccessToken', response.data.AccessToken);
       localStorage.setItem('RefreshToken', response.data.RefreshToken);
       localStorage.setItem('IdToken', response.data.IdToken);
@@ -341,8 +352,10 @@ export const useAuth = () => {
     try {
       const authConfig = await getAuthConfig()
       if (authConfig.status !== 200) return authConfig;
-      axios.get(`${API_URL}${ENDPOINTS.api.SignOut}`, authConfig.data);
+      await axios.get(`${API_URL}${ENDPOINTS.api.SignOut}`, authConfig.data);
       setIsLoggedIn(false);
+      localStorage.removeItem('isLoggedIn');
+      console.log('Signed out, isLoggedIn removed from localStorage');
     } catch (error) {
       console.error('Logout failed:', error);
       throw error;
