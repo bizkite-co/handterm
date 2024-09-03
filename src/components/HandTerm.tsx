@@ -57,7 +57,8 @@ export interface IHandTermProps {
     getExpiresAt: () => string;
     refreshTokenIfNeeded: () => Promise<MyResponse<any>>;
     initiateGitHubAuth: () => void;
-    listRecentRepos: () => Promise<MyResponse<any>>
+    listRecentRepos: () => Promise<MyResponse<any>>;
+    getRepoTree: (path: string) => Promise<MyResponse<any>>;
     // Add other properties returned by useAuth here
   };
 }
@@ -458,14 +459,22 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       if (!this.state.githubUsername) {
         this.props.auth.initiateGitHubAuth();
       } else {
+        if(args) {
+          // TODO: Handle Github file tree
+          if(JSON.parse(localStorage.getItem(LogKeys.RepoNames) || '[]').includes(args[0])) {
+            this.props.auth.getRepoTree(args[0]);
+          }
+        }
         this.props.auth.listRecentRepos().then((repos: any) => {
           console.log("repos: ", repos);
-          const repoNames = Array.from(repos).map((repo: any) => repo.name).join('<br/>');
+          const repoNames = Array.from(repos).map((repo: any) => repo.name);
+          localStorage.setItem(LogKeys.RepoNames, JSON.stringify(repoNames));
+          const reponameText = repoNames.join('<br/>');
+
           console.log("repoNames: ", repoNames);
-          this.writeOutput(repoNames);
+          this.writeOutput(reponameText);
         });
       }
-
       return;
     }
 
@@ -625,6 +634,10 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
             const result = await this.props.auth.login(this.tempUserName, this.getTempPassword());
             if (result.status === 200) {
               this.writeOutput(`Login successful! Status: ${JSON.stringify(result.status)}`);
+              // SET USERNAME
+              // TODO: Set other user properties such as githubUsername
+              this.setState({username: this.tempUserName});
+              localStorage.setItem(LogKeys.Username, this.tempUserName);
             } else {
               this.writeOutput(`Login failed! Status: ${JSON.stringify(result.status)}<br />${result.message}`);
             }
