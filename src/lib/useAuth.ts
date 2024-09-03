@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { ENDPOINTS } from '../shared/endpoints';
 import { MyResponse } from 'src/types/Types';
+import { LogKeys } from '../types/TerminalTypes';
 
 
 export const useAuth = () => {
@@ -277,6 +278,20 @@ export const useAuth = () => {
     }
   }
 
+  const getRepoTree = async (path: string) => {
+    try {
+      const authConfig = await getAuthConfig();
+      const response = await axios.get(`${API_URL}${ENDPOINTS.api.GetRepoTree}`, {
+        headers: authConfig.data.headers, // Assuming authConfig.data contains headers
+        params: { path }
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching repo tree:', error);
+      return null;
+    }
+  }
+
   const getUser = async (): Promise<MyResponse<any>> => {
     try {
       // Make the request with the Access Token
@@ -306,24 +321,10 @@ export const useAuth = () => {
       localStorage.setItem('AccessToken', response.data.AccessToken);
       localStorage.setItem('RefreshToken', response.data.RefreshToken);
       localStorage.setItem('IdToken', response.data.IdToken);
+      localStorage.setItem(LogKeys.GitHubUsername, response.data.githubUsername);
       localStorage.setItem('SignedInAs', username);
 
       setExpiresAt(response.data.ExpiresIn);
-
-      // Fetch user attributes
-      const userResponse = await getUser();
-      if (userResponse.status === 200 && userResponse.data) {
-        const userData = userResponse.data;
-        // Store GitHub-related information
-        // You might want to store the GitHub username if it's available in the user attributes
-        if (userData['custom:github_username']) {
-          localStorage.setItem('GitHubUsername', userData['custom:github_username']);
-        }
-        // Set githubAuthHandled to true if GitHub is linked
-        if (userData['custom:github_token'] && userData['custom:github_id']) {
-          localStorage.setItem('githubAuthHandled', 'true');
-        }
-      }
 
       return { data: response.data, message: 'Login successful', status: 200, error: [] };
     } catch (error) {
@@ -359,5 +360,5 @@ export const useAuth = () => {
     }
   };
 
-  return { isLoggedIn, login: signIn, logout: signOut, signUp, getUser, checkSession, changePassword, setUser, saveLog, getLog, listLog, getFile, putFile, getExpiresAt, refreshTokenIfNeeded, initiateGitHubAuth, listRecentRepos, verify };
+  return { isLoggedIn, login: signIn, logout: signOut, signUp, getUser, checkSession, changePassword, setUser, saveLog, getLog, listLog, getFile, putFile, getExpiresAt, refreshTokenIfNeeded, initiateGitHubAuth, listRecentRepos, getRepoTree, verify };
 };
