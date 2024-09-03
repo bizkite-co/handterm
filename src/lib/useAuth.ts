@@ -373,5 +373,26 @@ export const useAuth = () => {
     }
   };
 
-  return { isLoggedIn, login: signIn, logout: signOut, signUp, getUser, checkSession, changePassword, setUser, saveLog, getLog, listLog, getFile, putFile, getExpiresAt, refreshTokenIfNeeded, initiateGitHubAuth, listRecentRepos, getRepoTree, verify };
+  return { 
+    isLoggedIn, 
+    setIsLoggedIn,
+    login: signIn, 
+    logout: signOut, 
+    signUp, 
+    getUser, 
+    checkSession, 
+    changePassword, 
+    setUser, 
+    saveLog, 
+    getLog, 
+    listLog, 
+    getFile, 
+    putFile, 
+    getExpiresAt, 
+    refreshTokenIfNeeded, 
+    initiateGitHubAuth, 
+    listRecentRepos, 
+    getRepoTree, 
+    verify 
+  };
 };
