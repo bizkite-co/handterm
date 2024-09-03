@@ -99,7 +99,7 @@ export interface IHandTermState {
   isShowVideo: boolean;
   githubAuthHandled: boolean;
   githubUsername: string | null;
-  username: string | null;
+  userName: string | null;
   domain: string;
   timestamp: string;
 }
@@ -242,9 +242,10 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     this._persistence = new LocalStoragePersistence();
     const initialCanvasHeight = localStorage.getItem('canvasHeight') || '100';
     const nextAchievement = getNextTutorialAchievement();
+    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
     this.state = {
       domain: 'handterm.io',
-      username: null,
+      userName: isLoggedIn ? localStorage.getItem(LogKeys.Username) || null : null,
       timestamp: new Date().toTimeString().split('(')[0],
       outputElements: this.getCommandResponseHistory().slice(-1),
       isInGameMode: false,
@@ -527,6 +528,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
           this.props.auth.refreshTokenIfNeeded().then(() => {
             this.writeOutput("You are already logged in.")
             this.inLoginProcess = false;
+            this.updateUserName();
             this.adapterRef.current?.prompt();
             return;
           });
@@ -548,6 +550,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       response = "Logging out...";
       this.props.auth.logout();
       this.setIsLoggedIn(false);
+      this.updateUserName();
       this.adapterRef.current?.prompt();
       return;
     }
@@ -634,11 +637,9 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
             const result = await this.props.auth.login(this.tempUserName, this.getTempPassword());
             if (result.status === 200) {
               this.writeOutput(`Login successful! Status: ${JSON.stringify(result.status)}`);
-              // SET USERNAME
-              // TODO: Set other user properties such as githubUsername
-              this.setState({username: this.tempUserName});
               localStorage.setItem(LogKeys.Username, this.tempUserName);
               this.setIsLoggedIn(true);
+              this.updateUserName();
             } else {
               this.writeOutput(`Login failed! Status: ${JSON.stringify(result.status)}<br />${result.message}`);
               this.setIsLoggedIn(false);
@@ -953,6 +954,16 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     this.adapterRef.current?.terminalReset();
   }
 
+  private updateUserName = () => {
+    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+    if (isLoggedIn) {
+      const userName = localStorage.getItem(LogKeys.Username);
+      this.setState({ userName: userName || null });
+    } else {
+      this.setState({ userName: null });
+    }
+  }
+
   private setNewPhrase = (phraseName: string) => {
     phraseName = phraseName.replace('phrase ', '');
 
@@ -1220,7 +1231,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
                 )
               }
               <Prompt
-                username={this.state.username || 'guest'}
+                username={this.state.userName || 'guest'}
                 domain={this.state.domain || 'handterm'}
                 githubUsername={this.state.githubUsername}
                 timestamp={this.state.timestamp}
