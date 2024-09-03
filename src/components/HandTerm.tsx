@@ -1,4 +1,9 @@
 import { LogKeys, TimeHTML, CharDuration, CharWPM, TerminalCssClasses } from '../types/TerminalTypes';
+import ReactDOMServer from 'react-dom/server';
+import HelpCommand from '../commands/HelpCommand';
+import SpecialCommand from '../commands/SpecialCommand';
+import WpmTable from './WpmTable';
+import Phrases from '../utils/Phrases';
 import { IWPMCalculator, WPMCalculator } from '../utils/WPMCalculator';
 import { IPersistence, LocalStoragePersistence } from '../Persistence';
 import { createHTMLElementFromHTML } from '../utils/dom';
@@ -7,9 +12,7 @@ import XtermAdapter, { XtermAdapterHandle } from './XtermAdapter';
 import NextCharsDisplay, { NextCharsDisplayHandle } from './NextCharsDisplay';
 import { Output } from './Output';
 import Game, { IGameHandle } from '../game/Game';
-import ReactDOMServer from 'react-dom/server';
 import { ActionType } from '../game/types/ActionTypes';
-import Phrases from '../utils/Phrases';
 import WebCam from '../utils/WebCam';
 import { CommandContext } from '../commands/CommandContext';
 import { Achievement, MyResponse } from '../types/Types';
@@ -17,15 +20,12 @@ import { TutorialComponent } from './TutorialComponent';
 import { Chord } from './Chord';
 import { SpritePosition } from '../game/types/Position';
 import MonacoEditor, { MonacoEditorHandle } from './MonacoEditor';
-import WpmTable from './WpmTable';
 import './MonacoEditor.css'; // Make sure to import the CSS
 import { loadCommandHistory, parseCommand } from '../utils/commandUtils';
 import { getNextTutorialAchievement, loadTutorialAchievements } from '../utils/achievementUtils';
 import { getNthPhraseNotAchieved, getPhrasesAchieved, getPhrasesNotAchieved, resetPhrasesAchieved } from '../utils/phraseUtils';
 import UpdateCommandHistory from '../commands/UpdateCommandHistory';
-import HelpCommand from '../commands/HelpCommand';
 import UnlockAchievement from '../commands/UnlockAchievement';
-import SpecialCommand from '../commands/SpecialCommand';
 import { Prompt } from './Prompt';
 
 export interface IHandTermProps {
@@ -35,6 +35,7 @@ export interface IHandTermProps {
     login: (username: string, password: string) => Promise<MyResponse<any>>;
     logout: () => void;
     isLoggedIn: boolean;
+    setIsLoggedIn: React.Dispatch<React.SetStateAction<boolean>>;
     signUp: (
       username: string,
       password: string,
@@ -117,7 +118,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
   private terminalGameRef: React.RefObject<IGameHandle> = React.createRef();
   // Remove this line as we no longer need a ref for the editor
 
-  private _persistence: IPersistence;
+  private _persistence!: IPersistence;
   public commandHistory: string[] = [];
   private wpmCalculator: IWPMCalculator = new WPMCalculator();
   private static readonly commandHistoryLimit = 120;
@@ -133,6 +134,8 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
   private isInChangePasswordMode: boolean = false;
   private heroActionTimeoutId: number | null = null;
   private zombie4StartPostion: SpritePosition = { leftX: -50, topY: 0 }
+  private setIsLoggedIn: React.Dispatch<React.SetStateAction<boolean>>;
+
 
   private handleGitHubAuth = () => {
     if (!this.state.githubAuthHandled) {
@@ -233,8 +236,9 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     return storedTargetWPM ? parseInt(storedTargetWPM) : 25;
   }
 
-  constructor(IHandexTermProps: IHandTermProps) {
-    super(IHandexTermProps);
+  constructor(props: IHandTermProps) {
+    super(props);
+    this.setIsLoggedIn = props.auth.setIsLoggedIn;
     this._persistence = new LocalStoragePersistence();
     const initialCanvasHeight = localStorage.getItem('canvasHeight') || '100';
     const nextAchievement = getNextTutorialAchievement();
@@ -268,9 +272,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       errorCharIndex: undefined,
       editContent: '',
       editMode: false,
-      // Default edit language
       editLanguage: "markdown",
-      // Default edit file path
       editFilePath: "_index",
       editFileExtension: "md",
       isShowVideo: false,
@@ -361,15 +363,12 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
 
     if (command === 'help' || command === '411') {
       status = 200;
-      const helpResponse = <HelpCommand command={command} />;
-      response = ReactDOMServer.renderToStaticMarkup(helpResponse);
+      response = ReactDOMServer.renderToStaticMarkup(<HelpCommand command={command} />);
     }
 
     if (command === 'special') {
       status = 200;
-      // Write out all the spcieal characters to the output
-      const specialCharsHtml = ReactDOMServer.renderToStaticMarkup(<SpecialCommand />);
-      response = specialCharsHtml;
+      response = ReactDOMServer.renderToStaticMarkup(<SpecialCommand />);
     }
 
     if (command === 'edit') {
@@ -548,6 +547,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       status = 200;
       response = "Logging out...";
       this.props.auth.logout();
+      this.setIsLoggedIn(false);
       this.adapterRef.current?.prompt();
       return;
     }
@@ -638,8 +638,10 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
               // TODO: Set other user properties such as githubUsername
               this.setState({username: this.tempUserName});
               localStorage.setItem(LogKeys.Username, this.tempUserName);
+              this.setIsLoggedIn(true);
             } else {
               this.writeOutput(`Login failed! Status: ${JSON.stringify(result.status)}<br />${result.message}`);
+              this.setIsLoggedIn(false);
             }
             this.prompt();
           } catch (error: any) {
@@ -837,32 +839,42 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     if (!this.commandHistory) { this.commandHistory = []; }
     const commandResponse = commandResponseElement.outerHTML;
     const characterAverages = this.averageWpmByCharacter(charWpms.filter(wpm => wpm.durationMilliseconds > 1));
-    const slowestCharacters = (
+    const slowestCharactersHTML = ReactDOMServer.renderToStaticMarkup(
       <WpmTable
         wpms={characterAverages.sort((a, b) => a.wpm - b.wpm).slice(0, 5)}
         name="slow-chars"
       />
     );
 
-    const slowestCharactersHTML = ReactDOMServer.renderToStaticMarkup(slowestCharacters);
-
     commandResponseElement.innerHTML += slowestCharactersHTML;
-    this.writeOutput(commandResponse)
+    this.writeOutputHTML(commandResponseElement.outerHTML);
 
-    // Now you can append slowestCharactersHTML as a string to your element's innerHTML
     this._persistence.setItem(`${LogKeys.Command}_${timeCode}`, commandResponseElement.outerHTML);
 
     return commandResponse;
   }
 
-  writeOutput(output: string) {
-    this.commandHistory = [output];
-    this.setState({ outputElements: [output] });
+  writeOutput(output: string | React.ReactNode) {
+    this.setState(prevState => ({
+      outputElements: [...prevState.outputElements, output]
+    }));
+  }
+
+  writeOutputHTML(output: string) {
+    const outputElement = document.createElement('div');
+    outputElement.innerHTML = output;
+    this.writeOutput(outputElement.innerHTML);
   }
 
   createCommandRecord(command: string, commandTime: Date): string {
-    let commandText = `<div class="log-line"><span class="log-time">[${this.createTimeHTML(commandTime)}]</span><span class="wpm-label">WPM:</span><span class="wpm">{{wpm}}</span>${command}</div>`;
-    return commandText;
+    return `
+      <div class="log-line">
+        <span class="log-time">[${this.createTimeHTML(commandTime)}]</span>
+        <span class="wpm-label">WPM:</span>
+        <span class="wpm">{{wpm}}</span>
+        ${command}
+      </div>
+    `;
   }
 
   private createTimeCode(now = new Date()): string[] {
@@ -873,24 +885,21 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     const hours = time.getHours().toString().padStart(2, '0');
     const minutes = time.getMinutes().toString().padStart(2, '0');
     const seconds = time.getSeconds().toString().padStart(2, '0');
-    return `<span class="log-hour">${hours}</span><span class="log-minute">${minutes}</span><span class="log-second">${seconds}</span>`;
+    return `
+      <span class="log-hour">${hours}</span>
+      <span class="log-minute">${minutes}</span>
+      <span class="log-second">${seconds}</span>
+    `;
   }
 
-  toggleIsDebug(setIsDebug: boolean | undefined) {
-    this.isDebug = !this.isDebug;
-    if (setIsDebug) {
-      this.isDebug = setIsDebug;
-    }
+  toggleIsDebug(setIsDebug?: boolean) {
+    this.isDebug = setIsDebug ?? !this.isDebug;
     localStorage.setItem('xterm-debug', String(this.isDebug));
-    console.log('Xterm debug:', localStorage.getItem('xterm-debug'));
+    console.log('Xterm debug:', this.isDebug);
   }
 
   loadDebugValue() {
-    if (localStorage.getItem('xterm-debug') === 'true') {
-      this.isDebug = true;
-    } else {
-      this.isDebug = false;
-    }
+    this.isDebug = localStorage.getItem('xterm-debug') === 'true';
   }
 
   private handlePhraseSuccess = (phrase: string) => {
@@ -921,15 +930,24 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
   }
 
   private handlePhraseComplete = () => {
-
     localStorage.setItem('currentCommand', '');
-    let newPhraseIndex = (this.state.phraseIndex) % Phrases.phrases.length;
-    let newPhrase = getPhrasesNotAchieved()[newPhraseIndex];
-    this.setState({
-      phraseIndex: newPhraseIndex + 1,
-      phraseValue: newPhrase.value,
-      phraseName: newPhrase.key,
-    });
+    const phrasesNotAchieved = getPhrasesNotAchieved();
+    if (phrasesNotAchieved.length === 0) {
+      // Handle the case when all phrases are achieved
+      this.setState({
+        isInGameMode: false,
+        phraseValue: '',
+        phraseName: '',
+      });
+    } else {
+      let newPhraseIndex = (this.state.phraseIndex + 1) % phrasesNotAchieved.length;
+      let newPhrase = phrasesNotAchieved[newPhraseIndex];
+      this.setState({
+        phraseIndex: newPhraseIndex,
+        phraseValue: newPhrase.value,
+        phraseName: newPhrase.key,
+      });
+    }
     if (this.nextCharsDisplayRef.current) this.nextCharsDisplayRef.current.cancelTimer();
     this.terminalGameRef.current?.completeGame();
     this.adapterRef.current?.terminalReset();

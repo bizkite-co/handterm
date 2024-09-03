@@ -66,6 +66,9 @@ export const LogKeys = {
     PhrasesAchieved: 'phrasesAchieved',
     TargetWPM: 'targetWPM',
     CurrentCommand: 'currentCommand',
+    RepoNames: 'repoNames',
+    Username: 'userName',
+    GitHubUsername: 'githubUserName',
 } as const;
 
 export type TimeCode = string;
