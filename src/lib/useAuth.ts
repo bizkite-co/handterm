@@ -288,12 +288,15 @@ export const useAuth = () => {
     }
   }
 
-  const getRepoTree = async (path: string) => {
+  const getRepoTree = async (repo: string, path: string) => {
     try {
       const authConfig = await getAuthConfig();
       const response = await axios.get(`${API_URL}${ENDPOINTS.api.GetRepoTree}`, {
         headers: authConfig.data.headers, // Assuming authConfig.data contains headers
-        params: { path }
+        params: { 
+          repo, 
+          path 
+        }
       });
       return response.data;
     } catch (error) {

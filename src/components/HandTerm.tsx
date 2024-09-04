@@ -59,7 +59,7 @@ export interface IHandTermProps {
     refreshTokenIfNeeded: () => Promise<MyResponse<any>>;
     initiateGitHubAuth: () => void;
     listRecentRepos: () => Promise<MyResponse<any>>;
-    getRepoTree: (path: string) => Promise<MyResponse<any>>;
+    getRepoTree: (repo: string, path?: string) => Promise<MyResponse<any>>;
     // Add other properties returned by useAuth here
   };
 }
@@ -147,9 +147,9 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
         localStorage.setItem('githubUsername', githubUsername);
         window.history.replaceState({}, document.title, window.location.pathname);
         this.writeOutput(`GitHub authentication successful. Welcome, ${githubUsername}!`);
-        this.setState({ 
-          githubAuthHandled: true, 
-          githubUsername: githubUsername 
+        this.setState({
+          githubAuthHandled: true,
+          githubUsername: githubUsername
         });
       }
     }
@@ -459,21 +459,26 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       if (!this.state.githubUsername) {
         this.props.auth.initiateGitHubAuth();
       } else {
-        if(args) {
-          // TODO: Handle Github file tree
-          if(JSON.parse(localStorage.getItem(LogKeys.RepoNames) || '[]').includes(args[0])) {
-            this.props.auth.getRepoTree(args[0]);
-          }
-        }
-        this.props.auth.listRecentRepos().then((repos: any) => {
-          console.log("repos: ", repos);
-          const repoNames = Array.from(repos).map((repo: any) => repo.name);
-          localStorage.setItem(LogKeys.RepoNames, JSON.stringify(repoNames));
-          const reponameText = repoNames.join('<br/>');
 
-          console.log("repoNames: ", repoNames);
-          this.writeOutput(reponameText);
-        });
+        if (args.length === 1) {
+          const repo = args[0];
+          // TODO: Handle Github file tree
+          this.props.auth.getRepoTree(repo).then((tree: any) => {
+            const treePathArray = Array.from(tree).map((treeItem: any) => {return treeItem.type === 'tree' ? `${treeItem.path}/` : treeItem.path});
+            this.writeOutput(treePathArray.join('<br/>'));
+          });
+
+        } else {
+          this.props.auth.listRecentRepos().then((repos: any) => {
+            console.log("repos: ", repos);
+            const repoNames = Array.from(repos).map((repo: any) => repo.name);
+            localStorage.setItem(LogKeys.RepoNames, JSON.stringify(repoNames));
+            const reponameText = repoNames.join('<br/>');
+
+            console.log("repoNames: ", repoNames);
+            this.writeOutput(reponameText);
+          });
+        }
       }
       return;
     }
@@ -494,7 +499,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       })
     }
 
-    if( command === 'verify') {
+    if (command === 'verify') {
       const commandSlices = cmd.split(' ');
       if (commandSlices.length < 3) {
         response = "Please provide a username and verification code.";
@@ -856,6 +861,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
   }
 
   writeOutput(output: string | React.ReactNode) {
+    console.log("OUTPUT: ",output);
     this.setState(prevState => ({
       outputElements: [...prevState.outputElements, output]
     }));
