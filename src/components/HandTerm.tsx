@@ -845,32 +845,27 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     if (!this.commandHistory) { this.commandHistory = []; }
     const commandResponse = commandResponseElement.outerHTML;
     const characterAverages = this.averageWpmByCharacter(charWpms.filter(wpm => wpm.durationMilliseconds > 1));
-    const slowestCharactersHTML = ReactDOMServer.renderToStaticMarkup(
+    const slowestCharacters = (
       <WpmTable
         wpms={characterAverages.sort((a, b) => a.wpm - b.wpm).slice(0, 5)}
         name="slow-chars"
       />
     );
 
-    commandResponseElement.innerHTML += slowestCharactersHTML;
-    this.writeOutputHTML(commandResponseElement.outerHTML);
+    const slowestCharactersHTML = ReactDOMServer.renderToStaticMarkup(slowestCharacters);
 
+    commandResponseElement.innerHTML += slowestCharactersHTML;
+    this.writeOutput(commandResponse)
+
+    // Now you can append slowestCharactersHTML as a string to your element's innerHTML
     this._persistence.setItem(`${LogKeys.Command}_${timeCode}`, commandResponseElement.outerHTML);
 
     return commandResponse;
   }
 
-  writeOutput(output: string | React.ReactNode) {
-    console.log("OUTPUT: ",output);
-    this.setState(prevState => ({
-      outputElements: [...prevState.outputElements, output]
-    }));
-  }
-
-  writeOutputHTML(output: string) {
-    const outputElement = document.createElement('div');
-    outputElement.innerHTML = output;
-    this.writeOutput(outputElement.innerHTML);
+  writeOutput(output: string) {
+    this.commandHistory = [output];
+    this.setState({ outputElements: [output] });
   }
 
   createCommandRecord(command: string, commandTime: Date): string {
