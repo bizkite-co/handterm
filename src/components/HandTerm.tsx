@@ -278,7 +278,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       editFileExtension: "md",
       isShowVideo: false,
       githubAuthHandled: false,
-      githubUsername: localStorage.getItem('githubUsername') || null,
+      githubUsername: isLoggedIn ? localStorage.getItem(LogKeys.GitHubUsername) || null : null,
     }
     this.loadDebugValue();
     this.loadFontSize();
@@ -845,17 +845,15 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     if (!this.commandHistory) { this.commandHistory = []; }
     const commandResponse = commandResponseElement.outerHTML;
     const characterAverages = this.averageWpmByCharacter(charWpms.filter(wpm => wpm.durationMilliseconds > 1));
-    const slowestCharacters = (
+    const slowestCharactersHTML = ReactDOMServer.renderToStaticMarkup(
       <WpmTable
         wpms={characterAverages.sort((a, b) => a.wpm - b.wpm).slice(0, 5)}
         name="slow-chars"
       />
     );
 
-    const slowestCharactersHTML = ReactDOMServer.renderToStaticMarkup(slowestCharacters);
-
     commandResponseElement.innerHTML += slowestCharactersHTML;
-    this.writeOutput(commandResponse)
+    this.writeOutput(commandResponseElement.outerHTML);
 
     // Now you can append slowestCharactersHTML as a string to your element's innerHTML
     this._persistence.setItem(`${LogKeys.Command}_${timeCode}`, commandResponseElement.outerHTML);
@@ -866,6 +864,10 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
   writeOutput(output: string) {
     this.commandHistory = [output];
     this.setState({ outputElements: [output] });
+    // TO append output instead of replacing it, do this:
+    // this.setState(prevState => ({
+    //   outputElements: [...prevState.outputElements, output]
+    // }));
   }
 
   createCommandRecord(command: string, commandTime: Date): string {
