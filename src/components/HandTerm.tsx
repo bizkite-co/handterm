@@ -1,4 +1,4 @@
-import { LogKeys, TimeHTML, CharDuration, CharWPM, TerminalCssClasses } from '../types/TerminalTypes';
+import { LogKeys, CharDuration, CharWPM, TerminalCssClasses } from '../types/TerminalTypes';
 import ReactDOMServer from 'react-dom/server';
 import HelpCommand from '../commands/HelpCommand';
 import SpecialCommand from '../commands/SpecialCommand';
@@ -27,6 +27,8 @@ import { getNthPhraseNotAchieved, getPhrasesAchieved, getPhrasesNotAchieved, res
 import UpdateCommandHistory from '../commands/UpdateCommandHistory';
 import UnlockAchievement from '../commands/UnlockAchievement';
 import { Prompt } from './Prompt';
+import { createTimeCode } from '../utils/timeUtils';
+import { TimeDisplay } from './TimeDisplay';
 
 export interface IHandTermProps {
   // Define the interface for your HandexTerm logic
@@ -823,7 +825,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
 
   public saveCommandResponseHistory(command: string, response: string, status: number): string {
     const commandTime = new Date();
-    const timeCode = this.createTimeCode(commandTime).join(':');
+    const timeCode = createTimeCode(commandTime).join(':');
     let commandText = this.createCommandRecord(command, commandTime);
     // TODO: Render this with JSX instead.
     const commandElement = createHTMLElementFromHTML(commandText);
@@ -840,7 +842,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
       .innerHTML
       .replace(/{{wpm}}/g, wpmAverage.toFixed(0));
 
-    commandText = commandText.replace(/{{wpm}}/g, wpmAverage.toFixed(0));
+    commandText = commandText.replace(/\{\{wpm\}\}/g, wpmAverage.toFixed(0));
 
     if (!this.commandHistory) { this.commandHistory = []; }
     const commandResponse = commandResponseElement.outerHTML;
@@ -871,28 +873,14 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
   }
 
   createCommandRecord(command: string, commandTime: Date): string {
+    const timeDisplay = ReactDOMServer.renderToString(<TimeDisplay time={commandTime} />);
     return `
       <div class="log-line">
-        <span class="log-time">[${this.createTimeHTML(commandTime)}]</span>
+        <span class="log-time">[${timeDisplay}]</span>
         <span class="wpm-label">WPM:</span>
         <span class="wpm">{{wpm}}</span>
         ${command}
       </div>
-    `;
-  }
-
-  private createTimeCode(now = new Date()): string[] {
-    return now.toISOString().split(':');
-  }
-
-  private createTimeHTML(time = new Date()): TimeHTML {
-    const hours = time.getHours().toString().padStart(2, '0');
-    const minutes = time.getMinutes().toString().padStart(2, '0');
-    const seconds = time.getSeconds().toString().padStart(2, '0');
-    return `
-      <span class="log-hour">${hours}</span>
-      <span class="log-minute">${minutes}</span>
-      <span class="log-second">${seconds}</span>
     `;
   }
 
