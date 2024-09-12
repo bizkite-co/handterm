@@ -30,5 +30,7 @@ export const ENDPOINTS = {
         PutFile: '/putFile',
         ListRecentRepos: '/list-recent-repos',
         GetRepoTree: '/get-repo-tree',
+        GitHubAuth: '/github_auth',
+        OAuthCallback: '/oauth_callback'
     }
 } as const

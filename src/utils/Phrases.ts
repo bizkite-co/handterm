@@ -1,14 +1,18 @@
 import { MyResponse } from "src/types/Types";
 
-export type PhraseType = { key: string, value: string };
+export type PhraseType = { 
+    key: string, 
+    value: string,
+    tutorial?: string,
+};
 
 const standardChars = /^[a-zA-Z0-9\s'";:.!,?]+$/;
 
 export default class Phrases {
     public static readonly phrases: PhraseType[] = [
-        { key: "ask", value: "Ask dad; A sad lass had salad." },
-        { key: "sad", value: "All sad lads fall."},
-        { key: "gallant", value: "A gallant lad; a glass." },
+        { key: "ask", value: "Ask dad; A sad lass had salad.", tutorial: "fdsa" },
+        { key: "sad", value: "All sad lads fall.", tutorial: "fdsa"},
+        { key: "gallant", value: "A gallant lad; a glass.", tutorial: "fdsa" },
         { key: "alas", value: "Alas, Khal's flask has a crack." },
         { key: "lads", value: "Lads' flags fall as gaffs sag." },
         { key: "hello", value: "Hello, World!" },

@@ -244,7 +244,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
     const nextAchievement = getNextTutorialAchievement();
     const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
     this.state = {
-      domain: 'handterm.io',
+      domain: 'handterm.com',
       userName: isLoggedIn ? localStorage.getItem(LogKeys.Username) || null : null,
       timestamp: new Date().toTimeString().split('(')[0],
       outputElements: this.getCommandResponseHistory().slice(-1),
@@ -429,7 +429,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> {
             const userResponse: any = await this.props.auth.getFile(filename, 'md');
 
             if (userResponse.status === 200) {
-              const content = userResponse.data.replaceAll('\n', '<br />');
+              const content = userResponse.data.content.replaceAll('\n', '<br />');
               this.writeOutput(content);
             } else {
               this.writeOutput(userResponse.error.join('<br/>'));
