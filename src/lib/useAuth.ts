@@ -288,7 +288,7 @@ export const useAuth = () => {
     }
   }
 
-  const getRepoTree = async (repo: string, path: string) => {
+  const getRepoTree = async (repo: string, path?: string) => {
     try {
       const authConfig = await getAuthConfig();
       const response = await axios.get(`${API_URL}${ENDPOINTS.api.GetRepoTree}`, {

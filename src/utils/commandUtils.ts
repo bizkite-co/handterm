@@ -11,7 +11,7 @@ export const saveCommandHistory = (commandHistory: any) => {
   localStorage.setItem(LogKeys.CommandHistory, JSON.stringify(commandHistory));
 }
 
-export const parseCommand = (input: string): { command: string, args: string[], switches: Record<string, boolean | string> } => {
+export const parseCommand = (input: string): { parsedCommand: string, args: string[], switches: Record<string, boolean | string> } => {
   const parts = input.split(/\s+/); // Split by whitespace
   const command = parts.shift(); // The first element is the command
   const args = [];
@@ -44,5 +44,5 @@ export const parseCommand = (input: string): { command: string, args: string[], 
     }
   }
 
-  return { command: command || '', args, switches };
+  return { parsedCommand: command || '', args, switches };
 }

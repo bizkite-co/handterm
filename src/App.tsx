@@ -1,6 +1,6 @@
 // App.tsx
 import React, { useEffect, useRef } from 'react';
-import  HandTerm  from './components/HandTerm';
+import HandTerm, { IHandTermMethods } from './components/HandTerm';
 import { CommandProvider } from './commands/CommandProvider';
 import { TerminalCssClasses } from './types/TerminalTypes';
 import { useAuth } from './lib/useAuth';
@@ -8,7 +8,7 @@ import { useAuth } from './lib/useAuth';
 const App = () => {
   const containerRef = React.createRef<HTMLDivElement>();
   const [containerWidth, setContainerWidth] = React.useState<number>(0);
-  const handexTermRef = useRef<HandTerm>(null);
+  const handexTermRef = useRef<IHandTermMethods>(null);
   const auth = useAuth();
 
   useEffect(() => {
@@ -19,16 +19,15 @@ const App = () => {
       // Check if the click is outside of the terminal area
       if (
         handexTermRef.current &&
-        handexTermRef.current.adapterRef.current
-        && (event.target as HTMLElement).id !== TerminalCssClasses.Terminal
+        (event.target as HTMLElement).id !== TerminalCssClasses.Terminal
       ) {
         event.stopPropagation();
         // window.scrollTo(0, window.screen.height)
-        handexTermRef.current.adapterRef.current.focusTerminal();
+        handexTermRef.current.focusTerminal();
 
         if (event instanceof MouseEvent || (event instanceof TouchEvent && event.touches.length === 1)) {
           setTimeout(() => {
-            handexTermRef.current?.adapterRef.current?.focusTerminal();
+            handexTermRef.current?.focusTerminal();
           }, 1000);
         }
       }

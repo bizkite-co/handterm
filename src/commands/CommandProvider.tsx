@@ -2,11 +2,11 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { CommandContext, ICommandContext } from './CommandContext';
 import { commandRegistry } from './commandRegistry';
-import HandTerm from '../components/HandTerm';
+import { IHandTermMethods } from '../components/HandTerm';
 
 interface CommandProviderProps {
   children?: React.ReactNode;
-  handTermRef: React.RefObject<HandTerm>;
+  handTermRef: React.RefObject<IHandTermMethods>;
 }
 
 export const CommandProvider: React.FC<CommandProviderProps> = ({ children, handTermRef }) => {
@@ -22,7 +22,7 @@ export const CommandProvider: React.FC<CommandProviderProps> = ({ children, hand
     const command = commandRegistry.getCommand(commandName);
     if (command) {
       // Execute the command and return the result
-      return {status: 200, message: command.execute(commandName, args, switches, handTerm).message };
+      return {status: 200, message: command.execute(commandName, args, switches, { current: handTerm }).message };
     }
     return { status: 404, message: `CommandProvider: Command not found: ${commandName}`};
   }, [handTermRef]);
@@ -33,7 +33,7 @@ export const CommandProvider: React.FC<CommandProviderProps> = ({ children, hand
       console.error('CommandProvider: handTermRef.current is NULL');
       return 'CommandProvider: handTermRef.current is NULL';
     }
-    if(element) handTerm.writeOutput(element.toString());
+    if(element && handTerm) handTerm.writeOutput(element.toString());
   }, [handTermRef]);
 
 

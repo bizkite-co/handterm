@@ -1,6 +1,6 @@
-import HandTerm from '../components/HandTerm';
 import Phrases from '../utils/Phrases';
 import { ICommand } from './ICommand';
+import { IHandTermMethods } from '../components/HandTerm';
 
 export const ListPhrasesCommand: ICommand = {
   name: 'ls',
@@ -14,7 +14,7 @@ export const ListPhrasesCommand: ICommand = {
     _commandName: string, 
     _args?: string[], 
     _switches?: Record<string, boolean | string>,
-    _handTerm?: HandTerm 
+    _handTerm?: React.RefObject<IHandTermMethods>
   ) => {
     if (!_handTerm) {
       return { status: 404, message: 'No command context available.'};
@@ -26,8 +26,10 @@ export const ListPhrasesCommand: ICommand = {
       .map(x => x.key)
       .join('\n');
 
-    _handTerm?.saveCommandResponseHistory(_commandName, phrases, 200);
-    _handTerm?.prompt();
+    if (_handTerm && _handTerm.current) {
+      _handTerm.current.saveCommandResponseHistory(_commandName, phrases, 200);
+      _handTerm.current.prompt();
+    }
     return { status: 200, message: phrases};
   }
 };

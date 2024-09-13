@@ -1,7 +1,7 @@
 
 // src/commands/cleanCommand.ts
 import { LogKeys } from '../types/TerminalTypes';
-import HandTerm from '../components/HandTerm';
+import { HandTermRef } from '../components/HandTerm';
 import { ICommand } from './ICommand';
 import { saveCommandHistory } from '../utils/commandUtils';
 
@@ -13,7 +13,7 @@ export const cleanCommand: ICommand = {
         _commandName: string,
         _args?: string[],
         _switches?: Record<string, boolean | string>,
-        handTerm?: HandTerm
+        handTerm?: HandTermRef
     ) => {
         if (!handTerm) {
             return { status: 404, message: 'No command context available.' };
@@ -33,8 +33,8 @@ export const cleanCommand: ICommand = {
 
         saveCommandHistory(commandHistory);
         localStorage.setItem(LogKeys.CommandHistory, JSON.stringify(commandHistory));
-        handTerm.terminalReset();
-        handTerm.prompt();
+        handTerm?.current?.terminalReset();
+        handTerm?.current?.prompt();
         return { status: 200, message: 'Command history cleaned.' };
     }
 };

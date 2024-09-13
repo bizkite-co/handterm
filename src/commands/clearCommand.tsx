@@ -1,6 +1,6 @@
 // src/commands/clearCommand.ts
 import { LogKeys } from '../types/TerminalTypes';
-import HandTerm from '../components/HandTerm';
+import { IHandTermMethods } from "../components/HandTerm";
 import { ICommand } from './ICommand';
 
 export const clearCommand: ICommand = {
@@ -11,9 +11,9 @@ export const clearCommand: ICommand = {
     _commandName: string,
     args?: string[],
     _switches?: Record<string, boolean | string>,
-    handTerm?: HandTerm
+    handTerm?: React.RefObject<IHandTermMethods>
   ) => {
-    if (!handTerm) {
+    if (!handTerm?.current) {
       return { status: 404, message: 'No command context available.' };
     }
     // Logic to clear the command history from localStorage
@@ -38,10 +38,13 @@ export const clearCommand: ICommand = {
     for (let removeKey of removeKeys) {
       localStorage.removeItem(removeKey); // Clear localStorage.length
     }
-    handTerm.commandHistory = [];
-    handTerm.setState({ outputElements: [] });
-    handTerm.terminalReset();
-    handTerm.prompt();
+    const handTermInstance = handTerm.current as any;
+    if (handTermInstance) {
+      handTermInstance.setState({ commandHistory: [] });
+      handTermInstance.setState({ outputElements: [] });
+      handTermInstance.terminalReset();
+      handTermInstance.prompt();
+    }
     return { status: 200, message: 'Command history cleared.' };
   }
 };

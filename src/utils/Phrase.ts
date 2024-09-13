@@ -1,6 +1,6 @@
-import { allChords } from "../allChords.js";
-import { Chord } from "../types/Types.js";
-import { createHTMLElementFromHTML } from "./dom.js";
+import { allChords } from "../allChords";
+import { Chord } from "../types/Types";
+import { createHTMLElementFromHTML } from "./dom";
 
 export class Phrase {
     private _value: string[];

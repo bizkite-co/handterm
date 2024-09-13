@@ -1,4 +1,4 @@
-import { MyResponse } from "src/types/Types";
+import { MyResponse } from "../types/Types";
 
 export type PhraseType = { 
     key: string, 

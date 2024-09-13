@@ -25,6 +25,7 @@ export interface IGameProps {
 }
 
 export interface IGameHandle {
+  startGame: () => void;
   completeGame: () => void;
   resetGame: () => void;
   levelUp: (setLevelValue?: number | null) => void;
@@ -41,13 +42,23 @@ const Game = React.forwardRef<IGameHandle, IGameProps>((props, ref) => {
   const {
     canvasHeight,
     canvasWidth,
-    isInGameMode: isInPhraseMode,
+    isInGameMode,
     heroActionType,
     zombie4ActionType,
     zombie4StartPosition,
     onSetHeroAction,
     onSetZombie4Action,
   } = props;
+
+  const startGame = () => {
+    if (context) {
+      startAnimationLoop(context);
+    }
+    // Reset game state here if needed
+    setZombie4Position(zombie4StartPosition);
+    setIsPhraseComplete(false);
+    // Add any other necessary game start logic
+  };
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const heroRef = useRef<ICharacterRefMethods>(null);
   const zombie4Ref = useRef<ICharacterRefMethods>(null);
@@ -243,6 +254,7 @@ const Game = React.forwardRef<IGameHandle, IGameProps>((props, ref) => {
   }, [context]);
 
   useImperativeHandle(ref, () => ({
+    startGame,
     completeGame,
     resetGame: () => {
       setZombie4Position(zombie4StartPosition);
@@ -255,44 +267,47 @@ const Game = React.forwardRef<IGameHandle, IGameProps>((props, ref) => {
   }));
 
   return (
-    <div
-      id="terminal-game"
-      hidden={!isInPhraseMode}
-      style={{ position: "relative", height: canvasHeight }}
-    >
-      <div className="parallax-background">
-        {isTextScrolling && (
-          <ScrollingTextLayer
-            text={textToScroll}
-            canvasHeight={canvasHeight}
+    <>
+      {isInGameMode ? (
+        <div
+          id="terminal-game"
+          style={{ position: "relative", height: canvasHeight }}
+        >
+          <div className="parallax-background">
+            {isTextScrolling && (
+              <ScrollingTextLayer
+                text={textToScroll}
+                canvasHeight={canvasHeight}
+              />
+            )}
+            {layersState.map((layer, index) => (
+              <ParallaxLayer
+                key={index}
+                layer={layer}
+                offset={backgroundOffsetX}
+                canvasHeight={canvasHeight}
+              />
+            ))}
+          </div>
+          <canvas
+            style={{ position: "absolute", top: 0, left: 0, zIndex: 2 }}
+            ref={canvasRef}
+            width={canvasWidth}
+            height={canvasHeight}
           />
-        )}
-        {layersState.map((layer, index) => (
-          <ParallaxLayer
-            key={index}
-            layer={layer}
-            offset={backgroundOffsetX}
-            canvasHeight={canvasHeight}
+          <Hero
+            ref={heroRef}
+            currentActionType={heroActionType}
+            scale={1.95}
           />
-        ))}
-      </div>
-      <canvas
-        style={{ position: "absolute", top: 0, left: 0, zIndex: 2 }}
-        ref={canvasRef}
-        width={canvasWidth}
-        height={canvasHeight}
-      />
-      <Hero
-        ref={heroRef}
-        currentActionType={heroActionType}
-        scale={1.95}
-      />
-      <Zombie4
-        ref={zombie4Ref}
-        currentActionType={zombie4ActionType}
-        scale={1.90}
-      />
-    </div>
+          <Zombie4
+            ref={zombie4Ref}
+            currentActionType={zombie4ActionType}
+            scale={1.90}
+          />
+        </div>
+      ) : null}
+    </>
   );
 });
 

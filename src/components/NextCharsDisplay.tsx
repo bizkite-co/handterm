@@ -1,9 +1,9 @@
-import { TerminalCssClasses } from "../types/TerminalTypes.js";
+import { TerminalCssClasses } from "../types/TerminalTypes";
 
 import React, { useState, useEffect, useRef, useImperativeHandle } from 'react';
 import Timer from './Timer'; // Import the React component
 import ErrorDisplay from "./ErrorDisplay";
-import { Phrase } from "../utils/Phrase.js";
+import { Phrase } from "../utils/Phrase";
 
 export interface NextCharsDisplayProps {
     commandLine: string;

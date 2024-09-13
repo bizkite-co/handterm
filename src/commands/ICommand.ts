@@ -1,4 +1,4 @@
-import HandTerm from "../components/HandTerm";
+import { IHandTermMethods } from "../components/HandTerm";
 
 export interface ICommandResponse {
     status: number;
@@ -13,6 +13,6 @@ export interface ICommand {
         commandName: string, 
         args?: string[], 
         switches?: Record<string, boolean | string>,
-        handTerm?: HandTerm
+        handTerm?: React.RefObject<IHandTermMethods>
     ) => ICommandResponse;
 }

@@ -1,6 +1,6 @@
 import { ICommand } from './ICommand';
 import React from 'react';
-import { IHandTermProps } from '../components/HandTerm';
+import { IHandTermMethods } from '../components/HandTerm';
 
 export const wrtCommand: ICommand = {
   name: 'wrt',
@@ -14,7 +14,7 @@ export const wrtCommand: ICommand = {
     _commandName: string,
     args?: string[],
     switches?: Record<string, boolean | string>,
-    handTerm?: React.RefObject<React.ComponentType<IHandTermProps>>
+    handTerm?: React.RefObject<IHandTermMethods>
   ) => {
     if (!handTerm?.current) {
       return { status: 404, message: 'No command context available.' };

@@ -1,5 +1,5 @@
 import { LogKeys } from '../types/TerminalTypes';
-import HandTerm from '../components/HandTerm';
+import { HandTermRef } from '../components/HandTerm';
 import { ICommand } from './ICommand';
 
 export const archiveCommand: ICommand = {
@@ -9,7 +9,7 @@ export const archiveCommand: ICommand = {
         _commandName: string,
         _args?: string[],
         _switches?: Record<string, boolean | string>,
-        _handTerm?: HandTerm
+        _handTerm?: HandTermRef
     ) => {
         if (!_handTerm) {
             return { status: 404, message: 'No command context available.' };
@@ -36,10 +36,10 @@ export const archiveCommand: ICommand = {
                     if (content) {
                         (async () => {
                             try {
-                                const result = await _handTerm.props.auth.saveLog(key, content, 'json');
+                                const result = await (_handTerm.current as any)?.props.auth.saveLog(key, content, 'json');
                                 if (!result) {
                                     // If saveLog returns false, stop the archiving process
-                                    _handTerm.writeOutput("Stopping archive due to saveLog returning false.");
+                                    _handTerm.current?.writeOutput("Stopping archive due to saveLog returning false.");
                                     return {
                                         status: 500,
                                         message: 'Stopping archive due to saveLog returning false.'
@@ -48,7 +48,7 @@ export const archiveCommand: ICommand = {
                                 localStorage.setItem(key.replace(logKey, logKey + '_archive'), content);
                                 localStorage.removeItem(key);
                             } catch (e: any) {
-                                _handTerm.writeOutput(e.message);
+                                _handTerm.current?.writeOutput(e.message);
                             }
                         })();
                     }
@@ -61,7 +61,7 @@ export const archiveCommand: ICommand = {
         };
 
         archiveNext(0); // Start processing from the first item
-        _handTerm.prompt();
+        _handTerm.current?.prompt();
         return { status: 200, message: 'Command history archived.' };
     },
 }

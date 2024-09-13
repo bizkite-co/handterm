@@ -1,34 +1,56 @@
-// tsconfig.json
-
 {
   "compilerOptions": {
     "baseUrl": "./",
     "target": "ES2020",
     "useDefineForClassFields": true,
-    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "sourceMap": true,
+    "lib": [
+      "ES2020",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "jsx": "react-jsx",
     "module": "ESNext",
     "skipLibCheck": true,
     "outDir": "./dist",
-
     /* Bundler mode */
-    "moduleResolution": "bundler",
+    "moduleResolution": "node",
     "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
-    "jsx": "react-jsx",
-
     /* Linting */
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-    "typeRoots": ["./node_modules/@types", "./src/types"],
+    "typeRoots": [
+      "./node_modules/@types",
+      "./src/types"
+    ],
+    "paths": {
+      "src/*": [
+        "src/*"
+      ],
+      "@xterm/xterm": [
+        "node_modules/@xterm/xterm"
+      ]
+    },
+    "esModuleInterop": true,
   },
+  "types": [
+    "node",
+    "jest",
+    "@testing-library/jest-dom"
+  ],
   "include": [
     "./src",
     "src/shared",
-    "./src/types/elements.d.ts", "verifyWorkers.js",
+    "./src/types/elements.d.ts"
   ],
-  "references": [{ "path": "./tsconfig.node.json" }]
+  "references": [
+    {
+      "path": "./tsconfig.node.json"
+    }
+  ]
 }
