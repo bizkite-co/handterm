@@ -10,6 +10,8 @@
       "DOM.Iterable"
     ],
     "jsx": "react-jsx",
+    "jsxImportSource": "react",
+    "types": ["jest", "node", "@testing-library/jest-dom"],
     "module": "ESNext",
     "skipLibCheck": true,
     "outDir": "./dist",
@@ -19,6 +21,7 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
+    "allowJs": true,
     /* Linting */
     "strict": true,
     "noUnusedLocals": true,
@@ -37,6 +40,7 @@
       ]
     },
     "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true
   },
   "types": [
     "node",
@@ -46,7 +50,10 @@
   "include": [
     "./src",
     "src/shared",
-    "./src/types/elements.d.ts"
+    "./src/types/elements.d.ts",
+    "jest.setup.js",
+    "jest.config.ts",
+    "jest.setup.ts"
   ],
   "references": [
     {

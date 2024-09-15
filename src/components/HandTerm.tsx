@@ -1,3 +1,4 @@
+/** @jsxImportSource react */
 import { LogKeys, CharDuration, CharWPM, TerminalCssClasses } from '../types/TerminalTypes';
 import * as ReactDOMServer from 'react-dom/server';
 import HelpCommand from '../commands/HelpCommand';
