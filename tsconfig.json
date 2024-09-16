@@ -55,6 +55,9 @@
     "jest.config.ts",
     "jest.setup.ts"
   ],
+  "exclude": [
+    ".vscode"
+  ],
   "references": [
     {
       "path": "./tsconfig.node.json"

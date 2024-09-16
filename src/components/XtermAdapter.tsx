@@ -116,12 +116,12 @@ import React, { useEffect, useRef, useImperativeHandle, forwardRef, useState } f
    };
 
    const terminalReset = () => {
-     terminalInstance.current.reset();
+     terminalInstance?.current?.reset();
    };
 
    const terminalWrite = (data: string) => {
      if (!data) return;
-     terminalInstance.current.write(data);
+     terminalInstance?.current?.write(data);
    };
 
    const handleResize = () => {
@@ -129,7 +129,7 @@ import React, { useEffect, useRef, useImperativeHandle, forwardRef, useState } f
    };
 
    const scrollBottom = () => {
-     terminalInstance.current.scrollToBottom();
+     terminalInstance?.current?.scrollToBottom();
    };
 
    const setCursorMode = (terminal: any) => {

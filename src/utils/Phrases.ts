@@ -1,7 +1,7 @@
 import { MyResponse } from "../types/Types";
 
-export type PhraseType = { 
-    key: string, 
+export type PhraseType = {
+    key: string,
     value: string,
     tutorial?: string,
 };
@@ -11,7 +11,7 @@ const standardChars = /^[a-zA-Z0-9\s'";:.!,?]+$/;
 export default class Phrases {
     public static readonly phrases: PhraseType[] = [
         { key: "ask", value: "Ask dad; A sad lass had salad.", tutorial: "fdsa" },
-        { key: "sad", value: "All sad lads fall.", tutorial: "fdsa"},
+        { key: "sad", value: "All sad lads fall.", tutorial: "fdsa" },
         { key: "gallant", value: "A gallant lad; a glass.", tutorial: "fdsa" },
         { key: "alas", value: "Alas, Khal's flask has a crack." },
         { key: "lads", value: "Lads' flags fall as gaffs sag." },
@@ -47,7 +47,7 @@ export default class Phrases {
 
     public checkPhrases = (): MyResponse<any> => {
         let response: MyResponse<any> = {
-            status: 200, 
+            status: 200,
             message: '',
             data: '',
             error: []
@@ -77,5 +77,28 @@ export default class Phrases {
         const randomKey = Math.floor(Math.random() * phrasesLength);
         const result = this.phrases[randomKey].value;
         return result;
+    }
+    public static getPhrasesAchieved = () => {
+        const storedPhrasesAchieved = localStorage.getItem('phrasesAchieved');
+
+        const phrasesAchieved = JSON.parse(storedPhrasesAchieved || '[]').map((phrase: string) => {
+            const [wpm, phraseName] = phrase.split(':');
+            return { wpm, phraseName };
+        });
+        return phrasesAchieved;
+    }
+
+    public static getPhrasesNotAchieved = () => {
+        const phrasesAchieved = this.getPhrasesAchieved().map((phrase: { wpm: number; phraseName: string }) => phrase.phraseName);
+        return Phrases.phrases.filter((phrase) => !phrasesAchieved.includes(phrase.key));
+    }
+
+    public static getNthPhraseNotAchieved = (n: number) => {
+        const phrasesNotAchieved = this.getPhrasesNotAchieved();
+        return phrasesNotAchieved[n];
+    }
+
+    public static resetPhrasesAchieved = () => {
+        localStorage.removeItem('phrasesAchieved');
     }
 }
