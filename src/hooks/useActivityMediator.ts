@@ -6,15 +6,17 @@ import { IGameHandle } from '../game/Game';
 export enum ActivityType {
   TUTORIAL,
   GAME,
-  EDIT
+  EDIT,
+  NORMAL
 }
 
 export function useActivityMediator(initialAchievement: Achievement) {
   const [currentActivity, setCurrentActivity] =
-    useState<ActivityType>(ActivityType.TUTORIAL);
+    useState<ActivityType>(ActivityType.NORMAL);
   const [isInGameMode, setIsInGameMode] = useState(false);
   const [isInTutorial, setIsInTutorial] = useState(false);
   const [isInEdit, setIsInEdit] = useState(false);
+  const [isInNormal, setIsInNormal] = useState(true);
   const [achievement, setAchievement] = useState<Achievement>(initialAchievement);
   const [heroAction, setHeroAction] = useState<ActionType>('Idle');
   const [zombie4Action, setZombie4Action] = useState<ActionType>('Walk');
@@ -23,6 +25,7 @@ export function useActivityMediator(initialAchievement: Achievement) {
 
   const handleCommand = useCallback((command: string): boolean => {
     const [cmd] = command.split(' ');
+    setIsInNormal(false);
     setIsInEdit(false);
     setIsInTutorial(false);
     setIsInGameMode(false);
@@ -44,12 +47,14 @@ export function useActivityMediator(initialAchievement: Achievement) {
         return true;
 
       default:
+        setCurrentActivity(ActivityType.NORMAL);
+        setIsInNormal(true);
         return false;
     }
   }, [setCurrentActivity, setIsInGameMode, setIsInTutorial, gameHandleRef]);
 
   useEffect(() => {
-    console.log("currentActivity:", ActivityType[currentActivity])
+    console.log("currentActivity:", ActivityType[currentActivity], "isInTutorial:", isInTutorial);
   }, [currentActivity])
 
   return {
@@ -57,6 +62,7 @@ export function useActivityMediator(initialAchievement: Achievement) {
     isInGameMode,
     isInTutorial,
     isInEdit,
+    isInNormal,
     achievement,
     heroAction,
     zombie4Action,
