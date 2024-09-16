@@ -45,11 +45,13 @@
   "types": [
     "node",
     "jest",
+    "@testing-library/jest-dom"
   ],
   "include": [
     "./src",
     "src/shared",
     "./src/types/elements.d.ts",
+    "./src/types/testing-library__jest-dom.d.ts",
     "jest.setup.js",
     "jest.config.ts",
     "jest.setup.ts"

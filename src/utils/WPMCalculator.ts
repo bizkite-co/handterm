@@ -59,7 +59,7 @@ export class WPMCalculator implements IWPMCalculator {
             charWpm.durationMilliseconds = charDur.durationMilliseconds
             let timeDifferenceMinute = charDur.durationMilliseconds / 60000.0
             if (timeDifferenceMinute > 0) {
-                let CPM = 1 / timeDifferenceMinute;
+                const CPM = 1 / timeDifferenceMinute;
                 // The standard is that one word = 5 characters
                 charWpm.wpm = CPM / 5;
             }

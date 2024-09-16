@@ -1,7 +1,7 @@
 // src/lib/useAuth.ts
 
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import axios, { AxiosResponse } from 'axios';
 import { ENDPOINTS } from '../shared/endpoints';
 import { MyResponse } from 'src/types/Types';
 import { LogKeys } from '../types/TerminalTypes';
@@ -311,7 +311,7 @@ export const useAuth = () => {
       const authConfig = await getAuthConfig()
       if (authConfig.status !== 200) return authConfig;
       const request = axios.get(`${API_URL}${ENDPOINTS.api.GetUser}`, authConfig.data);
-      const response = await request;
+      const response: AxiosResponse = await request;
       return { data: response.data, message: 'User fetched successfully', status: 200, error: [] }; // Contains username, attributes, etc.
     } catch (error: any) {
       return {

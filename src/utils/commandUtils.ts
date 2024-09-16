@@ -20,7 +20,7 @@ export const parseCommand = (input: string): { parsedCommand: string, args: stri
   if (command) {
     for (let i = 0; i < parts.length; i++) {
       const part = parts[i];
-      if (part.startsWith('--')) {
+      if (part.startsWith('--') || (part.startsWith('-') && part.length === 2)) {
         const switchAssignmentIndex = part.indexOf('=');
         if (switchAssignmentIndex > -1) {
           // It's a switch with an explicit value

@@ -5,13 +5,13 @@ import { saveCommandHistory } from '../utils/commandUtils';
 interface UpdateCommandHistoryProps {
     cmd: string;
     state: any;
-    setState: (state: any) => void;
+    setState: (state: Partial<IHandTermState>) => void;
 }
 
 const UpdateCommandHistory: React.FC<UpdateCommandHistoryProps> = ({ cmd, state,
     setState }) => {
     if (cmd && cmd !== 'Return (ENTER)') {
-        setState((prevState: any) => ({
+        setState((prevState: IHandTermState) => ({
             ...prevState,
             commandHistory: [cmd, ...prevState.commandHistory],
             commandHistoryIndex: -1,

@@ -11,8 +11,8 @@ export const useCommandHistory = (initialHistory: string[]) => {
   }, []);
 
   const getCommandResponseHistory = useCallback((): string[] => {
-    let keys: string[] = [];
-    let history: string[] = [];
+    const keys: string[] = [];
+    const history: string[] = [];
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
       if (key?.startsWith(LogKeys.Command + '_')) {

@@ -6,7 +6,7 @@ import React, { useEffect, useRef, useImperativeHandle, forwardRef, useState } f
 
  export interface IXtermAdapterProps {
    terminalElementRef: React.RefObject<HTMLDivElement>;
-   onAddCharacter: (character: string) => void;
+   onAddCharacter: (character: string) => number;
    onRemoveCharacter: (command: string) => void;
    onTouchStart: React.TouchEventHandler<HTMLDivElement>;
    onTouchEnd: React.TouchEventHandler<HTMLDivElement>;

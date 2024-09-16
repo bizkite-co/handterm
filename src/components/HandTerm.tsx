@@ -29,11 +29,10 @@ import { Prompt } from './Prompt';
 import { createTimeCode } from '../utils/timeUtils';
 import { TimeDisplay } from './TimeDisplay';
 import { useCommandHistory } from '../hooks/useCommandHistory';
-import { useActivityMediator, ActivityType } from '../hooks/useActivityMediator';
+import { useActivityMediator } from '../hooks/useActivityMediator';
 // import HelpCommand from '../commands/HelpCommand';
 // import SpecialCommand from '../commands/SpecialCommand';
 import Phrases from '../utils/Phrases';
-import { faThemeisle } from '@fortawesome/free-brands-svg-icons';
 
 export interface IHandTermMethods {
   writeOutput: (output: string) => void;
@@ -125,7 +124,7 @@ export interface IHandTermState {
 
 // @ts-ignore
 // @ts-ignore
-class HandTerm extends React.Component<IHandTermProps, IHandTermState> implements IHandTermMethods {
+class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState> implements IHandTermMethods {
   static contextType = CommandContext;
   declare context: ContextType<typeof CommandContext>;
   declare props: IHandTermProps;
@@ -1144,20 +1143,19 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> implement
 
   public render() {
     const { terminalSize, outputElements, canvasHeight, phrasesAchieved, phraseValue, commandLine, lastTypedCharacter, userName, domain, githubUsername, timestamp, editMode, editContent, editLanguage, isShowVideo } = this.state;
+    const { activityMediator } = this.props;
     const canvasWidth = terminalSize ? terminalSize.width : 800;
-    // canvas height does not need to match terminal height
 
     return (
       <CommandContext.Consumer>
         {(context) => {
           if (context !== this.context) {
-            // Update context in a safe way
             setTimeout(() => {
               this.context = context;
               this.forceUpdate();
             }, 0);
           }
-          console.log(`Current Activity:${ActivityType[this.activityMediator.currentActivity]}, isInTutorial:${this.activityMediator.isInTutorial}`)
+          console.log(`Current Activity:${ActivityType[activityMediator.currentActivity]}, isInTutorial:${activityMediator.isInTutorial}`)
 
           return (
             <div className="terminal-container">
@@ -1167,27 +1165,27 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> implement
                 onTouchStart={this.handleTouchStart}
                 onTouchEnd={this.handleTouchEnd}
               />
-              {this.activityMediator.isInGameMode && (
+              {activityMediator.isInGameMode && (
                 <Game
-                  ref={this.activityMediator.gameHandleRef}
+                  ref={activityMediator.gameHandleRef}
                   canvasHeight={canvasHeight}
                   canvasWidth={canvasWidth}
-                  isInGameMode={this.activityMediator.isInGameMode}
-                  heroActionType={this.activityMediator.heroAction}
-                  zombie4ActionType={this.activityMediator.zombie4Action}
+                  isInGameMode={activityMediator.isInGameMode}
+                  heroActionType={activityMediator.heroAction}
+                  zombie4ActionType={activityMediator.zombie4Action}
                   onSetHeroAction={this.setHeroAction}
-                  onSetZombie4Action={this.activityMediator.setZombie4Action}
+                  onSetZombie4Action={activityMediator.setZombie4Action}
                   onTouchStart={this.handleTouchStart}
                   onTouchEnd={this.handleTouchEnd}
                   phrasesAchieved={phrasesAchieved}
                   zombie4StartPosition={this.zombie4StartPostion}
                 />
               )}
-              {this.activityMediator.isInGameMode && phraseValue && (
+              {activityMediator.isInGameMode && phraseValue && (
                 <NextCharsDisplay
                   ref={this.nextCharsDisplayRef}
                   commandLine={commandLine}
-                  isInPhraseMode={this.activityMediator.isInGameMode}
+                  isInPhraseMode={activityMediator.isInGameMode}
                   newPhrase={phraseValue}
                   onPhraseSuccess={this.handlePhraseSuccess}
                   onError={this.handlePhraseErrorState}
@@ -1196,11 +1194,11 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> implement
               {lastTypedCharacter && (
                 <Chord displayChar={lastTypedCharacter} />
               )}
-              {this.activityMediator.isInTutorial &&
+              {activityMediator.isInTutorial &&
                 TutorialComponent && (
                   <TutorialComponent
-                    achievement={this.activityMediator.achievement}
-                    isInTutorial={this.activityMediator.isInTutorial}
+                    achievement={activityMediator.achievement}
+                    isInTutorial={activityMediator.isInTutorial}
                     includeReturn={true}
                   />
                 )
@@ -1265,4 +1263,4 @@ const HandTermWrapper = React.forwardRef<IHandTermMethods, IHandTermProps>((prop
   );
 });
 
-export default HandTermWrapper;
+export default React.memo(HandTermWrapper);

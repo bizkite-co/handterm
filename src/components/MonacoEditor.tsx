@@ -26,7 +26,7 @@ export interface MonacoEditorHandle {
 }
 
 const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(({ initialValue, language, onChange, onSave, onClose, height = '80vh', toggleVideo }, ref) => {
-  const editorRef = useRef<any>(null);
+  const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const statusNodeRef = useRef<HTMLDivElement>(null);
 
   useImperativeHandle(ref, () => ({
@@ -45,7 +45,7 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(({ initia
     };
   }, []);
 
-  function handleEditorDidMount(editor: any, monaco: any) {
+  function handleEditorDidMount(editor: monaco.editor.IStandaloneCodeEditor, monaco: typeof import("monaco-editor")) {
     editorRef.current = editor;
     setTimeout(() => editor.focus(), 100);
 
@@ -53,7 +53,7 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(({ initia
       id: "save-content",
       label: "Save Content",
       keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_S],
-      run: function (editor: any) {
+      run: function (editor: monaco.editor.IStandaloneCodeEditor) {
         if (onSave) {
           onSave(editor.getValue());
         }

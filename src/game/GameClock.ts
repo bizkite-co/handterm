@@ -1,4 +1,4 @@
-class GameClock {
+export class GameClock {
   private startTime: number;
   private currentTime: number;
   private running: boolean;
