@@ -176,7 +176,8 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> implement
     this.activityMediator = props.activityMediator || { 
       currentActivity: ActivityType.TUTORIAL,
       isInGameMode: false,
-      isInTutorial: true,
+      isInTutorial: false,
+      isInEdit: false,
       achievement: { phrase: [], prompt: '', unlocked: false },
       heroAction: 'Idle' as ActionType,
       zombie4Action: 'Walk' as ActionType,
@@ -284,6 +285,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> implement
     localStorage.removeItem('achievements');
     this.setState({
       unlockedAchievements: [],
+      
     });
     const nextAchievement = getNextTutorialAchievement();
     if (nextAchievement) {
@@ -366,10 +368,11 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> implement
     let status = 404;
     let response = "Command not found.";
 
-    if (inputCmd === 'tut' && !this.activityMediator.isInTutorial) {
-      this.resetTutorialAchievementState();
-    }
-    if (this.activityMediator.isInTutorial || inputCmd === 'tut') {
+    if (inputCmd === 'tut') {
+      if(!this.activityMediator.isInTutorial){
+        this.resetTutorialAchievementState();
+        this.activityMediator.handleCommand(inputCmd);
+      }
       // Unlock the next achievement and decide if we are still in tutorial mode
       UnlockAchievement({
         achievementPhrase: inputCmd,
@@ -395,7 +398,8 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> implement
         if (args.length) {
           this.setNewPhrase(args[0])
         } else {
-          this.setNewPhrase(Phrases.getNthPhraseNotAchieved(this.state.phraseIndex).value);
+          const nthPhrase = Phrases.getNthPhraseNotAchieved(this.state.phraseIndex);
+          this.setNewPhrase(nthPhrase.value);
         }
 
         this.activityMediator.gameHandleRef.current?.handleZombie4PositionChange(this.zombie4StartPostion);
@@ -554,12 +558,9 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> implement
       return;
     }
     else if (parsedCommand === 'login') {
-      response = "Logging in. Enter <username> <password> (without <>)";
-      const commandSlices = parsedCommand.split(' ');
-      this.tempUserName = commandSlices[1];
+      response = "Logging in. Type password. It will be masked with ***";
+      this.tempUserName = args[0];
       this.inLoginProcess = true;
-      this.appendTempPassword(commandSlices[2]);
-      this.terminalWrite("*".repeat(commandSlices[2].length));
       return;
     }
     else if (parsedCommand === 'logout') {
@@ -580,10 +581,6 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> implement
         response = output.message;
         status = output.status;
       }
-    }
-
-    if (this.activityMediator.isInTutorial || inputCmd === 'tut') {
-      this.activityMediator.handleCommand(inputCmd);
     }
 
     this.activityMediator.gameHandleRef.current?.resetGame();
@@ -1195,7 +1192,7 @@ class HandTerm extends React.Component<IHandTermProps, IHandTermState> implement
               {lastTypedCharacter && (
                 <Chord displayChar={lastTypedCharacter} />
               )}
-              {Array.isArray(this.activityMediator.achievement?.phrase) &&
+              {this.activityMediator.isInTutorial &&
                 TutorialComponent && (
                   <TutorialComponent
                     achievement={this.activityMediator.achievement}

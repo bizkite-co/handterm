@@ -80,7 +80,7 @@ import React, { useEffect, useRef, useImperativeHandle, forwardRef, useState } f
 
    const focusTerminal = () => {
      terminalInstance.current.focus();
-     terminalInstance.current.scrollToBottom();
+     scrollBottom();
    };
 
    useImperativeHandle(ref, () => ({

@@ -11,7 +11,7 @@
     ],
     "jsx": "react-jsx",
     "jsxImportSource": "react",
-    "types": ["jest", "node", "@testing-library/jest-dom"],
+    "types": ["jest", "node"],
     "module": "ESNext",
     "skipLibCheck": true,
     "outDir": "./dist",
@@ -45,7 +45,6 @@
   "types": [
     "node",
     "jest",
-    "@testing-library/jest-dom"
   ],
   "include": [
     "./src",

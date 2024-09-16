@@ -1,3 +1,3 @@
-import '@testing-library/jest-dom';
-import { jest } from '@jest/globals';
-import { MyResponse } from '../../types/Types';
+import '@testing-library/jest-dom';                                                        
+ import '@testing-library/jest-dom/extend-expect';                                          
+ import { jest } from '@jest/globals';                                                      

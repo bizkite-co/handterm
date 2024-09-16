@@ -26,6 +26,6 @@ describe('useActivityMediator', () => {
 
     expect(result.current.currentActivity).toBe(ActivityType.TUTORIAL);
     expect(result.current.isInGameMode).toBe(false);
-    expect(result.current.isInTutorial).toBe(true);
+    expect(result.current.isInTutorial).toBe(false);
   });
 });
