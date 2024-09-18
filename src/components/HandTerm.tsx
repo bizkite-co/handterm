@@ -373,7 +373,6 @@ class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState> imple
     }
 
     if (this.props.activityMediator.isInGameMode) {
-      console.log("Play is in game mode:", this.props.activityMediator.isInGameMode)
       let newPhrase = args.length ? args[0] : Phrases.getNthPhraseNotAchieved(this.state.phraseIndex).value;
       this.setNewPhrase(newPhrase);
       // You might want to handle this zombie position change in the wrapper component
@@ -1120,11 +1119,6 @@ class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState> imple
             }, 0);
           }
 
-          console.log(
-            'HandTerm.render() achievement:', activityMediator.achievement.phrase.join(''),
-            "isInGame:", activityMediator.isInGameMode
-          );
-
           return (
             <div className="terminal-container">
               {activityMediator.isInGameMode && (
@@ -1141,6 +1135,7 @@ class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState> imple
                   onTouchEnd={this.handleTouchEnd}
                   phrasesAchieved={phrasesAchieved}
                   zombie4StartPosition={this.zombie4StartPostion}
+                  activityMediator={activityMediator}
                 />
               )}
               {activityMediator.isInGameMode && phraseValue && (
@@ -1215,7 +1210,6 @@ const HandTermWrapper = React.forwardRef<IHandTermMethods, IHandTermProps>((prop
   }, [activityMediator]);
 
   const handleActivityChange = useCallback((newActivityType: ActivityType) => {
-    console.log("Activity changed to:", newActivityType);
     if (newActivityType === ActivityType.GAME) {
       const nextPhrase = Phrases.getNthPhraseNotAchieved(0); // Get the first unachieved phrase
       activityMediator.setNextAchievement({

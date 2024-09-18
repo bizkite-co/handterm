@@ -9,6 +9,7 @@ import { Sprite } from './sprites/Sprite';
 import { IParallaxLayer, ParallaxLayer } from './ParallaxLayer';
 import ScrollingTextLayer from './ScrollingTextLayer';
 import confetti from 'canvas-confetti';
+import { useActivityMediator } from '../hooks/useActivityMediator';
 
 export interface IGameProps {
   canvasHeight: number
@@ -22,6 +23,7 @@ export interface IGameProps {
   onSetHeroAction: (action: ActionType) => void;
   onSetZombie4Action: (action: ActionType) => void;
   phrasesAchieved: string[];
+  activityMediator: ReturnType<typeof useActivityMediator>;
 }
 
 export interface IGameHandle {
@@ -73,7 +75,7 @@ const Game = React.forwardRef<IGameHandle, IGameProps>((props, ref) => {
   const [backgroundOffsetX, setBackgroundOffsetX] = useState(0);
   const [isPhraseComplete, setIsPhraseComplete] = useState(false);
   const [isTextScrolling, setIsTextScrolling] = useState(false);
-  const textToScroll = "Your scrolling text here";
+  const textToScroll = "TERMINAL VELOCITY!";
   const [layersState, setLayersState] = useState<IParallaxLayer[]>(layers[0]);
 
   const getLevel = () => currentLevel;
@@ -88,7 +90,11 @@ const Game = React.forwardRef<IGameHandle, IGameProps>((props, ref) => {
     let nextLevel = setLevelValue || getLevel() + 1;
     if (nextLevel > getLevelCount()) nextLevel = 0;
     if (nextLevel < 1) nextLevel = 1;
-    setLevel(nextLevel);
+    
+    const switchedToTutorial = props.activityMediator.checkGameProgress(nextLevel);
+    if (!switchedToTutorial) {
+      setLevel(nextLevel);
+    }
   };
 
   const setupCanvas = (canvas: HTMLCanvasElement) => {

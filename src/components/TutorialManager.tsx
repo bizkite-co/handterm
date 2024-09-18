@@ -15,7 +15,6 @@ export const TutorialManager: React.FC<TutorialManagerProps> = ({
     if (!isInTutorial) {
         return null;
     }
-    console.log("TutorialManager achievementPhrase:", achievement.phrase.join(''));
     return (
         <div className="tutorial-component">
             <pre className="tutorial-prompt">{achievement.prompt}</pre>

@@ -2,7 +2,7 @@ import { useState, useCallback, useRef } from 'react';
 import { Achievement } from '../types/Types';
 import { ActionType } from '../game/types/ActionTypes';
 import { IGameHandle } from '../game/Game';
-import { resetTutorial, unlockAchievement } from '../utils/achievementUtils';
+import { resetTutorial, unlockAchievement, getNextTutorialAchievement } from '../utils/achievementUtils';
 
 export enum ActivityType {
   NORMAL,
@@ -59,6 +59,18 @@ export function useActivityMediator(initialAchievement: Achievement) {
     return { progressed: false, completed: false };
   };
 
+  const checkGameProgress = (level: number) => {
+    if (level > 1) {
+      const nextAchievement = getNextTutorialAchievement();
+      if (nextAchievement) {
+        setAchievement(nextAchievement);
+        setCurrentActivity(ActivityType.TUTORIAL);
+        return true;
+      }
+    }
+    return false;
+  };
+
   return {
     currentActivity,
     isInGameMode: currentActivity === ActivityType.GAME,
@@ -74,5 +86,6 @@ export function useActivityMediator(initialAchievement: Achievement) {
     handleCommand,
     setHeroAction,
     setZombie4Action,
+    checkGameProgress,
   };
 }

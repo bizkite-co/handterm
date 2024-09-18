@@ -42,11 +42,6 @@
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true
   },
-  "types": [
-    "node",
-    "jest",
-    "@types/testing-library__jest-dom"
-  ],
   "typeRoots": [
     "./node_modules/@types"
   ],
