@@ -29,9 +29,9 @@ export const parseCommand = (input: string): { parsedCommand: string, args: stri
           switches[switchName] = switchValue;
         } else {
           // It's a boolean switch or a switch with a value that's the next part
-          const switchName = part.substring(2);
+          const switchName = part.substring(0,2) === '--' ? part.substring(2):part.substring(1);
           // Look ahead to see if the next part is a value for this switch
-          if (i + 1 < parts.length && !parts[i + 1].startsWith('--')) {
+          if (i + 1 < parts.length && !parts[i + 1].startsWith('-')) {
             switches[switchName] = parts[++i]; // Use the next part as the value and increment i
           } else {
             switches[switchName] = true; // No value provided, treat it as a boolean switch

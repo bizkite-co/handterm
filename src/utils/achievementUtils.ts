@@ -1,4 +1,4 @@
-import { Achievements } from "../types/Types";
+import { Achievement, Achievements } from "../types/Types";
 
 export const loadTutorialAchievements = (): string[] => {
     const storedAchievements = localStorage.getItem('achievements');
@@ -7,9 +7,9 @@ export const loadTutorialAchievements = (): string[] => {
 
 export const saveAchievements = (achievementPhrase: string) => {
     const storedAchievementString: string = localStorage.getItem('achievements') || '';
-    let storedAchievements = storedAchievementString ? JSON.parse(storedAchievementString) : [];
+    const storedAchievements: string[] = storedAchievementString ? JSON.parse(storedAchievementString) : [];
     // Don't add duplicate achievements
-    if(storedAchievements.includes(achievementPhrase)) return;
+    if (storedAchievements.includes(achievementPhrase)) return;
     storedAchievements.push(achievementPhrase);
     localStorage.setItem('achievements', JSON.stringify(storedAchievements));
 }
@@ -20,3 +20,17 @@ export const getNextTutorialAchievement = () => {
         .find(a => !unlockedAchievements.some(ua => ua === a.phrase.join('')));
     return nextAchievement || null;
 }
+
+export const unlockAchievementUtil = (command: string, achievement: string): Achievement | null => {
+    if (command === '') command = 'Return (ENTER)';
+    if (achievement === command) {
+        saveAchievements(command);
+        return getNextTutorialAchievement();
+    }
+    return null;
+}
+
+export const resetTutorial = () => {
+    localStorage.removeItem('achievements');
+}
+

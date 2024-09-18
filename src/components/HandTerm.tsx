@@ -17,14 +17,14 @@ import { ActionType } from '../game/types/ActionTypes';
 import WebCam from '../utils/WebCam';
 import { CommandContext } from '../commands/CommandContext';
 import { MyResponse } from '../types/Types';
-import { TutorialComponent } from './TutorialComponent';
+import { TutorialManager } from './TutorialManager';
 import { Chord } from './Chord';
 import { SpritePosition } from '../game/types/Position';
 import MonacoEditor, { MonacoEditorHandle } from './MonacoEditor';
 import './MonacoEditor.css'; // Make sure to import the CSS
 import { loadCommandHistory, parseCommand } from '../utils/commandUtils';
 import { getNextTutorialAchievement, loadTutorialAchievements } from '../utils/achievementUtils';
-import UnlockAchievement from '../commands/UnlockAchievement';
+// import UnlockAchievement from '../commands/UnlockAchievement';
 import { Prompt } from './Prompt';
 import { createTimeCode } from '../utils/timeUtils';
 import { TimeDisplay } from './TimeDisplay';
@@ -53,7 +53,7 @@ export interface IHandTermProps {
   // Define the interface for your HandexTerm logic
   terminalWidth: number;
   auth: {
-    login: (username: string, password: string) => Promise<MyResponse<any>>;
+    login: (username: string, password: string) => Promise<MyResponse<unknown>>;
     logout: () => void;
     isLoggedIn: boolean;
     setIsLoggedIn: React.Dispatch<React.SetStateAction<boolean>>;
@@ -61,30 +61,30 @@ export interface IHandTermProps {
       username: string,
       password: string,
       email: string,
-      callback: (error: any, result: any) => void
+      callback: (error: unknown, result: unknown) => void
     ) => void;
-    verify: (username: string, code: string, callback: (error: any, result: any) => void) => void;
-    getUser: () => Promise<MyResponse<any>>;
+    verify: (username: string, code: string, callback: (error: unknown, result: unknown) => void) => void;
+    getUser: () => Promise<MyResponse<unknown>>;
     setUser: (profile: string) => void;
-    saveLog: (key: string, content: string, extension: string) => Promise<MyResponse<any>>;
-    getLog: (key: string, limit?: number) => Promise<MyResponse<any>>;
+    saveLog: (key: string, content: string, extension: string) => Promise<MyResponse<unknown>>;
+    getLog: (key: string, limit?: number) => Promise<MyResponse<unknown>>;
     changePassword: (
       oldPassword: string,
       newPassword: string,
-      callback: (error: any, result: any) => void
+      callback: (error: unknown, result: unknown) => void
     ) => void;
-    getFile: (key: string, extension: string) => Promise<MyResponse<any>>;
-    putFile: (key: string, content: string, extension: string) => Promise<MyResponse<any>>;
-    listLog: () => Promise<MyResponse<any>>;
+    getFile: (key: string, extension: string) => Promise<MyResponse<unknown>>;
+    putFile: (key: string, content: string, extension: string) => Promise<MyResponse<unknown>>;
+    listLog: () => Promise<MyResponse<unknown>>;
     getExpiresAt: () => string | null;
-    refreshTokenIfNeeded: () => Promise<MyResponse<any>>;
+    refreshTokenIfNeeded: () => Promise<MyResponse<unknown>>;
     initiateGitHubAuth: () => void;
-    listRecentRepos: () => Promise<MyResponse<any>>;
-    getRepoTree: (repo: string, path?: string) => Promise<MyResponse<any>>;
+    listRecentRepos: () => Promise<MyResponse<unknown>>;
+    getRepoTree: (repo: string, path?: string) => Promise<MyResponse<unknown>>;
     // Add other properties returned by useAuth here
   };
-  commandHistoryHook?: ReturnType<typeof useCommandHistory>;
-  activityMediator?: ReturnType<typeof useActivityMediator>;
+  commandHistoryHook: ReturnType<typeof useCommandHistory>;
+  activityMediator: ReturnType<typeof useActivityMediator>;
 }
 
 type LanguageType = "javascript" | "typescript" | "markdown";
@@ -163,31 +163,8 @@ class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState> imple
     const initialCanvasHeight = localStorage.getItem('canvasHeight') || '100';
     const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
 
-    this.commandHistoryHook = props.commandHistoryHook || {
-      commandHistory: [],
-      commandHistoryIndex: -1,
-      commandHistoryFilter: null,
-      addToCommandHistory: () => { },
-      getCommandResponseHistory: () => [],
-      setCommandHistoryIndex: () => { },
-      setCommandHistoryFilter: () => { }
-    };
-
-    this.activityMediator = props.activityMediator || {
-      currentActivity: ActivityType.NORMAL,
-      isInGameMode: false,
-      isInTutorial: false,
-      isInEdit: false,
-      isInNormal: true,
-      achievement: { phrase: [], prompt: '', unlocked: false },
-      heroAction: 'Idle' as ActionType,
-      zombie4Action: 'Walk' as ActionType,
-      gameHandleRef: { current: null },
-      handleCommand: () => false,
-      setNextAchievement: () => { },
-      setHeroAction: () => { },
-      setZombie4Action: () => { },
-    };
+    this.commandHistoryHook = props.commandHistoryHook;
+    this.activityMediator = props.activityMediator;
 
     this.state = {
       domain: 'handterm.com',
@@ -282,18 +259,6 @@ class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState> imple
     });
   }
 
-  resetTutorialAchievementState() {
-    localStorage.removeItem('achievements');
-    this.setState({
-      unlockedAchievements: [],
-
-    });
-    const nextAchievement = getNextTutorialAchievement();
-    if (nextAchievement) {
-      this.activityMediator.setNextAchievement(nextAchievement);
-    }
-  }
-
   public focusTerminal() {
     if (this.adapterRef.current) {
       this.adapterRef.current.focusTerminal();
@@ -310,7 +275,7 @@ class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState> imple
     }))
 
     const storedPhrasesAchievedString: string = localStorage.getItem('phrasesAchieved') || '';
-    let storedPhrasesAchieved = storedPhrasesAchievedString ? JSON.parse(storedPhrasesAchievedString) : [];
+    const storedPhrasesAchieved: string[] = storedPhrasesAchievedString ? JSON.parse(storedPhrasesAchievedString) : [];
     const matchingStoredPhrases = storedPhrasesAchieved
       .filter((p: string) => { return p.split(":")[1] === this.state.phraseName });
     if (matchingStoredPhrases.length > 0) return;
@@ -344,7 +309,10 @@ class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState> imple
     this.handleGitHubAuth();
   }
 
-  componentDidUpdate(_prevProps: Readonly<IHandTermProps>, _prevState: Readonly<IHandTermState>, _snapshot?: any): void {
+  componentDidUpdate(_prevProps: Readonly<IHandTermProps>, _prevState: Readonly<IHandTermState>): void {
+    if (_prevProps.activityMediator !== this.props.activityMediator) {
+      this.activityMediator = this.props.activityMediator;
+    }
     this.handleGitHubAuth();
   }
 
@@ -369,30 +337,21 @@ class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState> imple
     let status = 404;
     let response = "Command not found.";
 
-    if (inputCmd === 'tut') {
-      if (!this.activityMediator.isInTutorial) {
-        this.resetTutorialAchievementState();
-        this.activityMediator.handleCommand(inputCmd);
-      }
-      // Unlock the next achievement and decide if we are still in tutorial mode
-      UnlockAchievement({
-        achievementPhrase: inputCmd,
-        nextAchievement: this.activityMediator.achievement,
-        unlockedAchievements: this.state.unlockedAchievements,
-        setState: (newState: any) => {
-          this.setState(newState);
-          if (newState.nextAchievement) {
-            this.activityMediator.setNextAchievement(newState.nextAchievement);
-          }
-        }
-      });
-    }
-
     const { parsedCommand, args, switches } = parseCommand(inputCmd);
 
-    const handled = this.activityMediator.handleCommand(parsedCommand);
+    const handled = this.activityMediator.handleCommand(parsedCommand, args, switches);
+
+    // Force a re-render to reflect the new activity state
+    this.forceUpdate();
+
+    let nextAchievement;
+    if (this.activityMediator.isInTutorial) {
+      nextAchievement = this.activityMediator.unlockAchievement(parsedCommand);
+    }
+
     if (handled) {
       if (parsedCommand === 'play') {
+        console.log("Play is in game mode:", this.activityMediator.isInGameMode)
         let newPhrase = '';
         if (args.length) {
           newPhrase = args[0];
@@ -400,7 +359,6 @@ class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState> imple
           newPhrase = Phrases.getNthPhraseNotAchieved(this.state.phraseIndex).value;
         }
         this.setNewPhrase(newPhrase);
-
         this.activityMediator.gameHandleRef.current?.handleZombie4PositionChange(this.zombie4StartPostion);
       }
       this.prompt();
@@ -611,7 +569,7 @@ class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState> imple
     this.adapterRef.current?.prompt();
   }
 
-  public handleCharacter = (character: string) => {
+  public handleCharacter = (character: string): number => {
     const charDuration: CharDuration = this.wpmCalculator.addKeystroke(character);
     const currentCommand = this.adapterRef.current?.getCurrentCommand();
 
@@ -652,7 +610,7 @@ class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState> imple
       else {
         this.appendTempPassword(character);
         this.terminalWrite("*");
-        return;
+        return 0;
       }
     }
     if (this.isInChangePasswordMode) {
@@ -673,7 +631,7 @@ class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState> imple
       else {
         this.appendTempPassword(character);
         this.terminalWrite("*");
-        return;
+        return 0;
       }
     }
     if (character.charCodeAt(0) === 3) { // Ctrl+C
@@ -689,8 +647,8 @@ class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState> imple
     if (character === 'ArrowUp') {
       const currentCommand = this.state.commandHistoryFilter || this.adapterRef.current?.getCurrentCommand();
       this.setState({ commandHistoryFilter: currentCommand || null });
-      let newCommandIndex = (this.state.commandHistoryIndex + 1) % this.state.commandHistory.length;
-      let command = this.state
+      const newCommandIndex = (this.state.commandHistoryIndex + 1) % this.state.commandHistory.length;
+      const command = this.state
         .commandHistory
         .filter((ch) => ch.startsWith(currentCommand || ''))[newCommandIndex];
       const commandResponseHistory = this.getCommandResponseHistory().reverse();
@@ -703,15 +661,15 @@ class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState> imple
       this.terminalReset();
       this.terminalPrompt();
       this.terminalWrite(command);
-      return;
+      return 0;
     }
     if (charCodes.join(',') == '27,91,66') { // ArrowDown
       const currentCommand = this.state.commandHistoryFilter;
-      let newCommandIndex = (this.state.commandHistoryIndex - 1 + this.state.commandHistory.length)
-        % this.state.commandHistory.length;
-      if (newCommandIndex < 0) newCommandIndex = 0;
-      if (newCommandIndex >= this.state.commandHistory.length) newCommandIndex = this.state.commandHistory.length - 1;
-      let command = this.state
+      const newCommandIndex = Math.max(0, Math.min(
+        (this.state.commandHistoryIndex - 1 + this.state.commandHistory.length) % this.state.commandHistory.length,
+        this.state.commandHistory.length - 1
+      ));
+      const command = this.state
         .commandHistory
         .filter((ch) => ch.startsWith(currentCommand || ''))[newCommandIndex];
       const commandResponseHistory = this.getCommandResponseHistory().reverse();
@@ -723,7 +681,7 @@ class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState> imple
       this.terminalReset();
       this.terminalPrompt();
       this.terminalWrite(command);
-      return;
+      return 0;
     }
 
     if (character.charCodeAt(0) === 4) { // Ctrl+D
@@ -735,15 +693,16 @@ class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState> imple
       // Process the command before clearing the terminal
       // TODO: cancel timer
 
-      let command = this.adapterRef.current?.getCurrentCommand() ?? '';
+      const command = this.adapterRef.current?.getCurrentCommand() ?? '';
       localStorage.setItem('currentCommand', '');
       this.terminalReset();
       this.handleCommand(command);
     } else if (this.activityMediator.isInGameMode) {
       // # IN PHRASE MODE
       // TODO: How is Game success handeled here?
-      if (this.state.errorCharIndex) {
-
+      // Handle error state if needed
+      if (this.state.errorCharIndex !== undefined) {
+        // Add error handling logic here
       }
       this.terminalWrite(character);
       let command = this.adapterRef.current?.getCurrentCommand() ?? '';
@@ -772,8 +731,8 @@ class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState> imple
   }
 
   getCommandResponseHistory(): string[] {
-    let keys: string[] = [];
-    let commandHistory: string[] = [];
+    const keys: string[] = [];
+    const commandHistory: string[] = [];
     for (let i = 0; i < localStorage.length; i++) {
       if (!localStorage.key(i)?.startsWith(LogKeys.Command + '_')) continue;
 
@@ -817,7 +776,7 @@ class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState> imple
     let commandText = this.createCommandRecord(command, commandTime);
     // TODO: Render this with JSX instead.
     const commandElement = createHTMLElementFromHTML(commandText);
-    let commandResponseElement = document.createElement('div');
+    const commandResponseElement = document.createElement('div');
     commandResponseElement.dataset.status = status.toString();
     commandResponseElement.appendChild(commandElement);
     commandResponseElement.appendChild(createHTMLElementFromHTML(`<div class="response">${response}</div>`));
@@ -879,7 +838,7 @@ class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState> imple
     console.log('Xterm debug:', this.isDebug);
   }
 
-  loadDebugValue() {
+  private loadDebugValue() {
     this.isDebug = localStorage.getItem('xterm-debug') === 'true';
   }
 
@@ -891,7 +850,7 @@ class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState> imple
       this.savePhrasesAchieved(this.state.phraseName, wpmAverage);
     }
 
-    let wpmPhrase = wpmAverage.toString(10)
+    const wpmPhrase = wpmAverage.toString(10)
       + ':' + phrase;
     this.setState(
       (prevState: IHandTermState) => ({
@@ -920,8 +879,8 @@ class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState> imple
         phraseName: '',
       });
     } else {
-      let newPhraseIndex = (this.state.phraseIndex + 1) % phrasesNotAchieved.length;
-      let newPhrase = phrasesNotAchieved[newPhraseIndex];
+      const newPhraseIndex = (this.state.phraseIndex + 1) % phrasesNotAchieved.length;
+      const newPhrase = phrasesNotAchieved[newPhraseIndex];
       this.setState({
         phraseIndex: newPhraseIndex,
         phraseValue: newPhrase.value,
@@ -1031,7 +990,7 @@ class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState> imple
   }
 
   private loadFontSize(): void {
-    let getFontSize: string = localStorage.getItem('terminalFontSize') || this.currentFontSize.toString();
+    const getFontSize: string = localStorage.getItem('terminalFontSize') || this.currentFontSize.toString();
     const fontSize = (getFontSize && getFontSize == 'NaN') ? this.currentFontSize : parseInt(getFontSize);
 
     if (fontSize) {
@@ -1143,8 +1102,9 @@ class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState> imple
 
   public render() {
     const { terminalSize, outputElements, canvasHeight, phrasesAchieved, phraseValue, commandLine, lastTypedCharacter, userName, domain, githubUsername, timestamp, editMode, editContent, editLanguage, isShowVideo } = this.state;
-    const { activityMediator } = this.props;
     const canvasWidth = terminalSize ? terminalSize.width : 800;
+
+    const { activityMediator } = this.props;
 
     return (
       <CommandContext.Consumer>
@@ -1155,7 +1115,11 @@ class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState> imple
               this.forceUpdate();
             }, 0);
           }
-          console.log(`Current Activity:${ActivityType[activityMediator.currentActivity]}, isInTutorial:${activityMediator.isInTutorial}`)
+
+          console.log(
+            'HandTerm.render() achievement:', activityMediator.achievement.phrase.join(''),
+            "isInGame:", activityMediator.isInGameMode
+          );
 
           return (
             <div className="terminal-container">
@@ -1194,15 +1158,10 @@ class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState> imple
               {lastTypedCharacter && (
                 <Chord displayChar={lastTypedCharacter} />
               )}
-              {activityMediator.isInTutorial &&
-                TutorialComponent && (
-                  <TutorialComponent
-                    achievement={activityMediator.achievement}
-                    isInTutorial={activityMediator.isInTutorial}
-                    includeReturn={true}
-                  />
-                )
-              }
+              <TutorialManager
+                isInTutorial={activityMediator.isInTutorial}
+                achievement={activityMediator.achievement}
+              />
               <Prompt
                 username={userName || 'guest'}
                 domain={domain || 'handterm'}
