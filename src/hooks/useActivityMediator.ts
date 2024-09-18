@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { Achievement } from '../types/Types';
 import { ActionType } from '../game/types/ActionTypes';
 import { IGameHandle } from '../game/Game';
@@ -49,9 +49,13 @@ export function useActivityMediator(initialAchievement: Achievement) {
 
   const unlockAchievement = (command: string) => {
     const nextAchievement = unlockAchievementUtil(command, achievement.phrase.join(''));
+    if (achievement.gameLevels) {
+      setCurrentActivity(ActivityType.GAME);
+      return;
+    }
     if (nextAchievement) {
       setNextAchievement(nextAchievement);
-      return nextAchievement;
+      return;
     }
     setCurrentActivity(ActivityType.NORMAL);
   };

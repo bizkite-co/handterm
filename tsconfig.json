@@ -45,13 +45,14 @@
   "types": [
     "node",
     "jest",
-    "@testing-library/jest-dom"
+    "@types/testing-library__jest-dom"
+  ],
+  "typeRoots": [
+    "./node_modules/@types"
   ],
   "include": [
-    "./src",
-    "src/shared",
-    "./src/types/elements.d.ts",
-    "./src/types/testing-library__jest-dom.d.ts",
+    "./src/**/*",
+    "./src/types/*.d.ts",
     "jest.setup.js",
     "jest.config.ts",
     "jest.setup.ts"
@@ -59,7 +60,7 @@
   "types": [
     "node",
     "jest",
-    "@testing-library/jest-dom"
+    "@types/testing-library__jest-dom"
   ],
   "exclude": [
     ".vscode"

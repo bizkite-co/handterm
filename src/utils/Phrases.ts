@@ -10,11 +10,11 @@ const standardChars = /^[a-zA-Z0-9\s'";:.!,?]+$/;
 
 export default class Phrases {
     public static readonly phrases: PhraseType[] = [
-        { key: "ask", value: "Ask dad; A sad lass had salad.", tutorial: "fdsa" },
-        { key: "sad", value: "All sad lads fall.", tutorial: "fdsa" },
-        { key: "gallant", value: "A gallant lad; a glass.", tutorial: "fdsa" },
-        { key: "alas", value: "Alas, Khal's flask has a crack." },
-        { key: "lads", value: "Lads' flags fall as gaffs sag." },
+        { key: "ask", value: "Ask dad; A sad lass had salad.", tutorial: "fdsajkl;" },
+        { key: "sad", value: "All sad lads fall.", tutorial: "fdsajkl;" },
+        { key: "gallant", value: "A gallant lad; a glass.", tutorial: "fdsajkl;" },
+        { key: "alas", value: "Alas, Khal's flask has a crack.", tutorial: 'fdsajkl;' },
+        { key: "lads", value: "Lads' flags fall as gaffs sag.", tutorial: 'fdsajk;' },
         { key: "hello", value: "Hello, World!" },
         { key: "pack", value: "Pack my box with five dozen liquor jugs." },
         { key: "sphinx", value: "Sphinx of black quartz, judge my vow." },

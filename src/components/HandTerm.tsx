@@ -11,7 +11,6 @@ import * as React from 'react';
 import { ContextType, TouchEventHandler } from 'react';
 import XtermAdapter, { XtermAdapterHandle } from './XtermAdapter';
 import NextCharsDisplay, { NextCharsDisplayHandle } from './NextCharsDisplay';
-import { Output } from './Output';
 import Game from '../game/Game';
 import { ActionType } from '../game/types/ActionTypes';
 import WebCam from '../utils/WebCam';
@@ -85,6 +84,7 @@ export interface IHandTermProps {
   };
   commandHistoryHook: ReturnType<typeof useCommandHistory>;
   activityMediator: ReturnType<typeof useActivityMediator>;
+  onOutputUpdate: (output: React.ReactNode) => void;
 }
 
 type LanguageType = "javascript" | "typescript" | "markdown";
@@ -154,7 +154,6 @@ class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState> imple
   private setIsLoggedIn: React.Dispatch<React.SetStateAction<boolean>>;
 
   private commandHistoryHook: ReturnType<typeof useCommandHistory>;
-  private activityMediator: ReturnType<typeof useActivityMediator>;
 
   constructor(props: IHandTermProps) {
     super(props);
@@ -164,7 +163,6 @@ class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState> imple
     const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
 
     this.commandHistoryHook = props.commandHistoryHook;
-    this.activityMediator = props.activityMediator;
 
     this.state = {
       domain: 'handterm.com',
@@ -228,7 +226,7 @@ class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState> imple
     if (command.length === 0) {
       this.nextCharsDisplayRef.current?.resetTimer();
     }
-    if (this.activityMediator.isInGameMode) {
+    if (this.props.activityMediator.isInGameMode) {
       this.setState({
         commandLine: command,
       });
@@ -310,9 +308,6 @@ class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState> imple
   }
 
   componentDidUpdate(_prevProps: Readonly<IHandTermProps>, _prevState: Readonly<IHandTermState>): void {
-    if (_prevProps.activityMediator !== this.props.activityMediator) {
-      this.activityMediator = this.props.activityMediator;
-    }
     this.handleGitHubAuth();
   }
 
@@ -339,30 +334,25 @@ class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState> imple
 
     const { parsedCommand, args, switches } = parseCommand(inputCmd);
 
-    const handled = this.activityMediator.handleCommand(parsedCommand, args, switches);
+    this.props.activityMediator.handleCommand(parsedCommand, args, switches);
 
     // Force a re-render to reflect the new activity state
     this.forceUpdate();
 
-    let nextAchievement;
-    if (this.activityMediator.isInTutorial) {
-      nextAchievement = this.activityMediator.unlockAchievement(parsedCommand);
+    if (this.props.activityMediator.isInTutorial) {
+      this.props.activityMediator.unlockAchievement(parsedCommand);
     }
 
-    if (handled) {
-      if (parsedCommand === 'play') {
-        console.log("Play is in game mode:", this.activityMediator.isInGameMode)
-        let newPhrase = '';
-        if (args.length) {
-          newPhrase = args[0];
-        } else {
-          newPhrase = Phrases.getNthPhraseNotAchieved(this.state.phraseIndex).value;
-        }
-        this.setNewPhrase(newPhrase);
-        this.activityMediator.gameHandleRef.current?.handleZombie4PositionChange(this.zombie4StartPostion);
+    if (this.props.activityMediator.isInGameMode) {
+      console.log("Play is in game mode:", this.props.activityMediator.isInGameMode)
+      let newPhrase = '';
+      if (args.length) {
+        newPhrase = args[0];
+      } else {
+        newPhrase = Phrases.getNthPhraseNotAchieved(this.state.phraseIndex).value;
       }
-      this.prompt();
-      return;
+      this.setNewPhrase(newPhrase);
+      this.props.activityMediator.gameHandleRef.current?.handleZombie4PositionChange(this.zombie4StartPostion);
     }
 
     if (this.context) {
@@ -540,7 +530,7 @@ class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState> imple
       }
     }
 
-    this.activityMediator.gameHandleRef.current?.resetGame();
+    this.props.activityMediator.gameHandleRef.current?.resetGame();
     this.scrollToBottom();
     this.setState({ commandLine: '' });
 
@@ -549,7 +539,7 @@ class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState> imple
     // ... (rest of the existing code)
 
     if (this.nextCharsDisplayRef.current) this.nextCharsDisplayRef.current.cancelTimer();
-    if (this.activityMediator.isInGameMode) {
+    if (this.props.activityMediator.isInGameMode) {
       response = '';
     }
 
@@ -697,7 +687,7 @@ class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState> imple
       localStorage.setItem('currentCommand', '');
       this.terminalReset();
       this.handleCommand(command);
-    } else if (this.activityMediator.isInGameMode) {
+    } else if (this.props.activityMediator.isInGameMode) {
       // # IN PHRASE MODE
       // TODO: How is Game success handeled here?
       // Handle error state if needed
@@ -811,13 +801,7 @@ class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState> imple
 
   writeOutput(output: string) {
     this.commandHistoryHook.addToCommandHistory(output);
-    this.setState((prevState: IHandTermState) => ({
-      outputElements: [...(prevState.outputElements || []), output]
-    }));
-    // TO append output instead of replacing it, do this:
-    // this.setState(prevState => ({
-    //   outputElements: [...prevState.outputElements, output]
-    // }));
+    this.props.onOutputUpdate(output);
   }
 
   createCommandRecord(command: string, commandTime: Date): string {
@@ -862,8 +846,8 @@ class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState> imple
       })
     );
     this.saveCommandResponseHistory("game", wpmPhrase, 200);
-    this.activityMediator.gameHandleRef.current?.completeGame();
-    this.activityMediator.gameHandleRef.current?.levelUp();
+    this.props.activityMediator.gameHandleRef.current?.completeGame();
+    this.props.activityMediator.gameHandleRef.current?.levelUp();
     this.handlePhraseComplete();
     this.adapterRef.current?.terminalReset();
     this.adapterRef.current?.prompt();
@@ -888,7 +872,7 @@ class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState> imple
       });
     }
     if (this.nextCharsDisplayRef.current) this.nextCharsDisplayRef.current.cancelTimer();
-    this.activityMediator.gameHandleRef.current?.completeGame();
+    this.props.activityMediator.gameHandleRef.current?.completeGame();
     this.adapterRef.current?.terminalReset();
   }
 
@@ -926,9 +910,9 @@ class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState> imple
       this.heroRunTimeoutId = null;
     }
 
-    this.activityMediator.setHeroAction('Run');
+    this.props.activityMediator.setHeroAction('Run');
     this.heroRunTimeoutId = window.setTimeout(() => {
-      this.activityMediator.setHeroAction('Idle');
+      this.props.activityMediator.setHeroAction('Idle');
       this.heroRunTimeoutId = null;
     }, 800);
   }
@@ -939,9 +923,9 @@ class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState> imple
       this.heroSummersaultTimeoutId = null;
     }
 
-    this.activityMediator.setHeroAction('Summersault');
+    this.props.activityMediator.setHeroAction('Summersault');
     this.heroSummersaultTimeoutId = window.setTimeout(() => {
-      this.activityMediator.setHeroAction('Idle');
+      this.props.activityMediator.setHeroAction('Idle');
       this.heroSummersaultTimeoutId = null;
     }, 800);
   }
@@ -951,16 +935,16 @@ class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState> imple
       clearTimeout(this.heroActionTimeoutId);
       this.heroActionTimeoutId = null;
     }
-    this.activityMediator.setHeroAction(newAction);
+    this.props.activityMediator.setHeroAction(newAction);
     if (newAction === 'Death') return;
     this.heroActionTimeoutId = window.setTimeout(() => {
-      this.activityMediator.setHeroAction('Idle');
+      this.props.activityMediator.setHeroAction('Idle');
       this.heroActionTimeoutId = null;
     }, 500);
   }
 
   setZombie4Action = (newAction: ActionType) => {
-    this.activityMediator.setZombie4Action(newAction);
+    this.props.activityMediator.setZombie4Action(newAction);
   }
 
   handleTimerStatusChange(isActive: boolean) {
@@ -1101,7 +1085,7 @@ class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState> imple
   }
 
   public render() {
-    const { terminalSize, outputElements, canvasHeight, phrasesAchieved, phraseValue, commandLine, lastTypedCharacter, userName, domain, githubUsername, timestamp, editMode, editContent, editLanguage, isShowVideo } = this.state;
+    const { terminalSize, canvasHeight, phrasesAchieved, phraseValue, commandLine, lastTypedCharacter, userName, domain, githubUsername, timestamp, editMode, editContent, editLanguage, isShowVideo } = this.state;
     const canvasWidth = terminalSize ? terminalSize.width : 800;
 
     const { activityMediator } = this.props;
@@ -1123,12 +1107,6 @@ class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState> imple
 
           return (
             <div className="terminal-container">
-              <Output
-                ref={this.outputRef}
-                elements={outputElements}
-                onTouchStart={this.handleTouchStart}
-                onTouchEnd={this.handleTouchEnd}
-              />
               {activityMediator.isInGameMode && (
                 <Game
                   ref={activityMediator.gameHandleRef}

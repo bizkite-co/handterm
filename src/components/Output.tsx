@@ -9,7 +9,7 @@ export interface OutputProps {
     onTouchEnd: TouchEventHandler<HTMLDivElement>;
 }
 
-export const Output = React.forwardRef<HTMLDivElement, OutputProps>(({ elements, onTouchStart, onTouchEnd }, ref) => {
+export const Output = React.memo(React.forwardRef<HTMLDivElement, OutputProps>(({ elements, onTouchStart, onTouchEnd }, ref) => {
     return (
         <div
             id={TerminalCssClasses.Output}
@@ -27,4 +27,4 @@ export const Output = React.forwardRef<HTMLDivElement, OutputProps>(({ elements,
             })}
         </div>
     );
-});
+}));

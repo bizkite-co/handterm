@@ -29,3 +29,4 @@ public/images/glitch-parallax-bg
 *.pem
 .aider.tags.*
 .aider.env
+prompt-temp.md
