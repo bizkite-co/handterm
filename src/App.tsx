@@ -6,7 +6,7 @@ import { TerminalCssClasses } from './types/TerminalTypes';
 import { useAuth } from './lib/useAuth';
 import { Output } from './components/Output';
 import { useCommandHistory } from './hooks/useCommandHistory';
-import { useActivityMediator } from './hooks/useActivityMediator';
+import { ActivityType, useActivityMediator } from './hooks/useActivityMediator';
 import { getNextTutorialAchievement } from './utils/achievementUtils';
 import { loadCommandHistory } from './utils/commandUtils';
 
@@ -80,6 +80,11 @@ const App = () => {
     // Implement your touch end logic here
   }, []);
 
+  const handleActivityChange = useCallback((newActivityType: ActivityType) => {
+    console.log("Activity changed to:", newActivityType);
+    // Add any additional logic for activity change here
+  }, []);
+
   return (
     <CommandProvider handTermRef={handexTermRef}>
       <div ref={containerRef}>
@@ -98,10 +103,7 @@ const App = () => {
           onCommandExecuted={(command, args, switches) => {
             activityMediator.handleCommand(command, args, switches);
           }}
-          onActivityChange={(newActivityType) => {
-            // Handle activity type change here
-            console.log("Activity changed to:", newActivityType);
-          }}
+          onActivityChange={handleActivityChange}
         />
       </div>
     </CommandProvider>

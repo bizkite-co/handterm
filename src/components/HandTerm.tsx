@@ -8,7 +8,7 @@ import { IWPMCalculator, WPMCalculator } from '../utils/WPMCalculator';
 import { IPersistence, LocalStoragePersistence } from '../Persistence';
 import { createHTMLElementFromHTML } from '../utils/dom';
 import * as React from 'react';
-import { ContextType, TouchEventHandler, useCallback, useEffect } from 'react';
+import { ContextType, TouchEventHandler, useCallback, useEffect, useRef } from 'react';
 import XtermAdapter, { XtermAdapterHandle } from './XtermAdapter';
 import NextCharsDisplay, { NextCharsDisplayHandle } from './NextCharsDisplay';
 import Game from '../game/Game';
@@ -306,10 +306,34 @@ class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState> imple
     this.addTouchListeners();
 
     this.handleGitHubAuth();
+
+    const { activityMediator } = this.props;
+    
+    if (activityMediator.isInGameMode && activityMediator.achievement.phrase.length > 0) {
+      this.setState({
+        phraseValue: activityMediator.achievement.phrase[0],
+        phraseName: activityMediator.achievement.prompt
+      });
+    }
   }
 
-  componentDidUpdate(_prevProps: Readonly<IHandTermProps>, _prevState: Readonly<IHandTermState>): void {
+  componentDidUpdate(prevProps: Readonly<IHandTermProps>, _prevState: Readonly<IHandTermState>): void {
     this.handleGitHubAuth();
+
+    const { activityMediator } = this.props;
+
+    // Check if we've just entered game mode or if the achievement has changed while in game mode
+    if (
+      (activityMediator.isInGameMode && !prevProps.activityMediator.isInGameMode) ||
+      (activityMediator.isInGameMode && activityMediator.achievement !== prevProps.activityMediator.achievement)
+    ) {
+      if (activityMediator.achievement.phrase.length > 0) {
+        this.setState({
+          phraseValue: activityMediator.achievement.phrase[0],
+          phraseName: activityMediator.achievement.prompt
+        });
+      }
+    }
   }
 
   componentWillUnmount(): void {
@@ -1191,29 +1215,27 @@ const HandTermWrapper = React.forwardRef<IHandTermMethods, IHandTermProps>((prop
   }, [activityMediator]);
 
   const handleActivityChange = useCallback((newActivityType: ActivityType) => {
-    // Handle activity type change here
     console.log("Activity changed to:", newActivityType);
-    // You might want to update some state in the activityMediator here
-    switch (newActivityType) {
-      case ActivityType.GAME:
-        console.log("Entering game mode");
-        break;
-      case ActivityType.TUTORIAL:
-        console.log("Entering tutorial mode");
-        break;
-      case ActivityType.EDIT:
-        console.log("Entering edit mode");
-        break;
-      case ActivityType.NORMAL:
-        console.log("Entering normal mode");
-        break;
+    if (newActivityType === ActivityType.GAME) {
+      const nextPhrase = Phrases.getNthPhraseNotAchieved(0); // Get the first unachieved phrase
+      activityMediator.setNextAchievement({
+        phrase: [nextPhrase.value],
+        prompt: nextPhrase.key,
+        unlocked: false
+      });
     }
-  }, []);
+  }, [activityMediator]);
 
   useEffect(() => {
-    // Monitor changes in activity type
-    handleActivityChange(activityMediator.currentActivity);
+    // Only call handleActivityChange if the activity has actually changed
+    if (activityMediator.currentActivity !== prevActivity.current) {
+      handleActivityChange(activityMediator.currentActivity);
+      prevActivity.current = activityMediator.currentActivity;
+    }
   }, [activityMediator.currentActivity, handleActivityChange]);
+
+  // Add this line near the top of the component, with other useRef declarations
+  const prevActivity = useRef(activityMediator.currentActivity);
 
   return (
     <HandTerm
