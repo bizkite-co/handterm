@@ -95,6 +95,13 @@ const App = () => {
           commandHistoryHook={commandHistoryHook}
           activityMediator={activityMediator}
           onOutputUpdate={handleOutputUpdate}
+          onCommandExecuted={(command, args, switches) => {
+            activityMediator.handleCommand(command, args, switches);
+          }}
+          onActivityChange={(newActivityType) => {
+            // Handle activity type change here
+            console.log("Activity changed to:", newActivityType);
+          }}
         />
       </div>
     </CommandProvider>

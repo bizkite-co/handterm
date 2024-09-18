@@ -8,7 +8,7 @@ import { IWPMCalculator, WPMCalculator } from '../utils/WPMCalculator';
 import { IPersistence, LocalStoragePersistence } from '../Persistence';
 import { createHTMLElementFromHTML } from '../utils/dom';
 import * as React from 'react';
-import { ContextType, TouchEventHandler } from 'react';
+import { ContextType, TouchEventHandler, useCallback, useEffect } from 'react';
 import XtermAdapter, { XtermAdapterHandle } from './XtermAdapter';
 import NextCharsDisplay, { NextCharsDisplayHandle } from './NextCharsDisplay';
 import Game from '../game/Game';
@@ -23,12 +23,11 @@ import MonacoEditor, { MonacoEditorHandle } from './MonacoEditor';
 import './MonacoEditor.css'; // Make sure to import the CSS
 import { loadCommandHistory, parseCommand } from '../utils/commandUtils';
 import { getNextTutorialAchievement, loadTutorialAchievements } from '../utils/achievementUtils';
-// import UnlockAchievement from '../commands/UnlockAchievement';
 import { Prompt } from './Prompt';
 import { createTimeCode } from '../utils/timeUtils';
 import { TimeDisplay } from './TimeDisplay';
 import { useCommandHistory } from '../hooks/useCommandHistory';
-import { useActivityMediator } from '../hooks/useActivityMediator';
+import { ActivityType, useActivityMediator } from '../hooks/useActivityMediator';
 // import HelpCommand from '../commands/HelpCommand';
 // import SpecialCommand from '../commands/SpecialCommand';
 import Phrases from '../utils/Phrases';
@@ -83,8 +82,10 @@ export interface IHandTermProps {
     // Add other properties returned by useAuth here
   };
   commandHistoryHook: ReturnType<typeof useCommandHistory>;
-  activityMediator: ReturnType<typeof useActivityMediator>;
   onOutputUpdate: (output: React.ReactNode) => void;
+  onCommandExecuted: (command: string, args: string[], switches: Record<string, boolean | string>) => void;
+  onActivityChange: (newActivityType: ActivityType) => void;
+  activityMediator: ReturnType<typeof useActivityMediator>;
 }
 
 type LanguageType = "javascript" | "typescript" | "markdown";
@@ -334,34 +335,29 @@ class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState> imple
 
     const { parsedCommand, args, switches } = parseCommand(inputCmd);
 
-    this.props.activityMediator.handleCommand(parsedCommand, args, switches);
-
-    // Force a re-render to reflect the new activity state
-    this.forceUpdate();
+    this.props.onCommandExecuted(parsedCommand, args, switches);
 
     if (this.props.activityMediator.isInTutorial) {
-      this.props.activityMediator.unlockAchievement(parsedCommand);
+      const { progressed, completed } = this.props.activityMediator.progressTutorial(parsedCommand);
+      if (progressed) {
+        // Handle tutorial progression (e.g., update UI, show messages)
+        if (completed) {
+          // Tutorial completed, transitioning to game mode
+          this.props.onActivityChange(ActivityType.GAME);
+        }
+      }
     }
 
     if (this.props.activityMediator.isInGameMode) {
       console.log("Play is in game mode:", this.props.activityMediator.isInGameMode)
-      let newPhrase = '';
-      if (args.length) {
-        newPhrase = args[0];
-      } else {
-        newPhrase = Phrases.getNthPhraseNotAchieved(this.state.phraseIndex).value;
-      }
+      let newPhrase = args.length ? args[0] : Phrases.getNthPhraseNotAchieved(this.state.phraseIndex).value;
       this.setNewPhrase(newPhrase);
-      this.props.activityMediator.gameHandleRef.current?.handleZombie4PositionChange(this.zombie4StartPostion);
+      // You might want to handle this zombie position change in the wrapper component
+      // this.props.onZombiePositionChange(this.zombie4StartPostion);
     }
 
     if (this.context) {
-      const output = this.context
-        .executeCommand(
-          parsedCommand,
-          args,
-          switches,
-        );
+      const output = this.context.executeCommand(parsedCommand, args, switches);
       if (output.status === 200) return;
     }
     if (parsedCommand === 'help' || parsedCommand === '411') {
@@ -1190,11 +1186,42 @@ const HandTermWrapper = React.forwardRef<IHandTermMethods, IHandTermProps>((prop
   const commandHistoryHook = useCommandHistory(loadCommandHistory());
   const activityMediator = useActivityMediator(getNextTutorialAchievement() || { phrase: [], prompt: '', unlocked: false });
 
+  const handleCommandExecuted = useCallback((command: string, args: string[], switches: Record<string, boolean | string>) => {
+    activityMediator.handleCommand(command, args, switches);
+  }, [activityMediator]);
+
+  const handleActivityChange = useCallback((newActivityType: ActivityType) => {
+    // Handle activity type change here
+    console.log("Activity changed to:", newActivityType);
+    // You might want to update some state in the activityMediator here
+    switch (newActivityType) {
+      case ActivityType.GAME:
+        console.log("Entering game mode");
+        break;
+      case ActivityType.TUTORIAL:
+        console.log("Entering tutorial mode");
+        break;
+      case ActivityType.EDIT:
+        console.log("Entering edit mode");
+        break;
+      case ActivityType.NORMAL:
+        console.log("Entering normal mode");
+        break;
+    }
+  }, []);
+
+  useEffect(() => {
+    // Monitor changes in activity type
+    handleActivityChange(activityMediator.currentActivity);
+  }, [activityMediator.currentActivity, handleActivityChange]);
+
   return (
     <HandTerm
       ref={ref as React.Ref<HandTerm>}
       {...props}
       commandHistoryHook={commandHistoryHook}
+      onCommandExecuted={handleCommandExecuted}
+      onActivityChange={handleActivityChange}
       activityMediator={activityMediator}
     />
   );

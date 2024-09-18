@@ -2,7 +2,7 @@ import { useState, useCallback, useRef } from 'react';
 import { Achievement } from '../types/Types';
 import { ActionType } from '../game/types/ActionTypes';
 import { IGameHandle } from '../game/Game';
-import { resetTutorial, unlockAchievementUtil } from '../utils/achievementUtils';
+import { resetTutorial, unlockAchievement } from '../utils/achievementUtils';
 
 export enum ActivityType {
   NORMAL,
@@ -47,17 +47,16 @@ export function useActivityMediator(initialAchievement: Achievement) {
     }
   };
 
-  const unlockAchievement = (command: string) => {
-    const nextAchievement = unlockAchievementUtil(command, achievement.phrase.join(''));
-    if (achievement.gameLevels) {
-      setCurrentActivity(ActivityType.GAME);
-      return;
+  const progressTutorial = (command: string) => {
+    if (currentActivity === ActivityType.TUTORIAL) {
+      const nextAchievement = unlockAchievement(command, achievement.phrase.join(''));
+      if (achievement.gameLevels) setCurrentActivity(ActivityType.GAME); 
+      if (nextAchievement) {
+        setAchievement(nextAchievement);
+        return { progressed: true, completed: false };
+      }
     }
-    if (nextAchievement) {
-      setNextAchievement(nextAchievement);
-      return;
-    }
-    setCurrentActivity(ActivityType.NORMAL);
+    return { progressed: false, completed: false };
   };
 
   return {
@@ -68,7 +67,7 @@ export function useActivityMediator(initialAchievement: Achievement) {
     isInNormal: currentActivity === ActivityType.NORMAL,
     achievement,
     setNextAchievement,
-    unlockAchievement,
+    progressTutorial,
     heroAction,
     zombie4Action,
     gameHandleRef,

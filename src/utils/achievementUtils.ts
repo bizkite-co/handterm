@@ -21,7 +21,7 @@ export const getNextTutorialAchievement = () => {
     return nextAchievement || null;
 }
 
-export const unlockAchievementUtil = (command: string, achievement: string): Achievement | null => {
+export const unlockAchievement = (command: string, achievement: string): Achievement | null => {
     if (command === '') command = 'Return (ENTER)';
     if (achievement === command) {
         saveAchievements(command);
