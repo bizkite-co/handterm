@@ -74,7 +74,7 @@ describe('useActivityMediator', () => {
 
     let nextAchievement;
     act(() => {
-      nextAchievement = result.current.unlockAchievement('test');
+      nextAchievement = result.current.progressTutorial('test');
     });
 
     expect(nextAchievement).not.toBeNull();
@@ -85,7 +85,7 @@ describe('useActivityMediator', () => {
     const { result } = renderHook(() => useActivityMediator({ phrase: ['test'], prompt: 'Test prompt', unlocked: false }));
 
     act(() => {
-      result.current.unlockAchievement('wrong');
+      result.current.progressTutorial('wrong');
     });
 
     expect(result.current.achievement.unlocked).toBe(false);
