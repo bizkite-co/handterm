@@ -846,7 +846,7 @@ class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState> imple
     this.isDebug = localStorage.getItem('xterm-debug') === 'true';
   }
 
-  private handlePhraseSuccess = (phrase: Phrase) => {
+  private handlePhraseSuccess = (phrase: string) => {
     const wpms = this.wpmCalculator.getWPMs();
     const wpmAverage = wpms.wpmAverage;
 
@@ -855,7 +855,7 @@ class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState> imple
     }
 
     const wpmPhrase = wpmAverage.toString(10)
-      + ':' + phrase.value;
+      + ':' + phrase;
     this.setState(
       (prevState: IHandTermState) => ({
         outputElements: [
@@ -868,9 +868,11 @@ class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState> imple
     this.saveCommandResponseHistory("game", wpmPhrase, 200);
     this.props.activityMediator.gameHandleRef.current?.completeGame();
     const successPhrase = Phrases
-      .getPhraseByValue(phrase.value.join(''));
-    const switchedToTutorial = this.props.activityMediator.checkGameProgress(successPhrase);
-
+      .getPhraseByValue(phrase);
+    if(successPhrase) {
+      const isSwitchedToTutorial:boolean = this.props.activityMediator.checkGameProgress(successPhrase);
+      console.log("Switched from Game back to Tutorial:", isSwitchedToTutorial);
+    }
     this.props.activityMediator.gameHandleRef.current?.levelUp();
     this.handlePhraseComplete();
     this.adapterRef.current?.terminalReset();

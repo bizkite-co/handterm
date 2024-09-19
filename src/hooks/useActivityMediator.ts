@@ -61,7 +61,7 @@ export function useActivityMediator(initialAchievement: Achievement) {
     return { progressed: false, completed: false };
   };
 
-  const checkGameProgress = (successPhrase:PhraseType) => {
+  const checkGameProgress = (successPhrase: PhraseType) => {
     // TODO: Use more complex comparison to tutorial achievements.
     if (successPhrase.tutorial) {
       const nextAchievement = getNextTutorialAchievement();
