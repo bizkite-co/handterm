@@ -69,7 +69,7 @@ const App = () => {
   }, []);
 
   const handleOutputUpdate = useCallback((newOutput: React.ReactNode) => {
-    setOutputElements(prevOutputs => [...prevOutputs, newOutput]);
+    setOutputElements(_prevOutputs => [ newOutput]);
   }, []);
 
   const handleTouchStart = useCallback(() => {
