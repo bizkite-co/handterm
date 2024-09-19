@@ -5,7 +5,7 @@ import Timer from './Timer'; // Import the React component
 import ErrorDisplay from "./ErrorDisplay";
 import { Phrase } from "../utils/Phrase";
 
-export interface NextCharsDisplayProps {
+export interface INextCharsDisplayProps {
     commandLine: string;
     isInPhraseMode: boolean;
     newPhrase: string;
@@ -13,13 +13,12 @@ export interface NextCharsDisplayProps {
     onError: (error: number | undefined) => void;
 }
 
-
 export interface NextCharsDisplayHandle {
     resetTimer: () => void;
     cancelTimer: () => void;
 }
 
-const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, NextCharsDisplayProps>(({
+const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, INextCharsDisplayProps>(({
     commandLine,
     isInPhraseMode,
     newPhrase,
