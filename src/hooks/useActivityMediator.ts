@@ -56,6 +56,9 @@ export function useActivityMediator(initialAchievement: Achievement) {
       if (nextAchievement) {
         setAchievement(nextAchievement);
         return { progressed: true, completed: false };
+      }else{
+        setCurrentActivity(ActivityType.GAME);
+        return { progressed: true, completed: true };
       }
     }
     return { progressed: false, completed: false };

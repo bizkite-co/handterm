@@ -31,7 +31,6 @@ import { ActivityType, useActivityMediator } from '../hooks/useActivityMediator'
 // import HelpCommand from '../commands/HelpCommand';
 // import SpecialCommand from '../commands/SpecialCommand';
 import Phrases from '../utils/Phrases';
-import { Phrase } from 'src/utils/Phrase';
 
 export interface IHandTermMethods {
   writeOutput: (output: string) => void;

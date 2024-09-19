@@ -1,5 +1,6 @@
 export default {
   preset: 'ts-jest',
+  injectGlobals: true,
   testEnvironment: 'jest-environment-jsdom',
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
   transform: {

@@ -11,7 +11,7 @@
     ],
     "jsx": "react-jsx",
     "jsxImportSource": "react",
-    "types": ["jest", "node"],
+    "types": ["jest", "node", "@testing-library/jest-dom"],
     "module": "ESNext",
     "skipLibCheck": true,
     "outDir": "./dist",
@@ -54,8 +54,7 @@
   ],
   "types": [
     "node",
-    "jest",
-    "@types/testing-library__jest-dom"
+    "jest"
   ],
   "exclude": [
     ".vscode"
