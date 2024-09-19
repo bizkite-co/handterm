@@ -14,7 +14,7 @@ export default class Phrases {
         { key: "sad", value: "All sad lads fall.", tutorial: "fdsajkl;" },
         { key: "gallant", value: "A gallant lad; a glass.", tutorial: "fdsajkl;" },
         { key: "alas", value: "Alas, Khal's flask has a crack.", tutorial: 'fdsajkl;' },
-        { key: "lads", value: "Lads' flags fall as gaffs sag.", tutorial: 'fdsajk;' },
+        { key: "lads", value: "Lads' flags fall as gaffs sag.", tutorial: 'fdsajkl;' },
         { key: "hello", value: "Hello, World!" },
         { key: "pack", value: "Pack my box with five dozen liquor jugs." },
         { key: "sphinx", value: "Sphinx of black quartz, judge my vow." },
@@ -69,9 +69,16 @@ export default class Phrases {
         if (index >= this.phrases.length) return this.phrases[this.phrases.length - 1];
         return this.phrases[0];
     }
+
+    public static getPhraseByValue(phrase: string): PhraseType | null {
+        const result = Phrases.phrases.find(p => p.value === phrase)
+        return result || null;
+    }
+
     public static getPhraseNames(): string[] {
         return Phrases.phrases.map(x => x.key);
     }
+
     public static getRandomPhrase(): string {
         const phrasesLength = this.phrases.length;
         const randomKey = Math.floor(Math.random() * phrasesLength);

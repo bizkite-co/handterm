@@ -7,7 +7,7 @@ export const useCommandHistory = (initialHistory: string[]) => {
   const [commandHistoryFilter, setCommandHistoryFilter] = useState<string | null>(null);
 
   const addToCommandHistory = useCallback((command: string) => {
-    setCommandHistory(prev => [...prev, command].slice(-120)); // Keep last 120 commands
+    setCommandHistory(_prev => [..._prev, command].slice(-2)); // Keep last 120 commands
   }, []);
 
   const getCommandResponseHistory = useCallback((): string[] => {

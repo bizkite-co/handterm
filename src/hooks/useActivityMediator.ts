@@ -3,6 +3,7 @@ import { Achievement } from '../types/Types';
 import { ActionType } from '../game/types/ActionTypes';
 import { IGameHandle } from '../game/Game';
 import { resetTutorial, unlockAchievement, getNextTutorialAchievement } from '../utils/achievementUtils';
+import { PhraseType } from '../utils/Phrases';
 
 export enum ActivityType {
   NORMAL,
@@ -50,6 +51,7 @@ export function useActivityMediator(initialAchievement: Achievement) {
   const progressTutorial = (command: string) => {
     if (currentActivity === ActivityType.TUTORIAL) {
       const nextAchievement = unlockAchievement(command, achievement.phrase.join(''));
+      // TODO: Use more complex comparison to Game phrase levels.
       if (achievement.gameLevels) setCurrentActivity(ActivityType.GAME); 
       if (nextAchievement) {
         setAchievement(nextAchievement);
@@ -59,8 +61,9 @@ export function useActivityMediator(initialAchievement: Achievement) {
     return { progressed: false, completed: false };
   };
 
-  const checkGameProgress = (level: number) => {
-    if (level > 1) {
+  const checkGameProgress = (successPhrase:PhraseType) => {
+    // TODO: Use more complex comparison to tutorial achievements.
+    if (successPhrase.tutorial) {
       const nextAchievement = getNextTutorialAchievement();
       if (nextAchievement) {
         setAchievement(nextAchievement);

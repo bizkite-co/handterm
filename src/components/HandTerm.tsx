@@ -31,6 +31,7 @@ import { ActivityType, useActivityMediator } from '../hooks/useActivityMediator'
 // import HelpCommand from '../commands/HelpCommand';
 // import SpecialCommand from '../commands/SpecialCommand';
 import Phrases from '../utils/Phrases';
+import { Phrase } from 'src/utils/Phrase';
 
 export interface IHandTermMethods {
   writeOutput: (output: string) => void;
@@ -93,7 +94,7 @@ type LanguageType = "javascript" | "typescript" | "markdown";
 export interface IHandTermState {
   // Define the interface for your HandexTerm state
   phraseValue: string;
-  phraseName: string;
+  phraseKey: string;
   phraseIndex: number;
   phrasesAchieved: string[];
   targetWPM: number;
@@ -171,7 +172,7 @@ class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState> imple
       timestamp: new Date().toTimeString().split('(')[0],
       outputElements: this.commandHistoryHook.getCommandResponseHistory().slice(-1),
       phraseValue: '',
-      phraseName: '',
+      phraseKey: '',
       phraseIndex: 0,
       phrasesAchieved: Phrases.getPhrasesAchieved()
         .map((phrase: { wpm: number; phraseName: string }) => phrase.phraseName),
@@ -267,7 +268,7 @@ class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState> imple
   private savePhrasesAchieved(phraseName: string, wpmAverage: number) {
     const wpmPhraseName = Math.round(wpmAverage) + ':' + phraseName;
     const matchingPhrases = this.state.phrasesAchieved
-      .filter(p => { return p.split(":")[1] === this.state.phraseName });
+      .filter(p => { return p.split(":")[1] === this.state.phraseKey });
     if (matchingPhrases.length > 0) return;
     this.setState((prevState: IHandTermState) => ({
       phrasesAchieved: [...(prevState.phrasesAchieved || []), wpmPhraseName]
@@ -276,7 +277,7 @@ class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState> imple
     const storedPhrasesAchievedString: string = localStorage.getItem('phrasesAchieved') || '';
     const storedPhrasesAchieved: string[] = storedPhrasesAchievedString ? JSON.parse(storedPhrasesAchievedString) : [];
     const matchingStoredPhrases = storedPhrasesAchieved
-      .filter((p: string) => { return p.split(":")[1] === this.state.phraseName });
+      .filter((p: string) => { return p.split(":")[1] === this.state.phraseKey });
     if (matchingStoredPhrases.length > 0) return;
     storedPhrasesAchieved.push(wpmPhraseName);
     localStorage.setItem('phrasesAchieved', JSON.stringify(storedPhrasesAchieved));
@@ -845,16 +846,16 @@ class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState> imple
     this.isDebug = localStorage.getItem('xterm-debug') === 'true';
   }
 
-  private handlePhraseSuccess = (phrase: string) => {
+  private handlePhraseSuccess = (phrase: Phrase) => {
     const wpms = this.wpmCalculator.getWPMs();
     const wpmAverage = wpms.wpmAverage;
 
     if (wpmAverage > this.state.targetWPM) {
-      this.savePhrasesAchieved(this.state.phraseName, wpmAverage);
+      this.savePhrasesAchieved(this.state.phraseKey, wpmAverage);
     }
 
     const wpmPhrase = wpmAverage.toString(10)
-      + ':' + phrase;
+      + ':' + phrase.value;
     this.setState(
       (prevState: IHandTermState) => ({
         outputElements: [
@@ -866,6 +867,10 @@ class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState> imple
     );
     this.saveCommandResponseHistory("game", wpmPhrase, 200);
     this.props.activityMediator.gameHandleRef.current?.completeGame();
+    const successPhrase = Phrases
+      .getPhraseByValue(phrase.value.join(''));
+    const switchedToTutorial = this.props.activityMediator.checkGameProgress(successPhrase);
+
     this.props.activityMediator.gameHandleRef.current?.levelUp();
     this.handlePhraseComplete();
     this.adapterRef.current?.terminalReset();
@@ -1135,7 +1140,6 @@ class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState> imple
                   onTouchEnd={this.handleTouchEnd}
                   phrasesAchieved={phrasesAchieved}
                   zombie4StartPosition={this.zombie4StartPostion}
-                  activityMediator={activityMediator}
                 />
               )}
               {activityMediator.isInGameMode && phraseValue && (
