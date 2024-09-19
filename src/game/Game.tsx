@@ -9,7 +9,6 @@ import { Sprite } from './sprites/Sprite';
 import { IParallaxLayer, ParallaxLayer } from './ParallaxLayer';
 import ScrollingTextLayer from './ScrollingTextLayer';
 import confetti from 'canvas-confetti';
-import { useActivityMediator } from '../hooks/useActivityMediator';
 
 export interface IGameProps {
   canvasHeight: number
@@ -23,7 +22,6 @@ export interface IGameProps {
   onSetHeroAction: (action: ActionType) => void;
   onSetZombie4Action: (action: ActionType) => void;
   phrasesAchieved: string[];
-  activityMediator: ReturnType<typeof useActivityMediator>;
 }
 
 export interface IGameHandle {
@@ -90,11 +88,7 @@ const Game = React.forwardRef<IGameHandle, IGameProps>((props, ref) => {
     let nextLevel = setLevelValue || getLevel() + 1;
     if (nextLevel > getLevelCount()) nextLevel = 0;
     if (nextLevel < 1) nextLevel = 1;
-    
-    const switchedToTutorial = props.activityMediator.checkGameProgress(nextLevel);
-    if (!switchedToTutorial) {
-      setLevel(nextLevel);
-    }
+    setLevel(nextLevel);
   };
 
   const setupCanvas = (canvas: HTMLCanvasElement) => {
