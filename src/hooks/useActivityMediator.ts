@@ -3,7 +3,7 @@ import { Achievement } from '../types/Types';
 import { ActionType } from '../game/types/ActionTypes';
 import { IGameHandle } from '../game/Game';
 import { resetTutorial, unlockAchievement, getNextTutorialAchievement } from '../utils/achievementUtils';
-import { PhraseType } from '../utils/Phrases';
+import Phrases, { PhraseType } from '../utils/Phrases';
 
 export enum ActivityType {
   NORMAL,
@@ -52,11 +52,16 @@ export function useActivityMediator(initialAchievement: Achievement) {
     if (currentActivity === ActivityType.TUTORIAL) {
       const nextAchievement = unlockAchievement(command, achievement.phrase.join(''));
       // TODO: Use more complex comparison to Game phrase levels.
-      if (achievement.gameLevels) setCurrentActivity(ActivityType.GAME); 
+      if (achievement.tutorialGroup) {
+        setCurrentActivity(ActivityType.GAME);
+        const tutorialPhrases = Phrases.getPhrasesByTutorialGroup(achievement.tutorialGroup);
+        console.log("Play game levels:", tutorialPhrases);
+        // TODO: Pass phrases to game play
+      }
       if (nextAchievement) {
         setAchievement(nextAchievement);
         return { progressed: true, completed: false };
-      }else{
+      } else {
         setCurrentActivity(ActivityType.GAME);
         return { progressed: true, completed: true };
       }
@@ -66,13 +71,11 @@ export function useActivityMediator(initialAchievement: Achievement) {
 
   const checkGameProgress = (successPhrase: PhraseType) => {
     // TODO: Use more complex comparison to tutorial achievements.
-    if (successPhrase.tutorial) {
-      const nextAchievement = getNextTutorialAchievement();
-      if (nextAchievement) {
-        setAchievement(nextAchievement);
-        setCurrentActivity(ActivityType.TUTORIAL);
-        return true;
-      }
+    if (successPhrase.tutorialGroup) setCurrentActivity(ActivityType.TUTORIAL);
+    const nextAchievement = getNextTutorialAchievement();
+    if (nextAchievement) {
+      setAchievement(nextAchievement);
+      return true;
     }
     return false;
   };

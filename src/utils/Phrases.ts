@@ -3,18 +3,18 @@ import { MyResponse } from "../types/Types";
 export type PhraseType = {
     key: string,
     value: string,
-    tutorial?: string,
+    tutorialGroup?: string,
 };
 
 const standardChars = /^[a-zA-Z0-9\s'";:.!,?]+$/;
 
 export default class Phrases {
     public static readonly phrases: PhraseType[] = [
-        { key: "ask", value: "Ask dad; A sad lass had salad.", tutorial: "fdsajkl;" },
-        { key: "sad", value: "All sad lads fall.", tutorial: "fdsajkl;" },
-        { key: "gallant", value: "A gallant lad; a glass.", tutorial: "fdsajkl;" },
-        { key: "alas", value: "Alas, Khal's flask has a crack.", tutorial: 'fdsajkl;' },
-        { key: "lads", value: "Lads' flags fall as gaffs sag.", tutorial: 'fdsajkl;' },
+        { key: "ask", value: "Ask dad; A sad lass had salad." },
+        { key: "sad", value: "All sad lads fall." },
+        { key: "gallant", value: "A gallant lad; a glass." },
+        { key: "alas", value: "Alas, Khal's flask has a crack." },
+        { key: "lads", value: "Lads' flags fall as gaffs sag.", tutorialGroup: "home-row" },
         { key: "hello", value: "Hello, World!" },
         { key: "pack", value: "Pack my box with five dozen liquor jugs." },
         { key: "sphinx", value: "Sphinx of black quartz, judge my vow." },
@@ -43,6 +43,11 @@ export default class Phrases {
         }
         // Else, return first phrase.
         return this.getPhraseByIndex(0);
+    }
+
+    public static getPhrasesByTutorialGroup(tutorialGroup: string): PhraseType[] {
+        const phrases = this.phrases.filter(p => tutorialGroup.includes(p.tutorialGroup || 'exclude'))
+        return phrases;
     }
 
     public checkPhrases = (): MyResponse<any> => {

@@ -50,14 +50,14 @@ export type Achievement = {
   prompt: string;
   command?: string;
   unlocked: boolean;
-  gameLevels?: string;
+  tutorialGroup?: string;
 };
 
 export const Achievements: Achievement[] = [
   { prompt: 'The most important key is the Return (ENTER) key. Press the thumb tip and release. You\'ll use this key to enter every command.\n\nNOTE: Type `tut` to run this tutorial again.', phrase: ['Return (ENTER)'], unlocked: false },
   // { prompt: 'The second most important key is the Backspace key. Just pull back the index finger.', phrase: ['DELETE (Backspace)'], command: 'x', unlocked: false },
   { prompt: 'Type `fdsa` & Enter. Notice that it requires finger-pinch only.', phrase: 'fdsa'.split(''), unlocked: false },
-  { prompt: 'Type `jkl;`. Notice that it requires finger-grasp only.', phrase: 'jkl;'.split(''), unlocked: false, gameLevels: 'fdsajkl;' },
+  { prompt: 'Type `jkl;`. Notice that it requires finger-grasp only.', phrase: 'jkl;'.split(''), unlocked: false, tutorialGroup: 'home-row' },
   { prompt: 'Press the thumb tip followed by a finger tip to type numbers 0-4', phrase: '01234'.split(''), unlocked: false },
   { prompt: 'Press the thumb tip followed by a finger tip to type numbers 5-9', phrase: '56789'.split(''), unlocked: false },
   { prompt: 'These characters are all triggered by a single finger. Pinch first, then grasp to enter them.', phrase: 'nm,.'.split(''), unlocked: false },
