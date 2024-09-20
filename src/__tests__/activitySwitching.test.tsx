@@ -1,5 +1,4 @@
 /// <reference types="@testing-library/jest-dom" />
-/// <reference types="@testing-library/jest-dom" />
 import { render, act, waitFor } from '@testing-library/react';
 import { useActivityMediator, ActivityType } from '../hooks/useActivityMediator';
 import { getNextTutorialAchievement } from '../utils/achievementUtils';
@@ -93,7 +92,7 @@ describe('Activity Switching', () => {
         mockGetNthPhraseNotAchieved.mockReturnValue({
             key: 'test',
             value: 'Test phrase',
-            tutorial: 'fdsajkl;'
+            tutorialGroup: 'fdsajkl;'
         });
 
         const { getByTestId, getByText } = render(<TestComponent />);
