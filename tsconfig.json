@@ -50,7 +50,8 @@
     "./src/types/*.d.ts",
     "jest.setup.js",
     "jest.config.ts",
-    "jest.setup.ts"
+    "jest.setup.ts",
+    "./node_modules/@testing-library/jest-dom"
   ],
   "types": [
     "node",

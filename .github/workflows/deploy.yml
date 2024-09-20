@@ -9,6 +9,10 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     steps:
+      - name: Enable Corepack
+        run: corepack enable
+      - name: Install Yarn
+        run: corepack prepare yarn@4.5.0 --activate
       - uses: actions/checkout@v2
 
       - name: Setup Node.js
