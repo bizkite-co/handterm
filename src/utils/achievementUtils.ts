@@ -14,7 +14,7 @@ export const saveAchievements = (achievementPhrase: string) => {
     localStorage.setItem('achievements', JSON.stringify(storedAchievements));
 }
 
-export const getNextTutorialAchievement = () => {
+export const getNextTutorialAchievement = ():Achievement | null => {
     const unlockedAchievements = loadTutorialAchievements() || [];
     const nextAchievement = Achievements
         .find(a => !unlockedAchievements.some(ua => ua === a.phrase.join('')));

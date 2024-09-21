@@ -6,6 +6,13 @@ export interface CharTime {
     time: number;
 }
 
+export enum ActivityType {
+  NORMAL,
+  TUTORIAL,
+  GAME,
+  EDIT,
+}
+
 export function createCharTime(char: string, duration: number, time: number): CharTime {
     return { char, duration, time }
 }

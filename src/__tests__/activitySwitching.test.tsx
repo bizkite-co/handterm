@@ -1,10 +1,11 @@
 /// <reference types="@testing-library/jest-dom" />
 import { render, act, waitFor } from '@testing-library/react';
-import { useActivityMediator, ActivityType } from '../hooks/useActivityMediator';
+import { useActivityMediator } from '../hooks/useActivityMediator';
 import { getNextTutorialAchievement } from '../utils/achievementUtils';
 import Phrases, { PhraseType } from '../utils/Phrases';
 import { jest, expect, describe, it, beforeEach } from '@jest/globals';
-import { Achievement } from '../types/Types';
+import { Achievement, ActivityType } from '../types/Types';
+import React from 'react';
 
 // Mock the modules
 jest.mock('../utils/achievementUtils');
@@ -45,7 +46,8 @@ describe('Activity Switching', () => {
         jest.clearAllMocks();
     });
 
-    it('should start in TUTORIAL mode', () => {
+    it('should start in NORMAL mode', () => {
+        // TODO: Should start in NORMAL unless unlocked achievements exist.
         mockGetNextTutorialAchievement.mockReturnValue({
             phrase: ['Test phrase'],
             prompt: 'Test prompt',
@@ -53,7 +55,7 @@ describe('Activity Switching', () => {
         });
 
         const { getByTestId } = render(<TestComponent />);
-        expect(getByTestId('current-activity').textContent).toBe(ActivityType.TUTORIAL.toString());
+        expect(getByTestId('current-activity').textContent).toBe(ActivityType.NORMAL.toString());
     });
 
     it('should switch to GAME mode when tutorial is completed', async () => {
@@ -66,7 +68,7 @@ describe('Activity Switching', () => {
         const { getByTestId, getByText } = render(<TestComponent />);
 
         // Initially, it should be in TUTORIAL mode                                              
-        expect(getByTestId('current-activity').textContent).toBe(ActivityType.TUTORIAL.toString());
+        expect(getByTestId('current-activity').textContent).toBe(ActivityType.NORMAL.toString());
 
         // Progress through tutorials                                                            
         act(() => {

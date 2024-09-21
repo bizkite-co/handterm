@@ -1,14 +1,16 @@
 // App.tsx
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import HandTerm, { IHandTermMethods } from './components/HandTerm';
+import HandTermWrapper from './HandTermWrapper';
 import { CommandProvider } from './commands/CommandProvider';
 import { TerminalCssClasses } from './types/TerminalTypes';
 import { useAuth } from './lib/useAuth';
 import { Output } from './components/Output';
 import { useCommandHistory } from './hooks/useCommandHistory';
-import { ActivityType, useActivityMediator } from './hooks/useActivityMediator';
-import { getNextTutorialAchievement } from './utils/achievementUtils';
-import { loadCommandHistory } from './utils/commandUtils';
+import { useActivityMediator } from './hooks/useActivityMediator';
+import { getNextTutorialAchievement, loadTutorialAchievements } from './utils/achievementUtils';
+import { IHandTermMethods } from './components/HandTerm';
+import { ActivityType } from './types/Types';
+import { IGameHandle } from './game/Game';
 
 const MemoizedOutput = React.memo(Output);
 
@@ -19,8 +21,23 @@ const App = () => {
   const auth = useAuth();
   const [outputElements, setOutputElements] = useState<React.ReactNode[]>([]);
 
-  const commandHistoryHook = useCommandHistory(loadCommandHistory());
-  const activityMediator = useActivityMediator(getNextTutorialAchievement() || { phrase: [], prompt: '', unlocked: false });
+  const commandHistoryHook = useCommandHistory(loadTutorialAchievements());
+  // Determine the initial achievement and activity type                                     
+  // Set the initial activity type based on the initial achievement                          
+  // Determine the initial achievement and activity type
+  const initialAchievement = loadTutorialAchievements().length > 0 ? getNextTutorialAchievement() : null;
+  const initialActivityType = initialAchievement ? ActivityType.TUTORIAL : ActivityType.NORMAL;
+
+  // Initialize activityMediator with the appropriate initial values
+  const activityMediator = useActivityMediator(initialAchievement || { phrase: [], prompt: '', unlocked: false });
+
+  const gameHandleRef = useRef<IGameHandle>(null);
+
+  // Set the initial activity type based on the initial achievement
+  useEffect(() => {
+    activityMediator.setCurrentActivity(initialActivityType);
+    console.log("CurrentActivity:", ActivityType[activityMediator.currentActivity]);
+  }, [activityMediator, initialActivityType]);
 
   useEffect(() => {
     const w = getContainerWidth();
@@ -69,15 +86,17 @@ const App = () => {
   }, []);
 
   const handleOutputUpdate = useCallback((newOutput: React.ReactNode) => {
-    setOutputElements(_prevOutputs => [ newOutput]);
+    setOutputElements(_prevOutputs => [newOutput]);
   }, []);
 
   const handleTouchStart = useCallback(() => {
     // Implement your touch start logic here
+    console.log("handling touch start");
   }, []);
 
   const handleTouchEnd = useCallback(() => {
     // Implement your touch end logic here
+    console.log("Handling touch end");
   }, []);
 
   const handleActivityChange = useCallback((newActivityType: ActivityType) => {
@@ -93,7 +112,7 @@ const App = () => {
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
         />
-        <HandTerm
+        <HandTermWrapper
           ref={handexTermRef}
           auth={auth}
           terminalWidth={containerWidth}
@@ -104,6 +123,7 @@ const App = () => {
             activityMediator.handleCommand(command, args, switches);
           }}
           onActivityChange={handleActivityChange}
+          gameHandleRef={gameHandleRef}
         />
       </div>
     </CommandProvider>

@@ -2,7 +2,8 @@
  * @jest-environment jsdom
  */
 import { renderHook, act } from '@testing-library/react';
-import { useActivityMediator, ActivityType } from '../useActivityMediator';
+import { useActivityMediator } from '../useActivityMediator';
+import { ActivityType } from '../../types/Types';
 
 describe('useActivityMediator', () => {
   it('should switch to game mode when "play" command is handled', () => {
@@ -24,9 +25,10 @@ describe('useActivityMediator', () => {
       result.current.handleCommand('unknown', [], {});
     });
 
-    expect(result.current.currentActivity).toBe(ActivityType.TUTORIAL);
+    expect(result.current.currentActivity).toBe(ActivityType.NORMAL);
     expect(result.current.isInGameMode).toBe(false);
-    expect(result.current.isInTutorial).toBe(true);
+    expect(result.current.isInTutorial).toBe(false);
+    expect(result.current.isInNormal).toBe(true);
   });
 
   it('should set hero action', () => {

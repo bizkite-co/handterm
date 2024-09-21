@@ -1,19 +1,12 @@
 import { useState, useCallback, useRef } from 'react';
-import { Achievement } from '../types/Types';
+import { Achievement, ActivityType } from '../types/Types';
 import { ActionType } from '../game/types/ActionTypes';
 import { IGameHandle } from '../game/Game';
 import { resetTutorial, unlockAchievement, getNextTutorialAchievement } from '../utils/achievementUtils';
 import Phrases, { PhraseType } from '../utils/Phrases';
 
-export enum ActivityType {
-  NORMAL,
-  TUTORIAL,
-  GAME,
-  EDIT,
-}
-
 export function useActivityMediator(initialAchievement: Achievement) {
-  const [currentActivity, setCurrentActivity] = useState<ActivityType>(ActivityType.TUTORIAL);
+  const [currentActivity, setCurrentActivity] = useState<ActivityType>(ActivityType.NORMAL);
   const [achievement, setAchievement] = useState<Achievement>(initialAchievement);
   const [heroAction, setHeroAction] = useState<ActionType>('Idle');
   const [zombie4Action, setZombie4Action] = useState<ActionType>('Walk');
@@ -48,23 +41,30 @@ export function useActivityMediator(initialAchievement: Achievement) {
     }
   };
 
+  // Function to switch to the NORMAL activity                                               
+  const switchToNormal = useCallback(() => {
+    // Perform any necessary cleanup or state resets                                         
+    // TODO: Possibly clean up Game state.
+
+    // Update the current activity state                                                     
+    setCurrentActivity(ActivityType.NORMAL);
+  }, [setCurrentActivity]);
+
   const progressTutorial = (command: string) => {
-    if (currentActivity === ActivityType.TUTORIAL) {
-      const nextAchievement = unlockAchievement(command, achievement.phrase.join(''));
-      // TODO: Use more complex comparison to Game phrase levels.
-      if (achievement.tutorialGroup) {
-        setCurrentActivity(ActivityType.GAME);
-        const tutorialPhrases = Phrases.getPhrasesByTutorialGroup(achievement.tutorialGroup);
-        console.log("Play game levels:", tutorialPhrases);
-        // TODO: Pass phrases to game play
-      }
-      if (nextAchievement) {
-        setAchievement(nextAchievement);
-        return { progressed: true, completed: false };
-      } else {
-        setCurrentActivity(ActivityType.GAME);
-        return { progressed: true, completed: true };
-      }
+    const nextAchievement = unlockAchievement(command, achievement.phrase.join(''));
+    // TODO: Use more complex comparison to Game phrase levels.
+    if (achievement.tutorialGroup) {
+      setCurrentActivity(ActivityType.GAME);
+      const tutorialPhrases = Phrases.getPhrasesByTutorialGroup(achievement.tutorialGroup);
+      console.log("Play game levels:", tutorialPhrases);
+      // TODO: Pass phrases to game play
+    }
+    if (nextAchievement) {
+      setAchievement(nextAchievement);
+      return { progressed: true, completed: false };
+    } else {
+      setCurrentActivity(ActivityType.GAME);
+      return { progressed: true, completed: true };
     }
     return { progressed: false, completed: false };
   };
@@ -82,6 +82,7 @@ export function useActivityMediator(initialAchievement: Achievement) {
 
   return {
     currentActivity,
+    setCurrentActivity,
     isInGameMode: currentActivity === ActivityType.GAME,
     isInTutorial: currentActivity === ActivityType.TUTORIAL,
     isInEdit: currentActivity === ActivityType.EDIT,
@@ -96,5 +97,6 @@ export function useActivityMediator(initialAchievement: Achievement) {
     setHeroAction,
     setZombie4Action,
     checkGameProgress,
+    switchToNormal
   };
 }
