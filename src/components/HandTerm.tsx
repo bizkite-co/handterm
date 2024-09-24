@@ -97,7 +97,7 @@ export interface IHandTermState {
   phraseKey: string;
   phraseIndex: number;
   phrasesAchieved: string[];
-  tutorialPhrases: PhraseType[];
+  tutorialGroupPhrases: PhraseType[];
   targetWPM: number;
   isActive: boolean;
   commandLine: string;
@@ -177,7 +177,7 @@ export class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState
       phraseIndex: 0,
       phrasesAchieved: Phrases.getPhrasesAchieved()
         .map((phrase: { wpm: number; phraseName: string }) => phrase.phraseName),
-      tutorialPhrases: [],
+      tutorialGroupPhrases: [],
       targetWPM: this.loadTargetWPM(),
       isActive: false,
       commandLine: '',
@@ -371,7 +371,7 @@ export class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState
         if (completed) {
           // Tutorial completed, transitioning to game mode
           this.setState({
-            tutorialPhrases: phrases
+            tutorialGroupPhrases: phrases
           })
          this.props.activityMediator.gameHandleRef.current?.startGame(); 
           console.log("HandTerm.handleCommand isInTutorial onActivityChange()")
@@ -1148,7 +1148,7 @@ export class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState
                 onTouchStart={this.handleTouchStart}
                 onTouchEnd={this.handleTouchEnd}
                 phrasesAchieved={phrasesAchieved}
-                tutorialPhrases={activityMediator.tutorialPhrases}
+                tutorialGroupPhrases={activityMediator.tutorialGroupPhrases}
                 zombie4StartPosition={this.zombie4StartPostion}
               />
               {phraseValue && (

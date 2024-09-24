@@ -23,7 +23,7 @@ export interface IGameProps {
   onSetHeroAction: (action: ActionType) => void;
   onSetZombie4Action: (action: ActionType) => void;
   phrasesAchieved: string[];
-  tutorialPhrases: PhraseType[];
+  tutorialGroupPhrases: PhraseType[];
 }
 
 export interface IGameHandle {

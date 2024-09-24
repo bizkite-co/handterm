@@ -10,7 +10,7 @@ export function useActivityMediator(initialAchievement: Achievement) {
   const [achievement, setAchievement] = useState<Achievement>(initialAchievement);
   const [heroAction, setHeroAction] = useState<ActionType>('Idle');
   const [zombie4Action, setZombie4Action] = useState<ActionType>('Walk');
-  const [tutorialPhrases, setTutorialPhrases] = useState<PhraseType[]>([]);
+  const [tutorialGroupPhrases, setTutorialGroupPhrases] = useState<PhraseType[]>([]);
 
   const gameHandleRef = useRef<IGameHandle>(null);
 
@@ -23,7 +23,7 @@ export function useActivityMediator(initialAchievement: Achievement) {
     const nextAchievement = getNextTutorialAchievement();
     if (!nextAchievement && !commandActivity) {
       return setCurrentActivity(ActivityType.NORMAL);
-    } else if (tutorialPhrases.length > 0) {
+    } else if (tutorialGroupPhrases.length > 0) {
       const result = setCurrentActivity(ActivityType.GAME);
       if (gameHandleRef.current) {
         gameHandleRef.current.startGame();
@@ -77,11 +77,11 @@ export function useActivityMediator(initialAchievement: Achievement) {
     // TODO: Use more complex comparison to Game phrase levels.
     if (achievement.tutorialGroup) {
       setCurrentActivity(ActivityType.GAME);
-      const tutorialPhrases = Phrases.getPhrasesByTutorialGroup(achievement.tutorialGroup);
-      setTutorialPhrases(tutorialPhrases);
-      console.log("Play game levels:", tutorialPhrases);
+      const tutorialGroupPhrases = Phrases.getPhrasesByTutorialGroup(achievement.tutorialGroup);
+      setTutorialGroupPhrases(tutorialGroupPhrases);
+      console.log("Play game levels:", tutorialGroupPhrases);
       // TODO: Pass phrases to game play
-      return { progressed: true, completed: true, phrases: tutorialPhrases }
+      return { progressed: true, completed: true, phrases: tutorialGroupPhrases }
     }
     if (nextAchievement) {
       setAchievement(nextAchievement);
@@ -113,7 +113,7 @@ export function useActivityMediator(initialAchievement: Achievement) {
     isInEdit: currentActivity === ActivityType.EDIT,
     isInNormal: currentActivity === ActivityType.NORMAL,
     achievement,
-    tutorialPhrases,
+    tutorialGroupPhrases,
     determineActivityState,
     setNextAchievement,
     progressTutorial,
