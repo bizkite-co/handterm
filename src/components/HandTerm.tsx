@@ -30,7 +30,7 @@ import { useCommandHistory } from '../hooks/useCommandHistory';
 import { useActivityMediator } from '../hooks/useActivityMediator';
 // import HelpCommand from '../commands/HelpCommand';
 // import SpecialCommand from '../commands/SpecialCommand';
-import Phrases from '../utils/Phrases';
+import Phrases, { PhraseType } from '../utils/Phrases';
 
 export interface IHandTermMethods {
   writeOutput: (output: string) => void;
@@ -97,6 +97,7 @@ export interface IHandTermState {
   phraseKey: string;
   phraseIndex: number;
   phrasesAchieved: string[];
+  tutorialPhrases: PhraseType[];
   targetWPM: number;
   isActive: boolean;
   commandLine: string;
@@ -176,6 +177,7 @@ export class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState
       phraseIndex: 0,
       phrasesAchieved: Phrases.getPhrasesAchieved()
         .map((phrase: { wpm: number; phraseName: string }) => phrase.phraseName),
+      tutorialPhrases: [],
       targetWPM: this.loadTargetWPM(),
       isActive: false,
       commandLine: '',
@@ -363,12 +365,17 @@ export class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState
     this.props.onCommandExecuted(parsedCommand, args, switches);
 
     if (this.props.activityMediator.isInTutorial) {
-      const { progressed, completed } = this.props.activityMediator.progressTutorial(parsedCommand);
+      const { progressed, completed, phrases } = this.props.activityMediator.progressTutorial(parsedCommand);
       if (progressed) {
         // Handle tutorial progression (e.g., update UI, show messages)
         if (completed) {
           // Tutorial completed, transitioning to game mode
-          this.props.onActivityChange(ActivityType.GAME);
+          this.setState({
+            tutorialPhrases: phrases
+          })
+         this.props.activityMediator.gameHandleRef.current?.startGame(); 
+          console.log("HandTerm.handleCommand isInTutorial onActivityChange()")
+          // this.props.onActivityChange(ActivityType.GAME);
         }
       }
     }
@@ -1131,21 +1138,6 @@ export class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState
             <div className="terminal-container">
               <Game
                 ref={activityMediator.gameHandleRef}
-               canvasHeight={canvasHeight}
-               canvasWidth={canvasWidth}
-               isInGameMode={activityMediator.isInGameMode}
-               heroActionType={activityMediator.heroAction}
-               zombie4ActionType={activityMediator.zombie4Action}
-               onSetHeroAction={this.setHeroAction}
-               onSetZombie4Action={activityMediator.setZombie4Action}
-               onTouchStart={this.handleTouchStart}
-               onTouchEnd={this.handleTouchEnd}
-               phrasesAchieved={phrasesAchieved}
-               zombie4StartPosition={this.zombie4StartPostion}
-                // ... other props
-              />
-              <Game
-                ref={activityMediator.gameHandleRef}
                 canvasHeight={canvasHeight}
                 canvasWidth={canvasWidth}
                 isInGameMode={activityMediator.isInGameMode}
@@ -1156,9 +1148,10 @@ export class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState
                 onTouchStart={this.handleTouchStart}
                 onTouchEnd={this.handleTouchEnd}
                 phrasesAchieved={phrasesAchieved}
+                tutorialPhrases={activityMediator.tutorialPhrases}
                 zombie4StartPosition={this.zombie4StartPostion}
               />
-              {activityMediator.isInGameMode && phraseValue && (
+              {phraseValue && (
                 <NextCharsDisplay
                   ref={this.nextCharsDisplayRef}
                   commandLine={commandLine}

@@ -162,23 +162,25 @@ const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, INextCharsDisp
     };
 
     return (
-        <div
-            id={TerminalCssClasses.NextChars} 
-            hidden={!isInPhraseMode} 
-        >
-            {mismatchedChar && mismatchedIsVisible && (
-                <ErrorDisplay
-                    isVisible={mismatchedIsVisible}
-                    mismatchedChar={mismatchedChar ?? ''}
-                />
-            )}
-            <Timer ref={timerRef} />
-            <div id={TerminalCssClasses.NextCharsRate} ref={nextCharsRateRef}></div>
-            <span id={TerminalCssClasses.WPM} ref={wpmRef}></span>
-            <pre id={TerminalCssClasses.NextChars} ref={nextCharsRef}>
-                {nextChars}
-            </pre>
-        </div>
+        (isInPhraseMode && newPhrase.length > 0 &&
+            <div
+                id={TerminalCssClasses.NextChars}
+                hidden={!isInPhraseMode}
+            >
+                {mismatchedChar && mismatchedIsVisible && (
+                    <ErrorDisplay
+                        isVisible={mismatchedIsVisible}
+                        mismatchedChar={mismatchedChar ?? ''}
+                    />
+                )}
+                <Timer ref={timerRef} />
+                <div id={TerminalCssClasses.NextCharsRate} ref={nextCharsRateRef}></div>
+                <span id={TerminalCssClasses.WPM} ref={wpmRef}></span>
+                <pre id={TerminalCssClasses.NextChars} ref={nextCharsRef}>
+                    {nextChars}
+                </pre>
+            </div>
+        )
     );
 });
 

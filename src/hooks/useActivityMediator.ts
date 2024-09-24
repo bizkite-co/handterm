@@ -10,23 +10,45 @@ export function useActivityMediator(initialAchievement: Achievement) {
   const [achievement, setAchievement] = useState<Achievement>(initialAchievement);
   const [heroAction, setHeroAction] = useState<ActionType>('Idle');
   const [zombie4Action, setZombie4Action] = useState<ActionType>('Walk');
+  const [tutorialPhrases, setTutorialPhrases] = useState<PhraseType[]>([]);
 
   const gameHandleRef = useRef<IGameHandle>(null);
+
+  const determineActivityState = useCallback((commandActivity: ActivityType | null = null) => {
+    /*
+      If the user is new to the site, start the tutorial.
+      If the user was in tutorial and completed an achievement that has accompanying game levels, start game play.
+      Otherwise, just obey the command.
+    */
+    const nextAchievement = getNextTutorialAchievement();
+    if (!nextAchievement && !commandActivity) {
+      return setCurrentActivity(ActivityType.NORMAL);
+    } else if (tutorialPhrases.length > 0) {
+      const result = setCurrentActivity(ActivityType.GAME);
+      if (gameHandleRef.current) {
+        gameHandleRef.current.startGame();
+      }
+      return result;
+    } else {
+      return setCurrentActivity(ActivityType.TUTORIAL);
+    }
+  }, []);
 
   const handleCommand = useCallback((command: string, _args: string[], switches: Record<string, boolean | string>): boolean => {
     switch (command) {
       case 'play':
-        setCurrentActivity(ActivityType.GAME);
-        if (gameHandleRef.current) {
-          gameHandleRef.current.startGame();
-        }
+        determineActivityState(ActivityType.GAME);
         return true;
       case 'tut':
-        if ('r' in switches) resetTutorial();
-        setCurrentActivity(ActivityType.TUTORIAL);
+        if ('r' in switches) {
+          resetTutorial();
+          // TODO: refresh HandTerm.
+        }
+        console.log('useActivityMediator.handleCommand switch: TUTORIAL')
+        determineActivityState(ActivityType.TUTORIAL);
         return true;
       case 'edit':
-        setCurrentActivity(ActivityType.EDIT);
+        determineActivityState(ActivityType.EDIT);
         return true;
 
       default:
@@ -56,8 +78,10 @@ export function useActivityMediator(initialAchievement: Achievement) {
     if (achievement.tutorialGroup) {
       setCurrentActivity(ActivityType.GAME);
       const tutorialPhrases = Phrases.getPhrasesByTutorialGroup(achievement.tutorialGroup);
+      setTutorialPhrases(tutorialPhrases);
       console.log("Play game levels:", tutorialPhrases);
       // TODO: Pass phrases to game play
+      return { progressed: true, completed: true, phrases: tutorialPhrases }
     }
     if (nextAchievement) {
       setAchievement(nextAchievement);
@@ -66,12 +90,14 @@ export function useActivityMediator(initialAchievement: Achievement) {
       setCurrentActivity(ActivityType.GAME);
       return { progressed: true, completed: true };
     }
-    return { progressed: false, completed: false };
   };
 
   const checkGameProgress = (successPhrase: PhraseType) => {
     // TODO: Use more complex comparison to tutorial achievements.
-    if (successPhrase.tutorialGroup) setCurrentActivity(ActivityType.TUTORIAL);
+    if (successPhrase.tutorialGroup) {
+      console.log("checkGameProgress: set TUTORIAL")
+      setCurrentActivity(ActivityType.TUTORIAL);
+    }
     const nextAchievement = getNextTutorialAchievement();
     if (nextAchievement) {
       setAchievement(nextAchievement);
@@ -82,12 +108,13 @@ export function useActivityMediator(initialAchievement: Achievement) {
 
   return {
     currentActivity,
-    setCurrentActivity,
     isInGameMode: currentActivity === ActivityType.GAME,
     isInTutorial: currentActivity === ActivityType.TUTORIAL,
     isInEdit: currentActivity === ActivityType.EDIT,
     isInNormal: currentActivity === ActivityType.NORMAL,
     achievement,
+    tutorialPhrases,
+    determineActivityState,
     setNextAchievement,
     progressTutorial,
     heroAction,

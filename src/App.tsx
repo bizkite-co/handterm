@@ -25,19 +25,21 @@ const App = () => {
   // Determine the initial achievement and activity type                                     
   // Set the initial activity type based on the initial achievement                          
   // Determine the initial achievement and activity type
-  const initialAchievement = loadTutorialAchievements().length > 0 ? getNextTutorialAchievement() : null;
-  const initialActivityType = initialAchievement ? ActivityType.TUTORIAL : ActivityType.NORMAL;
+  const initialAchievement = getNextTutorialAchievement();
 
   // Initialize activityMediator with the appropriate initial values
-  const activityMediator = useActivityMediator(initialAchievement || { phrase: [], prompt: '', unlocked: false });
+  const activityMediator = useActivityMediator(
+    initialAchievement 
+    || { phrase: [], prompt: '', unlocked: false }
+  );
 
   const gameHandleRef = useRef<IGameHandle>(null);
 
   // Set the initial activity type based on the initial achievement
   useEffect(() => {
-    activityMediator.setCurrentActivity(initialActivityType);
-    console.log("CurrentActivity:", ActivityType[activityMediator.currentActivity]);
-  }, [activityMediator, initialActivityType]);
+    activityMediator.determineActivityState();
+    console.log("App useEffect CurrentActivity:", ActivityType[activityMediator.currentActivity]);
+  }, []);
 
   useEffect(() => {
     const w = getContainerWidth();

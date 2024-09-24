@@ -9,6 +9,7 @@ import { Sprite } from './sprites/Sprite';
 import { IParallaxLayer, ParallaxLayer } from './ParallaxLayer';
 import ScrollingTextLayer from './ScrollingTextLayer';
 import confetti from 'canvas-confetti';
+import { PhraseType } from 'src/utils/Phrases';
 
 export interface IGameProps {
   canvasHeight: number
@@ -22,6 +23,7 @@ export interface IGameProps {
   onSetHeroAction: (action: ActionType) => void;
   onSetZombie4Action: (action: ActionType) => void;
   phrasesAchieved: string[];
+  tutorialPhrases: PhraseType[];
 }
 
 export interface IGameHandle {
@@ -59,6 +61,7 @@ const Game = React.forwardRef<IGameHandle, IGameProps>((props, ref) => {
     setIsPhraseComplete(false);
     // Add any other necessary game start logic
   };
+
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const heroRef = useRef<ICharacterRefMethods>(null);
   const zombie4Ref = useRef<ICharacterRefMethods>(null);
