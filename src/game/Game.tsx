@@ -87,9 +87,10 @@ const Game = React.forwardRef<IGameHandle, IGameProps>((props, ref) => {
   };
 
   const levelUp = (setLevelValue: number | null = null) => {
-    if (setLevelValue && setLevelValue > getLevelCount()) setLevelValue = getLevelCount();
+    const levelCount = getLevelCount();
+    if (setLevelValue && setLevelValue > levelCount) setLevelValue = levelCount;
     let nextLevel = setLevelValue || getLevel() + 1;
-    if (nextLevel > getLevelCount()) nextLevel = 0;
+    if (nextLevel > levelCount) nextLevel = 0;
     if (nextLevel < 1) nextLevel = 1;
     setLevel(nextLevel);
   };

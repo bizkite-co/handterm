@@ -31,6 +31,7 @@ import { useActivityMediator } from '../hooks/useActivityMediator';
 // import HelpCommand from '../commands/HelpCommand';
 // import SpecialCommand from '../commands/SpecialCommand';
 import Phrases, { PhraseType } from '../utils/Phrases';
+import { Phrase } from '../utils/Phrase';
 
 export interface IHandTermMethods {
   writeOutput: (output: string) => void;
@@ -365,7 +366,7 @@ export class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState
     this.props.onCommandExecuted(parsedCommand, args, switches);
 
     if (this.props.activityMediator.isInTutorial) {
-      const { progressed, completed, phrases } = this.props.activityMediator.progressTutorial(parsedCommand);
+      const { progressed, completed, phrases } = this.props.activityMediator.checkTutorialProgress(parsedCommand);
       if (progressed) {
         // Handle tutorial progression (e.g., update UI, show messages)
         if (completed) {
@@ -854,7 +855,7 @@ export class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState
     this.isDebug = localStorage.getItem('xterm-debug') === 'true';
   }
 
-  private handlePhraseSuccess = (phrase: string) => {
+  private handlePhraseSuccess = (phrase: Phrase) => {
     const wpms = this.wpmCalculator.getWPMs();
     const wpmAverage = wpms.wpmAverage;
 
@@ -863,7 +864,7 @@ export class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState
     }
 
     const wpmPhrase = wpmAverage.toString(10)
-      + ':' + phrase;
+      + ':' + phrase.value.join('');
     this.setState(
       (prevState: IHandTermState) => ({
         outputElements: [
@@ -875,8 +876,7 @@ export class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState
     );
     this.saveCommandResponseHistory("game", wpmPhrase, 200);
     this.props.activityMediator.gameHandleRef.current?.completeGame();
-    const successPhrase = Phrases
-      .getPhraseByValue(phrase);
+    const successPhrase = Phrases.getPhraseByValue(phrase.value.join(''));
     if (successPhrase) {
       const isSwitchedToTutorial: boolean = this.props.activityMediator.checkGameProgress(successPhrase);
       console.log("Switched from Game back to Tutorial:", isSwitchedToTutorial);

@@ -9,7 +9,7 @@ export interface INextCharsDisplayProps {
     commandLine: string;
     isInPhraseMode: boolean;
     newPhrase: string;
-    onPhraseSuccess: (phrase: string) => void;
+    onPhraseSuccess: (phrase: Phrase) => void;
     onError: (error: number | undefined) => void;
 }
 
@@ -133,7 +133,7 @@ const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, INextCharsDisp
         setMismatchedChar('');
         setMismatchedIsVisible(false);
         setNextChars('');
-        onPhraseSuccess(phrase.value.join(''));
+        onPhraseSuccess(phrase);
     };
 
     const stopTimer = () => {

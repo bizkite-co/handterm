@@ -4,6 +4,7 @@ export type PhraseType = {
     key: string,
     value: string,
     tutorialGroup?: string,
+    isComplete?: boolean
 };
 
 const standardChars = /^[a-zA-Z0-9\s'";:.!,?]+$/;

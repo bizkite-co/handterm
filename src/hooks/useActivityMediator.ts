@@ -34,7 +34,7 @@ export function useActivityMediator(initialAchievement: Achievement) {
     }
   }, []);
 
-  const handleCommand = useCallback((command: string, _args: string[], switches: Record<string, boolean | string>): boolean => {
+  const handleCommandExecuted = useCallback((command: string, _args: string[], switches: Record<string, boolean | string>): boolean => {
     switch (command) {
       case 'play':
         determineActivityState(ActivityType.GAME);
@@ -72,7 +72,7 @@ export function useActivityMediator(initialAchievement: Achievement) {
     setCurrentActivity(ActivityType.NORMAL);
   }, [setCurrentActivity]);
 
-  const progressTutorial = (command: string) => {
+  const checkTutorialProgress = (command: string) => {
     const nextAchievement = unlockAchievement(command, achievement.phrase.join(''));
     // TODO: Use more complex comparison to Game phrase levels.
     if (achievement.tutorialGroup) {
@@ -116,11 +116,11 @@ export function useActivityMediator(initialAchievement: Achievement) {
     tutorialGroupPhrases,
     determineActivityState,
     setNextAchievement,
-    progressTutorial,
+    checkTutorialProgress,
     heroAction,
     zombie4Action,
     gameHandleRef,
-    handleCommand,
+    handleCommandExecuted,
     setHeroAction,
     setZombie4Action,
     checkGameProgress,

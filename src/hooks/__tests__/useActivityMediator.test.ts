@@ -10,7 +10,7 @@ describe('useActivityMediator', () => {
     const { result } = renderHook(() => useActivityMediator({ phrase: [], prompt: '', unlocked: false }));
 
     act(() => {
-      result.current.handleCommand('play', [],{});
+      result.current.handleCommandExecuted('play', [],{});
     });
 
     expect(result.current.currentActivity).toBe(ActivityType.GAME);
@@ -22,7 +22,7 @@ describe('useActivityMediator', () => {
     const { result } = renderHook(() => useActivityMediator({ phrase: [], prompt: '', unlocked: false }));
 
     act(() => {
-      result.current.handleCommand('unknown', [], {});
+      result.current.handleCommandExecuted('unknown', [], {});
     });
 
     expect(result.current.currentActivity).toBe(ActivityType.NORMAL);
@@ -76,7 +76,7 @@ describe('useActivityMediator', () => {
 
     let nextAchievement;
     act(() => {
-      nextAchievement = result.current.progressTutorial('test');
+      nextAchievement = result.current.checkTutorialProgress('test');
     });
 
     expect(nextAchievement).not.toBeNull();
@@ -87,7 +87,7 @@ describe('useActivityMediator', () => {
     const { result } = renderHook(() => useActivityMediator({ phrase: ['test'], prompt: 'Test prompt', unlocked: false }));
 
     act(() => {
-      result.current.progressTutorial('wrong');
+      result.current.checkTutorialProgress('wrong');
     });
 
     expect(result.current.achievement.unlocked).toBe(false);
