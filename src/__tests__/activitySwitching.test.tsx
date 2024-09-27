@@ -1,7 +1,7 @@
 /// <reference types="@testing-library/jest-dom" />
 import { render, act, waitFor } from '@testing-library/react';
 import { useActivityMediator } from '../hooks/useActivityMediator';
-import { getNextTutorialAchievement } from '../utils/achievementUtils';
+import { getNextTutorialAchievement } from '../utils/tutorialAchievementUtils';
 import Phrases, { PhraseType } from '../utils/Phrases';
 import { jest, expect, describe, it, beforeEach } from '@jest/globals';
 import { TutorialAchievement, ActivityType } from '../types/Types';

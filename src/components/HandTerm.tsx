@@ -22,7 +22,7 @@ import { SpritePosition } from '../game/types/Position';
 import MonacoEditor, { MonacoEditorHandle } from './MonacoEditor';
 import './MonacoEditor.css'; // Make sure to import the CSS
 import { parseCommand } from '../utils/commandUtils';
-import { loadTutorialAchievements } from '../utils/achievementUtils';
+import { loadTutorialAchievements } from '../utils/tutorialAchievementUtils';
 import { Prompt } from './Prompt';
 import { createTimeCode } from '../utils/timeUtils';
 import { TimeDisplay } from './TimeDisplay';

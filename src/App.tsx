@@ -6,7 +6,7 @@ import { TerminalCssClasses } from './types/TerminalTypes';
 import { useAuth } from './lib/useAuth';
 import { Output } from './components/Output';
 import { useCommandHistory } from './hooks/useCommandHistory';
-import { loadTutorialAchievements } from './utils/achievementUtils';
+import { loadTutorialAchievements } from './utils/tutorialAchievementUtils';
 import { IHandTermMethods } from './components/HandTerm';
 import { IGameHandle } from './game/Game';
 

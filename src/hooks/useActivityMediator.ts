@@ -2,7 +2,7 @@ import { useState, useCallback, useRef } from 'react';
 import { TutorialAchievement, TutorialAchievements, ActivityType, ActivityMediatorType } from '../types/Types';
 import { ActionType } from '../game/types/ActionTypes';
 import { IGameHandle } from '../game/Game';
-import { resetTutorial, unlockAchievement, getNextTutorialAchievement } from '../utils/achievementUtils';
+import { resetTutorial, unlockTutorialAchievement, getNextTutorialAchievement } from '../utils/tutorialAchievementUtils';
 import Phrases, { PhraseType } from '../utils/Phrases';
 
 export function useActivityMediator(initialTutorialAchievement: TutorialAchievement, refreshHandTerm?: () => void):ActivityMediatorType {
@@ -87,7 +87,7 @@ export function useActivityMediator(initialTutorialAchievement: TutorialAchievem
     args?: string[],
     _switches?: Record<string, string | boolean>
   ) => {
-    const nextAchievement = args?.includes('r') ? TutorialAchievements[0] : unlockAchievement(command, tutorialAchievement.phrase.join(''));
+    const nextAchievement = args?.includes('r') ? TutorialAchievements[0] : unlockTutorialAchievement(command, tutorialAchievement.phrase.join(''));
     // TODO: Use more complex comparison to Game phrase levels.
     if (tutorialAchievement.tutorialGroup) {
       setCurrentActivity(ActivityType.GAME);

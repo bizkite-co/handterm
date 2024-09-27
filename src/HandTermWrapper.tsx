@@ -1,7 +1,7 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 import { HandTerm, IHandTermMethods } from './components/HandTerm';
-import { getNextTutorialAchievement, resetTutorial } from './utils/achievementUtils';
+import { getNextTutorialAchievement, resetTutorial } from './utils/tutorialAchievementUtils';
 import { ActivityType } from './types/Types';
 import { useActivityMediator } from './hooks/useActivityMediator';
 import { useCommandHistory } from './hooks/useCommandHistory';
@@ -26,7 +26,6 @@ const HandTermWrapper = React.forwardRef<IHandTermMethods, IHandTermWrapperProps
 
   // Function to reset tutorial and refresh HandTerm
   const refreshHandTerm = () => {
-    resetTutorial();
     setKey(prevKey => prevKey + 1); // Increment key to force re-render.
   }
 
@@ -61,7 +60,7 @@ const HandTermWrapper = React.forwardRef<IHandTermMethods, IHandTermWrapperProps
         activityMediator.handleCommandExecuted(command, args, switches);
       }}
       onActivityChange={handleActivityChange}
-       currentPhrase={currentPhrase}                                    
+      currentPhrase={currentPhrase}
     />
   );
 });

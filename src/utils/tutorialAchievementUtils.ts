@@ -5,7 +5,7 @@ export const loadTutorialAchievements = (): string[] => {
     return storedAchievements ? JSON.parse(storedAchievements) : [];
 }
 
-export const saveAchievements = (achievementPhrase: string) => {
+export const saveTutorialAchievements = (achievementPhrase: string) => {
     const storedAchievementString: string = localStorage.getItem('tutorialAchievements') || '';
     const storedAchievements: string[] = storedAchievementString ? JSON.parse(storedAchievementString) : [];
     // Don't add duplicate tutorialAchievements
@@ -21,10 +21,10 @@ export const getNextTutorialAchievement = ():TutorialAchievement | null => {
     return nextAchievement || null;
 }
 
-export const unlockAchievement = (command: string, achievement: string): TutorialAchievement | null => {
+export const unlockTutorialAchievement = (command: string, achievement: string): TutorialAchievement | null => {
     if (command === '') command = 'Return (ENTER)';
     if (achievement === command) {
-        saveAchievements(command);
+        saveTutorialAchievements(command);
         return getNextTutorialAchievement();
     }
     return null;
