@@ -1,13 +1,13 @@
 import { useState, useCallback, useRef } from 'react';
-import { Achievement, Achievements, ActivityType } from '../types/Types';
+import { TutorialAchievement, TutorialAchievements, ActivityType } from '../types/Types';
 import { ActionType } from '../game/types/ActionTypes';
 import { IGameHandle } from '../game/Game';
 import { resetTutorial, unlockAchievement, getNextTutorialAchievement } from '../utils/achievementUtils';
 import Phrases, { PhraseType } from '../utils/Phrases';
 
-export function useActivityMediator(initialAchievement: Achievement, refreshHandTerm?: () => void) {
+export function useActivityMediator(initialTutorialAchievement: TutorialAchievement, refreshHandTerm?: () => void) {
   const [currentActivity, setCurrentActivity] = useState<ActivityType>(ActivityType.NORMAL);
-  const [achievement, setAchievement] = useState<Achievement>(initialAchievement);
+  const [tutorialAchievement, setTutorialAchievement] = useState<TutorialAchievement>(initialTutorialAchievement);
   const [heroAction, setHeroAction] = useState<ActionType>('Idle');
   const [zombie4Action, setZombie4Action] = useState<ActionType>('Walk');
   const [tutorialGroupPhrases, setTutorialGroupPhrases] = useState<PhraseType[]>([]);
@@ -34,8 +34,8 @@ export function useActivityMediator(initialAchievement: Achievement, refreshHand
     }
   }, []);
 
-  const getNextIncompleteTutorialPhrase = ():PhraseType => {
-    let response:PhraseType = {
+  const getNextIncompleteTutorialPhrase = (): PhraseType => {
+    let response: PhraseType = {
       key: '',
       value: ''
     };
@@ -67,9 +67,9 @@ export function useActivityMediator(initialAchievement: Achievement, refreshHand
     }
   }, [setCurrentActivity, gameHandleRef]);
 
-  const setNextAchievement = (nextAchievement: Achievement | null) => {
+  const setNextTutorialAchievement = (nextAchievement: TutorialAchievement | null) => {
     if (nextAchievement) {
-      setAchievement(nextAchievement);
+      setTutorialAchievement(nextAchievement);
     }
   };
 
@@ -87,18 +87,18 @@ export function useActivityMediator(initialAchievement: Achievement, refreshHand
     args?: string[],
     _switches?: Record<string, string | boolean>
   ) => {
-    const nextAchievement = args?.includes('r') ? Achievements[0] : unlockAchievement(command, achievement.phrase.join(''));
+    const nextAchievement = args?.includes('r') ? TutorialAchievements[0] : unlockAchievement(command, tutorialAchievement.phrase.join(''));
     // TODO: Use more complex comparison to Game phrase levels.
-    if (achievement.tutorialGroup) {
+    if (tutorialAchievement.tutorialGroup) {
       setCurrentActivity(ActivityType.GAME);
-      const tutorialGroupPhrases = Phrases.getPhrasesByTutorialGroup(achievement.tutorialGroup);
+      const tutorialGroupPhrases = Phrases.getPhrasesByTutorialGroup(tutorialAchievement.tutorialGroup);
       setTutorialGroupPhrases(tutorialGroupPhrases);
       console.log("Play game levels:", tutorialGroupPhrases);
       // TODO: Pass phrases to game play
       return { progressed: true, completed: false, phrases: tutorialGroupPhrases }
     }
     if (nextAchievement) {
-      setAchievement(nextAchievement);
+      setTutorialAchievement(nextAchievement);
       return { progressed: true, completed: false };
     } else {
       setCurrentActivity(ActivityType.GAME);
@@ -107,7 +107,7 @@ export function useActivityMediator(initialAchievement: Achievement, refreshHand
   };
 
   const checkGameProgress = (successPhrase: PhraseType): { resultActivityType: ActivityType, nextPhrase: PhraseType | null } => {
-    // TODO: Use more complex comparison to tutorial achievements.
+    // TODO: Use more complex comparison to tutorial tutorialAchievements.
     const tutorialGroupPhrase = tutorialGroupPhrases.find(p => p.key === successPhrase.key);
     if (tutorialGroupPhrase) {
       setTutorialGroupPhrases(prevTutorialGroupPhrases => {
@@ -131,7 +131,7 @@ export function useActivityMediator(initialAchievement: Achievement, refreshHand
       return { resultActivityType: ActivityType.GAME, nextPhrase: nextTutorialGroupPhrase }
     }
     if (nextAchievement) {
-      setAchievement(nextAchievement);
+      setTutorialAchievement(nextAchievement);
       return { resultActivityType: ActivityType.TUTORIAL, nextPhrase: null };
     }
     return { resultActivityType: ActivityType.GAME, nextPhrase: null };
@@ -143,11 +143,11 @@ export function useActivityMediator(initialAchievement: Achievement, refreshHand
     isInTutorial: currentActivity === ActivityType.TUTORIAL,
     isInEdit: currentActivity === ActivityType.EDIT,
     isInNormal: currentActivity === ActivityType.NORMAL,
-    achievement,
+    tutorialAchievement,
     tutorialGroupPhrases,
     getNextIncompleteTutorialPhrase,
     determineActivityState,
-    setNextAchievement,
+    setNextTutorialAchievement,
     checkTutorialProgress,
     heroAction,
     zombie4Action,

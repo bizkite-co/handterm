@@ -4,7 +4,7 @@ import { useActivityMediator } from '../hooks/useActivityMediator';
 import { getNextTutorialAchievement } from '../utils/achievementUtils';
 import Phrases, { PhraseType } from '../utils/Phrases';
 import { jest, expect, describe, it, beforeEach } from '@jest/globals';
-import { Achievement, ActivityType } from '../types/Types';
+import { TutorialAchievement, ActivityType } from '../types/Types';
 import React from 'react';
 
 // Mock the modules
@@ -12,7 +12,7 @@ jest.mock('../utils/achievementUtils');
 jest.mock('../utils/Phrases');
 
 // Create mock implementations
-const mockGetNextTutorialAchievement = jest.fn<() => Achievement | null>();
+const mockGetNextTutorialAchievement = jest.fn<() => TutorialAchievement | null>();
 const mockGetNthPhraseNotAchieved = jest.fn<() => PhraseType>();
 
 // Mock the getNextTutorialAchievement function
@@ -47,7 +47,7 @@ describe('Activity Switching', () => {
     });
 
     it('should start in NORMAL mode', () => {
-        // TODO: Should start in NORMAL unless unlocked achievements exist.
+        // TODO: Should start in NORMAL unless unlocked tutorialAchievements exist.
         mockGetNextTutorialAchievement.mockReturnValue({
             phrase: ['Test phrase'],
             prompt: 'Test prompt',

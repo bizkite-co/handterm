@@ -301,13 +301,13 @@ export class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState
     // Check if we've just entered game mode or if the achievement has changed while in game mode
     if (
       (activityMediator.isInGameMode && !prevProps.activityMediator.isInGameMode) ||
-      (activityMediator.isInGameMode && activityMediator.achievement !== prevProps.activityMediator.achievement)
+      (activityMediator.isInGameMode && activityMediator.tutorialAchievement !== prevProps.activityMediator.tutorialAchievement)
     ) {
-      if (activityMediator.achievement.phrase.length > 0) {
-        const _phrase = activityMediator.achievement.phrase;
+      if (activityMediator.tutorialAchievement.phrase.length > 0) {
+        const _phrase = activityMediator.tutorialAchievement.phrase;
         this.setState({
           phraseValue: Array.isArray(_phrase) ? _phrase.join('') : _phrase,
-          phraseName: activityMediator.achievement.prompt
+          phraseName: activityMediator.tutorialAchievement.prompt
         });
       }
     }
@@ -1144,7 +1144,7 @@ export class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState
               )}
               <TutorialManager
                 isInTutorial={activityMediator.isInTutorial}
-                achievement={activityMediator.achievement}
+                achievement={activityMediator.tutorialAchievement}
               />
               <Prompt
                 username={userName || 'guest'}
