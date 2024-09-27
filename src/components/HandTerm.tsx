@@ -67,7 +67,6 @@ type LanguageType = "javascript" | "typescript" | "markdown";
 
 export interface IHandTermState {
   // Define the interface for your HandexTerm state
-  phraseValue: string;
   phraseKey: string;
   phraseIndex: number;
   phrasesAchieved: string[];
@@ -146,7 +145,6 @@ export class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState
       userName: isLoggedIn ? localStorage.getItem(LogKeys.Username) || null : null,
       timestamp: new Date().toTimeString().split('(')[0],
       outputElements: this.commandHistoryHook.getCommandResponseHistory().slice(-1),
-      phraseValue: '',
       phraseKey: '',
       phraseIndex: 0,
       phrasesAchieved: Phrases.getPhrasesAchieved()
@@ -286,7 +284,6 @@ export class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState
   componentDidUpdate(prevProps: Readonly<IHandTermProps>, _prevState: Readonly<IHandTermState>): void {
     // NOTE: This runs on every keypress.
     this.handleGitHubAuth();
-    this.handleAchievement(prevProps);
   }
 
   componentWillUnmount(): void {
@@ -303,75 +300,6 @@ export class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState
       }
     }, 100);
   };
-
-  private handleAchievement = (prevProps: Readonly<IHandTermProps>) => {
-    const { activityMediator } = this.props;
-    // If Game mode changed OR achievement changed
-    if (
-      (activityMediator.isInGameMode && !prevProps.activityMediator.isInGameMode) ||
-      (activityMediator.isInGameMode && activityMediator.tutorialAchievement !== prevProps.activityMediator.tutorialAchievement)
-    ) {
-      if (activityMediator.tutorialAchievement.phrase.length > 0) {
-        const _phrase = activityMediator.tutorialAchievement.phrase;
-        this.setState({
-          phraseValue: Array.isArray(_phrase) ? _phrase.join('') : _phrase,
-          phraseName: activityMediator.tutorialAchievement.prompt
-        });
-      }
-    }
-  }
-
-  private handleTutorialPhrase = () => {
-    const { activityMediator } = this.props;
-    const firstIcompletePhrase = activityMediator.tutorialGroupPhrases.find(p => !p.isComplete);
-    if (firstIcompletePhrase) {
-      if (firstIcompletePhrase) this.setState({
-        phraseValue: firstIcompletePhrase.value,
-        phraseName: firstIcompletePhrase.key
-      })
-    } else if (activityMediator.isInGameMode && activityMediator.tutorialAchievement.phrase.length > 0) {
-      const _phrase = activityMediator.tutorialAchievement.phrase;
-      this.setState({
-        phraseValue: Array.isArray(_phrase) ? _phrase.join('') : _phrase,
-        phraseName: activityMediator.tutorialAchievement.prompt
-      });
-    }
-  }
-
-  private setNewPhrase = (phraseName: string) => {
-    phraseName = phraseName.replace('phrase ', '');
-    const newPhrase
-      = phraseName && phraseName != "" && Phrases.getPhraseByKey(phraseName)
-        ? Phrases.getPhraseByKey(phraseName)
-        : Phrases.getNthPhraseNotAchieved(this.state.phraseIndex);
-    this.setState((prevState: IHandTermState) => {
-      return {
-        ...prevState,
-        isInGameMode: true,
-        phraseValue: newPhrase.value,
-        phraseName: newPhrase.key,
-      }
-    });
-  }
-
-  private phraseCompleteNewPhrase() {
-    const phrasesNotAchieved = Phrases.getPhrasesNotAchieved();
-    if (phrasesNotAchieved.length === 0) {
-      // Handle the case when all phrases are achieved
-      this.setState({
-        phraseValue: '',
-        phraseName: '',
-      });
-    } else {
-      const newPhraseIndex = (this.state.phraseIndex + 1) % phrasesNotAchieved.length;
-      const newPhrase = phrasesNotAchieved[newPhraseIndex];
-      this.setState({
-        phraseIndex: newPhraseIndex,
-        phraseValue: newPhrase.value,
-        phraseName: newPhrase.key,
-      });
-    }
-  }
 
   public handleCommand = (inputCmd: string): void => {
     this.commandHistoryHook.addToCommandHistory(inputCmd);
@@ -399,13 +327,6 @@ export class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState
           // this.props.onActivityChange(ActivityType.GAME);
         }
       }
-    }
-
-    if (this.props.activityMediator.isInGameMode) {
-      let newPhrase = args.length ? args[0] : Phrases.getNthPhraseNotAchieved(this.state.phraseIndex).value;
-      this.setNewPhrase(newPhrase);
-      // You might want to handle this zombie position change in the wrapper component
-      // this.props.onZombiePositionChange(this.zombie4StartPostion);
     }
 
     if (this.context) {
@@ -912,7 +833,6 @@ export class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState
 
   private handlePhraseComplete = () => {
     localStorage.setItem('currentCommand', '');
-    this.phraseCompleteNewPhrase();
     if (this.nextCharsDisplayRef.current) this.nextCharsDisplayRef.current.cancelTimer();
     this.props.activityMediator.gameHandleRef.current?.completeGame();
     this.adapterRef.current?.terminalReset();
@@ -1109,10 +1029,10 @@ export class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState
   }
 
   public render() {
-    const { terminalSize, canvasHeight, phrasesAchieved, phraseValue, commandLine, lastTypedCharacter, userName, domain, githubUsername, timestamp, editMode, editContent, editLanguage, isShowVideo } = this.state;
+    const { terminalSize, canvasHeight, commandLine, lastTypedCharacter, userName, domain, githubUsername, timestamp, editMode, editContent, editLanguage, isShowVideo } = this.state;
     const canvasWidth = terminalSize ? terminalSize.width : 800;
 
-    const { activityMediator } = this.props;
+    const { activityMediator, currentPhrase } = this.props;
 
     return (
       <CommandContext.Consumer>
@@ -1138,12 +1058,12 @@ export class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState
                 tutorialGroupPhrases={activityMediator.tutorialGroupPhrases}
                 zombie4StartPosition={this.zombie4StartPostion}
               />
-              {phraseValue && (
+              {currentPhrase && (
                 <NextCharsDisplay
                   ref={this.nextCharsDisplayRef}
                   commandLine={commandLine}
                   isInPhraseMode={activityMediator.isInGameMode}
-                  newPhrase={phraseValue}
+                  newPhrase={currentPhrase.value}
                   onPhraseSuccess={this.handlePhraseSuccess}
                   onError={this.handlePhraseErrorState}
                 />
