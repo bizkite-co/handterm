@@ -60,6 +60,7 @@ export interface IHandTermProps {
   refreshHandTerm: () => void;
   activityMediator: ReturnType<typeof useActivityMediator>;
   gameHandleRef: React.RefObject<IGameHandle>;
+  currentPhrase: PhraseType | null;
 }
 
 type LanguageType = "javascript" | "typescript" | "markdown";

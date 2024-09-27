@@ -7,6 +7,8 @@ import { useActivityMediator } from './hooks/useActivityMediator';
 import { useCommandHistory } from './hooks/useCommandHistory';
 import { IGameHandle } from './game/Game';
 import { IAuthProps } from './lib/useAuth';
+import { usePhraseHandler } from './hooks/usePhraseHandler';
+
 export interface IHandTermWrapperProps {
   // Define the interface for your HandexTerm logic
   terminalWidth: number;
@@ -35,6 +37,7 @@ const HandTermWrapper = React.forwardRef<IHandTermMethods, IHandTermWrapperProps
     refreshHandTerm
   );
 
+  const { currentPhrase } = usePhraseHandler(activityMediator);
 
   // Set the initial activity type based on the initial achievement
   useEffect(() => {
@@ -58,6 +61,7 @@ const HandTermWrapper = React.forwardRef<IHandTermMethods, IHandTermWrapperProps
         activityMediator.handleCommandExecuted(command, args, switches);
       }}
       onActivityChange={handleActivityChange}
+       currentPhrase={currentPhrase}                                    
     />
   );
 });
