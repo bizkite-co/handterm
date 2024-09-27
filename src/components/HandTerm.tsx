@@ -1123,9 +1123,6 @@ export class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState
                 zombie4ActionType={activityMediator.zombie4Action}
                 onSetHeroAction={this.setHeroAction}
                 onSetZombie4Action={activityMediator.setZombie4Action}
-                onTouchStart={this.handleTouchStart}
-                onTouchEnd={this.handleTouchEnd}
-                phrasesAchieved={phrasesAchieved}
                 tutorialGroupPhrases={activityMediator.tutorialGroupPhrases}
                 zombie4StartPosition={this.zombie4StartPostion}
               />

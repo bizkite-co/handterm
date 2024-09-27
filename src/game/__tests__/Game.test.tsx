@@ -1,6 +1,7 @@
 import { render } from '@testing-library/react';
 import Game from '../Game';
 import * as matchers from '@testing-library/jest-dom/matchers'
+import React from 'react';
 
 expect.extend(matchers)
 describe('Game', () => {
@@ -11,11 +12,9 @@ describe('Game', () => {
     heroActionType: 'Idle' as const,
     zombie4ActionType: 'Walk' as const,
     zombie4StartPosition: { leftX: 0, topY: 0 },
-    onTouchStart: () => {},
-    onTouchEnd: () => {},
     onSetHeroAction: () => {},
     onSetZombie4Action: () => {},
-    phrasesAchieved: [],
+    tutorialGroupPhrases: []
   };
 
   it('should render when isInGameMode is true', () => {

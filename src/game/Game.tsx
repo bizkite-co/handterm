@@ -1,5 +1,5 @@
 // TerminalGame.ts
-import React, { TouchEventHandler, useState, useEffect, useRef, useImperativeHandle } from 'react';
+import React, { useState, useEffect, useRef, useImperativeHandle } from 'react';
 import { Zombie4 } from './Zombie4';
 import { Hero } from './Hero';
 import { Action, ActionType } from './types/ActionTypes';
@@ -18,11 +18,8 @@ export interface IGameProps {
   heroActionType: ActionType
   zombie4ActionType: ActionType
   zombie4StartPosition: SpritePosition
-  onTouchStart: TouchEventHandler<HTMLDivElement>;
-  onTouchEnd: TouchEventHandler<HTMLDivElement>;
   onSetHeroAction: (action: ActionType) => void;
   onSetZombie4Action: (action: ActionType) => void;
-  phrasesAchieved: string[];
   tutorialGroupPhrases: PhraseType[];
 }
 
