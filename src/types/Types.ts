@@ -1,9 +1,13 @@
+import { IGameHandle } from "src/game/Game";
+import { ActionType } from "src/game/types/ActionTypes";
+import { PhraseType } from "src/utils/Phrases";
+
 export const spaceDisplayChar = "&#x2581;";
 export const tabDisplayChar = "&#x2B7E;";
 export interface CharTime {
-    char: string;
-    duration: number;
-    time: number;
+  char: string;
+  duration: number;
+  time: number;
 }
 
 export enum ActivityType {
@@ -14,35 +18,35 @@ export enum ActivityType {
 }
 
 export function createCharTime(char: string, duration: number, time: number): CharTime {
-    return { char, duration, time }
+  return { char, duration, time }
 }
 
 export type CancelCallback = () => void;
 
 export type InputEventCallback = (event: InputEvent) => void;
 export interface ChordRow {
-    char: string;
-    chord: number;
-    strokes: string;
+  char: string;
+  chord: number;
+  strokes: string;
 }
 
 export interface IChord {
-    key: string;
-    chordCode: string;
-    index: number;
-    alias?: string;
+  key: string;
+  chordCode: string;
+  index: number;
+  alias?: string;
 }
 
 export class Chord implements IChord {
-    key: string;
-    chordCode: string;
-    index: number;
-    alias?: string;
-    constructor(key: string, chordCode: string, index: number) {
-        this.key = key;
-        this.chordCode = chordCode;
-        this.index = index;
-    }
+  key: string;
+  chordCode: string;
+  index: number;
+  alias?: string;
+  constructor(key: string, chordCode: string, index: number) {
+    this.key = key;
+    this.chordCode = chordCode;
+    this.index = index;
+  }
 }
 
 export type MyResponse<T> = {
@@ -59,6 +63,35 @@ export type TutorialAchievement = {
   unlocked: boolean;
   tutorialGroup?: string;
 };
+
+export type ActivityMediatorType = {
+  currentActivity: ActivityType;
+  isInGameMode: boolean;
+  isInTutorial: boolean;
+  isInEdit: boolean;
+  isInNormal: boolean;
+  tutorialAchievement: TutorialAchievement;
+  tutorialGroupPhrases: PhraseType[];
+  getNextIncompleteTutorialPhrase: () => PhraseType;
+  determineActivityState: (commandActivity?: ActivityType | null) => void;
+  setNextTutorialAchievement: (nextAchievement: TutorialAchievement | null) => void;
+  checkTutorialProgress: (command: string, args?: string[], _switches?: Record<string, string | boolean>) => {
+    progressed: boolean;
+    completed: boolean;
+    phrases?: PhraseType[];
+  };
+  heroAction: ActionType;
+  zombie4Action: ActionType;
+  gameHandleRef: React.RefObject<IGameHandle>;
+  handleCommandExecuted: (command: string, _args: string[], switches: Record<string, boolean | string>) => boolean;
+  setHeroAction: React.Dispatch<React.SetStateAction<ActionType>>,
+  setZombie4Action: React.Dispatch<React.SetStateAction<ActionType>>;
+  checkGameProgress: (successPhrase: PhraseType) => {
+    resultActivityType: ActivityType;
+    nextPhrase: PhraseType | null;
+  };
+  switchToNormal: () => void;
+}
 
 export const TutorialAchievements: TutorialAchievement[] = [
   { prompt: 'The most important key is the Return (ENTER) key. Press the thumb tip and release. You\'ll use this key to enter every command.\n\nNOTE: Press enter to reset and redo any tutorial steps.', phrase: ['Return (ENTER)'], unlocked: false },

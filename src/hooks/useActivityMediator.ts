@@ -1,11 +1,11 @@
 import { useState, useCallback, useRef } from 'react';
-import { TutorialAchievement, TutorialAchievements, ActivityType } from '../types/Types';
+import { TutorialAchievement, TutorialAchievements, ActivityType, ActivityMediatorType } from '../types/Types';
 import { ActionType } from '../game/types/ActionTypes';
 import { IGameHandle } from '../game/Game';
 import { resetTutorial, unlockAchievement, getNextTutorialAchievement } from '../utils/achievementUtils';
 import Phrases, { PhraseType } from '../utils/Phrases';
 
-export function useActivityMediator(initialTutorialAchievement: TutorialAchievement, refreshHandTerm?: () => void) {
+export function useActivityMediator(initialTutorialAchievement: TutorialAchievement, refreshHandTerm?: () => void):ActivityMediatorType {
   const [currentActivity, setCurrentActivity] = useState<ActivityType>(ActivityType.NORMAL);
   const [tutorialAchievement, setTutorialAchievement] = useState<TutorialAchievement>(initialTutorialAchievement);
   const [heroAction, setHeroAction] = useState<ActionType>('Idle');
