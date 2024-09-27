@@ -279,39 +279,14 @@ export class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState
       this.adapterRef.current.terminalWrite(localStorage.getItem('currentCommand') || '');
     }
     this.scrollToBottom();
-
     this.addTouchListeners();
-
     this.handleGitHubAuth();
-
-    const { activityMediator } = this.props;
-
-    if (activityMediator.isInGameMode && activityMediator.achievement.phrase.length > 0) {
-      this.setState({
-        phraseValue: activityMediator.achievement.phrase[0],
-        phraseName: activityMediator.achievement.prompt
-      });
-    }
   }
 
   componentDidUpdate(prevProps: Readonly<IHandTermProps>, _prevState: Readonly<IHandTermState>): void {
+    // NOTE: This runs on every keypress.
     this.handleGitHubAuth();
-
-    const { activityMediator } = this.props;
-
-    // Check if we've just entered game mode or if the achievement has changed while in game mode
-    if (
-      (activityMediator.isInGameMode && !prevProps.activityMediator.isInGameMode) ||
-      (activityMediator.isInGameMode && activityMediator.tutorialAchievement !== prevProps.activityMediator.tutorialAchievement)
-    ) {
-      if (activityMediator.tutorialAchievement.phrase.length > 0) {
-        const _phrase = activityMediator.tutorialAchievement.phrase;
-        this.setState({
-          phraseValue: Array.isArray(_phrase) ? _phrase.join('') : _phrase,
-          phraseName: activityMediator.tutorialAchievement.prompt
-        });
-      }
-    }
+    this.handleAchievement(prevProps);
   }
 
   componentWillUnmount(): void {
@@ -328,6 +303,75 @@ export class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState
       }
     }, 100);
   };
+
+  private handleAchievement = (prevProps: Readonly<IHandTermProps>) => {
+    const { activityMediator } = this.props;
+    // If Game mode changed OR achievement changed
+    if (
+      (activityMediator.isInGameMode && !prevProps.activityMediator.isInGameMode) ||
+      (activityMediator.isInGameMode && activityMediator.tutorialAchievement !== prevProps.activityMediator.tutorialAchievement)
+    ) {
+      if (activityMediator.tutorialAchievement.phrase.length > 0) {
+        const _phrase = activityMediator.tutorialAchievement.phrase;
+        this.setState({
+          phraseValue: Array.isArray(_phrase) ? _phrase.join('') : _phrase,
+          phraseName: activityMediator.tutorialAchievement.prompt
+        });
+      }
+    }
+  }
+
+  private handleTutorialPhrase = () => {
+    const { activityMediator } = this.props;
+    const firstIcompletePhrase = activityMediator.tutorialGroupPhrases.find(p => !p.isComplete);
+    if (firstIcompletePhrase) {
+      if (firstIcompletePhrase) this.setState({
+        phraseValue: firstIcompletePhrase.value,
+        phraseName: firstIcompletePhrase.key
+      })
+    } else if (activityMediator.isInGameMode && activityMediator.tutorialAchievement.phrase.length > 0) {
+      const _phrase = activityMediator.tutorialAchievement.phrase;
+      this.setState({
+        phraseValue: Array.isArray(_phrase) ? _phrase.join('') : _phrase,
+        phraseName: activityMediator.tutorialAchievement.prompt
+      });
+    }
+  }
+
+  private setNewPhrase = (phraseName: string) => {
+    phraseName = phraseName.replace('phrase ', '');
+    const newPhrase
+      = phraseName && phraseName != "" && Phrases.getPhraseByKey(phraseName)
+        ? Phrases.getPhraseByKey(phraseName)
+        : Phrases.getNthPhraseNotAchieved(this.state.phraseIndex);
+    this.setState((prevState: IHandTermState) => {
+      return {
+        ...prevState,
+        isInGameMode: true,
+        phraseValue: newPhrase.value,
+        phraseName: newPhrase.key,
+      }
+    });
+  }
+
+  private phraseCompleteNewPhrase() {
+    const phrasesNotAchieved = Phrases.getPhrasesNotAchieved();
+    if (phrasesNotAchieved.length === 0) {
+      // Handle the case when all phrases are achieved
+      this.setState({
+        phraseValue: '',
+        phraseName: '',
+      });
+    } else {
+      const newPhraseIndex = (this.state.phraseIndex + 1) % phrasesNotAchieved.length;
+      const newPhrase = phrasesNotAchieved[newPhraseIndex];
+      this.setState({
+        phraseIndex: newPhraseIndex,
+        phraseValue: newPhrase.value,
+        phraseName: newPhrase.key,
+      });
+    }
+  }
 
   public handleCommand = (inputCmd: string): void => {
     this.commandHistoryHook.addToCommandHistory(inputCmd);
@@ -350,7 +394,7 @@ export class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState
           this.setState({
             tutorialGroupPhrases: phrases
           })
-         this.props.activityMediator.gameHandleRef.current?.startGame(); 
+          this.props.activityMediator.gameHandleRef.current?.startGame();
           console.log("HandTerm.handleCommand isInTutorial onActivityChange()");
           // this.props.onActivityChange(ActivityType.GAME);
         }
@@ -868,22 +912,7 @@ export class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState
 
   private handlePhraseComplete = () => {
     localStorage.setItem('currentCommand', '');
-    const phrasesNotAchieved = Phrases.getPhrasesNotAchieved();
-    if (phrasesNotAchieved.length === 0) {
-      // Handle the case when all phrases are achieved
-      this.setState({
-        phraseValue: '',
-        phraseName: '',
-      });
-    } else {
-      const newPhraseIndex = (this.state.phraseIndex + 1) % phrasesNotAchieved.length;
-      const newPhrase = phrasesNotAchieved[newPhraseIndex];
-      this.setState({
-        phraseIndex: newPhraseIndex,
-        phraseValue: newPhrase.value,
-        phraseName: newPhrase.key,
-      });
-    }
+    this.phraseCompleteNewPhrase();
     if (this.nextCharsDisplayRef.current) this.nextCharsDisplayRef.current.cancelTimer();
     this.props.activityMediator.gameHandleRef.current?.completeGame();
     this.adapterRef.current?.terminalReset();
@@ -897,24 +926,6 @@ export class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState
     } else {
       this.setState({ userName: null });
     }
-  }
-
-  private setNewPhrase = (phraseName: string) => {
-    phraseName = phraseName.replace('phrase ', '');
-
-    const newPhrase
-      = phraseName && phraseName != "" && Phrases.getPhraseByKey(phraseName)
-        ? Phrases.getPhraseByKey(phraseName)
-        : Phrases.getNthPhraseNotAchieved(this.state.phraseIndex);
-
-    this.setState((prevState: IHandTermState) => {
-      return {
-        ...prevState,
-        isInGameMode: true,
-        phraseValue: newPhrase.value,
-        phraseName: newPhrase.key,
-      }
-    });
   }
 
   setHeroRunAction = () => {
