@@ -6,10 +6,8 @@ import { TerminalCssClasses } from './types/TerminalTypes';
 import { useAuth } from './lib/useAuth';
 import { Output } from './components/Output';
 import { useCommandHistory } from './hooks/useCommandHistory';
-import { useActivityMediator } from './hooks/useActivityMediator';
-import { getNextTutorialAchievement, loadTutorialAchievements } from './utils/achievementUtils';
+import { loadTutorialAchievements } from './utils/achievementUtils';
 import { IHandTermMethods } from './components/HandTerm';
-import { ActivityType } from './types/Types';
 import { IGameHandle } from './game/Game';
 
 const MemoizedOutput = React.memo(Output);
@@ -22,24 +20,8 @@ const App = () => {
   const [outputElements, setOutputElements] = useState<React.ReactNode[]>([]);
 
   const commandHistoryHook = useCommandHistory(loadTutorialAchievements());
-  // Determine the initial achievement and activity type                                     
-  // Set the initial activity type based on the initial achievement                          
-  // Determine the initial achievement and activity type
-  const initialAchievement = getNextTutorialAchievement();
-
-  // Initialize activityMediator with the appropriate initial values
-  const activityMediator = useActivityMediator(
-    initialAchievement 
-    || { phrase: [], prompt: '', unlocked: false }
-  );
-
+  
   const gameHandleRef = useRef<IGameHandle>(null);
-
-  // Set the initial activity type based on the initial achievement
-  useEffect(() => {
-    activityMediator.determineActivityState();
-    console.log("App useEffect CurrentActivity:", ActivityType[activityMediator.currentActivity]);
-  }, []);
 
   useEffect(() => {
     const w = getContainerWidth();
@@ -101,11 +83,6 @@ const App = () => {
     console.log("Handling touch end");
   }, []);
 
-  const handleActivityChange = useCallback((newActivityType: ActivityType) => {
-    console.log("Activity changed to:", newActivityType);
-    // Add any additional logic for activity change here
-  }, []);
-
   return (
     <CommandProvider handTermRef={handexTermRef}>
       <div ref={containerRef}>
@@ -119,12 +96,7 @@ const App = () => {
           auth={auth}
           terminalWidth={containerWidth}
           commandHistoryHook={commandHistoryHook}
-          activityMediator={activityMediator}
           onOutputUpdate={handleOutputUpdate}
-          onCommandExecuted={(command, args, switches) => {
-            activityMediator.handleCommand(command, args, switches);
-          }}
-          onActivityChange={handleActivityChange}
           gameHandleRef={gameHandleRef}
         />
       </div>

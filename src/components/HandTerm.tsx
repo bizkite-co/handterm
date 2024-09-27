@@ -15,7 +15,7 @@ import Game, { IGameHandle } from '../game/Game';
 import { ActionType } from '../game/types/ActionTypes';
 import WebCam from '../utils/WebCam';
 import { CommandContext } from '../commands/CommandContext';
-import { ActivityType, MyResponse } from '../types/Types';
+import { ActivityType } from '../types/Types';
 import { TutorialManager } from './TutorialManager';
 import { Chord } from './Chord';
 import { SpritePosition } from '../game/types/Position';
@@ -32,6 +32,7 @@ import { useActivityMediator } from '../hooks/useActivityMediator';
 // import SpecialCommand from '../commands/SpecialCommand';
 import Phrases, { PhraseType } from '../utils/Phrases';
 import { Phrase } from '../utils/Phrase';
+import { IAuthProps } from 'src/lib/useAuth';
 
 export interface IHandTermMethods {
   writeOutput: (output: string) => void;
@@ -51,41 +52,12 @@ export type HandTermRef = React.RefObject<IHandTermMethods>;
 export interface IHandTermProps {
   // Define the interface for your HandexTerm logic
   terminalWidth: number;
-  auth: {
-    login: (username: string, password: string) => Promise<MyResponse<unknown>>;
-    logout: () => void;
-    isLoggedIn: boolean;
-    setIsLoggedIn: React.Dispatch<React.SetStateAction<boolean>>;
-    signUp: (
-      username: string,
-      password: string,
-      email: string,
-      callback: (error: unknown, result: unknown) => void
-    ) => void;
-    verify: (username: string, code: string, callback: (error: unknown, result: unknown) => void) => void;
-    getUser: () => Promise<MyResponse<unknown>>;
-    setUser: (profile: string) => void;
-    saveLog: (key: string, content: string, extension: string) => Promise<MyResponse<unknown>>;
-    getLog: (key: string, limit?: number) => Promise<MyResponse<unknown>>;
-    changePassword: (
-      oldPassword: string,
-      newPassword: string,
-      callback: (error: unknown, result: unknown) => void
-    ) => void;
-    getFile: (key: string, extension: string) => Promise<MyResponse<unknown>>;
-    putFile: (key: string, content: string, extension: string) => Promise<MyResponse<unknown>>;
-    listLog: () => Promise<MyResponse<unknown>>;
-    getExpiresAt: () => string | null;
-    refreshTokenIfNeeded: () => Promise<MyResponse<unknown>>;
-    initiateGitHubAuth: () => void;
-    listRecentRepos: () => Promise<MyResponse<unknown>>;
-    getRepoTree: (repo: string, path?: string) => Promise<MyResponse<unknown>>;
-    // Add other properties returned by useAuth here
-  };
+  auth: IAuthProps;
   commandHistoryHook: ReturnType<typeof useCommandHistory>;
   onOutputUpdate: (output: React.ReactNode) => void;
   onCommandExecuted: (command: string, args: string[], switches: Record<string, boolean | string>) => void;
   onActivityChange: (newActivityType: ActivityType) => void;
+  refreshHandTerm: () => void;
   activityMediator: ReturnType<typeof useActivityMediator>;
   gameHandleRef: React.RefObject<IGameHandle>;
 }
@@ -332,8 +304,9 @@ export class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState
       (activityMediator.isInGameMode && activityMediator.achievement !== prevProps.activityMediator.achievement)
     ) {
       if (activityMediator.achievement.phrase.length > 0) {
+        const _phrase = activityMediator.achievement.phrase;
         this.setState({
-          phraseValue: activityMediator.achievement.phrase[0],
+          phraseValue: Array.isArray(_phrase) ? _phrase.join('') : _phrase,
           phraseName: activityMediator.achievement.prompt
         });
       }
@@ -363,10 +336,12 @@ export class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState
 
     const { parsedCommand, args, switches } = parseCommand(inputCmd);
 
-    this.props.onCommandExecuted(parsedCommand, args, switches);
+    const commandResponse = this.props.onCommandExecuted(parsedCommand, args, switches);
+    console.log("HandTerm.handleCommand commandResponse:", commandResponse)
 
     if (this.props.activityMediator.isInTutorial) {
-      const { progressed, completed, phrases } = this.props.activityMediator.checkTutorialProgress(parsedCommand);
+      const { progressed, completed, phrases } = this.props.activityMediator
+        .checkTutorialProgress(parsedCommand, args, switches);
       if (progressed) {
         // Handle tutorial progression (e.g., update UI, show messages)
         if (completed) {
@@ -375,7 +350,7 @@ export class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState
             tutorialGroupPhrases: phrases
           })
          this.props.activityMediator.gameHandleRef.current?.startGame(); 
-          console.log("HandTerm.handleCommand isInTutorial onActivityChange()")
+          console.log("HandTerm.handleCommand isInTutorial onActivityChange()");
           // this.props.onActivityChange(ActivityType.GAME);
         }
       }
@@ -876,10 +851,13 @@ export class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState
     );
     this.saveCommandResponseHistory("game", wpmPhrase, 200);
     this.props.activityMediator.gameHandleRef.current?.completeGame();
-    const successPhrase = Phrases.getPhraseByValue(phrase.value.join(''));
+    // TODO: Find if there's a tutorialGroupPhrase that matches the current phrase value.
+    const tutorialGroupPhrase = this.props.activityMediator.tutorialGroupPhrases.find(p => !p.isComplete);
+
+    const successPhrase = tutorialGroupPhrase ?? Phrases.getPhraseByValue(phrase.value.join(''));
     if (successPhrase) {
-      const isSwitchedToTutorial: boolean = this.props.activityMediator.checkGameProgress(successPhrase);
-      console.log("Switched from Game back to Tutorial:", isSwitchedToTutorial);
+      const { resultActivityType, nextPhrase } = this.props.activityMediator.checkGameProgress(successPhrase);
+      console.log("Switched from Game back to Tutorial:", ActivityType[resultActivityType], nextPhrase);
     }
     this.props.activityMediator.gameHandleRef.current?.levelUp();
     this.handlePhraseComplete();

@@ -6,8 +6,43 @@ import { ENDPOINTS } from '../shared/endpoints';
 import { MyResponse } from 'src/types/Types';
 import { LogKeys } from '../types/TerminalTypes';
 
+// Define the interface for the auth object                                      
+export interface IAuthProps {
+  login: (username: string, password: string) => Promise<MyResponse<unknown>>;
+  logout: () => void;
+  isLoggedIn: boolean;
+  setIsLoggedIn: React.Dispatch<React.SetStateAction<boolean>>;
+  signUp: (
+    username: string,
+    password: string,
+    email: string,
+    callback: (error: unknown, result: unknown) => void
+  ) => void;
+  verify: (username: string, code: string, callback: (error: unknown, result:
+    unknown) => void) => void;
+  getUser: () => Promise<MyResponse<unknown>>;
+  setUser: (profile: string) => void;
+  saveLog: (key: string, content: string, extension: string) =>
+    Promise<MyResponse<unknown>>;
+  getLog: (key: string, limit?: number) => Promise<MyResponse<unknown>>;
+  changePassword: (
+    oldPassword: string,
+    newPassword: string,
+    callback: (error: unknown, result: unknown) => void
+  ) => void;
+  getFile: (key: string, extension: string) => Promise<MyResponse<unknown>>;
+  putFile: (key: string, content: string, extension: string) =>
+    Promise<MyResponse<unknown>>;
+  listLog: () => Promise<MyResponse<unknown>>;
+  getExpiresAt: () => string | null;
+  refreshTokenIfNeeded: () => Promise<MyResponse<unknown>>;
+  initiateGitHubAuth: () => void;
+  listRecentRepos: () => Promise<MyResponse<unknown>>;
+  getRepoTree: (repo: string, path?: string) => Promise<MyResponse<unknown>>;
+  // Add other properties as needed                                              
+}
 
-export const useAuth = () => {
+export const useAuth = ():IAuthProps => {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() => {
     const storedValue = localStorage.getItem('isLoggedIn') === 'true';
     console.log('Initial isLoggedIn value:', storedValue);
@@ -74,7 +109,7 @@ export const useAuth = () => {
       throw new Error('All fields are required');
     }
     try {
-      
+
       await axios.post(`${API_URL}${ENDPOINTS.api.ConfirmSignUp}`, { username, code }, baseConfig);
       // Handle verification logic (e.g., auto-login or redirect to login page)
       setIsLoggedIn(true);
@@ -235,7 +270,7 @@ export const useAuth = () => {
   const getFile = async (key: string, extension: string = 'json'): Promise<MyResponse<any>> => {
     try {
       const authConfig = await getAuthConfig();
-      if(authConfig.status !== 200) return authConfig;
+      if (authConfig.status !== 200) return authConfig;
 
       const response = await axios.get(`${API_URL}${ENDPOINTS.api.GetFile}`, {
         headers: authConfig.data.headers, // Assuming authConfig.data contains headers
@@ -293,9 +328,9 @@ export const useAuth = () => {
       const authConfig = await getAuthConfig();
       const response = await axios.get(`${API_URL}${ENDPOINTS.api.GetRepoTree}`, {
         headers: authConfig.data.headers, // Assuming authConfig.data contains headers
-        params: { 
-          repo, 
-          path 
+        params: {
+          repo,
+          path
         }
       });
       return response.data;
@@ -376,26 +411,26 @@ export const useAuth = () => {
     }
   };
 
-  return { 
-    isLoggedIn, 
+  return {
+    isLoggedIn,
     setIsLoggedIn,
-    login: signIn, 
-    logout: signOut, 
-    signUp, 
-    getUser, 
-    checkSession, 
-    changePassword, 
-    setUser, 
-    saveLog, 
-    getLog, 
-    listLog, 
-    getFile, 
-    putFile, 
-    getExpiresAt, 
-    refreshTokenIfNeeded, 
-    initiateGitHubAuth, 
-    listRecentRepos, 
-    getRepoTree, 
-    verify 
+    login: signIn,
+    logout: signOut,
+    signUp,
+    getUser,
+    checkSession,
+    changePassword,
+    setUser,
+    saveLog,
+    getLog,
+    listLog,
+    getFile,
+    putFile,
+    getExpiresAt,
+    refreshTokenIfNeeded,
+    initiateGitHubAuth,
+    listRecentRepos,
+    getRepoTree,
+    verify
   };
 };

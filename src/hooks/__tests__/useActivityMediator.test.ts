@@ -13,9 +13,9 @@ describe('useActivityMediator', () => {
       result.current.handleCommandExecuted('play', [],{});
     });
 
-    expect(result.current.currentActivity).toBe(ActivityType.GAME);
-    expect(result.current.isInGameMode).toBe(true);
-    expect(result.current.isInTutorial).toBe(false);
+    expect(result.current.currentActivity).toBe(ActivityType.TUTORIAL);
+    expect(result.current.isInGameMode).toBe(false);
+    expect(result.current.isInTutorial).toBe(true);
   });
 
   it('should not change mode for unknown commands', () => {

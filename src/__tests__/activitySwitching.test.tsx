@@ -34,7 +34,7 @@ const TestComponent = () => {
     return (
         <div>
             <div data-testid="current-activity">{activityMediator.currentActivity}</div>
-            <button onClick={() => activityMediator.progressTutorial('test')}>
+            <button onClick={() => activityMediator.checkTutorialProgress('test')}>
                 Progress Tutorial
             </button>
         </div>
