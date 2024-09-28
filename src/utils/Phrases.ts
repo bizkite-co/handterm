@@ -11,10 +11,10 @@ const standardChars = /^[a-zA-Z0-9\s'";:.!,?]+$/;
 
 export default class Phrases {
     public static readonly phrases: PhraseType[] = [
-        { key: "first-eight", value: "all sad lads ask dad; alas fads fall", tutorialGroup: "first-eight"},
+        { key: "first-eight", value: "all sad lads ask dad; alas fads fall", tutorialGroup: "single-click"},
         { key: "numbers", value: "0123 4567 8901 2345 6789 0987", tutorialGroup: "numbers"},
         { key: "ask", value: "All lads had flasks as glad gals ask halls; all had a glass", tutorialGroup: "home-row" },
-        { key: "gallant", value: "A gallant lad; a glass." },
+        { key: "gallant", value: "A gallant lad; a glass", tutorialGroup: "home-row" },
         { key: "alas", value: "Alas, Khal's flask has a crack." },
         { key: "lads", value: "Lads' flags fall as gaffs sag."},
         { key: "hello", value: "Hello, World!" },

@@ -99,7 +99,6 @@ export interface IHandTermState {
 }
 
 // @ts-ignore
-// @ts-ignore
 export class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState> implements IHandTermMethods {
   static contextType = CommandContext;
   declare context: ContextType<typeof CommandContext>;

@@ -98,7 +98,7 @@ export const TutorialAchievements: TutorialAchievement[] = [
   { prompt: 'Type `fdsa` & Enter. Notice that it requires only a finger-pinch and release for each character.', phrase: 'fdsa'.split(''), unlocked: false },
   { prompt: 'Do it again, but this time put a space in between the letters. Grasp the thumb and release to enter a space.', phrase: 'fdsa'.split(' '), unlocked: false },
   // { prompt: 'The second most important key is the Backspace key. To use it, pull back the index finger. Practice typing fdsa and then deleting it. Then press enter to continue.', phrase: ['DELETE (Backspace)'], unlocked: false},
-  { prompt: 'Type `jkl;`. Notice that it requires only a finger-grasp followed by a release.', phrase: 'jkl;'.split(''), unlocked: false, tutorialGroup: 'first-eight' },
+  { prompt: 'Type `jkl;`. Notice that it requires only a finger-grasp followed by a release.', phrase: 'jkl;'.split(''), unlocked: false, tutorialGroup: 'single-click' },
   { prompt: 'Press the thumb tip followed by a finger tip to type numbers 0-4', phrase: '01234'.split(''), unlocked: false },
   { prompt: 'Press the thumb tip followed by a finger tip to type numbers 5-9', phrase: '56789'.split(''), unlocked: false, tutorialGroup: 'numbers' },
   { prompt: 'Characters are only entered when the keys are released. For example, when you grasp the thumb and release it a space is entered.\n\nHowever, when you HOLD a grasp of your thumb it activates the shift key. Use Shift to type FDSA in uppercase letters. Remember to release your grip after each character.', phrase: 'FDSA'.split(''), unlocked: false },
