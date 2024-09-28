@@ -30,7 +30,7 @@ import { useCommandHistory } from '../hooks/useCommandHistory';
 import { useActivityMediator } from '../hooks/useActivityMediator';
 // import HelpCommand from '../commands/HelpCommand';
 // import SpecialCommand from '../commands/SpecialCommand';
-import Phrases, { PhraseType } from '../utils/Phrases';
+import GamePhrases, { GamePhrase } from '../utils/GamePhrases';
 import { Phrase } from '../utils/Phrase';
 import { IAuthProps } from 'src/lib/useAuth';
 
@@ -60,7 +60,7 @@ export interface IHandTermProps {
   refreshHandTerm: () => void;
   activityMediator: ReturnType<typeof useActivityMediator>;
   gameHandleRef: React.RefObject<IGameHandle>;
-  currentPhrase: PhraseType | null;
+  currentPhrase: GamePhrase | null;
 }
 
 type LanguageType = "javascript" | "typescript" | "markdown";
@@ -70,7 +70,7 @@ export interface IHandTermState {
   phraseKey: string;
   phraseIndex: number;
   phrasesAchieved: string[];
-  tutorialGroupPhrases: PhraseType[];
+  tutorialGroupPhrases: GamePhrase[];
   targetWPM: number;
   isActive: boolean;
   commandLine: string;
@@ -146,7 +146,7 @@ export class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState
       outputElements: this.commandHistoryHook.getCommandResponseHistory().slice(-1),
       phraseKey: '',
       phraseIndex: 0,
-      phrasesAchieved: Phrases.getPhrasesAchieved()
+      phrasesAchieved: GamePhrases.getGamePhrasesAchieved()
         .map((phrase: { wpm: number; phraseName: string }) => phrase.phraseName),
       tutorialGroupPhrases: [],
       targetWPM: this.loadTargetWPM(),
@@ -387,7 +387,7 @@ export class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState
 
     if (parsedCommand === 'show') {
       if (args.length === 0) {
-        response = Phrases.getPhrasesAchieved().map((phrase: { wpm: number; phraseName: string; }) => `${phrase.wpm}:${phrase.phraseName}`).join('<br/>');
+        response = GamePhrases.getGamePhrasesAchieved().map((phrase: { wpm: number; phraseName: string; }) => `${phrase.wpm}:${phrase.phraseName}`).join('<br/>');
         status = 200;
       }
     }
@@ -819,7 +819,7 @@ export class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState
     // TODO: Find if there's a tutorialGroupPhrase that matches the current phrase value.
     const tutorialGroupPhrase = this.props.activityMediator.tutorialGroupPhrases.find(p => !p.isComplete);
 
-    const successPhrase = tutorialGroupPhrase ?? Phrases.getPhraseByValue(phrase.value.join(''));
+    const successPhrase = tutorialGroupPhrase ?? GamePhrases.getGamePhraseByValue(phrase.value.join(''));
     if (successPhrase) {
       const { resultActivityType, nextPhrase } = this.props.activityMediator.checkGameProgress(successPhrase);
       console.log("Switched from Game back to Tutorial:", ActivityType[resultActivityType], nextPhrase);

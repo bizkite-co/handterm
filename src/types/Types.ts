@@ -1,6 +1,6 @@
 import { IGameHandle } from "src/game/Game";
 import { ActionType } from "src/game/types/ActionTypes";
-import { PhraseType } from "src/utils/Phrases";
+import { GamePhrase } from "src/utils/GamePhrases";
 
 export const spaceDisplayChar = "&#x2581;";
 export const tabDisplayChar = "&#x2B7E;";
@@ -71,14 +71,14 @@ export type ActivityMediatorType = {
   isInEdit: boolean;
   isInNormal: boolean;
   tutorial: Tutorial;
-  tutorialGroupPhrases: PhraseType[];
-  getNextIncompleteTutorialPhrase: () => PhraseType;
+  tutorialGroupPhrases: GamePhrase[];
+  getNextIncompleteTutorialPhrase: () => GamePhrase;
   determineActivityState: (commandActivity?: ActivityType | null) => void;
   setNextTutorial: (nextAchievement: Tutorial | null) => void;
   checkTutorialProgress: (command: string, args?: string[], _switches?: Record<string, string | boolean>) => {
     progressed: boolean;
     completed: boolean;
-    phrases?: PhraseType[];
+    phrases?: GamePhrase[];
   };
   heroAction: ActionType;
   zombie4Action: ActionType;
@@ -86,9 +86,9 @@ export type ActivityMediatorType = {
   handleCommandExecuted: (command: string, _args: string[], switches: Record<string, boolean | string>) => boolean;
   setHeroAction: React.Dispatch<React.SetStateAction<ActionType>>,
   setZombie4Action: React.Dispatch<React.SetStateAction<ActionType>>;
-  checkGameProgress: (successPhrase: PhraseType) => {
+  checkGameProgress: (successPhrase: GamePhrase) => {
     resultActivityType: ActivityType;
-    nextPhrase: PhraseType | null;
+    nextPhrase: GamePhrase | null;
   };
   switchToNormal: () => void;
 }

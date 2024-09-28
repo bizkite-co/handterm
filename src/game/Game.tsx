@@ -9,7 +9,7 @@ import { Sprite } from './sprites/Sprite';
 import { IParallaxLayer, ParallaxLayer } from './ParallaxLayer';
 import ScrollingTextLayer from './ScrollingTextLayer';
 import confetti from 'canvas-confetti';
-import { PhraseType } from 'src/utils/Phrases';
+import { GamePhrase } from 'src/utils/GamePhrases';
 
 export interface IGameProps {
   canvasHeight: number
@@ -20,7 +20,7 @@ export interface IGameProps {
   zombie4StartPosition: SpritePosition
   onSetHeroAction: (action: ActionType) => void;
   onSetZombie4Action: (action: ActionType) => void;
-  tutorialGroupPhrases: PhraseType[];
+  tutorialGroupPhrases: GamePhrase[];
 }
 
 export interface IGameHandle {

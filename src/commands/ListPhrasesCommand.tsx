@@ -1,4 +1,4 @@
-import Phrases from '../utils/Phrases';
+import GamePhrases from '../utils/GamePhrases';
 import { ICommand } from './ICommand';
 import { IHandTermMethods } from '../components/HandTerm';
 
@@ -21,7 +21,7 @@ export const ListPhrasesCommand: ICommand = {
     }
     // Logic to clear the command history from localStorage
     // Logic to clear the command history from context (state)
-    const phrases = Phrases
+    const phrases = GamePhrases
       .phrases
       .map(x => x.key)
       .join('\n');

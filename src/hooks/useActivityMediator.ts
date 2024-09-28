@@ -2,8 +2,7 @@ import { useState, useCallback, useRef } from 'react';
 import { Tutorial, Tutorials, ActivityType, ActivityMediatorType } from '../types/Types';
 import { ActionType } from '../game/types/ActionTypes';
 import { IGameHandle } from '../game/Game';
-import { resetTutorial, unlockTutorialAchievement, getNextTutorialAchievement } from '../utils/tutorialAchievementUtils';
-import Phrases, { PhraseType } from '../utils/Phrases';
+import { GamePhrase } from '../utils/GamePhrases';
 
 export function useActivityMediator(initialTutorialAchievement: TutorialAchievement, refreshHandTerm?: () => void):ActivityMediatorType {
   const [currentActivity, setCurrentActivity] = useState<ActivityType>(ActivityType.NORMAL);
@@ -106,8 +105,7 @@ export function useActivityMediator(initialTutorialAchievement: TutorialAchievem
     }
   };
 
-  const checkGameProgress = (successPhrase: PhraseType): { resultActivityType: ActivityType, nextPhrase: PhraseType | null } => {
-    // TODO: Use more complex comparison to tutorial tutorialAchievements.
+  const checkGameProgress = (successPhrase: GamePhrase): { resultActivityType: ActivityType, nextPhrase: GamePhrase | null } => {
     const tutorialGroupPhrase = tutorialGroupPhrases.find(p => p.key === successPhrase.key);
     if (tutorialGroupPhrase) {
       setTutorialGroupPhrases(prevTutorialGroupPhrases => {

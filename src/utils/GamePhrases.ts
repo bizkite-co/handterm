@@ -1,6 +1,6 @@
 import { MyResponse } from "../types/Types";
 
-export type PhraseType = {
+export type GamePhrase = {
     key: string,
     value: string,
     tutorialGroup?: string,
@@ -9,14 +9,14 @@ export type PhraseType = {
 
 const standardChars = /^[a-zA-Z0-9\s'";:.!,?]+$/;
 
-export default class Phrases {
-    public static readonly phrases: PhraseType[] = [
-        { key: "first-eight", value: "all sad lads ask dad; alas fads fall", tutorialGroup: "single-click"},
-        { key: "numbers", value: "0123 4567 8901 2345 6789 0987", tutorialGroup: "numbers"},
+export default class GamePhrases {
+    public static readonly phrases: GamePhrase[] = [
+        { key: "first-eight", value: "all sad lads ask dad; alas fads fall", tutorialGroup: "single-click" },
+        { key: "numbers", value: "0123 4567 8901 2345 6789 0987", tutorialGroup: "numbers" },
         { key: "ask", value: "All lads had flasks as glad gals ask halls; all had a glass", tutorialGroup: "home-row" },
         { key: "gallant", value: "A gallant lad; a glass", tutorialGroup: "home-row" },
         { key: "alas", value: "Alas, Khal's flask has a crack." },
-        { key: "lads", value: "Lads' flags fall as gaffs sag."},
+        { key: "lads", value: "Lads' flags fall as gaffs sag." },
         { key: "hello", value: "Hello, World!" },
         { key: "pack", value: "Pack my box with five dozen liquor jugs." },
         { key: "sphinx", value: "Sphinx of black quartz, judge my vow." },
@@ -37,29 +37,29 @@ export default class Phrases {
         { key: "a=5", value: "a=5; b=3; c=$((a / b)); d=$((a - b)); echo $c $d; [ $a -gt $b ] && echo \"$a>$b\" || echo \"$a<$b\"; e=$(($a % $b)); echo \"Result: $e\"" }
     ];
 
-    public static getPhraseByKey(key: string): PhraseType {
+    public static getGamePhraseByKey(key: string): GamePhrase {
         const phrase = this.phrases.find(x => x.key == key);
         if (phrase) {
             // Return specified phrase, if it exists.
             return phrase;
         }
         // Else, return first phrase.
-        return this.getPhraseByIndex(0);
+        return this.getGamePhraseByIndex(0);
     }
 
-    public static getPhrasesByTutorialGroup(tutorialGroup: string): PhraseType[] {
+    public static getGamePhrasesByTutorialGroup(tutorialGroup: string): GamePhrase[] {
         const phrases = this.phrases.filter(p => tutorialGroup.includes(p.tutorialGroup || 'exclude'))
         return phrases;
     }
 
-    public checkPhrases = (): MyResponse<any> => {
+    public checkGamePhrases = (): MyResponse<any> => {
         let response: MyResponse<any> = {
             status: 200,
             message: '',
             data: '',
             error: []
         };
-        Phrases.phrases.forEach((phrase, index) => {
+        GamePhrases.phrases.forEach((phrase, index) => {
             if (!standardChars.test(phrase.value)) {
                 response.error.push(`Phrase at index ${index} contains non-standard characters: ${phrase.value}`);
                 response.status = 400;
@@ -68,7 +68,7 @@ export default class Phrases {
         return response;
     };
 
-    public static getPhraseByIndex(index: number): PhraseType {
+    public static getGamePhraseByIndex(index: number): GamePhrase {
         if (index >= 0 && index < this.phrases.length) {
             return this.phrases[index];
         }
@@ -77,22 +77,22 @@ export default class Phrases {
         return this.phrases[0];
     }
 
-    public static getPhraseByValue(phrase: string): PhraseType | null {
-        const result = Phrases.phrases.find(p => p.value === phrase)
+    public static getGamePhraseByValue(phrase: string): GamePhrase | null {
+        const result = GamePhrases.phrases.find(p => p.value === phrase)
         return result || null;
     }
 
-    public static getPhraseNames(): string[] {
-        return Phrases.phrases.map(x => x.key);
+    public static getGamePhraseNames(): string[] {
+        return GamePhrases.phrases.map(x => x.key);
     }
 
-    public static getRandomPhrase(): string {
+    public static getRandomGamePhrase(): string {
         const phrasesLength = this.phrases.length;
         const randomKey = Math.floor(Math.random() * phrasesLength);
         const result = this.phrases[randomKey].value;
         return result;
     }
-    public static getPhrasesAchieved = () => {
+    public static getGamePhrasesAchieved = () => {
         const storedPhrasesAchieved = localStorage.getItem('phrasesAchieved');
 
         const phrasesAchieved = JSON.parse(storedPhrasesAchieved || '[]').map((phrase: string) => {
@@ -102,17 +102,17 @@ export default class Phrases {
         return phrasesAchieved;
     }
 
-    public static getPhrasesNotAchieved = () => {
-        const phrasesAchieved = this.getPhrasesAchieved().map((phrase: { wpm: number; phraseName: string }) => phrase.phraseName);
-        return Phrases.phrases.filter((phrase) => !phrasesAchieved.includes(phrase.key));
+    public static getGamePhrasesNotAchieved = () => {
+        const phrasesAchieved = this.getGamePhrasesAchieved().map((phrase: { wpm: number; phraseName: string }) => phrase.phraseName);
+        return GamePhrases.phrases.filter((phrase) => !phrasesAchieved.includes(phrase.key));
     }
 
-    public static getNthPhraseNotAchieved = (n: number) => {
-        const phrasesNotAchieved = this.getPhrasesNotAchieved();
-        return phrasesNotAchieved[n];
+    public static getNthGamePhraseNotAchieved = (n: number) => {
+        const gamePhrasesNotAchieved = this.getGamePhrasesNotAchieved();
+        return gamePhrasesNotAchieved[n];
     }
 
-    public static resetPhrasesAchieved = () => {
+    public static resetGamePhrasesAchieved = () => {
         localStorage.removeItem('phrasesAchieved');
     }
 }
