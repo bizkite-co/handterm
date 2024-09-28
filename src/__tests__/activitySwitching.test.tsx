@@ -1,10 +1,10 @@
 /// <reference types="@testing-library/jest-dom" />
 import { render, act, waitFor } from '@testing-library/react';
 import { useActivityMediator } from '../hooks/useActivityMediator';
-import { getNextTutorialAchievement } from '../utils/tutorialAchievementUtils';
+import { getNextTutorial } from '../utils/tutorialUtils';
 import Phrases, { PhraseType } from '../utils/Phrases';
 import { jest, expect, describe, it, beforeEach } from '@jest/globals';
-import { TutorialAchievement, ActivityType } from '../types/Types';
+import { Tutorial, ActivityType } from '../types/Types';
 import React from 'react';
 
 // Mock the modules
@@ -12,12 +12,12 @@ jest.mock('../utils/achievementUtils');
 jest.mock('../utils/Phrases');
 
 // Create mock implementations
-const mockGetNextTutorialAchievement = jest.fn<() => TutorialAchievement | null>();
+const mockGetNextTutorial = jest.fn<() => Tutorial | null>();
 const mockGetNthPhraseNotAchieved = jest.fn<() => PhraseType>();
 
-// Mock the getNextTutorialAchievement function
+// Mock the getNextTutorial function
 jest.mock('../utils/achievementUtils', () => ({
-    getNextTutorialAchievement: jest.fn()
+    getNextTutorial: jest.fn()
 }));
 
 // Mock the Phrases class
@@ -25,7 +25,7 @@ jest.spyOn(Phrases, 'getNthPhraseNotAchieved').mockImplementation(mockGetNthPhra
 
 // Create a test component that uses the useActivityMediator hook                            
 const TestComponent = () => {
-    const activityMediator = useActivityMediator(getNextTutorialAchievement() || {
+    const activityMediator = useActivityMediator(getNextTutorial() || {
         phrase: [],
         prompt: '',
         unlocked: false
@@ -47,8 +47,8 @@ describe('Activity Switching', () => {
     });
 
     it('should start in NORMAL mode', () => {
-        // TODO: Should start in NORMAL unless unlocked tutorialAchievements exist.
-        mockGetNextTutorialAchievement.mockReturnValue({
+        // TODO: Should start in NORMAL unless unlocked tutorials exist.
+        mockGetNextTutorial.mockReturnValue({
             phrase: ['Test phrase'],
             prompt: 'Test prompt',
             unlocked: false
@@ -60,7 +60,7 @@ describe('Activity Switching', () => {
 
     it('should switch to GAME mode when tutorial is completed', async () => {
         // Set up a series of mock returns, ending with null                                     
-        mockGetNextTutorialAchievement
+        mockGetNextTutorial
             .mockReturnValueOnce({ phrase: ['First'], prompt: 'First', unlocked: false })
             .mockReturnValueOnce({ phrase: ['Second'], prompt: 'Second', unlocked: false })
             .mockReturnValueOnce(null);
@@ -86,7 +86,7 @@ describe('Activity Switching', () => {
 
     it.skip('should switch back to TUTORIAL mode when game level is completed', () => {
         // TODO: Make this test an appropriate flip-back.
-        mockGetNextTutorialAchievement.mockReturnValue({
+        mockGetNextTutorial.mockReturnValue({
             phrase: ['Next tutorial phrase'],
             prompt: 'Next prompt',
             unlocked: false

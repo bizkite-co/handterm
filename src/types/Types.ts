@@ -56,7 +56,7 @@ export type MyResponse<T> = {
   error: string[];
 };
 
-export type TutorialAchievement = {
+export type Tutorial = {
   phrase: string[];
   prompt: string;
   command?: string;
@@ -70,11 +70,11 @@ export type ActivityMediatorType = {
   isInTutorial: boolean;
   isInEdit: boolean;
   isInNormal: boolean;
-  tutorialAchievement: TutorialAchievement;
+  tutorial: Tutorial;
   tutorialGroupPhrases: PhraseType[];
   getNextIncompleteTutorialPhrase: () => PhraseType;
   determineActivityState: (commandActivity?: ActivityType | null) => void;
-  setNextTutorialAchievement: (nextAchievement: TutorialAchievement | null) => void;
+  setNextTutorial: (nextAchievement: Tutorial | null) => void;
   checkTutorialProgress: (command: string, args?: string[], _switches?: Record<string, string | boolean>) => {
     progressed: boolean;
     completed: boolean;
@@ -93,7 +93,7 @@ export type ActivityMediatorType = {
   switchToNormal: () => void;
 }
 
-export const TutorialAchievements: TutorialAchievement[] = [
+export const Tutorials: Tutorial[] = [
   { prompt: 'The most important key is the Return (ENTER) key. Press the thumb tip and release. You\'ll use this key to enter every command.\n\nNOTE: Press enter to reset and redo any tutorial steps.', phrase: ['Return (ENTER)'], unlocked: false },
   { prompt: 'Type `fdsa` & Enter. Notice that it requires only a finger-pinch and release for each character.', phrase: 'fdsa'.split(''), unlocked: false },
   { prompt: 'Do it again, but this time put a space in between the letters. Grasp the thumb and release to enter a space.', phrase: 'fdsa'.split(' '), unlocked: false },

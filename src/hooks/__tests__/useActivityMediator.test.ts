@@ -55,20 +55,20 @@ describe('useActivityMediator', () => {
     const { result } = renderHook(() => useActivityMediator({ phrase: [], prompt: '', unlocked: false }));
 
     act(() => {
-      result.current.setNextTutorialAchievement({ phrase: ['test'], prompt: 'Test prompt', unlocked: false });
+      result.current.setNextTutorial({ phrase: ['test'], prompt: 'Test prompt', unlocked: false });
     });
 
-    expect(result.current.tutorialAchievement).toEqual({ phrase: ['test'], prompt: 'Test prompt', unlocked: false });
+    expect(result.current.tutorial).toEqual({ phrase: ['test'], prompt: 'Test prompt', unlocked: false });
   });
 
   it('should not change achievement when null is provided', () => {
     const { result } = renderHook(() => useActivityMediator({ phrase: ['initial'], prompt: 'Initial prompt', unlocked: false }));
 
     act(() => {
-      result.current.setNextTutorialAchievement(null);
+      result.current.setNextTutorial(null);
     });
 
-    expect(result.current.tutorialAchievement).toEqual({ phrase: ['initial'], prompt: 'Initial prompt', unlocked: false });
+    expect(result.current.tutorial).toEqual({ phrase: ['initial'], prompt: 'Initial prompt', unlocked: false });
   });
 
   it('should unlock achievement when correct command is provided', () => {
@@ -80,7 +80,7 @@ describe('useActivityMediator', () => {
     });
 
     expect(nextAchievement).not.toBeNull();
-    expect(result.current.tutorialAchievement).not.toEqual({ phrase: ['test'], prompt: 'Test prompt', unlocked: false });
+    expect(result.current.tutorial).not.toEqual({ phrase: ['test'], prompt: 'Test prompt', unlocked: false });
   });
 
   it('should not unlock achievement when incorrect command is provided', () => {
@@ -90,6 +90,6 @@ describe('useActivityMediator', () => {
       result.current.checkTutorialProgress('wrong');
     });
 
-    expect(result.current.tutorialAchievement.unlocked).toBe(false);
+    expect(result.current.tutorial.unlocked).toBe(false);
   });
 });

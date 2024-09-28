@@ -1,11 +1,11 @@
 // TutorialManager.tsx                                                                         
 import React from 'react';
-import { TutorialAchievement } from '../types/Types';
+import { Tutorial } from '../types/Types';
 import { Chord } from './Chord';
 
 interface TutorialManagerProps {
     isInTutorial: boolean;
-    achievement: TutorialAchievement;
+    achievement: Tutorial;
 }
 
 export const TutorialManager: React.FC<TutorialManagerProps> = ({ 

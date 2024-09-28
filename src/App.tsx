@@ -6,7 +6,7 @@ import { TerminalCssClasses } from './types/TerminalTypes';
 import { useAuth } from './lib/useAuth';
 import { Output } from './components/Output';
 import { useCommandHistory } from './hooks/useCommandHistory';
-import { loadTutorialAchievements } from './utils/tutorialAchievementUtils';
+import { loadTutorials } from './utils/tutorialUtils';
 import { IHandTermMethods } from './components/HandTerm';
 import { IGameHandle } from './game/Game';
 
@@ -19,7 +19,7 @@ const App = () => {
   const auth = useAuth();
   const [outputElements, setOutputElements] = useState<React.ReactNode[]>([]);
 
-  const commandHistoryHook = useCommandHistory(loadTutorialAchievements());
+  const commandHistoryHook = useCommandHistory(loadTutorials());
   
   const gameHandleRef = useRef<IGameHandle>(null);
 
