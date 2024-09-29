@@ -155,7 +155,7 @@ export class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState
       terminalSize: undefined,
       terminalFontSize: 17,
       canvasHeight: parseInt(initialCanvasHeight),
-      unlockedAchievements: loadTutorialAchievements(),
+      unlockedAchievements: loadTutorials(),
       isInSvgMode: false,
       lastTypedCharacter: null,
       errorCharIndex: undefined,

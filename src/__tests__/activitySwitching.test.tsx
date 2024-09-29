@@ -2,7 +2,7 @@
 import { render, act, waitFor } from '@testing-library/react';
 import { useActivityMediator } from '../hooks/useActivityMediator';
 import { getNextTutorial } from '../utils/tutorialUtils';
-import Phrases, { PhraseType } from '../utils/Phrases';
+import GamePhrases, { GamePhrase } from '../utils/GamePhrases';
 import { jest, expect, describe, it, beforeEach } from '@jest/globals';
 import { Tutorial, ActivityType } from '../types/Types';
 import React from 'react';
@@ -13,7 +13,7 @@ jest.mock('../utils/Phrases');
 
 // Create mock implementations
 const mockGetNextTutorial = jest.fn<() => Tutorial | null>();
-const mockGetNthPhraseNotAchieved = jest.fn<() => PhraseType>();
+const mockGetNthGamePhraseNotAchieved = jest.fn<() => GamePhrase>();
 
 // Mock the getNextTutorial function
 jest.mock('../utils/achievementUtils', () => ({
@@ -21,7 +21,7 @@ jest.mock('../utils/achievementUtils', () => ({
 }));
 
 // Mock the Phrases class
-jest.spyOn(Phrases, 'getNthPhraseNotAchieved').mockImplementation(mockGetNthPhraseNotAchieved);
+jest.spyOn(GamePhrases, 'getNthGamePhraseNotAchieved').mockImplementation(mockGetNthGamePhraseNotAchieved);
 
 // Create a test component that uses the useActivityMediator hook                            
 const TestComponent = () => {
@@ -91,7 +91,7 @@ describe('Activity Switching', () => {
             prompt: 'Next prompt',
             unlocked: false
         });
-        mockGetNthPhraseNotAchieved.mockReturnValue({
+        mockGetNthGamePhraseNotAchieved.mockReturnValue({
             key: 'test',
             value: 'Test phrase',
             tutorialGroup: 'fdsajkl;'

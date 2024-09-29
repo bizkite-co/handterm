@@ -1,7 +1,7 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 import { HandTerm, IHandTermMethods } from './components/HandTerm';
-import { getNextTutorialAchievement, resetTutorial } from './utils/tutorialAchievementUtils';
+import { getNextTutorial, resetTutorial } from './utils/tutorialUtils';
 import { ActivityType } from './types/Types';
 import { useActivityMediator } from './hooks/useActivityMediator';
 import { useCommandHistory } from './hooks/useCommandHistory';
