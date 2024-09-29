@@ -3,8 +3,36 @@ import { Tutorial, Tutorials, ActivityType, ActivityMediatorType } from '../type
 import { ActionType } from '../game/types/ActionTypes';
 import { IGameHandle } from '../game/Game';
 import { GamePhrase } from '../utils/GamePhrases';
+export type useActivityMediatorReturn = {
+  currentActivity: ActivityType;
+  isInGameMode: boolean;
+  isInTutorial: boolean;
+  isInEdit: boolean;
+  isInNormal: boolean;
+  determineActivityState: (commandActivity?: ActivityType | null) => ActivityType;
+  heroAction: ActionType;
+  zombie4Action: ActionType;
+  gameHandleRef: React.RefObject<IGameHandle>;
+  handleCommandExecuted: (command: string, _args: string[], switches: Record<string, boolean | string>) => boolean;
+  setHeroAction: React.Dispatch<React.SetStateAction<ActionType>>,
+  setZombie4Action: React.Dispatch<React.SetStateAction<ActionType>>;
+  checkTutorialProgress: (command: string, args?: string[], _switches?: Record<string, string | boolean>) => {
+    progressed: boolean;
+    completed: boolean;
+  };
+  checkGameProgress: (successPhrase: GamePhrase) => {
+    resultActivityType: ActivityType;
+  };
+  switchToNormal: () => void;
+}
 
-export function useActivityMediator(initialTutorialAchievement: TutorialAchievement, refreshHandTerm?: () => void):ActivityMediatorType {
+export interface IActivityMediatorProps {
+  resetTutorial: () => void;
+  currentTutorial?: Tutorial | null;
+  tutorialGroupPhrase?: GamePhrase;
+}
+
+export function useActivityMediator(props: IActivityMediatorProps): useActivityMediatorReturn {
   const [currentActivity, setCurrentActivity] = useState<ActivityType>(ActivityType.NORMAL);
   const [tutorialAchievement, setTutorialAchievement] = useState<TutorialAchievement>(initialTutorialAchievement);
   const [heroAction, setHeroAction] = useState<ActionType>('Idle');

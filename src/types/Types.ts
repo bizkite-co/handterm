@@ -64,35 +64,6 @@ export type Tutorial = {
   tutorialGroup?: string;
 };
 
-export type ActivityMediatorType = {
-  currentActivity: ActivityType;
-  isInGameMode: boolean;
-  isInTutorial: boolean;
-  isInEdit: boolean;
-  isInNormal: boolean;
-  tutorial: Tutorial;
-  tutorialGroupPhrases: GamePhrase[];
-  getNextIncompleteTutorialPhrase: () => GamePhrase;
-  determineActivityState: (commandActivity?: ActivityType | null) => void;
-  setNextTutorial: (nextAchievement: Tutorial | null) => void;
-  checkTutorialProgress: (command: string, args?: string[], _switches?: Record<string, string | boolean>) => {
-    progressed: boolean;
-    completed: boolean;
-    phrases?: GamePhrase[];
-  };
-  heroAction: ActionType;
-  zombie4Action: ActionType;
-  gameHandleRef: React.RefObject<IGameHandle>;
-  handleCommandExecuted: (command: string, _args: string[], switches: Record<string, boolean | string>) => boolean;
-  setHeroAction: React.Dispatch<React.SetStateAction<ActionType>>,
-  setZombie4Action: React.Dispatch<React.SetStateAction<ActionType>>;
-  checkGameProgress: (successPhrase: GamePhrase) => {
-    resultActivityType: ActivityType;
-    nextPhrase: GamePhrase | null;
-  };
-  switchToNormal: () => void;
-}
-
 export const Tutorials: Tutorial[] = [
   { prompt: 'The most important key is the Return (ENTER) key. Press the thumb tip and release. You\'ll use this key to enter every command.\n\nNOTE: Press enter to reset and redo any tutorial steps.', phrase: ['Return (ENTER)'], unlocked: false },
   { prompt: 'Type `fdsa` & Enter. Notice that it requires only a finger-pinch and release for each character.', phrase: 'fdsa'.split(''), unlocked: false },
