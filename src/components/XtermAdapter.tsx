@@ -8,8 +8,6 @@ import React, { useEffect, useRef, useImperativeHandle, forwardRef, useState } f
    terminalElementRef: React.RefObject<HTMLDivElement>;
    onAddCharacter: (character: string) => number;
    onRemoveCharacter: (command: string) => void;
-   onTouchStart: React.TouchEventHandler<HTMLDivElement>;
-   onTouchEnd: React.TouchEventHandler<HTMLDivElement>;
    terminalFontSize: number;
  }
 
@@ -18,8 +16,6 @@ import React, { useEffect, useRef, useImperativeHandle, forwardRef, useState } f
    terminalElementRef: React.RefObject<HTMLDivElement>;
    onAddCharacter: (character: string) => void;
    onRemoveCharacter: (command: string) => void;
-   onTouchStart: React.TouchEventHandler<HTMLDivElement>;
-   onTouchEnd: React.TouchEventHandler<HTMLDivElement>;
    terminalFontSize: number;
    focusTerminal: () => void;
    scrollBottom: () => void;
@@ -35,8 +31,7 @@ import React, { useEffect, useRef, useImperativeHandle, forwardRef, useState } f
 
  const XtermAdapter = forwardRef<XtermAdapterHandle, IXtermAdapterProps>((props, ref) =>
  {
-   const { terminalElementRef, onAddCharacter, onRemoveCharacter, onTouchStart,
- onTouchEnd, terminalFontSize } = props;
+   const { terminalElementRef, onAddCharacter, onRemoveCharacter, terminalFontSize } = props;
    const [Terminal, setTerminal] = useState<any>(null);
    const terminalInstance = useRef<any>(null);
    const fitAddon = useRef(new FitAddon());
@@ -88,8 +83,6 @@ import React, { useEffect, useRef, useImperativeHandle, forwardRef, useState } f
      terminalElementRef,
      onAddCharacter,
      onRemoveCharacter,
-     onTouchStart,
-     onTouchEnd,
      terminalFontSize,
      scrollBottom,
      focusTerminal,
@@ -236,8 +229,6 @@ import React, { useEffect, useRef, useImperativeHandle, forwardRef, useState } f
        ref={terminalElementRef}
        id={TerminalCssClasses.Terminal}
        className={TerminalCssClasses.Terminal}
-       onTouchStart={onTouchStart}
-       onTouchEnd={onTouchEnd}
      />
    );
  });

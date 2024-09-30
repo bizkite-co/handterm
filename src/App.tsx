@@ -1,6 +1,6 @@
 // App.tsx
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import HandTermWrapper from './HandTermWrapper';
+import { HandTermWrapper } from './HandTermWrapper';
 import { CommandProvider } from './commands/CommandProvider';
 import { TerminalCssClasses } from './types/TerminalTypes';
 import { useAuth } from './lib/useAuth';
@@ -21,7 +21,6 @@ const App = () => {
 
   const commandHistoryHook = useCommandHistory(loadTutorials());
   
-  const gameHandleRef = useRef<IGameHandle>(null);
 
   useEffect(() => {
     const w = getContainerWidth();
@@ -97,7 +96,6 @@ const App = () => {
           terminalWidth={containerWidth}
           commandHistoryHook={commandHistoryHook}
           onOutputUpdate={handleOutputUpdate}
-          gameHandleRef={gameHandleRef}
         />
       </div>
     </CommandProvider>

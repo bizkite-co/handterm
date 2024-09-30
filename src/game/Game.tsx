@@ -20,7 +20,6 @@ export interface IGameProps {
   zombie4StartPosition: SpritePosition
   onSetHeroAction: (action: ActionType) => void;
   onSetZombie4Action: (action: ActionType) => void;
-  tutorialGroupPhrases: GamePhrase[];
 }
 
 export interface IGameHandle {

@@ -11,11 +11,10 @@ import * as React from 'react';
 import { ContextType, TouchEventHandler } from 'react';
 import XtermAdapter, { XtermAdapterHandle } from './XtermAdapter';
 import NextCharsDisplay, { NextCharsDisplayHandle } from './NextCharsDisplay';
-import Game, { IGameHandle } from '../game/Game';
 import { ActionType } from '../game/types/ActionTypes';
 import WebCam from '../utils/WebCam';
 import { CommandContext } from '../commands/CommandContext';
-import { ActivityType } from '../types/Types';
+import { ActivityType, Tutorial } from '../types/Types';
 import { TutorialManager } from './TutorialManager';
 import { Chord } from './Chord';
 import { SpritePosition } from '../game/types/Position';
@@ -33,6 +32,7 @@ import { useActivityMediator } from '../hooks/useActivityMediator';
 import GamePhrases, { GamePhrase } from '../utils/GamePhrases';
 import { Phrase } from '../utils/Phrase';
 import { IAuthProps } from 'src/lib/useAuth';
+import { IGameHandle } from 'src/game/Game';
 
 export interface IHandTermMethods {
   writeOutput: (output: string) => void;
@@ -44,6 +44,7 @@ export interface IHandTermMethods {
   handleCommand: (cmd: string) => void;
   handleCharacter: (character: string) => void;
   toggleVideo: () => boolean;
+  refreshComponent: () => void;
   // Add other methods as needed
 }
 
@@ -59,8 +60,11 @@ export interface IHandTermProps {
   onActivityChange: (newActivityType: ActivityType) => void;
   refreshHandTerm: () => void;
   activityMediator: ReturnType<typeof useActivityMediator>;
-  gameHandleRef: React.RefObject<IGameHandle>;
   currentPhrase: GamePhrase | null;
+  currentTutorial: Tutorial | null;
+  currentActivity: ActivityType;
+  setCurrentActivity: (currentActivity:ActivityType)=>void;
+  gameHandleRef: React.RefObject<IGameHandle>;
 }
 
 type LanguageType = "javascript" | "typescript" | "markdown";
@@ -76,7 +80,6 @@ export interface IHandTermState {
   commandLine: string;
   terminalSize: { width: number; height: number } | undefined;
   terminalFontSize: number;
-  canvasHeight: number;
   unlockedAchievements: string[];
   isInSvgMode: boolean;
   lastTypedCharacter: string | null;
@@ -134,7 +137,6 @@ export class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState
     super(props);
     this.setIsLoggedIn = props.auth.setIsLoggedIn;
     this._persistence = new LocalStoragePersistence();
-    const initialCanvasHeight = localStorage.getItem('canvasHeight') || '100';
     const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
 
     this.commandHistoryHook = props.commandHistoryHook;
@@ -154,7 +156,6 @@ export class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState
       commandLine: '',
       terminalSize: undefined,
       terminalFontSize: 17,
-      canvasHeight: parseInt(initialCanvasHeight),
       unlockedAchievements: loadTutorials(),
       isInSvgMode: false,
       lastTypedCharacter: null,
@@ -192,6 +193,10 @@ export class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState
       }
     }
   }
+  
+  public refreshComponent = () => {
+    this.setState({ _forceRender: Date.now() }); // _forceRende is a dummy state property
+  };
 
   public handlePhraseErrorState = (errorIndex: number | undefined) => {
     this.setState({ errorCharIndex: errorIndex });
@@ -276,7 +281,6 @@ export class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState
       this.adapterRef.current.terminalWrite(localStorage.getItem('currentCommand') || '');
     }
     this.scrollToBottom();
-    this.addTouchListeners();
     this.handleGitHubAuth();
   }
 
@@ -289,7 +293,6 @@ export class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState
     if (this.heroRunTimeoutId) {
       clearTimeout(this.heroRunTimeoutId);
     }
-    this.removeTouchListeners();
   }
 
   handleFocusEditor = () => {
@@ -308,25 +311,8 @@ export class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState
 
     const { parsedCommand, args, switches } = parseCommand(inputCmd);
 
-    const commandResponse = this.props.onCommandExecuted(parsedCommand, args, switches);
-    console.log("HandTerm.handleCommand commandResponse:", commandResponse)
-
-    if (this.props.activityMediator.isInTutorial) {
-      const { progressed, completed, phrases } = this.props.activityMediator
-        .checkTutorialProgress(parsedCommand, args, switches);
-      if (progressed) {
-        // Handle tutorial progression (e.g., update UI, show messages)
-        if (completed) {
-          // Tutorial completed, transitioning to game mode
-          this.setState({
-            tutorialGroupPhrases: phrases
-          })
-          this.props.activityMediator.gameHandleRef.current?.startGame();
-          console.log("HandTerm.handleCommand isInTutorial onActivityChange()");
-          // this.props.onActivityChange(ActivityType.GAME);
-        }
-      }
-    }
+    // Run command in HandTermWrapper.handleCommandExecuted()
+    this.props.onCommandExecuted(parsedCommand, args, switches);
 
     if (this.context) {
       const output = this.context.executeCommand(parsedCommand, args, switches);
@@ -594,7 +580,7 @@ export class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState
     }
     if (character.charCodeAt(0) === 3) { // Ctrl+C
       localStorage.setItem(LogKeys.CurrentCommand, '');
-      this.props.activityMediator.switchToNormal();
+      this.props.setCurrentActivity(ActivityType.NORMAL);
       this.setState({
         // isInGameMode: false,
         commandLine: ''
@@ -645,7 +631,7 @@ export class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState
 
     if (character.charCodeAt(0) === 4) { // Ctrl+D
       console.log('Ctrl+D pressed');
-      this.increaseFontSize();
+
     }
 
     if (character.charCodeAt(0) === 13) { // Enter key
@@ -817,13 +803,12 @@ export class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState
     this.saveCommandResponseHistory("game", wpmPhrase, 200);
     this.props.activityMediator.gameHandleRef.current?.completeGame();
     // TODO: Find if there's a tutorialGroupPhrase that matches the current phrase value.
-    const tutorialGroupPhrase = this.props.activityMediator.tutorialGroupPhrases.find(p => !p.isComplete);
 
-    const successPhrase = tutorialGroupPhrase ?? GamePhrases.getGamePhraseByValue(phrase.value.join(''));
-    if (successPhrase) {
-      const { resultActivityType, nextPhrase } = this.props.activityMediator.checkGameProgress(successPhrase);
-      console.log("Switched from Game back to Tutorial:", ActivityType[resultActivityType], nextPhrase);
-    }
+    // const successPhrase = tutorialGroupPhrase ?? GamePhrases.getGamePhraseByValue(phrase.value.join(''));
+    // if (successPhrase) {
+    //   const { resultActivityType, nextPhrase } = this.props.activityMediator.checkGameProgress(successPhrase);
+    //   console.log("Switched from Game back to Tutorial:", ActivityType[resultActivityType], nextPhrase);
+    // }
     this.props.activityMediator.gameHandleRef.current?.levelUp();
     this.handlePhraseComplete();
     this.adapterRef.current?.terminalReset();
@@ -926,100 +911,6 @@ export class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState
     }
   }
 
-  public handleTouchStart: TouchEventHandler<HTMLElement> = (event: React.TouchEvent<HTMLElement>) => {
-    setTimeout(() => {
-      // this.terminalElement.focus();
-    }, 500)
-    if (event.touches.length === 2) {
-      // event.preventDefault();
-      this.lastTouchDistance = this.getDistanceBetweenTouches(event.touches as unknown as TouchList);
-    }
-  }
-
-  public handleTouchMove = (event: TouchEvent) => {
-    if (event.touches.length === 2) {
-      event.preventDefault();
-
-      const currentDistance = this.getDistanceBetweenTouches(event.touches);
-      if (this.lastTouchDistance && this.lastTouchDistance > 0) {
-        const eventTarget = event.target as HTMLElement;
-        const scaleFactor = currentDistance / this.lastTouchDistance;
-        if (eventTarget && eventTarget.nodeName === 'CANVAS') {
-          this.setState((prevState: IHandTermState) => {
-            return {
-              canvasHeight: (prevState.canvasHeight || 0) * scaleFactor
-            }
-          })
-          return;
-        }
-        this.currentFontSize *= scaleFactor;
-        document.documentElement.style.setProperty('--terminal-font-size', `${this.currentFontSize}px`);
-        this.lastTouchDistance = currentDistance;
-        // this.terminal.options.fontSize = this.currentFontSize;
-        // this.terminal.refresh(0, this.terminal.rows - 1); // Refresh the terminal display
-      }
-    }
-  }
-
-  public increaseFontSize() {
-    this.currentFontSize += 1;
-    // this.terminal.options.fontSize = this.currentFontSize;
-    // this.terminal.refresh(0, this.terminal.rows - 1);
-    localStorage.setItem('terminalFontSize', `${this.currentFontSize}`);
-    console.log('INCREASE terminalFontSize', this.currentFontSize);
-  }
-
-  public handleTouchEnd: TouchEventHandler<HTMLDivElement> = () => {
-    localStorage.setItem('terminalFontSize', `${this.currentFontSize}`);
-    console.log('SET terminalFontSize', this.currentFontSize);
-    this.lastTouchDistance = null;
-  }
-
-  addTouchListeners() {
-    // Assuming 'terminalElementRef' points to the div you want to attach the event
-    const output = window.document.getElementById(TerminalCssClasses.Output);
-    if (output) {
-      output.addEventListener('touchmove', this.handleTouchMove, { passive: false });
-    }
-    const terminal = document.getElementById(TerminalCssClasses.Terminal);
-    if (terminal) {
-      terminal.addEventListener('touchmove', this.handleTouchMove, { passive: false });
-    }
-    const game = window.document.getElementById(TerminalCssClasses.TerminalGame);
-    if (game) {
-      // game.addEventListener('touchstart', this.handleTouchStart );
-      game.addEventListener('touchmove', this.handleTouchMove, { passive: false });
-    }
-  }
-
-  removeTouchListeners() {
-    const div = this.terminalElementRef.current;
-    if (div) {
-      div.removeEventListener('touchmove', this.handleTouchMove);
-    }
-    const output = window.document.getElementById(TerminalCssClasses.Output);
-    if (output) {
-      output.removeEventListener('touchmove', this.handleTouchMove);
-    }
-    const terminal = document.getElementById(TerminalCssClasses.Terminal);
-    if (terminal) {
-      terminal.removeEventListener('touchmove', this.handleTouchMove);
-    }
-    const game = window.document.getElementById(TerminalCssClasses.TerminalGame);
-    if (game) {
-      game.removeEventListener('touchmove', this.handleTouchMove);
-    }
-  }
-
-  private getDistanceBetweenTouches(touches: TouchList): number {
-    const touch1 = touches[0];
-    const touch2 = touches[1];
-    return Math.sqrt(
-      Math.pow(touch2.pageX - touch1.pageX, 2) +
-      Math.pow(touch2.pageY - touch1.pageY, 2),
-    );
-  }
-
   public toggleVideo = (): boolean => {
     this.setState((prevState: IHandTermState) => ({
       isShowVideo: !(prevState.isShowVideo || false)
@@ -1028,10 +919,9 @@ export class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState
   }
 
   public render() {
-    const { terminalSize, canvasHeight, commandLine, lastTypedCharacter, userName, domain, githubUsername, timestamp, editMode, editContent, editLanguage, isShowVideo } = this.state;
-    const canvasWidth = terminalSize ? terminalSize.width : 800;
+    const { commandLine, lastTypedCharacter, userName, domain, githubUsername, timestamp, editMode, editContent, editLanguage, isShowVideo } = this.state;
 
-    const { activityMediator, currentPhrase } = this.props;
+    const { currentPhrase } = this.props;
 
     return (
       <CommandContext.Consumer>
@@ -1045,23 +935,11 @@ export class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState
 
           return (
             <div className="terminal-container">
-              <Game
-                ref={activityMediator.gameHandleRef}
-                canvasHeight={canvasHeight}
-                canvasWidth={canvasWidth}
-                isInGameMode={activityMediator.isInGameMode}
-                heroActionType={activityMediator.heroAction}
-                zombie4ActionType={activityMediator.zombie4Action}
-                onSetHeroAction={this.setHeroAction}
-                onSetZombie4Action={activityMediator.setZombie4Action}
-                tutorialGroupPhrases={activityMediator.tutorialGroupPhrases}
-                zombie4StartPosition={this.zombie4StartPostion}
-              />
               {currentPhrase && (
                 <NextCharsDisplay
                   ref={this.nextCharsDisplayRef}
                   commandLine={commandLine}
-                  isInPhraseMode={activityMediator.isInGameMode}
+                  isInPhraseMode={this.props.currentActivity === ActivityType.GAME}
                   newPhrase={currentPhrase.value}
                   onPhraseSuccess={this.handlePhraseSuccess}
                   onError={this.handlePhraseErrorState}
@@ -1070,10 +948,11 @@ export class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState
               {lastTypedCharacter && (
                 <Chord displayChar={lastTypedCharacter} />
               )}
-              <TutorialManager
-                isInTutorial={activityMediator.isInTutorial}
-                achievement={activityMediator.tutorialAchievement}
-              />
+              {this.props.currentTutorial && (
+                <TutorialManager
+                  isInTutorial={this.props.currentActivity === ActivityType.TUTORIAL}
+                  achievement={this.props.currentTutorial}
+                />)}
               <Prompt
                 username={userName || 'guest'}
                 domain={domain || 'handterm'}
@@ -1087,8 +966,6 @@ export class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState
                   terminalFontSize={this.currentFontSize}
                   onAddCharacter={this.handleCharacter}
                   onRemoveCharacter={this.handleRemoveCharacter}
-                  onTouchStart={this.handleTouchStart}
-                  onTouchEnd={this.handleTouchEnd}
                 />
               )}
               {editMode && (
@@ -1119,4 +996,3 @@ export class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState
 }
 
 HandTerm.contextType = CommandContext;
-

@@ -21,13 +21,13 @@ export const getNextTutorial = ():Tutorial | null => {
     return nextAchievement || null;
 }
 
-export const unlockTutorial = (command: string, achievement: string): Tutorial | null => {
+export const unlockTutorial = (command: string, tutorial: Tutorial): boolean => {
     if (command === '') command = 'Return (ENTER)';
-    if (achievement === command) {
+    if (tutorial.phrase.join('') === command) {
         saveTutorials(command);
-        return getNextTutorial();
+        return true;
     }
-    return null;
+    return false;
 }
 
 export const resetTutorial = () => {
