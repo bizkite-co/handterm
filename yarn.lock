@@ -4226,6 +4226,7 @@ __metadata:
     react: "npm:^18.2.0"
     react-docgen: "npm:^7.0.3"
     react-dom: "npm:^18.2.0"
+    react-xtermjs: "npm:^1.0.9"
     recast: "npm:^0.23.9"
     tailwindcss: "npm:^3.1.8"
     ts-jest: "npm:^29.1.2"
@@ -6296,6 +6297,15 @@ __metadata:
   version: 0.14.2
   resolution: "react-refresh@npm:0.14.2"
   checksum: 10c0/875b72ef56b147a131e33f2abd6ec059d1989854b3ff438898e4f9310bfcc73acff709445b7ba843318a953cb9424bcc2c05af2b3d80011cee28f25aef3e2ebb
+  languageName: node
+  linkType: hard
+
+"react-xtermjs@npm:^1.0.9":
+  version: 1.0.9
+  resolution: "react-xtermjs@npm:1.0.9"
+  peerDependencies:
+    "@xterm/xterm": ^5.5.0
+  checksum: 10c0/ab051fe838cb0a14ec1df74027e226ba6fd0671b6804d40a93c66958fc6ebbbd3ebd317b76cb2c84527d92df20cf852895e921b6f8a7d6429b57157e126c0e88
   languageName: node
   linkType: hard
 

@@ -1,7 +1,6 @@
 /// <reference types="@testing-library/jest-dom" />
 import { render, act, waitFor } from '@testing-library/react';
 import { IActivityMediatorProps, useActivityMediator } from '../hooks/useActivityMediator';
-import { getNextTutorial } from '../utils/tutorialUtils';
 import GamePhrases, { GamePhrase } from '../utils/GamePhrases';
 import { jest, expect, describe, it, beforeEach } from '@jest/globals';
 import { Tutorial, ActivityType } from '../types/Types';
@@ -26,6 +25,9 @@ jest.spyOn(GamePhrases, 'getNthGamePhraseNotAchieved').mockImplementation(mockGe
 // Create a test component that uses the useActivityMediator hook                            
 const TestComponent = () => {
     const activityMediatorProps:IActivityMediatorProps = {
+        setCurrentActivity: jest.fn(),
+        currentActivity: ActivityType.NORMAL,
+        startGame: jest.fn(),
         resetTutorial: function (): void {
             throw new Error('Function not implemented.');
         }

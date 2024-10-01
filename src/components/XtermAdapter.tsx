@@ -1,236 +1,146 @@
-import React, { useEffect, useRef, useImperativeHandle, forwardRef, useState } from    
- 'react';
- import { FitAddon } from '@xterm/addon-fit';
- import { TerminalCssClasses } from '../types/TerminalTypes';
- import { XtermAdapterConfig } from './XtermAdapterConfig';
+import React, { useEffect, useCallback, useMemo, useRef } from 'react';
+import '@xterm/xterm/css/xterm.css';
+import { Terminal } from '@xterm/xterm';
+import { FitAddon } from '@xterm/addon-fit';
+import { ITerminalInitOnlyOptions, ITerminalOptions } from '@xterm/xterm';
+import { TerminalCssClasses } from '../types/TerminalTypes';
+import { XtermAdapterConfig } from './XtermAdapterConfig';
 
- export interface IXtermAdapterProps {
-   terminalElementRef: React.RefObject<HTMLDivElement>;
-   onAddCharacter: (character: string) => number;
-   onRemoveCharacter: (command: string) => void;
-   terminalFontSize: number;
- }
+export interface XtermAdapterProps {
+  onAddCharacter: (data: string) => void;
+  onRemoveCharacter: (command: string) => void;
+  terminalFontSize: number;
+  onCommandExecuted: (command: string, args: string[], switches: Record<string, string | boolean>) => void;
+  onTerminalReady: (methods: XtermAdapterMethods) => void;
+}
 
- export interface XtermAdapterHandle {
-   terminalElement: HTMLElement | null;
-   terminalElementRef: React.RefObject<HTMLDivElement>;
-   onAddCharacter: (character: string) => void;
-   onRemoveCharacter: (command: string) => void;
-   terminalFontSize: number;
-   focusTerminal: () => void;
-   scrollBottom: () => void;
-   getTerminalSize: () => { width: number; height: number } | undefined;
-   prompt: () => void;
-   getCurrentCommand: () => string;
-   terminalReset: () => void;
-   terminalWrite: (data: string) => void;
-   appendTempPassword: (passwordChar: string) => void;
-   resetTempPassword: () => void;
-   getTempPassword: () => string;
- }
+export interface XtermAdapterMethods {
+  focusTerminal: () => void;
+  terminalWrite: (data: string) => void;
+  getCurrentCommand: () => string;
+  getTerminalSize: () => { width: number; height: number } | undefined;
+  terminalReset: () => void;
+  prompt: () => void;
+  appendTempPassword: (password: string) => void;
+  scrollBottom: () => void;
+}
 
- const XtermAdapter = forwardRef<XtermAdapterHandle, IXtermAdapterProps>((props, ref) =>
- {
-   const { terminalElementRef, onAddCharacter, onRemoveCharacter, terminalFontSize } = props;
-   const [Terminal, setTerminal] = useState<any>(null);
-   const terminalInstance = useRef<any>(null);
-   const fitAddon = useRef(new FitAddon());
-   const onDataDisposable = useRef<import("@xterm/xterm").IDisposable | null>(null);    
-   const tempPassword = useRef('');
-   const promptDelimiter = '$';
-   const promptLength = useRef(0);
-   const isDebug = useRef(false);
+export const XtermAdapter: React.FC<XtermAdapterProps> = (props: XtermAdapterProps) => {
+  const terminalRef = useRef<HTMLDivElement>(null);
+  const terminalInstance = useRef<Terminal | null>(null);
+  const fitAddon = useRef<FitAddon | null>(null);
 
-   useEffect(() => {
-     import('@xterm/xterm').then(module => {
-       setTerminal(() => module.Terminal);
-     });
-   }, []);
+  const options: ITerminalOptions & ITerminalInitOnlyOptions = XtermAdapterConfig;
 
-   useEffect(() => {
-     if (Terminal && terminalElementRef.current) {
-       terminalInstance.current = new Terminal(XtermAdapterConfig);
-       terminalInstance.current.open(terminalElementRef.current);
-       terminalInstance.current.loadAddon(fitAddon.current);
-       fitAddon.current.fit();
-       terminalInstance.current.write('\x1b[4h');
-       focusTerminal();
-       onDataDisposable.current = terminalInstance.current.onData(onDataHandler);       
-       terminalInstance.current.onCursorMove(() => {});
-       setViewPortOpacity();
-       terminalInstance.current.focus();
-       prompt();
-       window.addEventListener('resize', handleResize);
-       scrollBottom();
-       focusTerminal();
+  const handleData = useCallback((data: string) => {
+    props.onAddCharacter(data);
+  }, [props]);
 
-       return () => {
-         if (onDataDisposable.current) {
-           onDataDisposable.current.dispose();
-         }
-         window.removeEventListener('resize', handleResize);
-       };
-     }
-   }, [Terminal, terminalElementRef]);
+  const terminalMethods: XtermAdapterMethods = useMemo(() => ({
+    focusTerminal: () => terminalInstance.current?.focus(),
+    terminalWrite: (data: string) => terminalInstance.current?.write(data),
+    getCurrentCommand: () => '', // This needs to be implemented differently
+    getTerminalSize: () => terminalInstance.current ? { width: terminalInstance.current.cols, height: terminalInstance.current.rows } : undefined,
+    terminalReset: () => terminalInstance.current?.reset(),
+    prompt: () => {
+      terminalInstance.current?.write('\r\n$ ');
+    },
+    appendTempPassword: (password: string) => terminalInstance.current?.write(password),
+    scrollBottom: () => terminalInstance.current?.scrollToBottom(),
+  }), []);
 
-   const focusTerminal = () => {
-     terminalInstance.current.focus();
-     scrollBottom();
-   };
+  useEffect(() => {
+    if (!terminalRef.current) return;
 
-   useImperativeHandle(ref, () => ({
-     terminalElement: terminalElementRef.current,
-     terminalElementRef,
-     onAddCharacter,
-     onRemoveCharacter,
-     terminalFontSize,
-     scrollBottom,
-     focusTerminal,
-     getTerminalSize,
-     prompt,
-     getCurrentCommand,
-     terminalReset,
-     terminalWrite,
-     appendTempPassword,
-     resetTempPassword,
-     getTempPassword,
-   }));
+    terminalInstance.current = new Terminal(options);
+    fitAddon.current = new FitAddon();
+    terminalInstance.current.loadAddon(fitAddon.current);
 
-   const appendTempPassword = (passwordChar: string) => {
-     tempPassword.current += passwordChar;
-   };
+    terminalInstance.current.open(terminalRef.current);
 
-   const resetTempPassword = () => {
-     tempPassword.current = '';
-   };
+    // Ensure the terminal is fully rendered before fitting
+    setTimeout(() => {
+      if (fitAddon.current && terminalInstance.current) {
+        fitAddon.current.fit();
+      }
+    }, 0);
 
-   const getTempPassword = () => {
-     return tempPassword.current;
-   };
+    fitAddon.current.fit();
 
-   const terminalReset = () => {
-     terminalInstance?.current?.reset();
-   };
+    terminalInstance.current.onData(handleData);
+    terminalInstance.current.write('$ ');
+    props.onTerminalReady(terminalMethods);
 
-   const terminalWrite = (data: string) => {
-     if (!data) return;
-     terminalInstance?.current?.write(data);
-   };
+    // Make the terminal visible after initialization
+    if (terminalRef.current) {
+      terminalRef.current.style.visibility = 'visible';
+    }
 
-   const handleResize = () => {
-     fitAddon.current?.fit();
-   };
+    return () => {
+      terminalInstance.current?.dispose();
+    }
+  }, [handleData, props, terminalMethods]);
 
-   const scrollBottom = () => {
-     terminalInstance?.current?.scrollToBottom();
-   };
+  useEffect(() => {
+    if (!terminalInstance.current) return;
 
-   const setCursorMode = (terminal: any) => {
-     terminal.options.cursorBlink = true;
-     terminal.options.cursorStyle = 'block';
-     terminal.write('\x1b[4h');
-   };
+    const handleKey = (event: KeyboardEvent) => {
+      event.preventDefault();
+      const key = event.key;
 
-   const handleBackSpaceAndNavigation = (data: string): boolean => {
-     let result = false;
-     if (data.charCodeAt(0) === 127) {
-       if (isCursorOnPrompt()) return true;
-       tempPassword.current = tempPassword.current.slice(0, -1);
-       if (terminalInstance.current.buffer.active.cursorY > 0 &&
- terminalInstance.current.buffer.active.cursorX === 0) {
-         terminalInstance.current.write('\x1b[A\x1b[999C\x1b[D\x1b[P');
-       } else {
-         terminalInstance.current.write('\x1b[D\x1b[P');
-       }
-       onRemoveCharacter(getCurrentCommand().slice(0, -1));
-       result = true;
-     }
-     return result;
-   };
+      if (key === 'Enter') {
+        terminalInstance.current?.write('\r\n');
+        const command = terminalInstance.current?.buffer.active.getLine(terminalInstance.current.buffer.active.cursorY)?.translateToString().trim() || '';
+        const [cmd, ...args] = command.split(' ');
+        props.onCommandExecuted(cmd, args, {});
+        terminalInstance.current?.write('\r\n$ ');
+      } else if (key === 'Backspace') {
+        if (terminalInstance 
+          && terminalInstance.current 
+          && terminalInstance.current?.buffer?.active?.cursorX > 2
+        ) {
+          terminalInstance.current?.write('\b \b');
+          props.onRemoveCharacter(key);
+        }
+      } else {
+        terminalInstance.current?.write(key);
+        props.onAddCharacter(key);
+      }
+    };
 
-   const isCursorOnPrompt = (): boolean => {
-     const isFirstLine = terminalInstance.current.buffer.active.cursorY === 0;
-     const isLeftOfPromptChar = terminalInstance.current.buffer.active.cursorX <        
- promptLength.current;
-     return isFirstLine && isLeftOfPromptChar;
-   };
+    terminalInstance.current.attachCustomKeyEventHandler((event) => {
+      if (event.type === 'keydown') {
+        handleKey(event);
+        return false;
+      }
+      return true;
+    });
+  }, [props]);
 
-   const isCursorOnFirstLine = (): boolean => {
-     return terminalInstance.current.buffer.active.cursorY === 0;
-   };
+  useEffect(() => {
+    const handleResize = () => {
+      if (fitAddon.current && terminalInstance.current) {
+        // Ensure the terminal is visible and has dimensions before fitting
+        if (terminalRef.current?.offsetHeight && terminalRef.current?.offsetWidth) {
+          fitAddon.current.fit();
+        } else {
+          // If the terminal is not visible, try again after a short delay
+          setTimeout(() => fitAddon.current?.fit(), 100);
+        }
+      }
+    };
 
-   const onDataHandler = (data: string): void => {
-     const charCodes = data.split('').map(char => char.charCodeAt(0)).join(',');        
-     if (isDebug.current) {
-       console.info('onDataHandler', data, charCodes,
- terminalInstance.current.buffer.active.cursorX,
- terminalInstance.current.buffer.active.cursorY);
-     }
-     setCursorMode(terminalInstance.current);
-     if (handleBackSpaceAndNavigation(data)) return;
-     if (data.charCodeAt(0) === 27) {
-       if (data.charCodeAt(1) === 91) {
-         if (data.length > 2) {
-           if (data.charCodeAt(2) === 72) {
-             terminalInstance.current.write(`\x1b[${promptLength.current}G`);
-             return;
-           }
-         }
-         if (data.charCodeAt(2) === 65 && isCursorOnFirstLine()) {
-           onAddCharacter('ArrowUp');
-           return;
-         }
-         if (data.charCodeAt(2) === 68 && isCursorOnPrompt()) {
-           return;
-         }
-       }
-     }
-     onAddCharacter(data);
-   };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
-   const setViewPortOpacity = (): void => {
-     const viewPort = document.getElementsByClassName('xterm-viewport')[0] as
- HTMLDivElement;
-     viewPort.style.opacity = "0.0";
-   };
+  return (
+    <div
+      ref={terminalRef}
+      id={TerminalCssClasses.Terminal}
+      className={TerminalCssClasses.Terminal}
+      style={{ height: '100%', width: '100%', visibility: 'hidden' }}
+    />
+  );
+};
 
-   const getCurrentCommand = (): string => {
-     const buffer = terminalInstance.current.buffer.active;
-     let command = '';
-     for (let i = 0; i <= buffer.cursorY; i++) {
-       const line = buffer.getLine(i);
-       if (line) {
-         command += line.translateToString(true);
-       }
-     }
-     const promptEndIndex = command.indexOf(promptDelimiter) + 1;
-     return command.substring(promptEndIndex).trimStart();
-   };
-
-   const prompt = () => {
-     terminalInstance.current.reset();
-     const promptText = `~${promptDelimiter} `;
-     promptLength.current = promptText.length + 1;
-     terminalInstance.current.write(promptText);
-   };
-
-   const getTerminalSize = (): { width: number; height: number } | undefined => {       
-     if (terminalElementRef.current) {
-       return {
-         width: terminalElementRef.current.clientWidth,
-         height: terminalElementRef.current.clientHeight,
-       };
-     }
-     return undefined;
-   };
-
-   return (
-     <div
-       ref={terminalElementRef}
-       id={TerminalCssClasses.Terminal}
-       className={TerminalCssClasses.Terminal}
-     />
-   );
- });
-
- export default XtermAdapter;

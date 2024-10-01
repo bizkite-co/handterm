@@ -333,7 +333,7 @@ export const useAuth = ():IAuthProps => {
           path
         }
       });
-      return response.data;
+      return response.data as any;
     } catch (error) {
       console.error('Error fetching repo tree:', error);
       return null;
@@ -418,7 +418,6 @@ export const useAuth = ():IAuthProps => {
     logout: signOut,
     signUp,
     getUser,
-    checkSession,
     changePassword,
     setUser,
     saveLog,

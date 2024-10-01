@@ -8,7 +8,7 @@ interface PromptProps {
     githubUsername: string | null;
 }
 
-export const Prompt: React.FC<PromptProps> = ({ domain, username, timestamp, githubUsername }) => {
+const PromptComponent: React.FC<PromptProps> = ({ domain, username, timestamp, githubUsername }) => {
     return (
         <pre id={TerminalCssClasses.Prompt}>
             <span className="timestamp">{timestamp}</span>
@@ -23,3 +23,5 @@ export const Prompt: React.FC<PromptProps> = ({ domain, username, timestamp, git
         </pre>
     )
 }
+
+export const Prompt = React.memo(PromptComponent);

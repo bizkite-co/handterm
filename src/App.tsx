@@ -1,27 +1,22 @@
 // App.tsx
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { HandTermWrapper } from './HandTermWrapper';
+import { HandTermWrapper } from './components/HandTermWrapper';
 import { CommandProvider } from './commands/CommandProvider';
 import { TerminalCssClasses } from './types/TerminalTypes';
 import { useAuth } from './lib/useAuth';
 import { Output } from './components/Output';
-import { useCommandHistory } from './hooks/useCommandHistory';
-import { loadTutorials } from './utils/tutorialUtils';
 import { IHandTermMethods } from './components/HandTerm';
-import { IGameHandle } from './game/Game';
+import { XtermAdapterMethods } from './components/XtermAdapter';
 
 const MemoizedOutput = React.memo(Output);
 
 const App = () => {
   const containerRef = React.createRef<HTMLDivElement>();
   const [containerWidth, setContainerWidth] = React.useState<number>(0);
-  const handexTermRef = useRef<IHandTermMethods>(null);
+  const handexTermWrapperRef = useRef<IHandTermMethods>(null);
   const auth = useAuth();
   const [outputElements, setOutputElements] = useState<React.ReactNode[]>([]);
-
-  const commandHistoryHook = useCommandHistory(loadTutorials());
-  
-
+  const adapterRef = useRef<XtermAdapterMethods>(null);
   useEffect(() => {
     const w = getContainerWidth();
     setContainerWidth(w);
@@ -29,15 +24,15 @@ const App = () => {
     const handleClickOutsideTerminal = (event: UIEvent) => {
       // Check if the click is outside of the terminal area
       if (
-        handexTermRef.current &&
+        handexTermWrapperRef.current &&
         (event.target as HTMLElement).id !== TerminalCssClasses.Terminal
       ) {
         event.stopPropagation();
-        handexTermRef.current.focusTerminal();
+        handexTermWrapperRef.current.focusTerminal();
 
         if (event instanceof MouseEvent || (event instanceof TouchEvent && event.touches.length === 1)) {
           setTimeout(() => {
-            handexTermRef.current?.focusTerminal();
+            handexTermWrapperRef.current?.focusTerminal();
           }, 1000);
         }
       }
@@ -83,7 +78,7 @@ const App = () => {
   }, []);
 
   return (
-    <CommandProvider handTermRef={handexTermRef}>
+    <CommandProvider handTermRef={handexTermWrapperRef}>
       <div ref={containerRef}>
         <MemoizedOutput
           elements={outputElements}
@@ -91,10 +86,10 @@ const App = () => {
           onTouchEnd={handleTouchEnd}
         />
         <HandTermWrapper
-          ref={handexTermRef}
+          ref={handexTermWrapperRef}
+          adapterRef={adapterRef}
           auth={auth}
           terminalWidth={containerWidth}
-          commandHistoryHook={commandHistoryHook}
           onOutputUpdate={handleOutputUpdate}
         />
       </div>

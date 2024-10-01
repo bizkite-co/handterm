@@ -9,7 +9,6 @@ import { Sprite } from './sprites/Sprite';
 import { IParallaxLayer, ParallaxLayer } from './ParallaxLayer';
 import ScrollingTextLayer from './ScrollingTextLayer';
 import confetti from 'canvas-confetti';
-import { GamePhrase } from 'src/utils/GamePhrases';
 
 export interface IGameProps {
   canvasHeight: number

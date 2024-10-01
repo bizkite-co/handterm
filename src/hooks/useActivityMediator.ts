@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef } from 'react';
-import { Tutorial, Tutorials, ActivityType } from '../types/Types';
+import { Tutorial, ActivityType } from '../types/Types';
 import { ActionType } from '../game/types/ActionTypes';
 import { IGameHandle } from '../game/Game';
 import { GamePhrase } from '../utils/GamePhrases';
@@ -18,7 +18,7 @@ export type useActivityMediatorReturn = {
   handleCommandExecuted: (command: string, _args: string[], switches: Record<string, boolean | string>) => boolean;
   setHeroAction: React.Dispatch<React.SetStateAction<ActionType>>,
   setZombie4Action: React.Dispatch<React.SetStateAction<ActionType>>;
-  checkTutorialProgress: (command: string, args?: string[], _switches?: Record<string, string | boolean>) => {resultActivity:ActivityType, nextTutorial:Tutorial | null};
+  checkTutorialProgress: (command: string, args?: string[], _switches?: Record<string, string | boolean>) => { resultActivity: ActivityType, nextTutorial: Tutorial | null };
   checkGameProgress: (successPhrase: GamePhrase) => {
     resultActivityType: ActivityType;
   };
@@ -28,9 +28,9 @@ export interface IActivityMediatorProps {
   resetTutorial: () => void;
   currentTutorial?: Tutorial | null;
   tutorialGroupPhrase?: GamePhrase;
-  setCurrentActivity: (currentActivity:ActivityType)=>void;
-  currentActivity:ActivityType;
-  startGame: ()=>void;
+  setCurrentActivity: (currentActivity: ActivityType) => void;
+  currentActivity: ActivityType;
+  startGame: () => void;
 }
 
 export function useActivityMediator(props: IActivityMediatorProps): useActivityMediatorReturn {
@@ -41,31 +41,31 @@ export function useActivityMediator(props: IActivityMediatorProps): useActivityM
 
   const determineActivityState = useCallback((commandActivity: ActivityType | null = null) => {
     /*
-      If the user is new to the site, start the tutorial.
-      If the user was in tutorial and completed an achievement that has accompanying game levels, start game play.
-      Otherwise, just obey the command.
+      If the user is new to the site, 
+        start the tutorial.
+      If the user was in tutorial and completed an achievement that has accompanying game levels, 
+        start game play.
+      Otherwise, 
+        just obey the command.
     */
-    if (!props.currentTutorial && !commandActivity) {
-      props.setCurrentActivity(ActivityType.NORMAL);
-      return ActivityType.NORMAL
-    } else if (props.tutorialGroupPhrase) {
-      props.setCurrentActivity(ActivityType.GAME);
-      if (gameHandleRef.current) {
-        props.startGame();
-      }
-      return ActivityType.GAME;
-    } else if (props.currentTutorial) { // TUTORIAL
+    if (commandActivity && commandActivity !== props.currentActivity) {
+      props.setCurrentActivity(commandActivity);
+      return commandActivity;
+    }
+
+    if (props.currentTutorial && props.currentActivity !== ActivityType.TUTORIAL) {
       props.setCurrentActivity(ActivityType.TUTORIAL);
       return ActivityType.TUTORIAL;
-    } else {
-      if (commandActivity) {
-        props.setCurrentActivity(commandActivity);
-        return commandActivity;
-      }
-      props.setCurrentActivity(ActivityType.NORMAL);
-      return ActivityType.NORMAL;
     }
-  }, []);
+
+    if (props.tutorialGroupPhrase && props.currentActivity !== ActivityType.GAME) {
+      props.setCurrentActivity(ActivityType.GAME);
+      props.startGame();
+      return ActivityType.GAME;
+    }
+
+    return props.currentActivity;
+  }, [props.currentTutorial, props.tutorialGroupPhrase, props.currentActivity, props.setCurrentActivity, props.startGame]);
 
   const handleCommandExecuted = useCallback((command: string, _args: string[], switches: Record<string, boolean | string>): boolean => {
     let result = false;
@@ -96,10 +96,10 @@ export function useActivityMediator(props: IActivityMediatorProps): useActivityM
 
   const checkTutorialProgress = (
     command: string,
-    args?: string[],
+    _args?: string[],
     _switches?: Record<string, string | boolean>
-  ):{resultActivity:ActivityType, nextTutorial:Tutorial|null} => {
-    if (!props.currentTutorial) return {resultActivity:props.currentActivity, nextTutorial:null};
+  ): { resultActivity: ActivityType, nextTutorial: Tutorial | null } => {
+    if (!props.currentTutorial) return { resultActivity: props.currentActivity, nextTutorial: null };
     /*
       If args include 'r', reset the tutorial and set TUTORIAL
       If the current tutorial achievement contains a tutorialGroupPhrase, then switch to GAME
@@ -113,22 +113,23 @@ export function useActivityMediator(props: IActivityMediatorProps): useActivityM
       props.setCurrentActivity(ActivityType.GAME);
       // TODO: Pass phrases to game play
       props.startGame();
-      return {resultActivity:ActivityType.GAME, nextTutorial:null};
+      return { resultActivity: ActivityType.GAME, nextTutorial: null };
     }
     const isUnlocked = unlockTutorial(command, props.currentTutorial);
     console.log("Unlock result:", isUnlocked);
     const nextTutorial = getNextTutorial();
     if (!nextTutorial) {
       props.setCurrentActivity(ActivityType.GAME);
-      return {resultActivity: ActivityType.GAME, nextTutorial: null};
+      return { resultActivity: ActivityType.GAME, nextTutorial: null };
     }
-    return {resultActivity:props.currentActivity, nextTutorial};
+    return { resultActivity: props.currentActivity, nextTutorial };
   };
 
   const checkGameProgress = (successPhrase: GamePhrase): { resultActivityType: ActivityType } => {
     /*
       If the game phrase is part of a tutorial group
     */
+    console.log("SuccessPhrase", successPhrase);
     const nextAchievement = getNextTutorial();
     if (props.tutorialGroupPhrase) {
       // Stay in GAME mode.

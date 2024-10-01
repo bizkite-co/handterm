@@ -1,7 +1,9 @@
 // useResizeCanvasAndFont.ts                             
 import { useState, useCallback, TouchEventHandler } from 'react';
 
-export function useResizeCanvasAndFont(initialFontSize: number, initialCanvasHeight: number) {
+export function useResizeCanvasAndFont() {
+    const initialFontSize = parseInt(localStorage.getItem("fontSize") || '17');
+    const initialCanvasHeight = parseInt(localStorage.getItem('canvas-height') || '100');
     const [fontSize, setFontSize] = useState(initialFontSize);
     const [canvasHeight, setCanvasHeight] = useState(initialCanvasHeight);
     let lastTouchDistance: number | null = null;

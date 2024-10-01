@@ -1,5 +1,5 @@
 // TutorialManager.tsx                                                                         
-import React from 'react';
+import React, { memo } from 'react';
 import { Tutorial } from '../types/Types';
 import { Chord } from './Chord';
 
@@ -8,7 +8,7 @@ interface TutorialManagerProps {
     achievement: Tutorial;
 }
 
-export const TutorialManager: React.FC<TutorialManagerProps> = ({ 
+export const TutorialManager: React.FC<TutorialManagerProps> = memo(({ 
     isInTutorial,
     achievement,
 }) => {
@@ -25,4 +25,4 @@ export const TutorialManager: React.FC<TutorialManagerProps> = ({
             </div>
         </div>
     );
-};
+});
