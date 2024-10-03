@@ -130,19 +130,6 @@ export const HandTermWrapper = React.forwardRef<IHandTermMethods, IHandTermWrapp
     setCurrentActivity,
   });
 
-  const handleAddCharacter = useCallback((character: string) => {
-    console.log('Character added:', character);
-    handleCharacter(character);
-  }, [/* dependencies */]);
-
-  const handleRemoveCharacter = useCallback(() => {
-    setCommandLine(prevCommand => prevCommand.slice(0, -1));
-  }, []);
-
-  const handleTerminalReady = useCallback((methods: XtermAdapterMethods) => {
-    setTerminalMethods(methods);
-  }, []);
-
   const wpmCalculator: IWPMCalculator = new WPMCalculator();
 
   const prompt = useCallback(() => {
@@ -163,14 +150,40 @@ export const HandTermWrapper = React.forwardRef<IHandTermMethods, IHandTermWrapp
     isInLoginProcess,
     setIsInLoginProcess,
   };
+
   const { handleCharacter } = useCharacterHandler(characterHandlerProps);
+
+  const handleAddCharacter = useCallback((character: string) => {
+    handleCharacter(character);
+  }, [terminalMethods, handleCharacter]);
+
+  const handleRemoveCharacter = useCallback(() => {
+    setCommandLine(prev => prev.slice(0, -1));
+  }, [setCommandLine]);
+
+  const handleCharacterInput = useCallback((char: string) => {
+    setCommandLine(prev => {
+      console.log("prev", prev, "char", char);
+      return prev + char;
+    }
+    );
+    console.log('HandTermWrapper: Character input:', commandLine);
+  }, [setCommandLine]);
+
+  const handleTerminalReady = useCallback((methods: XtermAdapterMethods) => {
+    setTerminalMethods(methods);
+    methods.prompt();
+  }, []);
 
   const handleCommandExecuted = useCallback(async (command: string, args: string[], switches: Record<string, string | boolean>) => {
     console.log('Command executed:', command, args, switches);
+    const fullCommand = [command, ...args].join(' ');
     setCommandLine('');
     const result = await handleCommand(command);
-    terminalMethods.prompt();
-    console.log('Command executed:', command, args, switches, result);
+    if (result) {
+      console.log('HandTermWrapper: Writing output:', result.response);
+      writeOutputInternal(result.response);
+    }
   }, [handleCommand]);
 
   const {
@@ -277,7 +290,7 @@ export const HandTermWrapper = React.forwardRef<IHandTermMethods, IHandTermWrapp
     terminalMethods.terminalReset();
   }
 
-  const timestamp = new Date().toTimeString().split('(')[0];
+  const timestamp = new Date().toTimeString().split(' ')[0];
   const zombie4StartPosition = { leftX: -70, topY: 0 };
 
   return (
@@ -286,7 +299,7 @@ export const HandTermWrapper = React.forwardRef<IHandTermMethods, IHandTermWrapp
         ref={gameHandleRef}
         canvasHeight={canvasHeight}
         canvasWidth={props.terminalWidth}
-        isInGameMode={currentActivity === ActivityType.GAME}
+        isInGameMode={true}
         heroActionType={activityMediator.heroAction}
         zombie4ActionType={activityMediator.zombie4Action}
         onSetHeroAction={activityMediator.setHeroAction}
@@ -319,8 +332,9 @@ export const HandTermWrapper = React.forwardRef<IHandTermMethods, IHandTermWrapp
         timestamp={timestamp}
       />
       <XtermAdapter
-        onAddCharacter={handleAddCharacter}
+        onCharacterInput={handleCharacterInput}
         onRemoveCharacter={handleRemoveCharacter}
+        commandLine={commandLine}
         onCommandExecuted={handleCommandExecuted}
         onTerminalReady={handleTerminalReady}
         terminalFontSize={fontSize}
@@ -329,4 +343,3 @@ export const HandTermWrapper = React.forwardRef<IHandTermMethods, IHandTermWrapp
     </>
   );
 });
-

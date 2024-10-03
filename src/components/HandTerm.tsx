@@ -92,7 +92,6 @@ export class HandTerm extends React.PureComponent<IHandTermProps, IHandTermState
   static contextType = CommandContext;
   declare context: ContextType<typeof CommandContext>;
   declare props: IHandTermProps;
-  state: IHandTermState;
   declare setState: React.Component['setState'];
 
   private editorRef: React.RefObject<MonacoEditorHandle> = React.createRef();

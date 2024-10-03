@@ -1,7 +1,6 @@
 // App.tsx
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { HandTermWrapper } from './components/HandTermWrapper';
-import { CommandProvider } from './commands/CommandProvider';
 import { TerminalCssClasses } from './types/TerminalTypes';
 import { useAuth } from './lib/useAuth';
 import { Output } from './components/Output';
@@ -78,7 +77,7 @@ const App = () => {
   }, []);
 
   return (
-    <CommandProvider handTermRef={handexTermWrapperRef}>
+    <>
       <div ref={containerRef}>
         <MemoizedOutput
           elements={outputElements}
@@ -93,7 +92,7 @@ const App = () => {
           onOutputUpdate={handleOutputUpdate}
         />
       </div>
-    </CommandProvider>
+    </>
   );
 };
 

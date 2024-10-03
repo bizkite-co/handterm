@@ -45,14 +45,12 @@ export interface IAuthProps {
 export const useAuth = ():IAuthProps => {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() => {
     const storedValue = localStorage.getItem('isLoggedIn') === 'true';
-    console.log('Initial isLoggedIn value:', storedValue);
     return storedValue;
   });
 
   const API_URL = ENDPOINTS.api.BaseUrl;
 
   useEffect(() => {
-    console.log('isLoggedIn changed:', isLoggedIn);
     if (isLoggedIn) {
       localStorage.setItem('isLoggedIn', 'true');
     } else {

@@ -1,6 +1,6 @@
 import { Buffer } from 'buffer';
 import './commands';
-import { StrictMode } from 'react';
+// import { StrictMode } from 'react';
 window.Buffer = Buffer;
 
 // Define 'global' if it's undefined (for browser environments)
@@ -14,8 +14,8 @@ if (typeof global === 'undefined') {
   ReactDOM
     .createRoot(document.getElementById('root')!)
     .render(
-      <StrictMode>
+      // <StrictMode>
         <App.default />
-      </StrictMode>
+      // </StrictMode>
     );
 })();
