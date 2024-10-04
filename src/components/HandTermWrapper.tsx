@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { IHandTermMethods } from './HandTerm';
 import { IWPMCalculator, WPMCalculator } from '../utils/WPMCalculator';
 import { getNextTutorial, loadTutorials, resetTutorial } from '../utils/tutorialUtils';
 import { ActivityType, Tutorial } from '../types/Types';
@@ -14,11 +13,12 @@ import { useCharacterHandler, UseCharacterHandlerProps } from '../hooks/useChara
 import { TutorialManager } from './TutorialManager';
 import { Chord } from './Chord';
 import { Phrase } from '../utils/Phrase';
-import { XtermAdapter, XtermAdapterMethods } from './XtermAdapter';
 import { Prompt } from './Prompt';
 import { useCommandHandler } from '../hooks/useCommandHandler';
 import { LogKeys } from '../types/TerminalTypes';
 import { useResizeCanvasAndFont } from '../hooks/useResizeCanvasAndFont';
+import { useXTerm } from 'react-xtermjs'
+import { XtermAdapterConfig } from './XtermAdapterConfig';
 
 export interface IHandTermWrapperProps {
   // Define the interface for your HandexTerm logic
@@ -28,7 +28,31 @@ export interface IHandTermWrapperProps {
   adapterRef: React.RefObject<any>;
 }
 
-export const HandTermWrapper = React.forwardRef<IHandTermMethods, IHandTermWrapperProps>((props, ref) => {
+export interface XtermMethods {
+  focusTerminal: () => void;
+  terminalWrite: (data: string) => void;
+  getCurrentCommand: () => string;
+  getTerminalSize: () => { width: number; height: number } | undefined;
+  terminalReset: () => void;
+  prompt: () => void;
+  appendTempPassword: (password: string) => void;
+  scrollBottom: () => void;
+}
+export interface IHandTermWrapperMethods {
+  writeOutput: (output: string) => void;
+  prompt: () => void;
+  terminalReset: () => void;
+  saveCommandResponseHistory: (command: string, response: string, status: number) => string;
+  focusTerminal: () => void;
+  handleCommand: (cmd: string) => void;
+  handleCharacter: (character: string) => void;
+  toggleVideo: () => boolean;
+  refreshComponent: () => void;
+  setHeroSummersaultAction: () => void;
+  // Add other methods as needed
+}
+
+export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTermWrapperProps>((props, ref) => {
   const commandHistoryHook = useCommandHistory(loadTutorials());
   const { addToCommandHistory } = commandHistoryHook;
 
@@ -59,7 +83,7 @@ export const HandTermWrapper = React.forwardRef<IHandTermMethods, IHandTermWrapp
   const targetWPM = 10;
 
   // Add these state variables for XtermAdapter functions
-  const [terminalMethods, setTerminalMethods] = useState<XtermAdapterMethods>(() => ({
+  const [terminalMethods, setTerminalMethods] = useState<XtermMethods>(() => ({
     focusTerminal: () => { },
     terminalWrite: () => { },
     getCurrentCommand: () => '',
@@ -69,6 +93,10 @@ export const HandTermWrapper = React.forwardRef<IHandTermMethods, IHandTermWrapp
     appendTempPassword: () => { },
     scrollBottom: () => { },
   }));
+
+  const { instance, ref: xtermRef } = useXTerm({options: XtermAdapterConfig});
+  instance?.writeln('Hello from react-xtermjs!')
+  instance?.onData((data) => instance?.write(data))
 
   const updateUserName = useCallback(() => {
     const isLoggedIn = props.auth.isLoggedIn;
@@ -331,15 +359,7 @@ export const HandTermWrapper = React.forwardRef<IHandTermMethods, IHandTermWrapp
         githubUsername={githubUsername}
         timestamp={timestamp}
       />
-      <XtermAdapter
-        onCharacterInput={handleCharacterInput}
-        onRemoveCharacter={handleRemoveCharacter}
-        commandLine={commandLine}
-        onCommandExecuted={handleCommandExecuted}
-        onTerminalReady={handleTerminalReady}
-        terminalFontSize={fontSize}
-
-      />
+      <div ref={xtermRef} />
     </>
   );
 });

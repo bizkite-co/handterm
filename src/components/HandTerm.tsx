@@ -22,22 +22,10 @@ import { useActivityMediator } from '../hooks/useActivityMediator';
 // import SpecialCommand from '../commands/SpecialCommand';
 import { IAuthProps } from 'src/lib/useAuth';
 import { IGameHandle } from 'src/game/Game';
+import { IHandTermWrapperMethods } from './HandTermWrapper';
 
-export interface IHandTermMethods {
-  writeOutput: (output: string) => void;
-  prompt: () => void;
-  terminalReset: () => void;
-  saveCommandResponseHistory: (command: string, response: string, status: number) => string;
-  focusTerminal: () => void;
-  handleCommand: (cmd: string) => void;
-  handleCharacter: (character: string) => void;
-  toggleVideo: () => boolean;
-  refreshComponent: () => void;
-  setHeroSummersaultAction: ()=>void; 
-  // Add other methods as needed
-}
 
-export type HandTermRef = React.RefObject<IHandTermMethods>;
+export type HandTermRef = React.RefObject<IHandTermWrapperMethods>;
 
 export interface IHandTermProps {
   // Define the interface for your HandexTerm logic

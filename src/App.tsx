@@ -1,10 +1,9 @@
 // App.tsx
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { HandTermWrapper } from './components/HandTermWrapper';
+import { HandTermWrapper, IHandTermWrapperMethods } from './components/HandTermWrapper';
 import { TerminalCssClasses } from './types/TerminalTypes';
 import { useAuth } from './lib/useAuth';
 import { Output } from './components/Output';
-import { IHandTermMethods } from './components/HandTerm';
 import { XtermAdapterMethods } from './components/XtermAdapter';
 
 const MemoizedOutput = React.memo(Output);
@@ -12,7 +11,7 @@ const MemoizedOutput = React.memo(Output);
 const App = () => {
   const containerRef = React.createRef<HTMLDivElement>();
   const [containerWidth, setContainerWidth] = React.useState<number>(0);
-  const handexTermWrapperRef = useRef<IHandTermMethods>(null);
+  const handexTermWrapperRef = useRef<IHandTermWrapperMethods>(null);
   const auth = useAuth();
   const [outputElements, setOutputElements] = useState<React.ReactNode[]>([]);
   const adapterRef = useRef<XtermAdapterMethods>(null);

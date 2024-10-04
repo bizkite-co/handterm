@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback, useMemo, useRef, memo } from 'react';
+import React, { useEffect, useCallback, useMemo, useRef, memo, useState } from 'react';
 import { Terminal } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
 import { ITerminalInitOnlyOptions, ITerminalOptions } from '@xterm/xterm';
@@ -35,13 +35,9 @@ const XtermAdapterComponent: React.FC<XtermAdapterProps> = (props: XtermAdapterP
   const promptDelimiter = '$';
   const promptLength = useRef(0);
 
-  useEffect(() => {
-    if (terminalInstance.current) {
-      terminalInstance.current.write(props.commandLine);
-      const currentCommand = getCurrentCommand();
-      console.log('%c XtermAdapter: Current command line:', 'color: cyan; font-weight: bold;', currentCommand);
-    }
-  }, [props.commandLine]);
+  const focusTerminal = useCallback(() => {
+    terminalInstance.current?.focus();
+  }, []);
 
   const setViewPortOpacity = (): void => {
     const viewPort = document.getElementsByClassName('xterm-viewport')[0] as
@@ -69,65 +65,42 @@ const XtermAdapterComponent: React.FC<XtermAdapterProps> = (props: XtermAdapterP
 
   const handleData = useCallback((data: string) => {
     console.log('Terminal received data:', data);
-    if (data === '\r') { // Enter key
-      console.log('XtermAdapter: Enter key pressed, current buffer:', terminalInstance.current?.buffer.active.getLine(terminalInstance.current.buffer.active.cursorY)?.translateToString());
+    if (data === '\r') { // Enter key                                              
       terminalInstance.current?.write('\r\n');
-      console.log('XtermAdapter: Enter key pressed');
-      const command = terminalInstance.current?.buffer.active.getLine(terminalInstance.current.buffer.active.cursorY - 1)?.translateToString().trim() || '';
+      const command = getCurrentCommand();
       const [cmd, ...args] = command.split(' ');
       props.onCommandExecuted(cmd, args, {});
-    } else if (data === '\x7F') { // Backspace
-      if (terminalInstance && terminalInstance.current && terminalInstance.current?.buffer.active.cursorX > 2) {
-        console.log('XtermAdapter: Backspace pressed, current buffer before:', terminalInstance.current.buffer.active.getLine(terminalInstance.current.buffer.active.cursorY)?.translateToString());
-        terminalInstance.current.write('\b \b');
-        props.onRemoveCharacter(props.commandLine);
-        console.log('XtermAdapter: Backspace pressed');
-      }
-    } else if (data === '\x1b[A') { // Up arrow
-      // Handle up arrow (e.g., navigate command history)
-    } else if (data === '\x1b[B') { // Down arrow
-      // Handle down arrow
-    } else if (data === '\x1b[C') { // Right arrow
-      // Move cursor right
-    } else if (data === '\x1b[D') { // Left arrow
-      // Move cursor left
-    } else if (data === '\x1b[H') { // Home key
-      // Move cursor to beginning of line
-      // You might need to implement custom logic for this
-    } else if (data === '\x1b[F') { // End key
-      // Move cursor to end of line
-      // You might need to implement custom logic for this
-    } else if (data === '\x03') { // Ctrl+C
-      // Handle Ctrl+C (e.g., cancel current operation)
-      terminalInstance.current?.write('^C');
-      props.onCommandExecuted('', [], {}); // Cancel current command                      
       terminalInstance.current?.write('\r\n$ ');
-      console.log('XtermAdapter: Ctrl+C pressed, current buffer:', terminalInstance.current?.buffer.active.getLine(terminalInstance.current.buffer.active.cursorY)?.translateToString());
+    } else if (data === '\x7F') { // Backspace                                     
+      if (terminalInstance.current?.buffer.active.cursorX > 2) {
+        terminalInstance.current.write('\b \b');
+        props.onRemoveCharacter(getCurrentCommand());
+      }
     } else {
       terminalInstance.current?.write(data);
-      console.log('XtermAdapter: Character written to terminal, current buffer:', terminalInstance.current?.buffer.active.getLine(terminalInstance.current.buffer.active.cursorY)?.translateToString());
-      console.log('XtermAdapter: Character input:', data);
       props.onCharacterInput(data);
     }
-  }, [props.onCharacterInput, props.onRemoveCharacter, props.onCommandExecuted]);
+  }, [props.onCharacterInput, props.onRemoveCharacter, props.onCommandExecuted, getCurrentCommand]);
+
+  useEffect(() => {
+    if (terminalInstance.current && props.commandLine !== getCurrentCommand()) {
+      terminalInstance.current.write(props.commandLine.slice(getCurrentCommand().length));
+    }
+  }, [props.commandLine, getCurrentCommand]);
 
   const terminalMethods: XtermAdapterMethods = useMemo(() => ({
-    focusTerminal: () => terminalInstance.current?.focus(),
+    focusTerminal,
     terminalWrite: (data: string) => terminalInstance.current?.write(data),
-    getCurrentCommand: () => {
-      console.log('XtermAdapter: Getting current command');
-      const command = terminalInstance.current?.buffer.active.getLine(terminalInstance.current.buffer.active.cursorY)?.translateToString().trim() || '';
-      return command;
-    },
+    getCurrentCommand,
     getTerminalSize: () => terminalInstance.current ? { width: terminalInstance.current.cols, height: terminalInstance.current.rows } : undefined,
-    terminalReset: () => terminalInstance.current?.reset(),
-    prompt: () => {
+    terminalReset: () => {
+      terminalInstance.current?.reset();
       terminalInstance.current?.write('$ ');
-      console.log('XtermAdapter: Prompt written, current buffer:', terminalInstance.current?.buffer.active.getLine(terminalInstance.current.buffer.active.cursorY)?.translateToString());
     },
+    prompt: () => terminalInstance.current?.write('$ '),
     appendTempPassword: (password: string) => terminalInstance.current?.write(password),
     scrollBottom: () => terminalInstance.current?.scrollToBottom(),
-  }), []);
+  }), [focusTerminal, getCurrentCommand]);
 
   useEffect(() => {
     if (!terminalRef.current) return;
@@ -149,6 +122,7 @@ const XtermAdapterComponent: React.FC<XtermAdapterProps> = (props: XtermAdapterP
 
     terminalInstance.current.open(terminalRef.current);
     terminalInstance.current.onData(handleData);
+    terminalInstance.current.write('$ '); // Add initial prompt                    
     props.onTerminalReady(terminalMethods);
 
     // Make the terminal visible after initialization
@@ -191,6 +165,10 @@ const XtermAdapterComponent: React.FC<XtermAdapterProps> = (props: XtermAdapterP
       console.log('XtermAdapter: Terminal element visibility:', window.getComputedStyle(terminalElement).visibility);
     }
   }, []);
+
+  useEffect(() => {
+    focusTerminal();
+  }, [focusTerminal]);
 
   return (
     <div
