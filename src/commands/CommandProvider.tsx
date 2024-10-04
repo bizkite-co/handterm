@@ -2,11 +2,11 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { CommandContext, ICommandContext } from './CommandContext';
 import { commandRegistry } from './commandRegistry';
-import { IHandTermMethods } from '../components/HandTerm';
+import { IHandTermWrapperMethods } from '../components/HandTermWrapper';
 
 interface CommandProviderProps {
   children?: React.ReactNode;
-  handTermRef: React.RefObject<IHandTermMethods>;
+  handTermRef: React.RefObject<IHandTermWrapperMethods>;
 }
 
 export const CommandProvider: React.FC<CommandProviderProps> = ({ children, handTermRef }) => {

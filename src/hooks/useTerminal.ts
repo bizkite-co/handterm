@@ -3,8 +3,14 @@ import { useCallback, useState, useEffect, useRef } from 'react';
 import { useXTerm } from 'react-xtermjs';
 import { FitAddon } from '@xterm/addon-fit';
 import { XtermAdapterConfig } from '../components/XtermAdapterConfig';
+import { IWPMCalculator } from '../utils/WPMCalculator';
 
-export const useTerminal = () => {
+interface UseTerminalProps {
+  wpmCalculator: IWPMCalculator;
+  onCommandExecuted: (command: string) => void;
+}
+
+export const useTerminal = ({ wpmCalculator, onCommandExecuted }: UseTerminalProps) => {
   const { instance, ref: xtermRef } = useXTerm({ options: XtermAdapterConfig });
   const [commandLine, setCommandLine] = useState('');
   const fitAddon = useRef(new FitAddon());
@@ -21,30 +27,36 @@ export const useTerminal = () => {
     return lineContent.substring(promptLength.current);
   }, [instance]);
 
+  const resetPrompt = useCallback(() => {
+    if (!instance) return;
+    instance.write('\r\n$ ');
+    setCommandLine('');
+  }, [instance]);
+
   const handleData = useCallback((data: string) => {
     if (!instance) return;
 
+    const cursorX = instance.buffer.active.cursorX;
+
     if (data === '\r') { // Enter key
       const currentCommand = getCurrentLine();
-      instance.writeln('');
-      // Handle command execution here
-      console.log('Command executed:', currentCommand);
-      setCommandLine('');
-      instance.write('$ ');
+      onCommandExecuted(currentCommand);
+      resetPrompt();
     } else if (data === '\x7F') { // Backspace
-      const currentLine = getCurrentLine();
-      if (currentLine.length > 0) {
+      if (cursorX > promptLength.current) {
         instance.write('\b \b');
-        setCommandLine(currentLine.slice(0, -1));
+        setCommandLine(prev => prev.slice(0, -1));
+      }
+    } else if (data === '\x1b[D') { // Left arrow
+      if (cursorX > promptLength.current) {
+        instance.write(data);
       }
     } else {
-      const cursorX = instance.buffer.active.cursorX;
-      if (cursorX >= promptLength.current) {
-        instance.write(data);
-        setCommandLine(prev => prev + data);
-      }
+      instance.write(data);
+      setCommandLine(prev => prev + data);
+      wpmCalculator.addKeystroke(data);
     }
-  }, [instance, getCurrentLine]);
+  }, [instance, getCurrentLine, onCommandExecuted, resetPrompt, wpmCalculator]);
 
   useEffect(() => {
     if (instance) {
@@ -68,5 +80,6 @@ export const useTerminal = () => {
     xtermRef,
     commandLine,
     writeToTerminal,
+    resetPrompt,
   };
 };

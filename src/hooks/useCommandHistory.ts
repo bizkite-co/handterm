@@ -31,10 +31,6 @@ export const useCommandHistory = (initialHistory: string[]) => {
 
   return {
     commandHistory,
-    commandHistoryIndex,
-    commandHistoryFilter,
-    setCommandHistoryIndex,
-    setCommandHistoryFilter,
     addToCommandHistory,
     getCommandResponseHistory,
   };

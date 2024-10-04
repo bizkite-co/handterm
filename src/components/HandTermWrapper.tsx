@@ -9,18 +9,14 @@ import { IAuthProps } from '../lib/useAuth';
 import { usePhraseHandler } from '../hooks/usePhraseHandler';
 import GamePhrases, { GamePhrase } from '../utils/GamePhrases';
 import NextCharsDisplay, { NextCharsDisplayHandle } from './NextCharsDisplay';
-import { useCharacterHandler, UseCharacterHandlerProps } from '../hooks/useCharacterHandler';
 import { TutorialManager } from './TutorialManager';
 import { Chord } from './Chord';
 import { Phrase } from '../utils/Phrase';
 import { Prompt } from './Prompt';
-import { useCommandHandler } from '../hooks/useCommandHandler';
 import { LogKeys } from '../types/TerminalTypes';
 import { useResizeCanvasAndFont } from '../hooks/useResizeCanvasAndFont';
-import { useXTerm } from 'react-xtermjs'
-import { XtermAdapterConfig } from './XtermAdapterConfig';
-import { FitAddon } from '@xterm/addon-fit'
 import { useTerminal } from '../hooks/useTerminal';
+import { IUseCommandHandlerProps, useCommandHandler } from '../hooks/useCommandHandler';
 
 export interface IHandTermWrapperProps {
   // Define the interface for your HandexTerm logic
@@ -41,12 +37,12 @@ export interface XtermMethods {
   scrollBottom: () => void;
 }
 export interface IHandTermWrapperMethods {
-  writeOutput: (output: string) => void;
+  writeOutput: (output: React.ReactNode) => void;
   prompt: () => void;
   terminalReset: () => void;
   saveCommandResponseHistory: (command: string, response: string, status: number) => string;
   focusTerminal: () => void;
-  handleCommand: (cmd: string) => void;
+  handleCommand: (cmd: string) => Promise<any>; // Adjust the return type as needed
   handleCharacter: (character: string) => void;
   toggleVideo: () => boolean;
   refreshComponent: () => void;
@@ -55,35 +51,110 @@ export interface IHandTermWrapperMethods {
 }
 
 export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTermWrapperProps>((props, ref) => {
-  const { xtermRef, commandLine, writeToTerminal } = useTerminal();
-  const fitAddon = useRef<FitAddon>(new FitAddon());
-  const commandHistoryHook = useCommandHistory(loadTutorials());
-  const { addToCommandHistory } = commandHistoryHook;
+   const targetWPM = 10;
+   const wpmCalculator: IWPMCalculator = new WPMCalculator();
+   const mutableRef = React.useRef<IHandTermWrapperMethods | null>(null);
+   const gameHandleRef = useRef<IGameHandle>(null);
+   const nextCharsDisplayRef: React.RefObject<NextCharsDisplayHandle> = React.createRef();
+   const timestamp = new Date().toTimeString().split(' ')[0];
+   const zombie4StartPosition = { leftX: -70, topY: 0 };
 
-  const [domain] = useState<string>('handterm.com');
-  const [currentPhrase] = useState<GamePhrase | null>(null);
-  const [currentTutorial] = useState<Tutorial | null>(getNextTutorial());
-  const [currentActivity, setCurrentActivity] = useState<ActivityType>(ActivityType.NORMAL);
-  const initialCanvasHeight = localStorage.getItem('canvasHeight') || '100';
-  const [canvasHeight] = useState(parseInt(initialCanvasHeight));
-  const [lastTypedCharacter, setLastTypedCharacter] = useState<string | null>(null);
-  const [, setErrorCharIndex] = useState<number | undefined>(undefined);
-  const gamePhrasesAchieved = GamePhrases
-    .getGamePhrasesAchieved()
-    .map((phrase: { wpm: number; phraseName: string }) => phrase.phraseName);
-  const [phrasesAchieved, setPhrasesAchieved] = useState<string[]>(gamePhrasesAchieved);
-  const [phraseKey] = useState('');
-  const [, setTerminalSize] = useState<{ width: number; height: number } | undefined>();
-  const [githubAuthHandled, setGithubAuthHandled] = useState<boolean>(false);
-  const [githubUsername, setGithubUsername] = useState<string | null>(null);
-  const [isInSvgMode] = useState<boolean>(false);
-  const [isInLoginProcess, setIsInLoginProcess] = useState<boolean>(false);
-  const [, setIsLoggedIn] = useState<boolean>(false);
-  const [, setEditContent] = useState('');
-  const [, setEditFilePath] = useState('_index');
-  const [, setEditFileExtension] = useState('md');
-  const [userName, setUserName] = useState<string | null>(null);
-  const targetWPM = 10;
+   const { addToCommandHistory } = useCommandHistory(loadTutorials());
+   const [domain] = useState<string>('handterm.com');
+   const [currentPhrase] = useState<GamePhrase | null>(null);
+   const [currentTutorial] = useState<Tutorial | null>(getNextTutorial());
+   const [currentActivity, setCurrentActivity] = useState<ActivityType>(ActivityType.NORMAL);
+   const initialCanvasHeight = localStorage.getItem('canvasHeight') || '100';
+   const [canvasHeight] = useState(parseInt(initialCanvasHeight));
+   const [lastTypedCharacter, setLastTypedCharacter] = useState<string | null>(null);
+   const [, setErrorCharIndex] = useState<number | undefined>(undefined);
+   const gamePhrasesAchieved = GamePhrases
+     .getGamePhrasesAchieved()
+     .map((phrase: { wpm: number; phraseName: string }) => phrase.phraseName);
+   const [phrasesAchieved, setPhrasesAchieved] = useState<string[]>(gamePhrasesAchieved);
+   const [phraseKey] = useState('');
+   const [, setTerminalSize] = useState<{ width: number; height: number } | undefined>();
+   const [githubAuthHandled, setGithubAuthHandled] = useState<boolean>(false);
+   const [githubUsername, setGithubUsername] = useState<string | null>(null);
+   const [isInSvgMode] = useState<boolean>(false);
+   const [isInLoginProcess, setIsInLoginProcess] = useState<boolean>(false);
+   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+   const [editContent, setEditContent] = useState('');
+   const [editFilePath, setEditFilePath] = useState('_index');
+   const [editFileExtension, setEditFileExtension] = useState('md');
+   const [userName, setUserName] = useState<string | null>(null);
+
+   const updateUserName = useCallback(() => {
+     const isLoggedIn = props.auth.isLoggedIn;
+     if (isLoggedIn) {
+       const userName = localStorage.getItem(LogKeys.Username);
+       setUserName(userName || null);
+     } else {
+       setUserName(null);
+     }
+   }, [props.auth.isLoggedIn]);
+
+   const handleFocusEditor = useCallback(() => {
+     // Implement focus editor logic here
+   }, []);
+
+   // Function to reset tutorial and refresh HandTerm
+   const onResetTutorial = useCallback(() => {
+     if (ref && 'current' in ref && ref.current) {
+       resetTutorial();
+       ref.current.refreshComponent(); // Call the new method to force a re-render
+     }
+   }, [ref]);
+
+   const startGame = useCallback(() => {
+     console.log("startGame called:", gameHandleRef);
+     if (gameHandleRef.current) gameHandleRef.current.startGame();
+   }, []);
+
+   const activityMediatorProps: IActivityMediatorProps = {
+     resetTutorial: onResetTutorial,
+     currentTutorial: getNextTutorial(),
+     currentActivity,
+     setCurrentActivity,
+     startGame,
+   }
+
+   // Initialize activityMediator with the appropriate initial values
+   const activityMediator = useActivityMediator(activityMediatorProps);
+
+   const writeToTerminal = useCallback((output: React.ReactNode) => {
+     if (mutableRef.current) {
+       mutableRef.current.writeOutput(output);
+     }
+   }, []);
+
+   const commandHandlerProps: IUseCommandHandlerProps = {
+     handTermRef: mutableRef,
+     auth: props.auth,
+     setIsLoggedIn,
+     updateUserName,
+     writeOutput: writeToTerminal,
+     setEditContent,
+     setEditFilePath,
+     setEditFileExtension,
+     setTargetWPM: () => {}, // Implement this if needed
+     handleFocusEditor,
+     activityMediator,
+     setCurrentActivity,
+   };
+
+   const { handleCommand } = useCommandHandler(commandHandlerProps);
+
+   const handleCommandExecuted = useCallback((command: string) => {
+     handleCommand(command);
+     addToCommandHistory(command);
+     // Any other logic you need after command execution
+   }, [handleCommand, addToCommandHistory]);
+
+   const { xtermRef, commandLine, writeToTerminal: xtermWrite, resetPrompt } = useTerminal({
+     wpmCalculator,
+     onCommandExecuted: handleCommandExecuted
+   });
 
 
   // Add these state variables for XtermAdapter functions
@@ -98,82 +169,18 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
     scrollBottom: () => { },
   }));
 
-  const updateUserName = useCallback(() => {
-    const isLoggedIn = props.auth.isLoggedIn;
-    if (isLoggedIn) {
-      const userName = localStorage.getItem(LogKeys.Username);
-      setUserName(userName || null);
-    } else {
-      setUserName(null);
-    }
-  }, [props.auth.isLoggedIn]);
-
-  const handleFocusEditor = useCallback(() => {
-    // Implement focus editor logic here
-  }, []);
-
   const writeOutputInternal = useCallback((output: string) => {
     addToCommandHistory(output);
     props.onOutputUpdate(output);
   }, [addToCommandHistory, props]);
 
-  const wpmCalculator: IWPMCalculator = new WPMCalculator();
-
   const prompt = useCallback(() => {
     terminalMethods.prompt();
   }, [terminalMethods]);
 
-
-  // Function to reset tutorial and refresh HandTerm
-  const onResetTutorial = useCallback(() => {
-    if (ref && 'current' in ref && ref.current) {
-      resetTutorial();
-      ref.current.refreshComponent(); // Call the new method to force a re - render
-    }
-  }, [ref]);
-
-  const startGame = useCallback(() => {
-    console.log("startGame called:", gameHandleRef);
-    if (gameHandleRef.current) gameHandleRef.current.startGame();
-  }, []);
-
-  const activityMediatorProps: IActivityMediatorProps = {
-    resetTutorial: onResetTutorial,
-    currentTutorial: getNextTutorial(),
-    currentActivity,
-    setCurrentActivity,
-    startGame,
-  }
-
-  // Initialize activityMediator with the appropriate initial values
-  const activityMediator = useActivityMediator(
-    activityMediatorProps,
-  );
-
-  const { handleCommand } = useCommandHandler({
-    auth: props.auth,
-    setIsLoggedIn,
-    updateUserName,
-    writeOutput: writeOutputInternal,
-    setEditMode: () => { }, // You might want to implement this
-    setEditContent,
-    setEditFilePath,
-    setEditFileExtension,
-    setTargetWPM: () => { }, // You might want to implement this
-    handleFocusEditor,
-    activityMediator,
-    setCurrentActivity,
-  });
-
-
   const {
     fontSize,
   } = useResizeCanvasAndFont();
-
-
-  const gameHandleRef = useRef<IGameHandle>(null);
-
-  const nextCharsDisplayRef: React.RefObject<NextCharsDisplayHandle> = React.createRef();
 
   const savePhrasesAchieved = (phraseName: string, wpmAverage: number) => {
     const wpmPhraseName = Math.round(wpmAverage) + ':' + phraseName;
@@ -269,9 +276,6 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
     gameHandleRef.current?.completeGame();
     terminalMethods.terminalReset();
   }
-
-  const timestamp = new Date().toTimeString().split(' ')[0];
-  const zombie4StartPosition = { leftX: -70, topY: 0 };
 
   return (
     <>
