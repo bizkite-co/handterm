@@ -19,6 +19,8 @@ import { LogKeys } from '../types/TerminalTypes';
 import { useResizeCanvasAndFont } from '../hooks/useResizeCanvasAndFont';
 import { useXTerm } from 'react-xtermjs'
 import { XtermAdapterConfig } from './XtermAdapterConfig';
+import { FitAddon } from '@xterm/addon-fit'
+import { useTerminal } from '../hooks/useTerminal';
 
 export interface IHandTermWrapperProps {
   // Define the interface for your HandexTerm logic
@@ -53,6 +55,8 @@ export interface IHandTermWrapperMethods {
 }
 
 export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTermWrapperProps>((props, ref) => {
+  const { xtermRef, commandLine, writeToTerminal } = useTerminal();
+  const fitAddon = useRef<FitAddon>(new FitAddon());
   const commandHistoryHook = useCommandHistory(loadTutorials());
   const { addToCommandHistory } = commandHistoryHook;
 
@@ -62,7 +66,6 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
   const [currentActivity, setCurrentActivity] = useState<ActivityType>(ActivityType.NORMAL);
   const initialCanvasHeight = localStorage.getItem('canvasHeight') || '100';
   const [canvasHeight] = useState(parseInt(initialCanvasHeight));
-  const [commandLine, setCommandLine] = useState('');
   const [lastTypedCharacter, setLastTypedCharacter] = useState<string | null>(null);
   const [, setErrorCharIndex] = useState<number | undefined>(undefined);
   const gamePhrasesAchieved = GamePhrases
@@ -82,6 +85,7 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
   const [userName, setUserName] = useState<string | null>(null);
   const targetWPM = 10;
 
+
   // Add these state variables for XtermAdapter functions
   const [terminalMethods, setTerminalMethods] = useState<XtermMethods>(() => ({
     focusTerminal: () => { },
@@ -93,10 +97,6 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
     appendTempPassword: () => { },
     scrollBottom: () => { },
   }));
-
-  const { instance, ref: xtermRef } = useXTerm({options: XtermAdapterConfig});
-  instance?.writeln('Hello from react-xtermjs!')
-  instance?.onData((data) => instance?.write(data))
 
   const updateUserName = useCallback(() => {
     const isLoggedIn = props.auth.isLoggedIn;
@@ -116,6 +116,13 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
     addToCommandHistory(output);
     props.onOutputUpdate(output);
   }, [addToCommandHistory, props]);
+
+  const wpmCalculator: IWPMCalculator = new WPMCalculator();
+
+  const prompt = useCallback(() => {
+    terminalMethods.prompt();
+  }, [terminalMethods]);
+
 
   // Function to reset tutorial and refresh HandTerm
   const onResetTutorial = useCallback(() => {
@@ -158,61 +165,6 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
     setCurrentActivity,
   });
 
-  const wpmCalculator: IWPMCalculator = new WPMCalculator();
-
-  const prompt = useCallback(() => {
-    terminalMethods.prompt();
-  }, [terminalMethods]);
-
-  const characterHandlerProps: UseCharacterHandlerProps = {
-    wpmCalculator,
-    setCommandLine,
-    setLastTypedCharacter,
-    isInSvgMode,
-    writeOutputInternal,
-    auth: props.auth,
-    setIsLoggedIn,
-    updateUserName,
-    terminalReset: terminalMethods.terminalReset,
-    prompt,
-    isInLoginProcess,
-    setIsInLoginProcess,
-  };
-
-  const { handleCharacter } = useCharacterHandler(characterHandlerProps);
-
-  const handleAddCharacter = useCallback((character: string) => {
-    handleCharacter(character);
-  }, [terminalMethods, handleCharacter]);
-
-  const handleRemoveCharacter = useCallback(() => {
-    setCommandLine(prev => prev.slice(0, -1));
-  }, [setCommandLine]);
-
-  const handleCharacterInput = useCallback((char: string) => {
-    setCommandLine(prev => {
-      console.log("prev", prev, "char", char);
-      return prev + char;
-    }
-    );
-    console.log('HandTermWrapper: Character input:', commandLine);
-  }, [setCommandLine]);
-
-  const handleTerminalReady = useCallback((methods: XtermAdapterMethods) => {
-    setTerminalMethods(methods);
-    methods.prompt();
-  }, []);
-
-  const handleCommandExecuted = useCallback(async (command: string, args: string[], switches: Record<string, string | boolean>) => {
-    console.log('Command executed:', command, args, switches);
-    const fullCommand = [command, ...args].join(' ');
-    setCommandLine('');
-    const result = await handleCommand(command);
-    if (result) {
-      console.log('HandTermWrapper: Writing output:', result.response);
-      writeOutputInternal(result.response);
-    }
-  }, [handleCommand]);
 
   const {
     fontSize,
