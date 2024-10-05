@@ -141,6 +141,9 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
      handleFocusEditor,
      activityMediator,
      setCurrentActivity,
+     wpmCalculator,
+     addToCommandHistory,
+     onOutputUpdate: props.onOutputUpdate
    };
 
    const { handleCommand } = useCommandHandler(commandHandlerProps);
@@ -153,7 +156,8 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
 
    const { xtermRef, commandLine, writeToTerminal: xtermWrite, resetPrompt } = useTerminal({
      wpmCalculator,
-     onCommandExecuted: handleCommandExecuted
+     onCommandExecuted: handleCommandExecuted,
+     handTermRef: mutableRef
    });
 
 

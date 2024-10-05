@@ -2,15 +2,15 @@
 import { RefObject, useCallback } from 'react';
 import { ActivityType } from '../types/Types';
 import { IAuthProps } from '../lib/useAuth';
-import { LogKeys } from '../types/TerminalTypes';
-import GamePhrases from '../utils/GamePhrases';
 import { parseCommand } from '../utils/commandUtils';
 import { useActivityMediatorReturn } from './useActivityMediator';
 import { commandRegistry } from '../commands/commandRegistry';
 import { IHandTermWrapperMethods } from 'src/components/HandTermWrapper';
+import { useCommandOutput } from './useCommandOutput';
+import { IWPMCalculator } from '../utils/WPMCalculator';
 
 export interface IUseCommandHandlerProps {
-  handTermRef: React.MutableRefObject<IHandTermWrapperMethods | null>;
+  handTermRef: React.MutableRefObject<IHandTermWrapperMethods>;
   auth: IAuthProps;
   setIsLoggedIn: React.Dispatch<React.SetStateAction<boolean>>;
   updateUserName: () => void;
@@ -22,9 +22,18 @@ export interface IUseCommandHandlerProps {
   handleFocusEditor: () => void;
   activityMediator: useActivityMediatorReturn;
   setCurrentActivity: React.Dispatch<React.SetStateAction<ActivityType>>;
+  wpmCalculator: IWPMCalculator;
+  addToCommandHistory: (output: React.ReactNode) => void;
+  onOutputUpdate: (output: React.ReactNode) => void;
 }
 
 export const useCommandHandler = (props: IUseCommandHandlerProps) => {
+  const { processCommandOutput } = useCommandOutput({
+    wpmCalculator: props.wpmCalculator,
+    addToCommandHistory: props.addToCommandHistory,
+    onOutputUpdate: props.onOutputUpdate,
+  })
+
   const handleCommand = useCallback(async (inputCmd: string) => {
     let status = 404;
     let response = "Command not found.";
@@ -92,7 +101,7 @@ export const useCommandHandler = (props: IUseCommandHandlerProps) => {
 
     props.handTermRef.current?.writeOutput(response);
     return { status, response };
-  }, [props.handTermRef]);
+  }, [processCommandOutput, props.handTermRef]);
 
   return { handleCommand };
 };

@@ -6,7 +6,7 @@ interface WpmTableProps {
   name?: string;
 }
 
-const WpmTable: React.FC<WpmTableProps> = ({ wpms, name = "slowest-characters" }) => {
+export const WpmTable: React.FC<WpmTableProps> = ({ wpms, name = "slowest-characters" }) => {
   return (
   <table className="wpm-table">
     <thead>
