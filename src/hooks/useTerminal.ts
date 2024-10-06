@@ -29,6 +29,20 @@ export const useTerminal = ({ wpmCalculator, onCommandExecuted }: UseTerminalPro
     return lineContent.substring(promptLength);
   }, [instance]);
 
+  const getCurrentCommand = useCallback(() => {
+    if(!instance) return '';
+    const buffer = instance.buffer.active;
+    let command = '';
+    for (let i = 0; i <= buffer.cursorY; i++) {
+      const line = buffer.getLine(i);
+      if (line) {
+        command += line.translateToString(true);
+      }
+    }
+    const promptEndIndex = command.indexOf(PROMPT) + promptLength;
+    return command.substring(promptEndIndex).trimStart();
+  }, [instance]);
+
   const resetPrompt = useCallback(() => {
     if (!instance) return;
     instance.write(PROMPT);
@@ -41,7 +55,7 @@ export const useTerminal = ({ wpmCalculator, onCommandExecuted }: UseTerminalPro
     if (!instance) return;
     const cursorX = instance.buffer.active.cursorX;
     if (data === '\r') { // Enter key
-      const currentCommand = getCurrentLine();
+      const currentCommand = getCurrentCommand();
       instance.write('\r\n');
       onCommandExecuted(currentCommand);
       resetPrompt();
