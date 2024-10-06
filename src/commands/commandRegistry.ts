@@ -1,12 +1,16 @@
 // src/commands/commandRegistry.ts
 
-import { ICommand } from './ICommand';
+import { ICommand } from '../contexts/CommandContext';
 import { clearCommand } from './clearCommand';
 import { ListPhrasesCommand } from './ListPhrasesCommand';
 import { wrtCommand } from './wrtCommand';
 
+export type ICommandRegistryItems = Record<string, ICommand>;
+
+
+
 class CommandRegistry {
-    private commands: Record<string, ICommand> = {
+    private commands: ICommandRegistryItems = {
         'clear': clearCommand,
         'ls': ListPhrasesCommand,
         'wrt': wrtCommand,

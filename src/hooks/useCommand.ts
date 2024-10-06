@@ -2,32 +2,30 @@
 import React, { useContext, useState, useCallback, useRef } from 'react';
 import { CommandContext } from '../contexts/CommandContext';
 import { parseCommand } from '../utils/commandUtils';
-import { IWPMCalculator } from '../utils/WPMCalculator';
 import { LogKeys } from '../types/TerminalTypes';
 import { TimeDisplay } from '../components/TimeDisplay';
 import WpmTable from '../components/WpmTable';
 import { commandRegistry } from '../commands/commandRegistry';
+import { useWPMCalculator } from './useWPMCaculator';
 
-interface UseCommandProps {
-  wpmCalculator: IWPMCalculator;
-  onOutputUpdate: (output: React.ReactNode) => void;
-}
+export interface IUseCommandProps { }
 
-export const useCommand = ({ wpmCalculator, onOutputUpdate }: UseCommandProps) => {
+export const useCommand = () => {
   const [output, setOutput] = useState<React.ReactNode[]>([]);
   const [commandHistory, setCommandHistory] = useState<string[]>([]);
   const [commandHistoryIndex, setCommandHistoryIndex] = useState(-1);
   const [commandHistoryFilter, setCommandHistoryFilter] = useState<string | null>(null);
+  const wpmCalculator = useWPMCalculator();
 
   const context = useContext(CommandContext);
+
   if (context === undefined) {
     throw new Error('useCommand must be used within a CommandProvider');
   }
 
   const appendToOutput = useCallback((newOutput: React.ReactNode) => {
     setOutput(prev => [...prev, newOutput]);
-    onOutputUpdate(newOutput);
-  }, [onOutputUpdate]);
+  }, []);
 
   const resetOutput = useCallback(() => {
     setOutput([]);

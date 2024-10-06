@@ -1,9 +1,8 @@
 import { useCallback, useRef } from 'react';
-import { IWPMCalculator } from '../utils/WPMCalculator';
 import { CharDuration, LogKeys } from '../types/TerminalTypes';
+import { useWPMCalculator } from './useWPMCaculator';
 
 interface UseCharacterHandlerProps {
-  wpmCalculator: IWPMCalculator;
   setCommandLine: React.Dispatch<React.SetStateAction<string>>;
   setLastTypedCharacter: React.Dispatch<React.SetStateAction<string | null>>;
   isInSvgMode: boolean;
@@ -20,7 +19,6 @@ interface UseCharacterHandlerProps {
 export type { UseCharacterHandlerProps };
 
 export const useCharacterHandler = ({
-  wpmCalculator,
   setCommandLine,
   setLastTypedCharacter,
   isInSvgMode,
@@ -37,6 +35,7 @@ export const useCharacterHandler = ({
   const tempPasswordRef = useRef<string>('');
 
   const handleCharacter = useCallback((character: string): number|CharDuration => {
+    const wpmCalculator = useWPMCalculator();
     const charDuration = wpmCalculator.addKeystroke(character);
     setCommandLine((prev) => prev + character);
     localStorage.setItem('currentCharacter', character);
@@ -81,7 +80,7 @@ export const useCharacterHandler = ({
     }
 
     return charDuration;
-  }, [wpmCalculator, setCommandLine, setLastTypedCharacter, isInSvgMode, isInLoginProcess, setIsInLoginProcess, writeOutputInternal, auth, setIsLoggedIn, updateUserName, terminalReset, prompt]);
+  }, [ setCommandLine, setLastTypedCharacter, isInSvgMode, isInLoginProcess, setIsInLoginProcess, writeOutputInternal, auth, setIsLoggedIn, updateUserName, terminalReset, prompt]);
 
   return { handleCharacter };
 };

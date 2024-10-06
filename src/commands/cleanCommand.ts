@@ -1,8 +1,7 @@
 
 // src/commands/cleanCommand.ts
 import { LogKeys } from '../types/TerminalTypes';
-import { HandTermRef } from '../components/HandTerm';
-import { ICommand } from './ICommand';
+import { ICommand, ICommandContext } from '../contexts/CommandContext';
 import { saveCommandHistory } from '../utils/commandUtils';
 
 export const cleanCommand: ICommand = {
@@ -11,11 +10,11 @@ export const cleanCommand: ICommand = {
     // Make sure the parameters match the ICommand execute definition
     execute: (
         _commandName: string,
+        context: ICommandContext,
         _args?: string[],
         _switches?: Record<string, boolean | string>,
-        handTerm?: HandTermRef
     ) => {
-        if (!handTerm) {
+        if (!context) {
             return { status: 404, message: 'No command context available.' };
         }
         // Logic to clean the command history from localStorage

@@ -1,19 +1,15 @@
 import { LogKeys } from '../types/TerminalTypes';
-import { HandTermRef } from '../components/HandTerm';
-import { ICommand } from './ICommand';
+import { ICommand, ICommandContext } from '../contexts/CommandContext';
 
 export const archiveCommand: ICommand = {
     name: 'archive',
     description: 'Archive the current command history',
     execute: (
         _commandName: string,
+        context: ICommandContext,
         _args?: string[],
         _switches?: Record<string, boolean | string>,
-        _handTerm?: HandTermRef
     ) => {
-        if (!_handTerm) {
-            return { status: 404, message: 'No command context available.' };
-        }
         const archiveNext = async (index: number) => {
             if (index >= localStorage.length) return { status: 200, message: 'Command history archived.' }; // Stop if we've processed all items
 
@@ -39,7 +35,7 @@ export const archiveCommand: ICommand = {
                                 const result = await (_handTerm.current as any)?.props.auth.saveLog(key, content, 'json');
                                 if (!result) {
                                     // If saveLog returns false, stop the archiving process
-                                    _handTerm.current?.writeOutput("Stopping archive due to saveLog returning false.");
+                                    context.appendToOutput("Stopping archive due to saveLog returning false.");
                                     return {
                                         status: 500,
                                         message: 'Stopping archive due to saveLog returning false.'
@@ -48,7 +44,7 @@ export const archiveCommand: ICommand = {
                                 localStorage.setItem(key.replace(logKey, logKey + '_archive'), content);
                                 localStorage.removeItem(key);
                             } catch (e: any) {
-                                _handTerm.current?.writeOutput(e.message);
+                                context.appendToOutput(e.message);
                             }
                         })();
                     }

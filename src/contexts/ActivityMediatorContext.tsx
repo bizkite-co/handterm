@@ -1,8 +1,8 @@
 // src/contexts/ActivityMediatorContext.tsx
 import React, { createContext, useContext } from 'react';
-import { useActivityMediatorReturn } from '../hooks/useActivityMediator';
+import { IActivityMediatorReturn } from '../hooks/useActivityMediator';
 
-const ActivityMediatorContext = createContext<useActivityMediatorReturn |
+const ActivityMediatorContext = createContext<IActivityMediatorReturn |
     null>(null);
 
 export const useActivityMediatorContext = () => {
@@ -15,7 +15,7 @@ export const useActivityMediatorContext = () => {
 
 interface ActivityMediatorProviderProps {
     children: React.ReactNode;
-    value: useActivityMediatorReturn;
+    value: IActivityMediatorReturn;
 }
 
 export const ActivityMediatorProvider: React.FC<ActivityMediatorProviderProps> = ({children, value }) => {

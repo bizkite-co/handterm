@@ -1,9 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback, useImperativeHandle, ReactNode } from 'react';
-import { IWPMCalculator, WPMCalculator } from '../utils/WPMCalculator';
 import { getNextTutorial, loadTutorials, resetTutorial } from '../utils/tutorialUtils';
 import { ActivityType, Tutorial } from '../types/Types';
 import { useActivityMediator, IActivityMediatorProps } from '../hooks/useActivityMediator';
-import { useCommandHistory } from '../hooks/useCommandHistory';
 import Game, { IGameHandle } from '../game/Game';
 import { IAuthProps } from '../lib/useAuth';
 import { usePhraseHandler } from '../hooks/usePhraseHandler';
@@ -16,8 +14,8 @@ import { Prompt } from './Prompt';
 import { LogKeys } from '../types/TerminalTypes';
 import { useResizeCanvasAndFont } from '../hooks/useResizeCanvasAndFont';
 import { useTerminal } from '../hooks/useTerminal';
-import { IUseCommandHandlerProps, useCommandHandler } from '../hooks/useCommandHandler';
 import { ActivityMediatorProvider } from '../contexts/ActivityMediatorContext';
+import { useWPMCalculator } from '../hooks/useWPMCaculator';
 
 export interface IHandTermWrapperProps {
   // Define the interface for your HandexTerm logic
@@ -42,7 +40,6 @@ export interface IHandTermWrapperMethods {
   terminalReset: () => void;
   saveCommandResponseHistory: (command: string, response: string, status: number) => string;
   focusTerminal: () => void;
-  handleCommand: (cmd: string) => Promise<any>; // Adjust the return type as needed
   handleCharacter: (character: string) => void;
   toggleVideo: () => boolean;
   refreshComponent: () => void;
@@ -54,13 +51,12 @@ export interface IHandTermWrapperMethods {
 
 export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTermWrapperProps>((props, forwardedRef) => {
   const targetWPM = 10;
-  const wpmCalculator: IWPMCalculator = new WPMCalculator();
+  const wpmCalculator = useWPMCalculator();
   const gameHandleRef = useRef<IGameHandle>(null);
   const nextCharsDisplayRef: React.RefObject<NextCharsDisplayHandle> = React.createRef();
   const timestamp = new Date().toTimeString().split(' ')[0];
   const zombie4StartPosition = { leftX: -70, topY: 0 };
 
-  const { addToCommandHistory } = useCommandHistory(loadTutorials());
   const [domain] = useState<string>('handterm.com');
   const [currentPhrase] = useState<GamePhrase | null>(null);
   const [currentTutorial] = useState<Tutorial | null>(getNextTutorial());
@@ -91,7 +87,6 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
     prompt: () => { },
     terminalReset: () => { },
     saveCommandResponseHistory: () => '',
-    handleCommand: async () => { },
     handleCharacter: () => { },
     toggleVideo: () => false,
     refreshComponent: () => { },
@@ -145,20 +140,10 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
     internalRef.current.writeOutput(output);
   }, [internalRef]);
 
-  const { handleCommand } = useCommandHandler();
-
-  const handleCommandExecuted = useCallback((command: string) => {
-    handleCommand(command);
-    addToCommandHistory(command);
-    // Any other logic you need after command execution
-  }, [handleCommand, addToCommandHistory]);
 
 
-  const { xtermRef, commandLine, writeToTerminal: xtermWrite, resetPrompt } = useTerminal({
-    wpmCalculator,
-    onCommandExecuted: handleCommandExecuted,
-    handTermRef: internalRef
-  });
+
+  const { xtermRef, commandLine, writeToTerminal: xtermWrite, resetPrompt } = useTerminal();
 
   // Expose methods via ref
   useImperativeHandle(internalRef, () => {
@@ -172,7 +157,6 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
         // Implement saveCommandResponseHistory logic
         return ''; // Return appropriate string
       },
-      handleCommand,
       handleCharacter: (character: string) => {
         // Implement handleCharacter logic
       },
@@ -210,15 +194,6 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
     scrollBottom: () => { },
   }));
 
-  const writeOutputInternal = useCallback((output: string) => {
-    addToCommandHistory(output);
-    props.onOutputUpdate(output);
-  }, [addToCommandHistory, props]);
-
-  const prompt = useCallback(() => {
-    terminalMethods.prompt();
-  }, [terminalMethods]);
-
   const {
     fontSize,
   } = useResizeCanvasAndFont();
@@ -251,12 +226,11 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
       if (githubAuth === 'success') {
         localStorage.setItem('githubUsername', githubUsername);
         window.history.replaceState({}, document.title, window.location.pathname);
-        writeOutputInternal(`GitHub authentication successful. Welcome, ${githubUsername}!`);
         setGithubAuthHandled(true);
         setGithubUsername(githubUsername);
       }
     }
-  }, [githubAuthHandled, writeOutputInternal]);
+  }, [githubAuthHandled]);
 
   // Determine the initial achievement and activity type
   const initializeActivity = useCallback(() => {

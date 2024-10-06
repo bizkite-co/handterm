@@ -1,7 +1,7 @@
 // src/commands/clearCommand.ts
 import { LogKeys } from '../types/TerminalTypes';
-import { IHandTermMethods } from "../components/HandTerm";
-import { ICommand } from './ICommand';
+import { IHandTermWrapperMethods } from "../components/HandTermWrapper";
+import { ICommand } from '../contexts/CommandContext';
 
 export const clearCommand: ICommand = {
   name: 'clear',
@@ -11,7 +11,7 @@ export const clearCommand: ICommand = {
     _commandName: string,
     args?: string[],
     _switches?: Record<string, boolean | string>,
-    handTerm?: React.RefObject<IHandTermMethods>
+    handTerm?: React.RefObject<IHandTermWrapperMethods>
   ) => {
     if (!handTerm?.current) {
       return { status: 404, message: 'No command context available.' };

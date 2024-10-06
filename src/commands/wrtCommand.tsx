@@ -1,5 +1,4 @@
-import { ICommand, ICommandResponse } from './ICommand';
-import { ICommandContext } from '../contexts/CommandContext';
+import { ICommand, ICommandResponse, ICommandContext } from '../contexts/CommandContext';
 import { ActivityType } from '../types/Types';
 
 export const wrtCommand: ICommand = {

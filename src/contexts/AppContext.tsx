@@ -1,6 +1,6 @@
 // AppContext.tsx
 import React, { createContext, useCallback, useContext, useState } from 'react';
-import { ICommandResponse } from '../commands/ICommand';
+import { ICommandResponse } from '../contexts/CommandContext';
 import { ActivityType } from '../types/Types';
 import { useActivityMediator, IActivityMediatorProps } from '../hooks/useActivityMediator';
 import { commandTextToHTML } from 'src/utils/commandUtils';

@@ -1,6 +1,6 @@
 import GamePhrases from '../utils/GamePhrases';
-import { ICommand } from './ICommand';
-import { IHandTermMethods } from '../components/HandTerm';
+import { ICommand, ICommandContext } from '../contexts/CommandContext';
+import { IHandTermWrapperMethods } from '../components/HandTermWrapper';
 
 export const ListPhrasesCommand: ICommand = {
   name: 'ls',
@@ -12,11 +12,11 @@ export const ListPhrasesCommand: ICommand = {
   },
   execute: (
     _commandName: string, 
+    context: ICommandContext,
     _args?: string[], 
     _switches?: Record<string, boolean | string>,
-    _handTerm?: React.RefObject<IHandTermMethods>
   ) => {
-    if (!_handTerm) {
+    if (!context) {
       return { status: 404, message: 'No command context available.'};
     }
     // Logic to clear the command history from localStorage
@@ -26,10 +26,8 @@ export const ListPhrasesCommand: ICommand = {
       .map(x => x.key)
       .join('\n');
 
-    if (_handTerm && _handTerm.current) {
-      _handTerm.current.saveCommandResponseHistory(_commandName, phrases, 200);
-      _handTerm.current.prompt();
-    }
+      context.saveCommandResponseHistory(_commandName, phrases, 200);
+      context.prompt();
     return { status: 200, message: phrases};
   }
 };

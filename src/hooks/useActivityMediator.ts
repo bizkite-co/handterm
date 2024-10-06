@@ -5,7 +5,7 @@ import { IGameHandle } from '../game/Game';
 import { GamePhrase } from '../utils/GamePhrases';
 import { getNextTutorial, unlockTutorial } from '../utils/tutorialUtils';
 
-export type useActivityMediatorReturn = {
+export type IActivityMediatorReturn = {
   currentActivity: ActivityType;
   isInGameMode: boolean;
   isInTutorial: boolean;
@@ -33,7 +33,7 @@ export interface IActivityMediatorProps {
   startGame: () => void;
 }
 
-export function useActivityMediator(props: IActivityMediatorProps): useActivityMediatorReturn {
+export function useActivityMediator(props: IActivityMediatorProps): IActivityMediatorReturn {
   const [heroAction, setHeroAction] = useState<ActionType>('Idle');
   const [zombie4Action, setZombie4Action] = useState<ActionType>('Walk');
 
