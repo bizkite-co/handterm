@@ -1,48 +1,68 @@
 // src/commands/CommandProvider.tsx
-import React, { useCallback, useMemo, useState } from 'react';
-import { CommandContext, ICommandContext } from './CommandContext';
+import React, { useCallback, useMemo, useRef, useEffect } from 'react';
+import { CommandContext, ICommandContext } from '../contexts/CommandContext';
 import { commandRegistry } from './commandRegistry';
 import { IHandTermWrapperMethods } from '../components/HandTermWrapper';
+import { IAuthProps } from '../lib/useAuth';
+import { useActivityMediatorContext } from '../contexts/ActivityMediatorContext';
 
 interface CommandProviderProps {
-  children?: React.ReactNode;
+  children: React.ReactNode;
   handTermRef: React.RefObject<IHandTermWrapperMethods>;
+  auth: IAuthProps;
 }
 
-export const CommandProvider: React.FC<CommandProviderProps> = ({ children, handTermRef }) => {
+export const CommandProvider: React.FC<CommandProviderProps> = ({ children,
+  handTermRef, auth }) => {
+    const contextRef = useRef<ICommandContext | null>(null);
+    const activityMediator = useActivityMediatorContext();
 
-  const [commandHistory] = useState<string[]>([]);
-
-  const executeCommand = useCallback((commandName: string, args?: string[], switches?: Record<string, boolean | string>) => {
+  const executeCommand = useCallback((commandName: string, args?: string[],
+    switches?: Record<string, boolean | string>) => {
     const handTerm = handTermRef.current;
-    if (!handTerm) {
-      console.error('CommandProvider: handTermRef.current is NULL');
-      return {status: 404, message: 'CommandProvider: handTermRef.current is NULL'};
+    if (!handTerm || !contextRef.current) {
+      console.error('CommandProvider: handTermRef.current or context is NULL');
+      return { status: 404, message: 'CommandProvider: handTermRef.current or context is NULL' };
     }
     const command = commandRegistry.getCommand(commandName);
     if (command) {
-      // Execute the command and return the result
-      return {status: 200, message: command.execute(commandName, args, switches, { current: handTerm }).message };
+      return command.execute(commandName, contextRef.current, args, switches);
     }
-    return { status: 404, message: `CommandProvider: Command not found: ${commandName}`};
+    return { status: 404, message: `CommandProvider: Command not found: ${commandName}` };
   }, [handTermRef]);
 
   const appendToOutput = useCallback((element: React.ReactNode) => {
     const handTerm = handTermRef.current;
     if (!handTerm) {
       console.error('CommandProvider: handTermRef.current is NULL');
-      return 'CommandProvider: handTermRef.current is NULL';
+      return;
     }
-    if(element && handTerm) handTerm.writeOutput(element.toString());
+    handTerm.writeOutput(element);
   }, [handTermRef]);
 
-
-  // Provide the context with the necessary values
   const contextValue = useMemo<ICommandContext>(() => ({
-    commandHistory,
+    commandHistory: [],
+    auth,
+    activityMediator,
     executeCommand,
-    appendToOutput: appendToOutput,
-  }), [executeCommand]);
+    appendToOutput,
+    setEditMode: (isEditMode: boolean) => {
+      const handTerm = handTermRef.current;
+      if (handTerm && handTerm.setEditMode) {
+        handTerm.setEditMode(isEditMode);
+      }
+    },
+    handleEditSave: (content: string) => {
+      const handTerm = handTermRef.current;
+      if (handTerm && handTerm.handleEditSave) {
+        handTerm.handleEditSave(content);
+      }
+    },
+  }), [auth, activityMediator, executeCommand, appendToOutput, handTermRef]);
+
+  useEffect(() => {
+    contextRef.current = contextValue;
+  }, [contextValue]);
 
   return (
     <CommandContext.Provider value={contextValue}>

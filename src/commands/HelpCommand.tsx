@@ -1,17 +1,16 @@
-import React from 'react';
 import { Chord } from '../components/Chord';
 import ReactDOMServer from 'react-dom/server';
 import { ICommand, ICommandResponse } from './ICommand';
-import { IHandTermWrapperMethods } from '../components/HandTermWrapper';
+import { ICommandContext } from 'src/contexts/CommandContext';
 
 const HelpCommand: ICommand = {
   name: 'help',
   description: 'Display help information',
   execute: (
     commandName: string,
+    context: ICommandContext,
     args?: string[],
     switches?: Record<string, boolean | string>,
-    handTermRef?: React.MutableRefObject<IHandTermWrapperMethods | null>
   ): ICommandResponse => {
     if (commandName === 'help' || commandName === '411') {
       const commandChords = [
@@ -29,8 +28,6 @@ const HelpCommand: ICommand = {
         return ReactDOMServer.renderToStaticMarkup(element);
       }).join('');
       const response = "<div class='chord-display-container'>" + commandChordsHtml + "</div>";
-
-      handTermRef?.current?.writeOutput(<div dangerouslySetInnerHTML={{ __html: response }} />);
       return { status: 200, message: "Help information displayed" };
     }
     return { status: 404, message: "Help command not recognized" };

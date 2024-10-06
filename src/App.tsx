@@ -4,17 +4,45 @@ import { HandTermWrapper, IHandTermWrapperMethods } from './components/HandTermW
 import { TerminalCssClasses } from './types/TerminalTypes';
 import { useAuth } from './lib/useAuth';
 import { Output } from './components/Output';
-import { XtermAdapterMethods } from './components/XtermAdapter';
+import { CommandProvider } from './commands/CommandProvider';
 
 const MemoizedOutput = React.memo(Output);
 
 const App = () => {
   const containerRef = React.createRef<HTMLDivElement>();
   const [containerWidth, setContainerWidth] = React.useState<number>(0);
-  const handexTermWrapperRef = useRef<IHandTermWrapperMethods>(null);
-  const auth = useAuth();
   const [outputElements, setOutputElements] = useState<React.ReactNode[]>([]);
-  const adapterRef = useRef<XtermAdapterMethods>(null);
+
+  const getContainerWidth = () => {
+    return containerRef.current?.clientWidth ?? 0
+  }
+
+  useEffect(() => {
+    const handleResize = () => {
+      const w = getContainerWidth();
+      setContainerWidth(w);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const handleOutputUpdate = useCallback((newOutput: React.ReactNode) => {
+    setOutputElements(_prevOutputs => [newOutput]);
+  }, []);
+
+  const handleTouchStart = useCallback(() => {
+    // Implement your touch start logic here
+    console.log("handling touch start");
+  }, []);
+
+  const handleTouchEnd = useCallback(() => {
+    // Implement your touch end logic here
+    console.log("Handling touch end");
+  }, []);
+
+  const auth = useAuth();
+  const handexTermWrapperRef = useRef<IHandTermWrapperMethods>(null);
   useEffect(() => {
     const w = getContainerWidth();
     setContainerWidth(w);
@@ -47,51 +75,20 @@ const App = () => {
     };
   }, []);
 
-  const getContainerWidth = () => {
-    return containerRef.current?.clientWidth ?? 0
-  }
-
-  useEffect(() => {
-    const handleResize = () => {
-      const w = getContainerWidth();
-      setContainerWidth(w);
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  const handleOutputUpdate = useCallback((newOutput: React.ReactNode) => {
-    setOutputElements(_prevOutputs => [newOutput]);
-  }, []);
-
-  const handleTouchStart = useCallback(() => {
-    // Implement your touch start logic here
-    console.log("handling touch start");
-  }, []);
-
-  const handleTouchEnd = useCallback(() => {
-    // Implement your touch end logic here
-    console.log("Handling touch end");
-  }, []);
-
   return (
-    <>
-      <div ref={containerRef}>
-        <MemoizedOutput
-          elements={outputElements}
-          onTouchStart={handleTouchStart}
-          onTouchEnd={handleTouchEnd}
-        />
-        <HandTermWrapper
-          ref={handexTermWrapperRef}
-          adapterRef={adapterRef}
-          auth={auth}
-          terminalWidth={containerWidth}
-          onOutputUpdate={handleOutputUpdate}
-        />
-      </div>
-    </>
+    <div ref={containerRef}>
+      <MemoizedOutput
+        elements={outputElements}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+      />
+      <HandTermWrapper
+        ref={handexTermWrapperRef}
+        auth={auth}
+        terminalWidth={containerWidth}
+        onOutputUpdate={handleOutputUpdate}
+      />
+    </div>
   );
 };
 

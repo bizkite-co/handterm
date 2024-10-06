@@ -1,13 +1,14 @@
 // hooks/useTerminal.ts
-import { useCallback, useState, useEffect, useRef, MutableRefObject } from 'react';
+import React, { useCallback, useState, useEffect, useRef, MutableRefObject } from 'react';
 import { useXTerm } from 'react-xtermjs';
 import { FitAddon } from '@xterm/addon-fit';
 import { XtermAdapterConfig } from '../components/XtermAdapterConfig';
 import { IWPMCalculator } from '../utils/WPMCalculator';
+import { IHandTermWrapperMethods } from 'src/components/HandTermWrapper';
 
 interface UseTerminalProps {
   wpmCalculator: IWPMCalculator;
-  handTermRef: MutableRefObject<any>;
+  handTermRef: React.RefObject<IHandTermWrapperMethods>;
   onCommandExecuted: (command: string) => void;
 }
 

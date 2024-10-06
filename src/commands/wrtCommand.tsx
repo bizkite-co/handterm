@@ -1,6 +1,6 @@
-import { ICommand } from './ICommand';
-import React from 'react';
-import { IHandTermMethods } from '../components/HandTerm';
+import { ICommand, ICommandResponse } from './ICommand';
+import { ICommandContext } from '../contexts/CommandContext';
+import { ActivityType } from '../types/Types';
 
 export const wrtCommand: ICommand = {
   name: 'wrt',
@@ -12,68 +12,59 @@ export const wrtCommand: ICommand = {
   },
   execute: (
     _commandName: string,
+    context: ICommandContext,
     args?: string[],
     switches?: Record<string, boolean | string>,
-    handTerm?: React.RefObject<IHandTermMethods>
-  ) => {
-    if (!handTerm?.current) {
-      return { status: 404, message: 'No command context available.' };
-    }
-
-    const handTermInstance = handTerm.current as any;
-
+  ): ICommandResponse => {
     if (switches && switches['file']) {
       // Logic to read and write file contents
       const fileName = typeof switches['file'] === 'string' ? switches['file'] : '';
       if (fileName) {
         // Read file contents and write to terminal
-        handTermInstance.props.auth.getFile(fileName, 'txt')
+        context.auth.getFile(fileName, 'txt')
           .then((response: any) => {
             if (response.status === 200 && response.data) {
-              handTermInstance.writeOutput(response.data);
+              context.appendToOutput(response.data);
             } else {
-              handTermInstance.writeOutput(`Error reading file: ${fileName}`);
+              context.appendToOutput(<div>`Error reading file: ${fileName}`</div>);
             }
           })
           .catch((error: Error) => {
-            handTermInstance.writeOutput(`Error reading file: ${error.message}`);
+            context.appendToOutput(<div>`Error reading file: ${error.message}`</div>);
           });
       } else {
-        handTermInstance.writeOutput('Please provide a file name.');
+        context.appendToOutput('Please provide a file name.');
       }
     } else if (switches && switches['edit']) {
       // Logic to edit file contents
       const fileName = typeof switches['edit'] === 'string' ? switches['edit'] : '';
       if (fileName) {
-        handTermInstance.setState({
-          editMode: true,
-          editFilePath: fileName,
-          editFileExtension: 'txt',
-        });
+        context.setEditMode(true);
+        context.activityMediator.determineActivityState(ActivityType.EDIT);
       } else {
-        handTermInstance.writeOutput('Please provide a file name to edit.');
+        context.appendToOutput('Please provide a file name to edit.');
       }
     } else if (switches && switches['save']) {
       // Logic to save file contents
       const fileName = typeof switches['save'] === 'string' ? switches['save'] : '';
       if (fileName) {
-        handTermInstance.props.auth.getFile(fileName, 'txt')
+        context.auth.getFile(fileName, 'txt')
           .then((response: any) => {
             if (response.status === 200 && response.data) {
-              handTermInstance.handleEditSave(response.data);
+              context.handleEditSave(response.data);
             } else {
-              handTermInstance.writeOutput(`Error reading file: ${fileName}`);
+              context.appendToOutput(<div>`Error reading file: ${fileName}`</div>);
             }
           })
           .catch((error: Error) => {
-            handTermInstance.writeOutput(`Error reading file: ${error.message}`);
+            context.appendToOutput(`Error reading file: ${error.message}`);
           });
       } else {
-        handTermInstance.writeOutput('Please provide a file name to save.');
+        context.appendToOutput('Please provide a file name to save.');
       }
     } else if (args && args.length > 0) {
       // Write the provided arguments to the terminal
-      handTermInstance.writeOutput(args.join(' '));
+      context.appendToOutput(args.join(' '));
     } else {
       return { status: 400, message: 'Please provide text to write or use a switch.' };
     }
