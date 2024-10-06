@@ -5,14 +5,12 @@
   "license": "Apache-2.0",
   "type": "module",
   "scripts": {
-    "cpCdk": "cp src/shared/endpoints.ts cdk/lambda/cdkshared/",
-    "dev": "vite",
+    "dev": "yarn clean && vite",
     "build": "vite build",
+    "clean": "rm -rf dist && yarn cache clean",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
     "build-shared": "vite build --ssr",
-    "cdk-build": "yarn cpCdk && cd cdk && yarn build && cd ..",
-    "cdk-deploy": "yarn cdk-build && cd cdk && yarn deploy && cd ..",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js"
   },
   "dependencies": {
