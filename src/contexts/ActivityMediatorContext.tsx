@@ -23,17 +23,28 @@ export const ActivityMediatorProvider: React.FC<{ children: React.ReactNode }> =
 
     const determineActivityState = useCallback((commandActivity: ActivityType | null = null) => {
         if (commandActivity) {
+            console.log(`Changing activity state from ${ActivityType[currentActivity]} to ${ActivityType[commandActivity]}`);
             setCurrentActivity(commandActivity);
             return commandActivity;
         }
-        // Add your logic here for determining the activity state
         return currentActivity;
     }, [currentActivity]);
 
     const handleCommandExecuted = useCallback((parsedCommand: ParsedCommand) => {
-        // Add your logic here for handling executed commands
         console.log('Command executed:', parsedCommand);
-    }, []);
+        switch (parsedCommand.command) {
+            case 'tut':
+                determineActivityState(ActivityType.TUTORIAL);
+                break;
+            case 'play':
+                determineActivityState(ActivityType.GAME);
+                break;
+            case 'edit':
+                determineActivityState(ActivityType.EDIT);
+                break;
+            // Add other cases as needed
+        }
+    }, [determineActivityState]);
 
     const value: IActivityMediatorContext = {
         currentActivity,

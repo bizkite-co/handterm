@@ -57,6 +57,11 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
   const { executeCommand, commandHistory } = useCommand();
   const { xtermRef, commandLine, writeToTerminal, resetPrompt } = useTerminal();
 
+  useEffect(() => {
+    console.log('Current activity:', ActivityType[currentActivity]);
+    // Add any logic that should run when the activity changes
+  }, [currentActivity]);
+
   const targetWPM = 10;
   const wpmCalculator = useWPMCalculator();
   const gameHandleRef = useRef<IGameHandle>(null);
