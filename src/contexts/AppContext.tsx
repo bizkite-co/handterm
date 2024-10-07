@@ -1,79 +1,63 @@
-// AppContext.tsx
-import React, { createContext, useCallback, useContext, useState } from 'react';
-import { ICommandResponse } from '../contexts/CommandContext';
+// src/contexts/AppContext.tsx
+import React, { createContext, useContext, useState, useCallback } from 'react';
 import { ActivityType } from '../types/Types';
-import { useActivityMediator, IActivityMediatorProps } from '../hooks/useActivityMediator';
-import { commandTextToHTML } from 'src/utils/commandUtils';
+import { useCommandContext } from './CommandContext';
+import { useActivityMediatorContext } from './ActivityMediatorContext';
 
 interface AppContextType {
-    commandHistory: string[];
-    appendToOutput: (element: React.ReactNode) => void;
-    executeCommand: (commandName: string, args?: string[], switches?: Record<string,
-        boolean | string>) => ICommandResponse;
-    setEditMode: (isEditMode: boolean) => void;
-    handleEditSave: (content: string) => void;
-    currentActivity: ActivityType;
-    setCurrentActivity: React.Dispatch<React.SetStateAction<ActivityType>>;
-    // ... other properties and methods
+  currentActivity: ActivityType;
+  setCurrentActivity: (activity: ActivityType) => void;
+  isLoggedIn: boolean;
+  setIsLoggedIn: (isLoggedIn: boolean) => void;
+  userName: string | null;
+  setUserName: (userName: string | null) => void;
+  outputElements: React.ReactNode[];
+  appendToOutput: (element: React.ReactNode) => void;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
 
 export const useAppContext = () => {
-    const context = useContext(AppContext);
-    if (!context) {
-        throw new Error('useAppContext must be used within an AppProvider');
-    }
-    return context;
+  const context = useContext(AppContext);
+  if (!context) {
+    throw new Error('useAppContext must be used within an AppProvider');
+  }
+  return context;
 };
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [commandHistory, setCommandHistory] = useState<string[]>([]);
-    const [currentActivity, setCurrentActivity] = useState<ActivityType>(ActivityType.NORMAL);
-    const [editContent, setEditContent] = useState('');
+  const [currentActivity, setCurrentActivity] = useState<ActivityType>(ActivityType.NORMAL);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userName, setUserName] = useState<string | null>(null);
+  const [outputElements, setOutputElements] = useState<React.ReactNode[]>([]);
 
-    const handleEditSave = useCallback((content: string) => {
-        // Implement the logic to save the edited content                          
-        setEditContent(content);
-        // You might want to perform additional actions here, such as:             
-        // - Sending the content to a server                                       
-        // - Updating other parts of your application state                        
-        // - Triggering a re-render or state update in other components            
-        console.log('Saving edited content:', content);
-        // Example: if you need to execute a command after saving                  
-        // executeCommand('save', [content]);                                      
-    }, [/* add any dependencies */]);
+  const { handleCommandExecuted } = useActivityMediatorContext();
 
-    // Initialize activityMediator
-    const activityMediatorProps: IActivityMediatorProps = {
-        resetTutorial,
-        setCurrentActivity,
-        currentActivity,
-        startGame,
-    };
+  const appendToOutput = useCallback((element: React.ReactNode) => {
+    console.log('AppContext: appendToOutput called with', element);
+    if (Array.isArray(element)) {
+      setOutputElements(prev => [...prev, ...element]);
+    } else {
+      setOutputElements(prev => [...prev, element]);
+    }
+    // Call handleCommandExecuted if the element is a command output
+    if (React.isValidElement(element) && element.props['data-status'] !== undefined) {
+      const command = element.props.children[0].props.children[3]; // Assuming the command is the fourth child of the first child
+      console.log('AppContext: Calling handleCommandExecuted with:', command);
+      handleCommandExecuted(command);
+    }
+  }, [handleCommandExecuted]);
 
-    const activityMediator = useActivityMediator(activityMediatorProps);
+  const value = {
+    currentActivity,
+    setCurrentActivity,
+    isLoggedIn,
+    setIsLoggedIn,
+    userName,
+    setUserName,
+    outputElements,
+    appendToOutput,
+  };
 
-    const value: AppContextType = {
-        commandHistory,
-        appendToOutput: (element: React.ReactNode) => {
-            // Implement appendToOutput logic
-        },
-        executeCommand: (commandName: string, args?: string[], switches?: Record<string, boolean | string>) => {
-            // Implement executeCommand logic
-            return {} as ICommandResponse; // Replace with actual implementation
-        },
-        setEditMode: (isEditMode: boolean) => {
-            const handTerm = handTermRef.current;
-            if (handTerm && handTerm.setEditMode) {
-                handTerm.setEditMode(isEditMode);
-            }
-        },
-        handleEditSave,
-        currentActivity,
-        setCurrentActivity,
-        // ... other methods and properties
-    };
-
-    return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
+  return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 };

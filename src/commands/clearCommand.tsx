@@ -1,7 +1,7 @@
 // src/commands/clearCommand.ts
 import { LogKeys } from '../types/TerminalTypes';
 import { IHandTermWrapperMethods } from "../components/HandTermWrapper";
-import { ICommand } from '../contexts/CommandContext';
+import { ICommand, ICommandContext } from '../contexts/CommandContext';
 
 export const clearCommand: ICommand = {
   name: 'clear',
@@ -9,6 +9,7 @@ export const clearCommand: ICommand = {
   // Make sure the parameters match the ICommand execute definition
   execute: (
     _commandName: string,
+    context: ICommandContext,
     args?: string[],
     _switches?: Record<string, boolean | string>,
     handTerm?: React.RefObject<IHandTermWrapperMethods>

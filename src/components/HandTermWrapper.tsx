@@ -14,8 +14,10 @@ import { Prompt } from './Prompt';
 import { LogKeys } from '../types/TerminalTypes';
 import { useResizeCanvasAndFont } from '../hooks/useResizeCanvasAndFont';
 import { useTerminal } from '../hooks/useTerminal';
-import { ActivityMediatorProvider } from '../contexts/ActivityMediatorContext';
 import { useWPMCalculator } from '../hooks/useWPMCaculator';
+import { useAppContext } from '../contexts/AppContext';
+import { useCommand } from '../hooks/useCommand';
+
 
 export interface IHandTermWrapperProps {
   // Define the interface for your HandexTerm logic
@@ -35,7 +37,7 @@ export interface XtermMethods {
   scrollBottom: () => void;
 }
 export interface IHandTermWrapperMethods {
-  writeOutput: (output: React.ReactNode) => void;
+  writeOutput: (output: string) => void;
   prompt: () => void;
   terminalReset: () => void;
   saveCommandResponseHistory: (command: string, response: string, status: number) => string;
@@ -50,6 +52,10 @@ export interface IHandTermWrapperMethods {
 }
 
 export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTermWrapperProps>((props, forwardedRef) => {
+  const { currentActivity, setCurrentActivity } = useAppContext();
+  const { executeCommand, commandHistory } = useCommand();
+  const { xtermRef, commandLine, writeToTerminal, resetPrompt } = useTerminal();
+
   const targetWPM = 10;
   const wpmCalculator = useWPMCalculator();
   const gameHandleRef = useRef<IGameHandle>(null);
@@ -60,7 +66,6 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
   const [domain] = useState<string>('handterm.com');
   const [currentPhrase] = useState<GamePhrase | null>(null);
   const [currentTutorial] = useState<Tutorial | null>(getNextTutorial());
-  const [currentActivity, setCurrentActivity] = useState<ActivityType>(ActivityType.NORMAL);
   const initialCanvasHeight = localStorage.getItem('canvasHeight') || '100';
   const [canvasHeight] = useState(parseInt(initialCanvasHeight));
   const [lastTypedCharacter, setLastTypedCharacter] = useState<string | null>(null);
@@ -135,15 +140,6 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
 
   // Initialize activityMediator with the appropriate initial values
   const activityMediator = useActivityMediator(activityMediatorProps);
-
-  const writeToTerminal = useCallback((output: React.ReactNode) => {
-    internalRef.current.writeOutput(output);
-  }, [internalRef]);
-
-
-
-
-  const { xtermRef, commandLine, writeToTerminal: xtermWrite, resetPrompt } = useTerminal();
 
   // Expose methods via ref
   useImperativeHandle(internalRef, () => {
@@ -291,7 +287,7 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
   }
 
   return (
-    <ActivityMediatorProvider value={activityMediator}>
+    <>
       {currentActivity === ActivityType.GAME && (<Game
         ref={gameHandleRef}
         canvasHeight={canvasHeight}
@@ -329,6 +325,6 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
         timestamp={timestamp}
       />
       <div ref={xtermRef} />
-    </ActivityMediatorProvider>
+    </>
   );
 });

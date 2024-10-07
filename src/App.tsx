@@ -4,7 +4,9 @@ import { HandTermWrapper, IHandTermWrapperMethods } from './components/HandTermW
 import { TerminalCssClasses } from './types/TerminalTypes';
 import { useAuth } from './lib/useAuth';
 import { Output } from './components/Output';
-import { CommandProvider } from './commands/CommandProvider';
+import { AppProvider } from './contexts/AppContext';
+import { CommandProvider } from './contexts/CommandProvider';
+import { ActivityMediatorProvider } from './contexts/ActivityMediatorContext';
 
 const MemoizedOutput = React.memo(Output);
 
@@ -76,19 +78,24 @@ const App = () => {
   }, []);
 
   return (
-    <div ref={containerRef}>
-      <MemoizedOutput
-        elements={outputElements}
-        onTouchStart={handleTouchStart}
-        onTouchEnd={handleTouchEnd}
-      />
-      <HandTermWrapper
-        ref={handexTermWrapperRef}
-        auth={auth}
-        terminalWidth={containerWidth}
-        onOutputUpdate={handleOutputUpdate}
-      />
-    </div>
+    <ActivityMediatorProvider>
+      <div ref={containerRef}>
+        <AppProvider>
+          <CommandProvider
+            auth={auth}
+            handTermRef={handexTermWrapperRef}
+          >
+            <MemoizedOutput />
+            <HandTermWrapper
+              ref={handexTermWrapperRef}
+              auth={auth}
+              terminalWidth={containerWidth}
+              onOutputUpdate={handleOutputUpdate}
+            />
+          </CommandProvider>
+        </AppProvider>
+      </div>
+    </ActivityMediatorProvider>
   );
 };
 

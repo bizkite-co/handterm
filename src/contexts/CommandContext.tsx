@@ -1,7 +1,7 @@
-// src/commands/CommandContext.tsx
-import React from 'react';
-import { IAuthProps } from 'src/lib/useAuth';
-import { IActivityMediatorReturn } from 'src/hooks/useActivityMediator';
+// src/contexts/CommandContext.tsx
+import React, { createContext, useContext } from 'react';
+import { IAuthProps } from '../lib/useAuth';
+import { IHandTermWrapperMethods } from '../components/HandTermWrapper';
 
 export interface ICommandResponse {
   status: number;
@@ -20,14 +20,21 @@ export interface ICommand {
   ) => ICommandResponse;
 }
 export interface ICommandContext {
+  executeCommand: (command: string) => Promise<void>;
   commandHistory: string[];
-  appendToOutput: (element: React.ReactNode) => void;
-  setEditMode: (isEditMode: boolean) => void;
-  handleEditSave: (content: string) => void;
+  addToCommandHistory: (command: string) => void;
+  output: React.ReactNode[];
+  appendToOutput: (output: React.ReactNode) => void;
+  handTermRef: React.RefObject<IHandTermWrapperMethods>;
   auth: IAuthProps;
-  activityMediator: IActivityMediatorReturn;
-  // Add any other methods that commands might need
 }
 
-// Create the context with a default value
-export const CommandContext = React.createContext<ICommandContext | null>(null);
+export const CommandContext = createContext<ICommandContext | null>(null);
+
+export const useCommandContext = () => {
+  const context = useContext(CommandContext);
+  if (!context) {
+    throw new Error('useCommandContext must be used within a CommandProvider');
+  }
+  return context;
+};

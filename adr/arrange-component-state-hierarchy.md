@@ -11,26 +11,26 @@
 2. Shared/Global State:
    - Keep only truly global states in AppContext, such as:
      - currentActivity
+     - Command output history
      - isLoggedIn
      - userName
    - These are states that genuinely affect multiple components or the overall app behavior.
 
-3. Preventing Vestigial Values:
-   - Code Review: Regularly review your interfaces and components to remove unused props or state.
-   - Static Analysis: Use TypeScript's strict mode and tools like ESLint to catch unused variables.
-   - Unit Tests: Write tests that check for the presence and necessity of each prop and state.
+3. Command Handling:
+   - Use CommandContext to manage command-related state and functions:
+     - executeCommand
+     - commandHistory
+     - WPM calculation
 
-4. Architectural Documentation:
-   - Component Tree: Create a visual representation of your component hierarchy.
-   - State Management Diagram: Show which states are managed where (global, component-level, etc.).
-   - Data Flow Diagram: Illustrate how data and actions flow between components.
+4. Terminal Management:
+   - Use useTerminal hook for xterm-specific functionality:
+     - xtermRef
+     - commandLine
+     - writeToTerminal
+     - resetPrompt
 
-5. Code Organization:
-   - Use a feature-based folder structure to keep related components, hooks, and contexts together.
-   - Implement custom hooks for shared logic between components.
-
-6. Regular Refactoring:
-   - Schedule regular refactoring sessions to clean up and optimize your code structure.
+5. Activity Mediation:
+   - Use ActivityMediatorContext for managing transitions between different activities (normal, game, tutorial, edit).
 
 Here's a simple example of how you might document your component and state structure:
 
@@ -56,7 +56,7 @@ App
 ```
 
 ```mermaid
-graph TD
+flowchart TD
     A[App] --> AC[AppContext]
     AC --> T[Terminal]
     AC --> E[Editor]
@@ -65,7 +65,7 @@ graph TD
     
     T --> |Uses| TS[TerminalState]
     E --> |Uses| ES[EditorState]
-    G --> |Uses| H[GameState]
+    G --> |Uses| GSt[GameState]
 
     subgraph history
       direction TB
@@ -75,20 +75,20 @@ graph TD
     
     TS --> |Updates| CLI[currentCommandLine]
     ES --> |Updates| EC[editContent]
-    H --> |Updates| GS[gameScore]
+    GSt --> |Updates| GSc[gameScore]
 
-    CLI --> |Updates| H
-    
+    CLI --> |Updates| GSt
+
     U[User Input] --> |Triggers| T
     T --> |Triggers| E
-    T --> |Triggers| G
-    T ==> |Triggers| AC
+    T --> |commandLine,Command| G
+    T ==> |Command| AC
     
     N[API] --> |Fetches Data| AC
 
     subgraph auth
       direction TB
       AC --> |Updates Global State| O[isLoggedIn]
-      AC --> |Updates Global State| P[userName]
+      AC --> |Updates Global State| UN[userName]
     end
 ```

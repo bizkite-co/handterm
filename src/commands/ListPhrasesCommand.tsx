@@ -27,7 +27,6 @@ export const ListPhrasesCommand: ICommand = {
       .join('\n');
 
       context.saveCommandResponseHistory(_commandName, phrases, 200);
-      context.prompt();
     return { status: 200, message: phrases};
   }
 };

@@ -1,24 +1,21 @@
 // src/components/Output.tsx
 
-import React, { TouchEventHandler } from "react";
+import React from "react";
 import { TerminalCssClasses } from "../types/TerminalTypes";
+import { useAppContext } from "../contexts/AppContext";
 
-export interface OutputProps {
-    elements: React.ReactNode[];
-    onTouchStart: TouchEventHandler<HTMLDivElement>;
-    onTouchEnd: TouchEventHandler<HTMLDivElement>;
-}
 
-export const Output = React.memo(React.forwardRef<HTMLDivElement, OutputProps>(({ elements, onTouchStart, onTouchEnd }, ref) => {
+export const Output: React.FC = () => {
+    const { outputElements } = useAppContext();
+
+  console.log('Rendering Output component, outputElements:', outputElements);
+    console.log(outputElements);
     return (
         <div
             id={TerminalCssClasses.Output}
             className={TerminalCssClasses.Output}
-            onTouchStart={onTouchStart}
-            onTouchEnd={onTouchEnd}
-            ref={ref}
         >
-            {elements.map((element, index) => {
+            {outputElements.map((element, index) => {
                 if (typeof element === 'string') {
                     return <div key={index} dangerouslySetInnerHTML={{ __html: element }} />;
                 } else {
@@ -27,4 +24,4 @@ export const Output = React.memo(React.forwardRef<HTMLDivElement, OutputProps>((
             })}
         </div>
     );
-}));
+};
