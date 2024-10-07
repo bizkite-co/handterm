@@ -1,18 +1,17 @@
 import { Chord } from '../components/Chord';
 import ReactDOMServer from 'react-dom/server';
 import { ICommand, ICommandResponse } from '../contexts/CommandContext';
-import { ICommandContext } from 'src/contexts/CommandContext';
+import { ICommandContext } from '../contexts/CommandContext';
+import { ParsedCommand } from '../types/Types';
 
 const HelpCommand: ICommand = {
   name: 'help',
   description: 'Display help information',
   execute: (
-    commandName: string,
     context: ICommandContext,
-    args?: string[],
-    switches?: Record<string, boolean | string>,
+    parsedCommand: ParsedCommand,
   ): ICommandResponse => {
-    if (commandName === 'help' || commandName === '411') {
+    if (parsedCommand.command === 'help' || parsedCommand.command === '411') {
       const commandChords = [
         'DELETE (Backspace)',
         'Return (ENTER)',

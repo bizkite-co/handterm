@@ -1,7 +1,7 @@
 // src/hooks/useWPMCalculator.ts
 
 import { useState, useCallback, useMemo } from 'react';
-import { CharDuration } from 'src/types/TerminalTypes';
+import { CharDuration } from '../types/TerminalTypes';
 
 interface WPM {
     wpm: number;

@@ -17,6 +17,7 @@ import { useTerminal } from '../hooks/useTerminal';
 import { useWPMCalculator } from '../hooks/useWPMCaculator';
 import { useAppContext } from '../contexts/AppContext';
 import { useCommand } from '../hooks/useCommand';
+import { useActivityMediatorContext } from 'src/contexts/ActivityMediatorContext';
 
 
 export interface IHandTermWrapperProps {
@@ -52,7 +53,7 @@ export interface IHandTermWrapperMethods {
 }
 
 export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTermWrapperProps>((props, forwardedRef) => {
-  const { currentActivity, setCurrentActivity } = useAppContext();
+  const { currentActivity } = useActivityMediatorContext();
   const { executeCommand, commandHistory } = useCommand();
   const { xtermRef, commandLine, writeToTerminal, resetPrompt } = useTerminal();
 
@@ -117,6 +118,7 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
   const handleFocusEditor = useCallback(() => {
     // Implement focus editor logic here
     // TODO: put the focus into the editor
+    
   }, []);
 
   // Function to reset tutorial and refresh HandTerm
@@ -134,7 +136,6 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
     resetTutorial: onResetTutorial,
     currentTutorial: getNextTutorial(),
     currentActivity,
-    setCurrentActivity,
     startGame,
   }
 
@@ -230,10 +231,6 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
 
   // Determine the initial achievement and activity type
   const initializeActivity = useCallback(() => {
-    const newActivity = activityMediator.determineActivityState();
-    if (newActivity !== currentActivity) {
-      setCurrentActivity(newActivity);
-    }
     if (terminalMethods.getTerminalSize) {
       const size = terminalMethods.getTerminalSize();
       if (size) {
@@ -241,7 +238,7 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
       }
     }
     terminalMethods.scrollBottom();
-  }, [activityMediator, currentActivity, setCurrentActivity, terminalMethods, setTerminalSize]);
+  }, [activityMediator, currentActivity, terminalMethods, setTerminalSize]);
 
   useEffect(() => {
     initializeActivity();

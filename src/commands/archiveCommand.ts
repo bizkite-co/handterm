@@ -1,14 +1,13 @@
 import { LogKeys } from '../types/TerminalTypes';
 import { ICommand, ICommandContext } from '../contexts/CommandContext';
+import { ParsedCommand } from '../types/Types';
 
 export const archiveCommand: ICommand = {
     name: 'archive',
     description: 'Archive the current command history',
     execute: (
-        _commandName: string,
         context: ICommandContext,
-        _args?: string[],
-        _switches?: Record<string, boolean | string>,
+        parsedCommand: ParsedCommand,
     ) => {
         const archiveNext = async (index: number) => {
             if (index >= localStorage.length) return { status: 200, message: 'Command history archived.' }; // Stop if we've processed all items

@@ -2,6 +2,7 @@
 import React, { createContext, useContext } from 'react';
 import { IAuthProps } from '../lib/useAuth';
 import { IHandTermWrapperMethods } from '../components/HandTermWrapper';
+import { ParsedCommand } from '../types/Types';
 
 export interface ICommandResponse {
   status: number;
@@ -13,10 +14,8 @@ export interface ICommand {
   description: string;
   switches?: Record<string, string>;
   execute: (
-    commandName: string,
     context: ICommandContext,
-    args?: string[],
-    switches?: Record<string, boolean | string>,
+    parsedCommand: ParsedCommand,
   ) => ICommandResponse;
 }
 export interface ICommandContext {

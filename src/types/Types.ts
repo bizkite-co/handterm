@@ -1,6 +1,6 @@
-import { IGameHandle } from "src/game/Game";
-import { ActionType } from "src/game/types/ActionTypes";
-import { GamePhrase } from "src/utils/GamePhrases";
+import { IGameHandle } from "../game/Game";
+import { ActionType } from "../game/types/ActionTypes";
+import { GamePhrase } from "../utils/GamePhrases";
 
 export const spaceDisplayChar = "&#x2581;";
 export const tabDisplayChar = "&#x2B7E;";
@@ -16,6 +16,12 @@ export enum ActivityType {
   GAME,
   EDIT,
 }
+
+export type ParsedCommand = Readonly<{
+  command: string;
+  args: readonly string[];
+  switches: Readonly<Record<string, boolean | string>>;
+}>;
 
 export function createCharTime(char: string, duration: number, time: number): CharTime {
   return { char, duration, time }

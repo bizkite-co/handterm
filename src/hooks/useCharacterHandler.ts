@@ -34,7 +34,7 @@ export const useCharacterHandler = ({
   const tempUserNameRef = useRef<string>('');
   const tempPasswordRef = useRef<string>('');
 
-  const handleCharacter = useCallback((character: string): number|CharDuration => {
+  const handleCharacter = useCallback((character: string) => {
     const wpmCalculator = useWPMCalculator();
     const charDuration = wpmCalculator.addKeystroke(character);
     setCommandLine((prev) => prev + character);
@@ -79,7 +79,7 @@ export const useCharacterHandler = ({
       }
     }
 
-    return charDuration;
+    return;
   }, [ setCommandLine, setLastTypedCharacter, isInSvgMode, isInLoginProcess, setIsInLoginProcess, writeOutputInternal, auth, setIsLoggedIn, updateUserName, terminalReset, prompt]);
 
   return { handleCharacter };

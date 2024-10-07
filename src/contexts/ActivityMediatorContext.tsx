@@ -1,15 +1,14 @@
 // src/contexts/ActivityMediatorContext.tsx
-import React, { createContext, useContext } from 'react';
-import { ActivityType } from '../types/Types';
-import { useActivityMediator, IActivityMediatorProps } from '../hooks/useActivityMediator';
+import React, { createContext, useContext, useState, useCallback } from 'react';
+import { ActivityType, ParsedCommand } from '../types/Types';
 
-export interface IActivityMediatorReturn {
+export interface IActivityMediatorContext {
     currentActivity: ActivityType;
-    setCurrentActivity: (activity: ActivityType) => void;
-    handleCommandExecuted: (command: string) => void;
+    determineActivityState: (commandActivity?: ActivityType | null) => ActivityType;
+    handleCommandExecuted: (parsedCommand: ParsedCommand) => void;
 }
 
-const ActivityMediatorContext = createContext<IActivityMediatorReturn | null>(null);
+const ActivityMediatorContext = createContext<IActivityMediatorContext | null>(null);
 
 export const useActivityMediatorContext = () => {
     const context = useContext(ActivityMediatorContext);
@@ -19,24 +18,26 @@ export const useActivityMediatorContext = () => {
     return context;
 };
 
-interface ActivityMediatorProviderProps {
-    children: React.ReactNode;
-}
+export const ActivityMediatorProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    const [currentActivity, setCurrentActivity] = useState<ActivityType>(ActivityType.NORMAL);
 
-export const ActivityMediatorProvider: React.FC<ActivityMediatorProviderProps> = ({ children }) => {
-    const activityMediatorProps: IActivityMediatorProps = {
-        resetTutorial: () => {}, // Implement this function if needed
-        currentTutorial: null, // Set the appropriate initial value
-        currentActivity: ActivityType.NORMAL,
-        setCurrentActivity: () => {}, // This will be overwritten by useActivityMediator
-        startGame: () => {}, // Implement this function if needed
-    };
+    const determineActivityState = useCallback((commandActivity: ActivityType | null = null) => {
+        if (commandActivity) {
+            setCurrentActivity(commandActivity);
+            return commandActivity;
+        }
+        // Add your logic here for determining the activity state
+        return currentActivity;
+    }, [currentActivity]);
 
-    const { currentActivity, setCurrentActivity, handleCommandExecuted } = useActivityMediator(activityMediatorProps);
+    const handleCommandExecuted = useCallback((parsedCommand: ParsedCommand) => {
+        // Add your logic here for handling executed commands
+        console.log('Command executed:', parsedCommand);
+    }, []);
 
-    const value: IActivityMediatorReturn = {
+    const value: IActivityMediatorContext = {
         currentActivity,
-        setCurrentActivity,
+        determineActivityState,
         handleCommandExecuted,
     };
 

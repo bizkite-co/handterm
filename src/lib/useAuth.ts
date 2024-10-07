@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import axios, { AxiosResponse } from 'axios';
 import { ENDPOINTS } from '../shared/endpoints';
-import { MyResponse } from 'src/types/Types';
+import { MyResponse } from '../types/Types';
 import { LogKeys } from '../types/TerminalTypes';
 
 // Define the interface for the auth object                                      

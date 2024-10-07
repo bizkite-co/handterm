@@ -9,6 +9,7 @@ import { commandRegistry } from '../commands/commandRegistry';
 import { useWPMCalculator } from './useWPMCaculator';
 import { useAppContext } from '../contexts/AppContext';
 import { useActivityMediatorContext } from '../contexts/ActivityMediatorContext';
+import { ParsedCommand } from '../types/Types';
 
 export interface IUseCommandProps { }
 
@@ -96,17 +97,17 @@ export const useCommand = () => {
 
     const executeCommand = useCallback(async (inputCmd: string) => {
         console.log('useCommand: executeCommand called with:', inputCmd);
-        const { parsedCommand, args, switches } = parseCommand(inputCmd);
-        const command = commandRegistry.getCommand(parsedCommand);
+        const parsedCommand:ParsedCommand = parseCommand(inputCmd);
+        const command = commandRegistry.getCommand(parsedCommand.command);
         if (command && context) {
-            const response = await command.execute(parsedCommand, context, args, switches);
+            const response = await command.execute(context, parsedCommand);
             processCommandOutput(inputCmd, response.message, response.status);
             console.log('useCommand: Calling handleCommandExecuted with:', inputCmd);
-            handleCommandExecuted(inputCmd);
+            handleCommandExecuted(parsedCommand);
         } else {
             processCommandOutput(inputCmd, `Command or context not found: ${parsedCommand}`, 404);
             console.log('useCommand: Calling handleCommandExecuted with:', inputCmd);
-            handleCommandExecuted(inputCmd);
+            handleCommandExecuted(parsedCommand);
         }
     }, [context, processCommandOutput, handleCommandExecuted]);
 
