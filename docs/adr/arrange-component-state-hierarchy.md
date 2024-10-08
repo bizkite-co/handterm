@@ -2,7 +2,7 @@
 
 ## Component State Interactions
 
-1. Component-Specific State: 
+1. Component-Specific State:
    - Editor state (like editContent, editFilePath, etc.) should indeed be managed within the MonacoEditor.tsx and related files.
    - Game state should be managed within the Game component.
      - The game needs access to the terminal state, which controls the game.
@@ -62,7 +62,7 @@ flowchart TD
     AC --> E[Editor]
     AC --> G[Game]
 
-    
+
     T --> |Uses| TS[TerminalState]
     E --> |Uses| ES[EditorState]
     G --> |Uses| GSt[GameState]
@@ -72,7 +72,7 @@ flowchart TD
       AC --> |Updates| CI[commandHistory]
       AC --> TO[Terminal<br/>Ouput]
     end
-    
+
     TS --> |Updates| CLI[currentCommandLine]
     ES --> |Updates| EC[editContent]
     GSt --> |Updates| GSc[gameScore]
@@ -83,12 +83,69 @@ flowchart TD
     T --> |Triggers| E
     T --> |commandLine,Command| G
     T ==> |Command| AC
-    
+
     N[API] --> |Fetches Data| AC
 
     subgraph auth
       direction TB
       AC --> |Updates Global State| O[isLoggedIn]
       AC --> |Updates Global State| UN[userName]
+    end
+```
+
+## `currentActivy` State Flow
+
+1. The `ActivityMediatorProvider` wraps the main `App` component and provides the `ActivityMediatorContext`.
+
+2. The `ActivityMediatorContext` contains the `currentActivity` state and methods to update it.
+
+3. Various components (HandTermWrapper, TutorialManager, and others) consume the ActivityMediatorContext.
+
+4. The `useActivityMediator` hook is used to interact with the ActivityMediatorContext.
+
+5. When a command is executed (either through user interaction or programmatically), it triggers the `handleCommandExecuted` function.
+
+6. `handleCommandExecuted` calls `determineActivityState`, which decides whether to update the `currentActivity`.
+
+7. If an update is needed, the `currentActivity` in the ActivityMediatorContext is updated.
+
+8. This update triggers re-renders in components that depend on `currentActivity`.
+
+
+```mermaid
+graph TD
+    A[App] --> B[ActivityMediatorProvider]
+    B --> |Provides context| C[ActivityMediatorContext]
+    C --> |Consumed by| D[HandTermWrapper]
+    C --> |Consumed by| E[TutorialManager]
+    C --> |Consumed by| F[Other Components]
+
+    G[useActivityMediator Hook] --> |Uses| C
+
+    H[Command Execution] --> |Triggers| I[handleCommandExecuted]
+    I --> |Calls| J[determineActivityState]
+    J --> |Updates| K[currentActivity]
+    K --> |Stored in| C
+
+    L[User Interaction] --> |May trigger| H
+
+    M[useCommand Hook] --> |May call| H
+
+    subgraph ActivityMediatorContext
+        C
+        K
+        I
+        J
+    end
+
+    subgraph Components
+        D
+        E
+        F
+    end
+
+    subgraph Hooks
+        G
+        M
     end
 ```

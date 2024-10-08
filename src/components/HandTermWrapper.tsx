@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState, useCallback, useImperativeHandle, ReactNode } from 'react';
-import { getNextTutorial, loadTutorials, resetTutorial } from '../utils/tutorialUtils';
 import { ActivityType, Tutorial } from '../types/Types';
 import { useActivityMediator, IActivityMediatorProps } from '../hooks/useActivityMediator';
 import Game, { IGameHandle } from '../game/Game';
@@ -18,6 +17,7 @@ import { useWPMCalculator } from '../hooks/useWPMCaculator';
 import { useAppContext } from '../contexts/AppContext';
 import { useCommand } from '../hooks/useCommand';
 import { useActivityMediatorContext } from 'src/contexts/ActivityMediatorContext';
+import { useTutorial } from 'src/hooks/useTutorials';
 
 
 export interface IHandTermWrapperProps {
@@ -57,6 +57,8 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
   const { executeCommand, commandHistory } = useCommand();
   const { xtermRef, commandLine, writeToTerminal, resetPrompt } = useTerminal();
 
+  const { currentTutorial, unlockTutorial, resetTutorial } = useTutorial();
+
   useEffect(() => {
     console.log('Current activity:', ActivityType[currentActivity]);
     // Add any logic that should run when the activity changes
@@ -71,7 +73,6 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
 
   const [domain] = useState<string>('handterm.com');
   const [currentPhrase] = useState<GamePhrase | null>(null);
-  const [currentTutorial] = useState<Tutorial | null>(getNextTutorial());
   const initialCanvasHeight = localStorage.getItem('canvasHeight') || '100';
   const [canvasHeight] = useState(parseInt(initialCanvasHeight));
   const [lastTypedCharacter, setLastTypedCharacter] = useState<string | null>(null);
@@ -103,8 +104,8 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
     refreshComponent: () => { },
     setHeroSummersaultAction: () => { },
     focusTerminal: () => { },
-    setEditMode: () => {},
-    handleEditSave: () => {},
+    setEditMode: () => { },
+    handleEditSave: () => { },
   });
 
   // Use useImperativeHandle to update both refs
@@ -123,7 +124,7 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
   const handleFocusEditor = useCallback(() => {
     // Implement focus editor logic here
     // TODO: put the focus into the editor
-    
+
   }, []);
 
   // Function to reset tutorial and refresh HandTerm
@@ -139,7 +140,7 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
 
   const activityMediatorProps: IActivityMediatorProps = {
     resetTutorial: onResetTutorial,
-    currentTutorial: getNextTutorial(),
+    currentTutorial,
     currentActivity,
     startGame,
   }
@@ -278,6 +279,19 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
     activityMediator.gameHandleRef.current?.levelUp();
     handlePhraseComplete();
   }
+
+  const handleCommand = useCallback((command: string) => {
+    if (currentActivity === ActivityType.TUTORIAL) {
+      const tutorialCompleted = unlockTutorial(command);
+      if (tutorialCompleted) {
+        // TODO: Maybe update UI or move to next tutorial
+
+      }
+    } else {
+      // Handle normal command execution
+      executeCommand(command);
+    }
+  }, [currentActivity, unlockTutorial, executeCommand]);
 
   const handlePhraseComplete = () => {
     localStorage.setItem('currentCommand', '');

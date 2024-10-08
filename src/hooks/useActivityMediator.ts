@@ -3,8 +3,8 @@ import { Tutorial, ActivityType, ParsedCommand } from '../types/Types';
 import { ActionType } from '../game/types/ActionTypes';
 import { IGameHandle } from '../game/Game';
 import { GamePhrase } from '../utils/GamePhrases';
-import { getNextTutorial, unlockTutorial } from '../utils/tutorialUtils';
 import { useActivityMediatorContext } from '../contexts/ActivityMediatorContext';
+import { useTutorial } from './useTutorials';
 
 export type IActivityMediatorReturn = {
   currentActivity: ActivityType;
@@ -16,7 +16,7 @@ export type IActivityMediatorReturn = {
   heroAction: ActionType;
   zombie4Action: ActionType;
   gameHandleRef: React.RefObject<IGameHandle>;
-  handleCommandExecuted: (parsedCommand:ParsedCommand) => boolean;
+  handleCommandExecuted: (parsedCommand: ParsedCommand) => boolean;
   setHeroAction: React.Dispatch<React.SetStateAction<ActionType>>,
   setZombie4Action: React.Dispatch<React.SetStateAction<ActionType>>;
   checkTutorialProgress: (command: string, args?: string[], _switches?: Record<string, string | boolean>) => { resultActivity: ActivityType, nextTutorial: Tutorial | null };
@@ -26,7 +26,6 @@ export type IActivityMediatorReturn = {
 }
 
 export interface IActivityMediatorProps {
-  resetTutorial: () => void;
   currentTutorial?: Tutorial | null;
   tutorialGroupPhrase?: GamePhrase;
   currentActivity: ActivityType;
@@ -34,10 +33,10 @@ export interface IActivityMediatorProps {
 }
 
 export function useActivityMediator(props: IActivityMediatorProps): IActivityMediatorReturn {
+  const { currentActivity, setCurrentActivity } = useActivityMediatorContext();
   const [heroAction, setHeroAction] = useState<ActionType>('Idle');
   const [zombie4Action, setZombie4Action] = useState<ActionType>('Walk');
-  const {setCurrentActivity} = useActivityMediatorContext();
-
+  const { unlockTutorial, resetTutorial, getNextTutorial } = useTutorial();
   const gameHandleRef = useRef<IGameHandle>(null);
 
   const determineActivityState = useCallback((commandActivity: ActivityType | null = null) => {
@@ -68,7 +67,7 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
     return props.currentActivity;
   }, [props.currentTutorial, props.tutorialGroupPhrase, props.currentActivity, setCurrentActivity, props.startGame]);
 
-  const handleCommandExecuted = useCallback((parsedCommand:ParsedCommand): boolean => {
+  const handleCommandExecuted = useCallback((parsedCommand: ParsedCommand): boolean => {
     let result = false;
     switch (parsedCommand.command) {
       case 'play':
@@ -77,7 +76,7 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
         break;
       case 'tut':
         if ('r' in parsedCommand.switches) {
-          props.resetTutorial();
+          resetTutorial();
         }
         console.log('useActivityMediator.handleCommand switch: TUTORIAL')
         determineActivityState(ActivityType.TUTORIAL);
@@ -116,7 +115,7 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
       props.startGame();
       return { resultActivity: ActivityType.GAME, nextTutorial: null };
     }
-    const isUnlocked = unlockTutorial(command, props.currentTutorial);
+    const isUnlocked = unlockTutorial(command);
     console.log("Unlock result:", isUnlocked);
     const nextTutorial = getNextTutorial();
     if (!nextTutorial) {

@@ -10,6 +10,7 @@ import { useWPMCalculator } from './useWPMCaculator';
 import { useAppContext } from '../contexts/AppContext';
 import { useActivityMediatorContext } from '../contexts/ActivityMediatorContext';
 import { ParsedCommand } from '../types/Types';
+import { useActivityMediator } from './useActivityMediator';
 
 export interface IUseCommandProps { }
 
@@ -20,7 +21,13 @@ export const useCommand = () => {
     const [commandHistoryFilter, setCommandHistoryFilter] = useState<string | null>(null);
     const wpmCalculator = useWPMCalculator();
     const { appendToOutput } = useAppContext();
-    const { handleCommandExecuted } = useActivityMediatorContext();
+    const { currentActivity } = useActivityMediatorContext();
+    const { handleCommandExecuted } = useActivityMediator({
+        currentActivity,
+        startGame: function (): void {
+            throw new Error('Function not implemented.');
+        }
+    });
 
     const context = useContext(CommandContext);
 

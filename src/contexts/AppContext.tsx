@@ -4,6 +4,7 @@ import { ActivityType, ParsedCommand } from '../types/Types';
 import { useCommandContext } from './CommandContext';
 import { useActivityMediatorContext } from './ActivityMediatorContext';
 import { parseCommand } from '../utils/commandUtils';
+import { useActivityMediator } from 'src/hooks/useActivityMediator';
 
 interface AppContextType {
   currentActivity: ActivityType;
@@ -30,7 +31,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [userName, setUserName] = useState<string | null>(null);
   const [outputElements, setOutputElements] = useState<React.ReactNode[]>([]);
 
-  const { handleCommandExecuted, currentActivity } = useActivityMediatorContext();
+  const { currentActivity } = useActivityMediatorContext();
+  const { handleCommandExecuted } = useActivityMediator({
+    currentActivity,
+    startGame: function (): void {
+      throw new Error('Function not implemented.');
+    }
+  })
 
   const appendToOutput = useCallback((element: React.ReactNode) => {
     console.log('AppContext: appendToOutput called with', element);
