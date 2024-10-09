@@ -2,7 +2,7 @@
 import React, { createContext, useContext } from 'react';
 import { IAuthProps } from '../lib/useAuth';
 import { IHandTermWrapperMethods } from '../components/HandTermWrapper';
-import { ParsedCommand } from '../types/Types';
+import { OutputElement, ParsedCommand } from '../types/Types';
 
 export interface ICommandResponse {
   status: number;
@@ -22,8 +22,8 @@ export interface ICommandContext {
   executeCommand: (command: string) => Promise<void>;
   commandHistory: string[];
   addToCommandHistory: (command: string) => void;
-  output: React.ReactNode[];
-  appendToOutput: (output: React.ReactNode) => void;
+  output: OutputElement[];
+  appendToOutput: (output: OutputElement) => void;
   handTermRef: React.RefObject<IHandTermWrapperMethods>;
   auth: IAuthProps;
 }

@@ -6,12 +6,13 @@ import { LogKeys } from '../types/TerminalTypes';
 import { TimeDisplay } from '../components/TimeDisplay';
 import WpmTable from '../components/WpmTable';
 import { commandRegistry } from '../commands/commandRegistry';
-import { useWPMCalculator } from './useWPMCaculator';
+import { useWPMCalculator, WPMs } from './useWPMCaculator';
 import { useAppContext } from '../contexts/AppContext';
 import { useActivityMediatorContext } from '../contexts/ActivityMediatorContext';
-import { ActivityType, ParsedCommand } from '../types/Types';
+import { ActivityType, OutputElement, ParsedCommand, WPM } from '../types/Types';
 import { useActivityMediator } from './useActivityMediator';
 import { useTutorial } from './useTutorials';
+import { CommandOutput } from 'src/components/CommandOutput';
 
 export interface IUseCommandProps { }
 
@@ -64,60 +65,51 @@ export const useCommand = () => {
         return history;
     }, []);
 
-    const createCommandRecord = useCallback((command: string, commandTime: Date): React.ReactNode => {
-        return React.createElement('div', { className: "log-line" },
-            React.createElement('span', { className: "log-time" },
-                React.createElement(TimeDisplay, { time: commandTime })
-            ),
-            React.createElement('span', { className: "wpm-label" }, "WPM:"),
-            React.createElement('span', { className: "wpm" },
-                wpmCalculator.getWPMs().wpmAverage.toFixed(0)),
-            command
-        );
-    }, [wpmCalculator]);
+    const createCommandRecord = useCallback((
+        command: string,
+        response: string,
+        status: number,
+        wpms: WPMs,
+        commandTime: Date
+    ): OutputElement => {
+        return {
+            command,
+            response,
+            status,
+            wpmAverage: wpms.wpmAverage,
+            characterAverages: wpms.charWpms,
+            commandTime
+        };
+    }, []);
 
-    const processCommandOutput = useCallback((command: string, response: string, status: number): void => {
+    const processCommandOutput = useCallback((
+        command: string,
+        response: string,
+        status: number,
+        wpms: WPMs
+    ): void => {
         const commandTime = new Date();
-        const timeCode = commandTime.toISOString();
-        const commandRecord = createCommandRecord(command, commandTime);
-
-        const { wpmAverage, charWpms } = wpmCalculator.getWPMs();
-        wpmCalculator.saveKeystrokes(timeCode);
-        wpmCalculator.clearKeystrokes();
-
-        const characterAverages = charWpms
-            .filter(wpm => wpm.durationMilliseconds > 1)
-            .sort((a, b) => a.wpm - b.wpm)
-            .slice(0, 5);
-
-        const outputElement = React.createElement('div', { 'data-status': status },
-            commandRecord,
-            React.createElement('div', { className: "response" }, response),
-            React.createElement(WpmTable, {
-                wpms: characterAverages, name: "slow-char"
-            })
-        );
-
+        const outputElement = createCommandRecord(command, response, status, wpms, commandTime);
         appendToOutput(outputElement);
         addToCommandHistory(command);
+    }, [createCommandRecord, appendToOutput, addToCommandHistory]);
 
-    }, [wpmCalculator, createCommandRecord, appendToOutput, addToCommandHistory]);
-
-    const executeCommand = useCallback(async (inputCmd: string) => {
+    const executeCommand = useCallback(async (inputCmd: string, wpms: WPMs) => {
         const parsedCommand: ParsedCommand = parseCommand(inputCmd);
         const command = commandRegistry.getCommand(parsedCommand.command);
         if (command && context) {
             const response = await command.execute(context, parsedCommand);
-            processCommandOutput(inputCmd, response.message, response.status);
+            processCommandOutput(inputCmd, response.message, response.status, wpms);
             handleCommandExecuted(parsedCommand);
         } else {
-            processCommandOutput(inputCmd, `Command or context not found: ${parsedCommand}`, 404);
+            // Fix: Correct the arguments for processCommandOutput
+            processCommandOutput(inputCmd, `Command not found: ${parsedCommand.command}`, 404, wpms);
             handleCommandExecuted(parsedCommand);
         }
     }, [context, processCommandOutput, handleCommandExecuted]);
 
-    const handleCommand = useCallback((input: string) => {
-        executeCommand(input);
+    const handleCommand = useCallback((input: string, wpms: WPMs) => {
+        executeCommand(input, wpms);
         if (currentActivity === ActivityType.TUTORIAL) {
             const tutorialCompleted = unlockTutorial(input);
             if (tutorialCompleted) {

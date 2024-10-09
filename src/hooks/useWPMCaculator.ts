@@ -1,58 +1,59 @@
 // src/hooks/useWPMCalculator.ts
 
 import { useState, useCallback, useMemo } from 'react';
-import { CharDuration } from '../types/TerminalTypes';
+import { WPM, WPMs } from '../types/Types';
 
-interface WPM {
-    wpm: number;
-    character: string;
-    durationMilliseconds: number;
+interface Keystroke {
+  char: string;
+  timestamp: number;
 }
 
 export const useWPMCalculator = () => {
-    const [keystrokes, setKeystrokes] = useState<{ [key: string]: number[] }>({});
+  const [keystrokes, setKeystrokes] = useState<Keystroke[]>([]);
 
-    const addKeystroke = useCallback((character: string) => {
-        const timestamp = Date.now();
-        setKeystrokes(prev => ({
-            ...prev,
-            [character]: [...(prev[character] || []), timestamp]
-        }));
-    }, []);
+  const addKeystroke = useCallback((char: string) => {
+    setKeystrokes(prev => [...prev, { char, timestamp: performance.now() }]);
+  }, []);
 
-    const clearKeystrokes = useCallback(() => {
-        setKeystrokes({});
-    }, []);
+  const getWPMs = useCallback((): WPMs => {
+    if (keystrokes.length < 2) return { wpmAverage: 0, charWpms: [] };
 
-    const saveKeystrokes = useCallback((timeCode: string) => {
-        localStorage.setItem(`keystrokes_${timeCode}`, JSON.stringify(keystrokes));
-    }, [keystrokes]);
+    const charWpms: WPM[] = [];
+    let totalWPM = 0;
 
-    const getWPMs = useCallback((): { wpmAverage: number; charWpms: WPM[] } => {
-        let totalWPM = 0;
-        let count = 0;
-        const charWpms: WPM[] = [];
+    for (let i = 1; i < keystrokes.length; i++) {
+      const duration = keystrokes[i].timestamp - keystrokes[i-1].timestamp;
+      const minutes = duration / 60000; // Convert to minutes
+      const wpm = 1 / minutes; // 1 character per duration
 
-        Object.entries(keystrokes).forEach(([char, timestamps]) => {
-            if (timestamps.length > 1) {
-                const durations = timestamps.slice(1).map((t, i) => t - timestamps[i]);
-                const avgDuration = durations.reduce((a, b) => a + b, 0) / durations.length;
-                const wpm = 60000 / (avgDuration * 5); // Assuming 5 characters per word
-                totalWPM += wpm;
-                count++;
-                charWpms.push({ wpm, character: char, durationMilliseconds: avgDuration });
-            }
-        });
+      charWpms.push({
+        character: keystrokes[i].char,
+        wpm,
+        durationMilliseconds: duration
+      });
 
-        const wpmAverage = count > 0 ? totalWPM / count : 0;
+      totalWPM += wpm;
+    }
 
-        return { wpmAverage, charWpms };
-    }, [keystrokes]);
+    const wpmAverage = totalWPM / (keystrokes.length - 1);
 
     return {
-        addKeystroke,
-        clearKeystrokes,
-        saveKeystrokes,
-        getWPMs
+      wpmAverage,
+      charWpms: Object.freeze(charWpms) // Make charWpms immutable
     };
+  }, [keystrokes]);
+
+  const clearKeystrokes = useCallback(() => {
+    setKeystrokes([]);
+  }, []);
+
+  // This will update whenever keystrokes change
+  const currentWPMs = useMemo(() => getWPMs(), [keystrokes, getWPMs]);
+
+  return {
+    addKeystroke,
+    getWPMs: () => currentWPMs, // Return the memoized value
+    clearKeystrokes,
+    keystrokeCount: keystrokes.length // Add this for debugging
+  };
 };

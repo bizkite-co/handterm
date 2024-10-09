@@ -55,6 +55,26 @@ export class Chord implements IChord {
   }
 }
 
+export interface WPM {
+  readonly wpm: number;
+  readonly character: string;
+  readonly durationMilliseconds: number;
+}
+
+export type WPMs = Readonly<{
+  wpmAverage: number;
+  charWpms: ReadonlyArray<WPM>;
+}>
+
+export interface OutputElement {
+  command: string;
+  response: string;
+  status: number;
+  wpmAverage: number;
+  characterAverages: ReadonlyArray<WPM>;
+  commandTime: Date;
+}
+
 export type MyResponse<T> = {
   status: 200 | 400 | 401 | 403 | 404 | 500;
   data?: T | undefined;
@@ -86,3 +106,4 @@ export const Tutorials: Tutorial[] = [
   { prompt: 'Remember this one so that you can restart this tutorial', phrase: 'tut'.split(''), unlocked: false },
   { prompt: 'Type `play` to play a guided typing game with chord-hints.', phrase: 'play'.split(''), unlocked: false },
 ]
+

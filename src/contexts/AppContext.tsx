@@ -1,6 +1,6 @@
 // src/contexts/AppContext.tsx
-import React, { createContext, useContext, useState, useCallback } from 'react';
-import { ActivityType, ParsedCommand } from '../types/Types';
+import React, { createContext, useContext, useState, useCallback, ReactElement } from 'react';
+import { ActivityType, OutputElement, ParsedCommand } from '../types/Types';
 import { useCommandContext } from './CommandContext';
 import { useActivityMediatorContext } from './ActivityMediatorContext';
 import { parseCommand } from '../utils/commandUtils';
@@ -12,8 +12,8 @@ interface AppContextType {
   setIsLoggedIn: (isLoggedIn: boolean) => void;
   userName: string | null;
   setUserName: (userName: string | null) => void;
-  outputElements: React.ReactNode[];
-  appendToOutput: (element: React.ReactNode) => void;
+  outputElements: OutputElement[];
+  appendToOutput: (element: OutputElement) => void;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -29,7 +29,7 @@ export const useAppContext = () => {
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userName, setUserName] = useState<string | null>(null);
-  const [outputElements, setOutputElements] = useState<React.ReactNode[]>([]);
+  const [outputElements, setOutputElements] = useState<OutputElement[]>([]);
 
   const { currentActivity } = useActivityMediatorContext();
   const { handleCommandExecuted } = useActivityMediator({
@@ -39,15 +39,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   })
 
-  const appendToOutput = useCallback((element: React.ReactNode) => {
-    if (Array.isArray(element)) {
-      setOutputElements(prev => [...prev, ...element]);
+  const appendToOutput = useCallback((newElement: ReactElement<OutputElement>) => {
+    if (Array.isArray(newElement)) {
+      setOutputElements(prev => [...prev, ...newElement]);
     } else {
-      setOutputElements(prev => [...prev, element]);
+      setOutputElements((prev) => [...prev, newElement]);
     }
     // Call handleCommandExecuted if the element is a command output
-    if (React.isValidElement(element) && element.props['data-status'] !== undefined) {
-      const commandString = element.props.children[0].props.children[3]; // Assuming the command is the fourth child of the first child
+    if (React.isValidElement(newElement) && newElement.props['data-status'] !== undefined) {
+      const commandString = newElement.props.children[0].props.children[3]; // Assuming the command is the fourth child of the first child
       const parsedCommand:ParsedCommand = parseCommand(commandString)
       handleCommandExecuted(parsedCommand);
     }

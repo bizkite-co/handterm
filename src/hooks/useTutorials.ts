@@ -53,10 +53,6 @@ export const useTutorial = () => {
         return false;
     }, [currentTutorial, saveTutorial]);
 
-    useEffect(()=>{
-        console.log("completedTutorials:", completedTutorials);
-    }, [completedTutorials]);
-
     const resetTutorial = useCallback(() => {
         localStorage.removeItem(completedTutorialsKey);
         setCompletedTutorials([]);

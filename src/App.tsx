@@ -1,5 +1,6 @@
 // App.tsx
 import React, { useEffect, useRef, useState, useCallback } from 'react';
+import { OutputElement } from './types/Types';
 import { HandTermWrapper, IHandTermWrapperMethods } from './components/HandTermWrapper';
 import { TerminalCssClasses } from './types/TerminalTypes';
 import { useAuth } from './lib/useAuth';
@@ -13,7 +14,7 @@ const MemoizedOutput = React.memo(Output);
 const App = () => {
   const containerRef = React.createRef<HTMLDivElement>();
   const [containerWidth, setContainerWidth] = React.useState<number>(0);
-  const [outputElements, setOutputElements] = useState<React.ReactNode[]>([]);
+  const [outputElements, setOutputElements] = useState<OutputElement[]>([]);
 
   const getContainerWidth = () => {
     return containerRef.current?.clientWidth ?? 0
@@ -29,8 +30,8 @@ const App = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const handleOutputUpdate = useCallback((newOutput: React.ReactNode) => {
-    setOutputElements(_prevOutputs => [newOutput]);
+  const handleOutputUpdate = useCallback((newOutput: OutputElement) => {
+    setOutputElements((prevOutputs: OutputElement[]) => [...prevOutputs, newOutput]);
   }, []);
 
   const handleTouchStart = useCallback(() => {

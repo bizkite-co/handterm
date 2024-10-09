@@ -1,25 +1,28 @@
 // src/components/Output.tsx
 
-import React from "react";
-import { TerminalCssClasses } from "../types/TerminalTypes";
-import { useAppContext } from "../contexts/AppContext";
-
+import React from 'react';
+import { useAppContext } from 'src/contexts/AppContext';
+import { OutputElement } from 'src/types/Types';
+import { CommandOutput } from './CommandOutput';
 
 export const Output: React.FC = () => {
-    const { outputElements } = useAppContext();
-
-    return (
-        <div
-            id={TerminalCssClasses.Output}
-            className={TerminalCssClasses.Output}
-        >
-            {outputElements.map((element, index) => {
-                if (typeof element === 'string') {
-                    return <div key={index} dangerouslySetInnerHTML={{ __html: element }} />;
-                } else {
-                    return <div key={index}>{element}</div>;
-                }
-            })}
-        </div>
-    );
+  const { outputElements } = useAppContext();
+   
+  return (
+    <div className="output-container">
+      {outputElements.map((element: OutputElement, index: number) => (
+        <CommandOutput
+          key={index}
+          command={element.command}
+          response={element.response}
+          status={element.status}
+          wpms={{
+            wpmAverage: element.wpmAverage,
+            charWpms: element.characterAverages
+          }}
+          commandTime={element.commandTime}
+        />
+      ))}
+    </div>
+  );
 };

@@ -2,7 +2,7 @@ import React from 'react';
 import { CharWPM } from '../types/TerminalTypes';
 
 interface WpmTableProps {
-  wpms: CharWPM[];
+  wpms: ReadonlyArray<CharWPM>;
   name?: string;
 }
 

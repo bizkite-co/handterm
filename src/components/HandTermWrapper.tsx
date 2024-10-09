@@ -24,7 +24,7 @@ export interface IHandTermWrapperProps {
   // Define the interface for your HandexTerm logic
   terminalWidth: number;
   auth: IAuthProps;
-  onOutputUpdate: (output: React.ReactNode) => void;
+  onOutputUpdate: (output: OutputElement) => void;
 }
 
 export interface XtermMethods {
