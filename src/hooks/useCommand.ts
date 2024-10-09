@@ -9,8 +9,9 @@ import { commandRegistry } from '../commands/commandRegistry';
 import { useWPMCalculator } from './useWPMCaculator';
 import { useAppContext } from '../contexts/AppContext';
 import { useActivityMediatorContext } from '../contexts/ActivityMediatorContext';
-import { ParsedCommand } from '../types/Types';
+import { ActivityType, ParsedCommand } from '../types/Types';
 import { useActivityMediator } from './useActivityMediator';
+import { useTutorial } from './useTutorials';
 
 export interface IUseCommandProps { }
 
@@ -22,7 +23,8 @@ export const useCommand = () => {
     const wpmCalculator = useWPMCalculator();
     const { appendToOutput } = useAppContext();
     const { currentActivity } = useActivityMediatorContext();
-    const { handleCommandExecuted } = useActivityMediator({
+    const { unlockTutorial, getNextTutorial } = useTutorial();
+    const { handleCommandExecuted, determineActivityState } = useActivityMediator({
         currentActivity,
         startGame: function (): void {
             throw new Error('Function not implemented.');
@@ -99,24 +101,40 @@ export const useCommand = () => {
         appendToOutput(outputElement);
         addToCommandHistory(command);
 
-        console.log(`Command output for ${LogKeys.Command}_${timeCode}:`, outputElement);
     }, [wpmCalculator, createCommandRecord, appendToOutput, addToCommandHistory]);
 
     const executeCommand = useCallback(async (inputCmd: string) => {
-        console.log('useCommand: executeCommand called with:', inputCmd);
-        const parsedCommand:ParsedCommand = parseCommand(inputCmd);
+        const parsedCommand: ParsedCommand = parseCommand(inputCmd);
         const command = commandRegistry.getCommand(parsedCommand.command);
         if (command && context) {
             const response = await command.execute(context, parsedCommand);
             processCommandOutput(inputCmd, response.message, response.status);
-            console.log('useCommand: Calling handleCommandExecuted with:', inputCmd);
             handleCommandExecuted(parsedCommand);
         } else {
             processCommandOutput(inputCmd, `Command or context not found: ${parsedCommand}`, 404);
-            console.log('useCommand: Calling handleCommandExecuted with:', inputCmd);
             handleCommandExecuted(parsedCommand);
         }
     }, [context, processCommandOutput, handleCommandExecuted]);
+
+    const handleCommand = useCallback((input: string) => {
+        executeCommand(input);
+        if (currentActivity === ActivityType.TUTORIAL) {
+            const tutorialCompleted = unlockTutorial(input);
+            if (tutorialCompleted) {
+                console.log(`Tutorial \"${input}\" completed!`, tutorialCompleted);
+                const nextTutorial = getNextTutorial();
+                if (nextTutorial) {
+                    // Move to the next tutorial
+                    determineActivityState(ActivityType.TUTORIAL);
+                } else {
+                    // All tutorials completed, move to normal mode
+                    determineActivityState(ActivityType.NORMAL);
+                }
+            } else {
+                console.log('Try again!');
+            }
+        }
+    }, [currentActivity, unlockTutorial, executeCommand, getNextTutorial, determineActivityState]);
 
     return {
         output,
@@ -124,7 +142,7 @@ export const useCommand = () => {
         commandHistory,
         addToCommandHistory,
         getCommandResponseHistory,
-        executeCommand,
+        handleCommand,
         commandHistoryIndex,
         setCommandHistoryIndex,
         commandHistoryFilter,

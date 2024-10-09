@@ -8,8 +8,6 @@ import { useAppContext } from "../contexts/AppContext";
 export const Output: React.FC = () => {
     const { outputElements } = useAppContext();
 
-  console.log('Rendering Output component, outputElements:', outputElements);
-    console.log(outputElements);
     return (
         <div
             id={TerminalCssClasses.Output}

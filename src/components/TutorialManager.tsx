@@ -5,7 +5,7 @@ import { Chord } from './Chord';
 
 interface TutorialManagerProps {
     isInTutorial: boolean;
-    achievement: Tutorial;
+    achievement: Tutorial | null;
 }
 
 export const TutorialManager: React.FC<TutorialManagerProps> = memo(({ 
@@ -15,7 +15,7 @@ export const TutorialManager: React.FC<TutorialManagerProps> = memo(({
     if (!isInTutorial) {
         return null;
     }
-    return (
+    return (achievement &&
         <div className="tutorial-component">
             <pre className="tutorial-prompt">{achievement.prompt}</pre>
             <div className="chord-display-container">

@@ -8,52 +8,79 @@ export const useTutorial = () => {
     const [completedTutorials, setCompletedTutorials] = useState<string[]>([]);
     const [currentTutorial, setCurrentTutorial] = useState<Tutorial | null>(null);
 
+    const loadTutorials = useCallback((): string[] => {
+        const storedAchievements = localStorage.getItem(completedTutorialsKey);
+        return storedAchievements ? JSON.parse(storedAchievements) : [];
+    }, []);
+
+    const getNextTutorial = useCallback((): Tutorial | null => {
+        const completedTuts = getCompletedTutorials();
+        const nextAchievement = Tutorials
+            .find(a => !completedTuts.some(ua => ua === a.phrase.join('')));
+        return nextAchievement || null;
+    }, [completedTutorials]);
+
     const getCompletedTutorials = useCallback((): string[] => {
         const storedAchievements = localStorage.getItem(completedTutorialsKey);
         return storedAchievements ? JSON.parse(storedAchievements) : [];
     }, []);
 
-    const saveTutorial = useCallback((achievementPhrase: string) => {
-        const updatedAchievements = [...completedTutorials, achievementPhrase];
-        setCompletedTutorials(updatedAchievements);
-        localStorage.setItem(completedTutorialsKey, JSON.stringify(updatedAchievements));
-    }, [completedTutorials]);
-
-    const getNextTutorial = useCallback((): Tutorial | null => {
-        const nextAchievement = Tutorials
-            .find(a => !completedTutorials.some(ua => ua === a.phrase.join('')));
-        return nextAchievement || null;
-    }, [completedTutorials]);
+    const saveTutorial = useCallback((achievementId: string) => {
+        setCompletedTutorials(prev => {
+            if (!prev.includes(achievementId)) {
+                const updatedAchievements = [...prev, achievementId];
+                localStorage.setItem(completedTutorialsKey, JSON.stringify(updatedAchievements));
+                return updatedAchievements;
+            }
+            return prev;
+        });
+    }, []);
 
     const unlockTutorial = useCallback((command: string): boolean => {
-        if (!currentTutorial) return false;
+        let nextTutorial = getNextTutorial();
+        if (!nextTutorial) return false;
         if (command === '') command = 'Return (ENTER)';
-        if (currentTutorial.phrase.join('') === command) {
-            saveTutorial(command);
-            setCurrentTutorial(getNextTutorial());
+        if (nextTutorial.phrase.join('') === command) {
+            const updatedCompletedTutorials = [...completedTutorials, nextTutorial.phrase.join('')];
+            setCompletedTutorials(updatedCompletedTutorials);
+            localStorage.setItem(completedTutorialsKey, JSON.stringify(updatedCompletedTutorials));
+            
+            // Update nextTutorial
+            nextTutorial = getNextTutorial();
+            setCurrentTutorial(nextTutorial);
             return true;
         }
         return false;
-    }, [currentTutorial, saveTutorial, getNextTutorial]);
+    }, [currentTutorial, saveTutorial]);
+
+    useEffect(()=>{
+        console.log("completedTutorials:", completedTutorials);
+    }, [completedTutorials]);
 
     const resetTutorial = useCallback(() => {
         localStorage.removeItem(completedTutorialsKey);
         setCompletedTutorials([]);
-        setCurrentTutorial(Tutorials[0]);
+        const firstTutorial = Tutorials[0];
+        setCurrentTutorial(firstTutorial);
+        return firstTutorial;
     }, []);
 
     useEffect(() => {
-        const loadedTutorials = getCompletedTutorials();
+        const loadedTutorials = loadTutorials();
         setCompletedTutorials(loadedTutorials);
-        setCurrentTutorial(getNextTutorial());
-    }, []);
+    }, [loadTutorials]);
+
+    useEffect(() => {
+        const nextTutorial = getNextTutorial();
+        setCurrentTutorial(nextTutorial);
+    }, [completedTutorials, getNextTutorial]);
 
     return {
         currentTutorial,
         unlockTutorial,
         resetTutorial,
-        getCompletedTutorials,
-        getNextTutorial,
-        saveTutorial
+        completedTutorials,
+        getCurrentTutorial: () => currentTutorial,
+        getNextTutorial
     };
 };

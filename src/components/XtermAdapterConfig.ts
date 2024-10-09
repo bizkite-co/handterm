@@ -3,7 +3,7 @@ export const XtermAdapterConfig: import("@xterm/xterm").ITerminalOptions | impor
       cursorBlink: true,
       cursorStyle: 'block',
       cursorInactiveStyle: 'outline',
-      rows: 26,
+      rows: 50,
       theme: {
         foreground: 'white',
         background: 'black',

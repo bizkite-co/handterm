@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { Tutorial, ActivityType, ParsedCommand } from '../types/Types';
 import { ActionType } from '../game/types/ActionTypes';
 import { IGameHandle } from '../game/Game';
@@ -78,7 +78,6 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
         if ('r' in parsedCommand.switches) {
           resetTutorial();
         }
-        console.log('useActivityMediator.handleCommand switch: TUTORIAL')
         determineActivityState(ActivityType.TUTORIAL);
         result = true;
         break;
@@ -90,9 +89,12 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
         // Don't default to NORMAL. 
         result = false;
     }
-    console.log("Switch Activity result:", ActivityType[props.currentActivity], "isSwitched:", result);
     return result;
-  }, [setCurrentActivity, gameHandleRef]);
+  }, [determineActivityState]);
+
+  useEffect(()=>{
+    determineActivityState();
+  },[determineActivityState])
 
   const checkTutorialProgress = (
     command: string,
@@ -116,7 +118,6 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
       return { resultActivity: ActivityType.GAME, nextTutorial: null };
     }
     const isUnlocked = unlockTutorial(command);
-    console.log("Unlock result:", isUnlocked);
     const nextTutorial = getNextTutorial();
     if (!nextTutorial) {
       setCurrentActivity(ActivityType.GAME);
@@ -129,7 +130,6 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
     /*
       If the game phrase is part of a tutorial group
     */
-    console.log("SuccessPhrase", successPhrase);
     const nextAchievement = getNextTutorial();
     if (props.tutorialGroupPhrase) {
       // Stay in GAME mode.

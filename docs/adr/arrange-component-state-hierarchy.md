@@ -111,41 +111,47 @@ flowchart TD
 
 8. This update triggers re-renders in components that depend on `currentActivity`.
 
+### update
+
+1. Keeps the `currentActivity` state in the `ActivityMediatorContext`, making it globally accessible.
+2. Maintains the `useActivityMediator` hook with all its existing functionality.
+3. Updates `useActivityMediator` to use the `currentActivity` from the context, ensuring consistency across the app.
+4. Allows for a gradual refactoring process, as you can slowly move more functionality into the context if needed in the future.
+
 
 ```mermaid
-graph TD
-    A[App] --> B[ActivityMediatorProvider]
-    B --> |Provides context| C[ActivityMediatorContext]
-    C --> |Consumed by| D[HandTermWrapper]
-    C --> |Consumed by| E[TutorialManager]
-    C --> |Consumed by| F[Other Components]
+flowchart TD
+    A[App] --> AC[ActivityMediatorContext]
+    AC --> |Provides currentActivity| UAM[useActivityMediator]
+    UAM --> T[Terminal]
+    UAM --> E[Editor]
+    UAM --> G[Game]
 
-    G[useActivityMediator Hook] --> |Uses| C
-
-    H[Command Execution] --> |Triggers| I[handleCommandExecuted]
-    I --> |Calls| J[determineActivityState]
-    J --> |Updates| K[currentActivity]
-    K --> |Stored in| C
-
-    L[User Interaction] --> |May trigger| H
-
-    M[useCommand Hook] --> |May call| H
+    T --> |Uses| TS[TerminalState]
+    E --> |Uses| ES[EditorState]
+    G --> |Uses| GSt[GameState]
 
     subgraph ActivityMediatorContext
-        C
-        K
-        I
-        J
+      direction TB
+      AC --> |Manages| CA[currentActivity]
     end
 
-    subgraph Components
-        D
-        E
-        F
+    subgraph useActivityMediator
+      direction TB
+      UAM --> |Uses| CA
+      UAM --> |Provides| DAS[determineActivityState]
+      UAM --> |Provides| HCE[handleCommandExecuted]
     end
 
-    subgraph Hooks
-        G
-        M
-    end
+    TS --> |Updates| CLI[currentCommandLine]
+    ES --> |Updates| EC[editContent]
+    GSt --> |Updates| GSc[gameScore]
+
+    CLI --> |Updates| GSt
+
+    U[User Input] --> |Triggers| T
+    T --> |Triggers| E
+    T --> |commandLine,Command| G
+    T ==> |Command| HCE
+    HCE --> |Updates| CA
 ```

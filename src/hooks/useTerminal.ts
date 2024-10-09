@@ -8,7 +8,7 @@ import { useWPMCalculator } from './useWPMCaculator';
 
 export const useTerminal = () => {
   const { instance, ref: xtermRef } = useXTerm({ options: XtermAdapterConfig });
-  const { executeCommand } = useCommand();
+  const { handleCommand } = useCommand();
   const wpmCalculator = useWPMCalculator();
 
   const [commandLine, setCommandLine] = useState('');
@@ -58,7 +58,7 @@ export const useTerminal = () => {
       if (data === '\r') { // Enter key
         const currentCommand = getCurrentCommand();
         instance.write('\r\n');
-        executeCommand(currentCommand);
+        handleCommand(currentCommand);
         resetPrompt();
       } else if (data === '\x7F') { // Backspace
         if (cursorX > promptLength) {
@@ -84,7 +84,7 @@ export const useTerminal = () => {
       window.removeEventListener('resize', resizeHandler);
       dataHandler.dispose();
     };
-}, [instance, executeCommand, getCurrentCommand, resetPrompt, wpmCalculator, commandLine ]);
+}, [instance, getCurrentCommand, resetPrompt, wpmCalculator, commandLine ]);
 
   return {
     xtermRef,

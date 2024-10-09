@@ -40,7 +40,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   })
 
   const appendToOutput = useCallback((element: React.ReactNode) => {
-    console.log('AppContext: appendToOutput called with', element);
     if (Array.isArray(element)) {
       setOutputElements(prev => [...prev, ...element]);
     } else {
@@ -50,7 +49,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (React.isValidElement(element) && element.props['data-status'] !== undefined) {
       const commandString = element.props.children[0].props.children[3]; // Assuming the command is the fourth child of the first child
       const parsedCommand:ParsedCommand = parseCommand(commandString)
-      console.log('AppContext: Calling handleCommandExecuted with:', parsedCommand);
       handleCommandExecuted(parsedCommand);
     }
   }, [handleCommandExecuted]);

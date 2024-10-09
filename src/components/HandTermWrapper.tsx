@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback, useImperativeHandle, ReactNode } from 'react';
 import { ActivityType, Tutorial } from '../types/Types';
-import { useActivityMediator, IActivityMediatorProps } from '../hooks/useActivityMediator';
+import { useActivityMediator, IActivityMediatorProps, IActivityMediatorReturn } from 'src/hooks/useActivityMediator';
 import Game, { IGameHandle } from '../game/Game';
 import { IAuthProps } from '../lib/useAuth';
 import { usePhraseHandler } from '../hooks/usePhraseHandler';
@@ -54,15 +54,9 @@ export interface IHandTermWrapperMethods {
 
 export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTermWrapperProps>((props, forwardedRef) => {
   const { currentActivity } = useActivityMediatorContext();
-  const { executeCommand, commandHistory } = useCommand();
   const { xtermRef, commandLine, writeToTerminal, resetPrompt } = useTerminal();
 
-  const { currentTutorial, unlockTutorial, resetTutorial } = useTutorial();
-
-  useEffect(() => {
-    console.log('Current activity:', ActivityType[currentActivity]);
-    // Add any logic that should run when the activity changes
-  }, [currentActivity]);
+  const { getNextTutorial, resetTutorial, currentTutorial } = useTutorial();
 
   const targetWPM = 10;
   const wpmCalculator = useWPMCalculator();
@@ -139,8 +133,7 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
   }, []);
 
   const activityMediatorProps: IActivityMediatorProps = {
-    resetTutorial: onResetTutorial,
-    currentTutorial,
+    currentTutorial: getNextTutorial(),
     currentActivity,
     startGame,
   }
@@ -235,6 +228,10 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
     }
   }, [githubAuthHandled]);
 
+  useEffect(() => {
+    activityMediator.determineActivityState();
+  }, [activityMediator]);
+
   // Determine the initial achievement and activity type
   const initializeActivity = useCallback(() => {
     if (terminalMethods.getTerminalSize) {
@@ -274,24 +271,10 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
     // const successPhrase = tutorialGroupPhrase ?? GamePhrases.getGamePhraseByValue(phrase.value.join(''));
     // if (successPhrase) {
     //   const { resultActivityType, nextPhrase } = props.activityMediator.checkGameProgress(successPhrase);
-    //   console.log("Switched from Game back to Tutorial:", ActivityType[resultActivityType], nextPhrase);
     // }
     activityMediator.gameHandleRef.current?.levelUp();
     handlePhraseComplete();
   }
-
-  const handleCommand = useCallback((command: string) => {
-    if (currentActivity === ActivityType.TUTORIAL) {
-      const tutorialCompleted = unlockTutorial(command);
-      if (tutorialCompleted) {
-        // TODO: Maybe update UI or move to next tutorial
-
-      }
-    } else {
-      // Handle normal command execution
-      executeCommand(command);
-    }
-  }, [currentActivity, unlockTutorial, executeCommand]);
 
   const handlePhraseComplete = () => {
     localStorage.setItem('currentCommand', '');
@@ -329,11 +312,12 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
       {lastTypedCharacter && (
         <Chord displayChar={lastTypedCharacter} />
       )}
-      {currentTutorial && (
+      {activityMediator.currentActivity === ActivityType.TUTORIAL && getNextTutorial() && (
         <TutorialManager
-          isInTutorial={currentActivity === ActivityType.TUTORIAL}
-          achievement={currentTutorial}
-        />)}
+          isInTutorial={true}
+          achievement={getNextTutorial()}
+        />
+      )}
       <Prompt
         username={userName || 'guest'}
         domain={domain || 'handterm.com'}
