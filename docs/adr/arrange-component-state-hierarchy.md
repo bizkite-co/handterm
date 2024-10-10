@@ -134,11 +134,7 @@ flowchart TD
     subgraph ActivityMediatorContext
       direction TB
       AC --> |Manages| CA[currentActivity]
-    end
-
-    subgraph useActivityMediator
-      direction TB
-      UAM --> |Uses| CA
+      UAM --> |Reads| CA
       UAM --> |Provides| DAS[determineActivityState]
       UAM --> |Provides| HCE[handleCommandExecuted]
     end
@@ -153,5 +149,6 @@ flowchart TD
     T --> |Triggers| E
     T --> |commandLine,Command| G
     T ==> |Command| HCE
-    HCE --> |Updates| CA
+    HCE --> |Calls| DAS
+    DAS --> |Updates| CA
 ```
