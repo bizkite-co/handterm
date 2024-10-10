@@ -103,13 +103,13 @@ export const useCommand = () => {
             handleCommandExecuted(parsedCommand);
         } else {
             // Fix: Correct the arguments for processCommandOutput
-            processCommandOutput(inputCmd, `Command not found: ${parsedCommand.command}`, 404, wpms);
+            const response = currentActivity === ActivityType.TUTORIAL ? `Tutorial attempt: ${inputCmd}` : `Command not found: ${inputCmd}`;
+            processCommandOutput(inputCmd, response, 404, wpms);
             handleCommandExecuted(parsedCommand);
         }
     }, [context, processCommandOutput, handleCommandExecuted]);
 
     const handleCommand = useCallback((input: string, wpms: WPMs) => {
-        executeCommand(input, wpms);
         if (currentActivity === ActivityType.TUTORIAL) {
             const tutorialCompleted = unlockTutorial(input);
             if (tutorialCompleted) {
@@ -126,6 +126,8 @@ export const useCommand = () => {
                 console.log('Try again!');
             }
         }
+
+        executeCommand(input, wpms);
     }, [currentActivity, unlockTutorial, executeCommand, getNextTutorial, determineActivityState]);
 
     return {
