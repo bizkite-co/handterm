@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback, useImperativeHandle, ReactNode } from 'react';
-import { ActivityType, Tutorial } from '../types/Types';
+import { ActivityType, OutputElement, Tutorial } from '../types/Types';
 import { useActivityMediator, IActivityMediatorProps, IActivityMediatorReturn } from 'src/hooks/useActivityMediator';
 import Game, { IGameHandle } from '../game/Game';
 import { IAuthProps } from '../lib/useAuth';
@@ -18,6 +18,8 @@ import { useAppContext } from '../contexts/AppContext';
 import { useCommand } from '../hooks/useCommand';
 import { useActivityMediatorContext } from 'src/contexts/ActivityMediatorContext';
 import { useTutorial } from 'src/hooks/useTutorials';
+import { gameActivitySignal, startGameSignal, signalGameStart } from 'src/signals/gameSignals';
+import { useComputed } from '@preact/signals-react';
 
 
 export interface IHandTermWrapperProps {
@@ -86,6 +88,7 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
   const [editFilePath, setEditFilePath] = useState('_index');
   const [editFileExtension, setEditFileExtension] = useState('md');
   const [userName, setUserName] = useState<string | null>(null);
+  const currentGameActivity = useComputed(() => gameActivitySignal.value);
 
   // Create a mutable ref that will always have a current value
   const internalRef = useRef<IHandTermWrapperMethods>({
@@ -127,10 +130,17 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
     internalRef.current.refreshComponent(); // Call the new method to force a re-render
   }, [internalRef]);
 
-  const startGame = useCallback(() => {
+  const startGame = useCallback((tutorialGroup?:string) => {
+    signalGameStart(tutorialGroup)
     console.log("startGame called:", gameHandleRef);
-    if (gameHandleRef.current) gameHandleRef.current.startGame();
   }, []);
+
+  useEffect(()=>{
+    if(currentGameActivity.value === ActivityType.GAME && gameHandleRef.current){
+      gameHandleRef.current.startGame(startGameSignal.value);
+      startGameSignal.value = undefined;
+    }
+  },[currentGameActivity])
 
   const activityMediatorProps: IActivityMediatorProps = {
     currentTutorial: getNextTutorial(),
@@ -287,17 +297,18 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
 
   return (
     <>
-      {currentActivity === ActivityType.GAME && (<Game
-        ref={gameHandleRef}
-        canvasHeight={canvasHeight}
-        canvasWidth={props.terminalWidth}
-        isInGameMode={true}
-        heroActionType={activityMediator.heroAction}
-        zombie4ActionType={activityMediator.zombie4Action}
-        onSetHeroAction={activityMediator.setHeroAction}
-        onSetZombie4Action={activityMediator.setZombie4Action}
-        zombie4StartPosition={zombie4StartPosition}
-      />
+      {(currentActivity === ActivityType.GAME || currentGameActivity.value === ActivityType.GAME) && (
+        <Game
+          ref={gameHandleRef}
+          canvasHeight={canvasHeight}
+          canvasWidth={props.terminalWidth}
+          isInGameMode={true}
+          heroActionType={activityMediator.heroAction}
+          zombie4ActionType={activityMediator.zombie4Action}
+          onSetHeroAction={activityMediator.setHeroAction}
+          onSetZombie4Action={activityMediator.setZombie4Action}
+          zombie4StartPosition={zombie4StartPosition}
+        />
       )}
       {currentPhrase && (
         <NextCharsDisplay

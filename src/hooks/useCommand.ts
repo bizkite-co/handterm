@@ -3,15 +3,12 @@ import React, { useContext, useState, useCallback } from 'react';
 import { CommandContext } from '../contexts/CommandContext';
 import { parseCommand } from '../utils/commandUtils';
 import { LogKeys } from '../types/TerminalTypes';
-import { TimeDisplay } from '../components/TimeDisplay';
-import WpmTable from '../components/WpmTable';
 import { commandRegistry } from '../commands/commandRegistry';
 import { useAppContext } from '../contexts/AppContext';
 import { useActivityMediatorContext } from '../contexts/ActivityMediatorContext';
 import { ActivityType, OutputElement, ParsedCommand, WPM, WPMs } from '../types/Types';
 import { useActivityMediator } from './useActivityMediator';
 import { useTutorial } from './useTutorials';
-import { CommandOutput } from 'src/components/CommandOutput';
 
 export interface IUseCommandProps { }
 
@@ -23,11 +20,11 @@ export const useCommand = () => {
     const { appendToOutput } = useAppContext();
     const { currentActivity } = useActivityMediatorContext();
     const { unlockTutorial, getNextTutorial } = useTutorial();
-    const { handleCommandExecuted, determineActivityState, checkGameProgress, checkTutorialProgress } = useActivityMediator({
+    const { 
+        handleCommandExecuted, determineActivityState, 
+        checkGameProgress, checkTutorialProgress 
+    } = useActivityMediator({
         currentActivity,
-        startGame: function (): void {
-            throw new Error('Function not implemented.');
-        }
     });
 
     const context = useContext(CommandContext);

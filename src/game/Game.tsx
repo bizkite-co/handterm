@@ -22,7 +22,7 @@ export interface IGameProps {
 }
 
 export interface IGameHandle {
-  startGame: () => void;
+  startGame: (tutorialGroup?:string) => void;
   completeGame: () => void;
   resetGame: () => void;
   levelUp: (setLevelValue?: number | null) => void;
@@ -47,7 +47,7 @@ const Game = React.forwardRef<IGameHandle, IGameProps>((props, ref) => {
     onSetZombie4Action,
   } = props;
 
-  const startGame = () => {
+  const startGame = (tutorialGroup?:string) => {
     if (context) {
       startAnimationLoop(context);
     }
