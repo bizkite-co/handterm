@@ -24,7 +24,8 @@ export const useWPMCalculator = () => {
     for (let i = 1; i < keystrokes.length; i++) {
       const duration = keystrokes[i].timestamp - keystrokes[i-1].timestamp;
       const minutes = duration / 60000; // Convert to minutes
-      const wpm = 1 / minutes; // 1 character per duration
+      const cpm = 1 / minutes; // 1 character per minute.
+      const wpm = cpm / 5; // five character words per minute.
 
       charWpms.push({
         character: keystrokes[i].char,
