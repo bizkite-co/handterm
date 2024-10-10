@@ -6,10 +6,9 @@ import { LogKeys } from '../types/TerminalTypes';
 import { TimeDisplay } from '../components/TimeDisplay';
 import WpmTable from '../components/WpmTable';
 import { commandRegistry } from '../commands/commandRegistry';
-import { useWPMCalculator, WPMs } from './useWPMCaculator';
 import { useAppContext } from '../contexts/AppContext';
 import { useActivityMediatorContext } from '../contexts/ActivityMediatorContext';
-import { ActivityType, OutputElement, ParsedCommand, WPM } from '../types/Types';
+import { ActivityType, OutputElement, ParsedCommand, WPM, WPMs } from '../types/Types';
 import { useActivityMediator } from './useActivityMediator';
 import { useTutorial } from './useTutorials';
 import { CommandOutput } from 'src/components/CommandOutput';
@@ -21,11 +20,10 @@ export const useCommand = () => {
     const [commandHistory, setCommandHistory] = useState<string[]>([]);
     const [commandHistoryIndex, setCommandHistoryIndex] = useState(-1);
     const [commandHistoryFilter, setCommandHistoryFilter] = useState<string | null>(null);
-    const wpmCalculator = useWPMCalculator();
     const { appendToOutput } = useAppContext();
     const { currentActivity } = useActivityMediatorContext();
     const { unlockTutorial, getNextTutorial } = useTutorial();
-    const { handleCommandExecuted, determineActivityState } = useActivityMediator({
+    const { handleCommandExecuted, determineActivityState, checkGameProgress, checkTutorialProgress } = useActivityMediator({
         currentActivity,
         startGame: function (): void {
             throw new Error('Function not implemented.');
@@ -111,20 +109,9 @@ export const useCommand = () => {
 
     const handleCommand = useCallback((input: string, wpms: WPMs) => {
         if (currentActivity === ActivityType.TUTORIAL) {
-            const tutorialCompleted = unlockTutorial(input);
-            if (tutorialCompleted) {
-                console.log(`Tutorial \"${input}\" completed!`, tutorialCompleted);
-                const nextTutorial = getNextTutorial();
-                if (nextTutorial) {
-                    // Move to the next tutorial
-                    determineActivityState(ActivityType.TUTORIAL);
-                } else {
-                    // All tutorials completed, move to normal mode
-                    determineActivityState(ActivityType.NORMAL);
-                }
-            } else {
-                console.log('Try again!');
-            }
+            const result = checkTutorialProgress(input);
+            console.log(result);
+            // TODO: Write result to output
         }
 
         executeCommand(input, wpms);

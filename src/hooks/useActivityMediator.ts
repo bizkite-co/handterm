@@ -92,16 +92,15 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
     return result;
   }, [determineActivityState]);
 
-  useEffect(()=>{
+  useEffect(() => {
     determineActivityState();
-  },[determineActivityState])
+  }, [determineActivityState])
 
   const checkTutorialProgress = (
     command: string,
-    _args?: string[],
-    _switches?: Record<string, string | boolean>
-  ): { resultActivity: ActivityType, nextTutorial: Tutorial | null } => {
-    if (!props.currentTutorial) return { resultActivity: props.currentActivity, nextTutorial: null };
+  ): { resultActivity: ActivityType, nextTutorial: Tutorial | null, response: string } => {
+    let response = "";
+    if (!getNextTutorial()) return { resultActivity: props.currentActivity, nextTutorial: null, response: response };
     /*
       If args include 'r', reset the tutorial and set TUTORIAL
       If the current tutorial achievement contains a tutorialGroupPhrase, then switch to GAME
@@ -111,19 +110,22 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
 
     // If the current tutorial has attached GamePhrases.
     // Don't unlock until the game is played.
-    if (props.currentTutorial.tutorialGroup) {
+    if (getNextTutorial()?.tutorialGroup) {
       setCurrentActivity(ActivityType.GAME);
       // TODO: Pass phrases to game play
       props.startGame();
-      return { resultActivity: ActivityType.GAME, nextTutorial: null };
+      return { resultActivity: ActivityType.GAME, nextTutorial: null, response: "Starting game for this tutorial." };
     }
     const isUnlocked = unlockTutorial(command);
+    response = isUnlocked ? `Tutorial ${command} unlocked!` : "Try again.";
     const nextTutorial = getNextTutorial();
-    if (!nextTutorial) {
-      setCurrentActivity(ActivityType.GAME);
-      return { resultActivity: ActivityType.GAME, nextTutorial: null };
+    if (nextTutorial) {
+      determineActivityState(ActivityType.TUTORIAL);
+      return { resultActivity: props.currentActivity, nextTutorial, response: response };
     }
-    return { resultActivity: props.currentActivity, nextTutorial };
+    // Set the state for after tutorial completion.
+    setCurrentActivity(ActivityType.GAME);
+    return { resultActivity: ActivityType.GAME, nextTutorial: null, response: "Continuing to Game" };
   };
 
   const checkGameProgress = (successPhrase: GamePhrase): { resultActivityType: ActivityType } => {
