@@ -20,9 +20,7 @@ export type IActivityMediatorReturn = {
   setHeroAction: React.Dispatch<React.SetStateAction<ActionType>>,
   setZombie4Action: React.Dispatch<React.SetStateAction<ActionType>>;
   checkTutorialProgress: (command: string, args?: string[], _switches?: Record<string, string | boolean>) => { resultActivity: ActivityType, nextTutorial: Tutorial | null };
-  checkGameProgress: (successPhrase: GamePhrase) => {
-    resultActivityType: ActivityType;
-  };
+  checkGameProgress: (successPhrase: GamePhrase) => void;
 }
 
 
