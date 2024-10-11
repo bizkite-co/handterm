@@ -19,7 +19,7 @@ export type IActivityMediatorReturn = {
   handleCommandExecuted: (parsedCommand: ParsedCommand) => boolean;
   setHeroAction: React.Dispatch<React.SetStateAction<ActionType>>,
   setZombie4Action: React.Dispatch<React.SetStateAction<ActionType>>;
-  checkTutorialProgress: (command: string, args?: string[], _switches?: Record<string, string | boolean>) => { resultActivity: ActivityType, nextTutorial: Tutorial | null };
+  checkTutorialProgress: (command: string | null) => { resultActivity: ActivityType, nextTutorial: Tutorial | null };
   checkGameProgress: (successPhrase: GamePhrase) => void;
 }
 
@@ -87,8 +87,8 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
   }, [determineActivityState]);
 
   const checkTutorialProgress = (
-    command: string,
-  ): { resultActivity: ActivityType, nextTutorial: Tutorial | null, response: string } => {
+    command: string | null,
+  ) => {
     let response = "";
     const currentTutorial = getNextTutorial();
     if (!currentTutorial) return { resultActivity: activity.value, nextTutorial: null, response: response };
@@ -98,7 +98,7 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
       initializeGame(tutorialGroup.value);
       return { resultActivity: ActivityType.GAME, nextTutorial: null, response: "Starting game for this tutorial." };
     }
-    const isUnlocked = unlockTutorial(command);
+    const isUnlocked = command ? unlockTutorial(command) : false;
     response = isUnlocked ? `Tutorial ${command} unlocked!` : "Try again.";
     // TODO: if the tutorial is not completed until the tutorialGroup is completed, how do we know if the tutorialGroup is completed, and which tutorial to complete when it is completed?
     const nextTutorial = getNextTutorial();

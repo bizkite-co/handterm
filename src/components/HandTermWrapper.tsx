@@ -254,6 +254,7 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
       }
     }
     terminalMethods.scrollBottom();
+    activityMediator.checkTutorialProgress(null);
   }, [activityMediator, terminalMethods, setTerminalSize]);
 
   useEffect(() => {
