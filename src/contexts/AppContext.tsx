@@ -34,23 +34,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const { currentActivity } = useActivityMediatorContext();
   const { handleCommandExecuted } = useActivityMediator({
     currentActivity,
-  })
+  });
 
-  const appendToOutput = useCallback((newElement: ReactElement<OutputElement>) => {
-    if (Array.isArray(newElement)) {
-      setOutputElements(prev => [...prev, ...newElement]);
-    } else {
-      setOutputElements((prev) => [...prev, newElement]);
-    }
+  const appendToOutput = useCallback((newElement: OutputElement) => {
+    setOutputElements((prev) => {
+      const updatedElements = [...prev, newElement];
+      // Keep only the last two elements
+      return updatedElements.slice(-2);
+    });
+
     // Call handleCommandExecuted if the element is a command output
-    if (React.isValidElement(newElement) && newElement.props['data-status'] !== undefined) {
-      const commandString = newElement.props.children[0].props.children[3]; // Assuming the command is the fourth child of the first child
-      const parsedCommand:ParsedCommand = parseCommand(commandString)
+    if ('command' in newElement) {
+      const parsedCommand: ParsedCommand = parseCommand(newElement.command);
       handleCommandExecuted(parsedCommand);
     }
   }, [handleCommandExecuted]);
 
-  const value = {
+  const value: AppContextType = {
     currentActivity,
     isLoggedIn,
     setIsLoggedIn,

@@ -1,4 +1,5 @@
-import React from 'react';
+// src/components/WpmTable.tsx
+import React, { useMemo } from 'react';
 import { CharWPM } from '../types/TerminalTypes';
 
 interface WpmTableProps {
@@ -7,20 +8,50 @@ interface WpmTableProps {
 }
 
 export const WpmTable: React.FC<WpmTableProps> = ({ wpms, name = "slowest-characters" }) => {
+  const groupedAndSortedWpms = useMemo(() => {
+    // Group by character
+    const grouped = wpms.reduce((acc, curr) => {
+      const char = curr.character.replace("\r", "\\r").replace(" ", "\\s");
+      if (!acc[char]) {
+        acc[char] = { character: char, wpm: curr.wpm, count: 1 };
+      } else {
+        acc[char].wpm += curr.wpm;
+        acc[char].count += 1;
+      }
+      return acc;
+    }, {} as Record<string, { character: string, wpm: number, count: number }>);
+
+    // Calculate average WPM for each character
+    const averages = Object.values(grouped).map(item => ({
+      character: item.character,
+      wpm: item.wpm / item.count
+    }));
+
+    // Sort by slowest (lowest WPM) first
+    averages.sort((a, b) => a.wpm - b.wpm);
+
+    // Take top 5
+    return averages.slice(0, 5);
+  }, [wpms]);
+
   return (
-  <table className="wpm-table">
-    <thead>
-      <tr><th colSpan={2}>{name}</th></tr>
-    </thead>
-    <tbody>
-      {wpms.map((wpm, index) => (
-        <tr key={index} className="wpm-table-row">
-          <td>{wpm.character.replace("\r", "\\r").replace(" ", "\\s")}</td>
-          <td className="number">{wpm.wpm.toFixed(2)}</td>
+    <table className="wpm-table">
+      <thead>
+        <tr><th colSpan={2}>{name}</th></tr>
+        <tr>
+          <th>Character</th>
+          <th>Avg WPM</th>
         </tr>
-      ))}
-    </tbody>
-  </table>
+      </thead>
+      <tbody>
+        {groupedAndSortedWpms.map((wpm, index) => (
+          <tr key={index} className="wpm-table-row">
+            <td>{wpm.character}</td>
+            <td className="number">{wpm.wpm.toFixed(0)}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
   );
 };
 
