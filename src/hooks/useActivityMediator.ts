@@ -112,7 +112,7 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
 
   const checkGameProgress = (successPhrase: GamePhrase): { resultActivityType: ActivityType } => {
     const nextAchievement = getNextTutorial();
-    if (tutorialGroupSignal) {
+    if (tutorialGroup.value) {
       return { resultActivityType: ActivityType.GAME }
     }
     if (nextAchievement) {
