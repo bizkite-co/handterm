@@ -34,24 +34,24 @@ export const useBaseCharacter = (props: BaseCharacterProps) => {
   };
 
   const draw = (
-    context: CanvasRenderingContext2D, 
-    position: SpritePosition, 
+    context: CanvasRenderingContext2D,
+    positionRef: React.RefObject<SpritePosition>,
     scale: number | null
   ): number => {
     const sprite = spritesRef.current[props.currentActionType];
     const action = props.actions[props.currentActionType];
-    const newX = position.leftX + action.dx;
+    const newX = (positionRef.leftX ?? 0) + action.dx;
     incrementFrameIndex();
-    // if(props.name.toLocaleLowerCase() === 'zombie4') console.log("zombie4", frameIndexRef.current)
+    // console.log(`${props.name.toLowerCase()} draw: positionRef=${JSON.stringify(positionRef)}, newX=${newX}, action.dx=${action.dx}`);
+
     if (sprite) {
       sprite.draw(
         context,
         frameIndexRef.current,
         newX,
-        position.topY,
+        positionRef.topY,
         scale ?? props.scale
       );
-
     }
     return action.dx;
   }

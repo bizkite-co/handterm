@@ -306,7 +306,6 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
           canvasHeight={canvasHeight}
           canvasWidth={props.terminalWidth}
           isInGameMode={true}
-          zombie4StartPosition={zombie4StartPosition}
         />
       )}
       {currentPhrase?.value?.value && activity.value === ActivityType.GAME && (

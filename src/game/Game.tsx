@@ -9,32 +9,27 @@ import { Sprite } from './sprites/Sprite';
 import { IParallaxLayer, ParallaxLayer } from './ParallaxLayer';
 import ScrollingTextLayer from './ScrollingTextLayer';
 import confetti from 'canvas-confetti';
-import { useComputed } from "@preact/signals-react";
-import { 
-  heroActionSignal, 
-  zombie4ActionSignal, 
-  setHeroAction, 
-  setZombie4Action 
-} from '../signals/activitySignals';
+import { useComputed, useSignalEffect } from "@preact/signals-react";
+import { commandLineSignal } from "src/signals/commandLineSignals";
+
 
 export interface IGameProps {
   canvasHeight: number
   canvasWidth: number
   isInGameMode: boolean
-  zombie4StartPosition: SpritePosition
 }
 
 export interface IGameHandle {
-  startGame: (tutorialGroup?:string) => void;
+  startGame: (tutorialGroup?: string) => void;
   completeGame: () => void;
   resetGame: () => void;
   levelUp: (setLevelValue?: number | null) => void;
-  handleZombie4PositionChange: (position: SpritePosition) => void;
 }
 
 interface ICharacterRefMethods {
   getCurrentSprite: () => Sprite | null;
   getActions: () => Record<ActionType, Action>;
+  positionRef: SpritePosition;
   draw: (context: CanvasRenderingContext2D, position: SpritePosition) => number;
 }
 
@@ -43,21 +38,10 @@ const Game = React.forwardRef<IGameHandle, IGameProps>((props, ref) => {
     canvasHeight,
     canvasWidth,
     isInGameMode,
-    zombie4StartPosition,
   } = props;
-  const heroActionType = useComputed(()=> heroActionSignal.value);
-  const zombie4ActionType = useComputed(() => zombie4ActionSignal.value);
-
-  const startGame = (tutorialGroup?:string) => {
-    if (context) {
-      startAnimationLoop(context);
-    }
-    // Reset game state here if needed
-    setZombie4Position(zombie4StartPosition);
-    setIsPhraseComplete(false);
-    // Add any other necessary game start logic
-  };
-
+  const zombie4StartPosition = { leftX: -70, topY: 0 };
+  const heroStartPosition = { leftX: 125, topY: 30 };
+  const zombie4PositionRef = useRef<SpritePosition>(zombie4StartPosition);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const heroRef = useRef<ICharacterRefMethods>(null);
   const zombie4Ref = useRef<ICharacterRefMethods>(null);
@@ -65,15 +49,52 @@ const Game = React.forwardRef<IGameHandle, IGameProps>((props, ref) => {
   const zombie4DeathTimeout = useRef<NodeJS.Timeout | null>(null);
   const heroXPercent = 0.23;
 
-  const [currentLevel, setCurrentLevel] = useState(1);
+  const herpoPositionRef = useRef<SpritePosition>(heroStartPosition);
   const [heroPosition, setHeroPosition] = useState<SpritePosition>({ leftX: canvasWidth * heroXPercent, topY: 30 });
-  const [zombie4Position, setZombie4Position] = useState<SpritePosition>(zombie4StartPosition);
+
+  const [currentLevel, setCurrentLevel] = useState(1);
   const [context, setContext] = useState<CanvasRenderingContext2D | null>(null);
   const [backgroundOffsetX, setBackgroundOffsetX] = useState(0);
   const [isPhraseComplete, setIsPhraseComplete] = useState(false);
   const [isTextScrolling, setIsTextScrolling] = useState(false);
+  const [heroAction, setHeroAction] = useState<ActionType>('Idle');
+  const [zombie4Action, setZombie4Action] = useState<ActionType>('Walk');
   const textToScroll = "TERMINAL VELOCITY!";
   const [layersState, setLayersState] = useState<IParallaxLayer[]>(layers[0]);
+  let heroRunTimeoutId: number | null = null;
+
+  const commandLine = useComputed(() => commandLineSignal.value);
+
+  useSignalEffect(() => {
+    handleCommandLineChange(commandLine.value);
+  })
+
+  const setHeroRunAction = () => {
+    if (heroRunTimeoutId) {
+      clearTimeout(heroRunTimeoutId);
+      heroRunTimeoutId = null;
+    }
+
+    setHeroAction('Run');
+    heroRunTimeoutId = window.setTimeout(() => {
+      setHeroAction('Idle');
+      heroRunTimeoutId = null;
+    }, 800);
+  }
+
+  const handleCommandLineChange = (comandLine: string) => {
+    setHeroRunAction();
+  }
+
+  const startGame = (tutorialGroup?: string) => {
+    if (context) {
+      startAnimationLoop(context);
+    }
+    // Reset game state here if needed
+    setIsPhraseComplete(false);
+    // Add any other necessary game start logic
+  };
+
 
   const getLevel = () => currentLevel;
   const setLevel = (newLevel: number) => {
@@ -127,15 +148,17 @@ const Game = React.forwardRef<IGameHandle, IGameProps>((props, ref) => {
     setZombie4Action('Death');
     zombie4DeathTimeout.current = setTimeout(() => {
       setZombie4Action('Walk');
-      setZombie4Position(zombie4StartPosition);
+      zombie4PositionRef.current = zombie4StartPosition;
       setIsPhraseComplete(false);
       zombie4DeathTimeout.current = null;
     }, 3000);
   };
 
+
+
   const checkProximityAndSetAction = () => {
     const ATTACK_THRESHOLD = 100;
-    const distance = heroPosition.leftX - zombie4Position.leftX;
+    const distance = heroPosition.leftX - zombie4PositionRef.current.leftX;
 
     if (20 < distance && distance < ATTACK_THRESHOLD) {
       setZombie4Action('Attack');
@@ -146,12 +169,11 @@ const Game = React.forwardRef<IGameHandle, IGameProps>((props, ref) => {
         setHeroAction('Death');
       }
     } else {
-      if (zombie4ActionType.value === 'Attack') {
+      if (zombie4Action === 'Attack') {
         setZombie4Action('Walk');
       }
     }
   };
-
 
   const updateCharacterAndBackgroundPostion = (_context: CanvasRenderingContext2D): number => {
     const canvasCenterX = canvasWidth * heroXPercent;
@@ -165,10 +187,14 @@ const Game = React.forwardRef<IGameHandle, IGameProps>((props, ref) => {
     }
 
     if (zombie4Ref.current && _context) {
-      const zombie4Dx = zombie4Ref.current.draw(_context, zombie4Position);
-      setZombie4Position(prev => ({
-        ...prev, leftX: prev.leftX + zombie4Dx
-      }));
+      // console.log('Before draw: zombie4Position=', JSON.stringify(zombie4PositionRef.current));
+      const zombie4Dx = zombie4Ref.current.draw(_context, zombie4PositionRef.current);
+      // console.log('After draw: zombie4Dx=', zombie4Dx, 'heroDx=', heroDx);
+      zombie4PositionRef.current = {
+        ...zombie4PositionRef.current,
+        leftX: zombie4PositionRef.current.leftX + zombie4Dx - heroDx
+      };
+      // console.log('Updated zombie position:', JSON.stringify(zombie4PositionRef.current));
     }
 
     if (heroDx !== 0) {
@@ -178,8 +204,11 @@ const Game = React.forwardRef<IGameHandle, IGameProps>((props, ref) => {
         setHeroPosition(prev => ({ ...prev, leftX: characterReachThreshold }));
       }
 
-      const newZombie4PositionX = zombie4Position.leftX - heroDx;
-      setZombie4Position(prev => ({ ...prev, leftX: newZombie4PositionX }));
+      const newZombie4PositionX = zombie4PositionRef.current.leftX - heroDx;
+      zombie4PositionRef.current = {
+        ...zombie4PositionRef.current,
+        leftX: newZombie4PositionX
+      };
     }
     return heroDx;
   };
@@ -250,13 +279,10 @@ const Game = React.forwardRef<IGameHandle, IGameProps>((props, ref) => {
     startGame,
     completeGame,
     resetGame: () => {
-      setZombie4Position(zombie4StartPosition);
+      zombie4PositionRef.current = zombie4StartPosition;
       setIsPhraseComplete(false);
     },
     levelUp,
-    handleZombie4PositionChange: (position: SpritePosition) => {
-      setZombie4Position(position);
-    },
   }));
 
   return (
@@ -290,12 +316,14 @@ const Game = React.forwardRef<IGameHandle, IGameProps>((props, ref) => {
           />
           <Hero
             ref={heroRef}
-            currentActionType={heroActionType.value}
+            positionRef={herpoPositionRef.current}
+            currentActionType={heroAction}
             scale={1.95}
           />
           <Zombie4
             ref={zombie4Ref}
-            currentActionType={zombie4ActionType.value}
+            positionRef={zombie4PositionRef.current}
+            currentActionType={zombie4Action}
             scale={1.90}
           />
         </div>
