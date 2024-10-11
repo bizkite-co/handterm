@@ -22,11 +22,11 @@ import {
   activitySignal,
   heroActionSignal,
   zombie4ActionSignal,
-  currentPhraseSignal,
+  gamePhraseSignal,
   gameLevelSignal,
   setHeroAction,
   setZombie4Action,
-  setCurrentPhrase,
+  setGamePhrase,
   tutorialGroupSignal,
   setGameLevel,
   gameInitSignal
@@ -100,7 +100,7 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
   const isGameIntialized = useComputed(() => gameInitSignal.value);
   const tutorialGroup = useComputed(() => tutorialGroupSignal.value);
   const gameInit = useComputed(() => gameInitSignal.value);
-  const currentPhrase = useComputed(() => currentPhraseSignal.value);
+  const currentPhrase = useComputed(() => gamePhraseSignal.value);
 
   // Create a mutable ref that will always have a current value
   const internalRef = useRef<IHandTermWrapperMethods>({
@@ -141,7 +141,7 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
         = (tutorialGroup.value
           ? GamePhrases.getGamePhrasesByTutorialGroup(tutorialGroup.value)
           : GamePhrases.getGamePhrasesNotAchieved()[0]) as GamePhrase;
-      setCurrentPhrase(phrase);
+      setGamePhrase(phrase);
       gameHandleRef.current.startGame(tutorialGroup.value);
       // gameInit.value = false;
     }
@@ -276,22 +276,20 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
 
     if (wpmAverage > targetWPM) {
       savePhrasesAchieved(phrase.key, wpmAverage);
+      let result = activityMediator.checkGameProgress(phrase);
+      console.log("phrase result:", result, phrase)
     }
 
     gameHandleRef.current?.completeGame();
-    // TODO: Find if there's a tutorialGroupPhrase that matches the current phrase value.
+    // TODO: Set the next phrase.
 
-    // const successPhrase = tutorialGroupPhrase ?? GamePhrases.getGamePhraseByValue(phrase.value.join(''));
-    // if (successPhrase) {
-    //   const { resultActivityType, nextPhrase } = props.activityMediator.checkGameProgress(successPhrase);
-    // }
     gameHandleRef.current?.levelUp();
     handlePhraseComplete();
   }
 
   const handlePhraseComplete = () => {
     localStorage.setItem('currentCommand', '');
-    setCurrentPhrase(null);
+    setGamePhrase(null);
     if (nextCharsDisplayRef.current && nextCharsDisplayRef.current.cancelTimer) {
       nextCharsDisplayRef.current.cancelTimer();
     }

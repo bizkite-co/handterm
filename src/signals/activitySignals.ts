@@ -9,7 +9,7 @@ export const startGameSignal = signal<string | undefined>(undefined);
 export const tutorialGroupSignal = signal<string | undefined>(undefined);
 export const heroActionSignal = signal<ActionType>('Idle');
 export const zombie4ActionSignal = signal<ActionType>('Walk');
-export const currentPhraseSignal = signal<GamePhrase | null>(null);
+export const gamePhraseSignal = signal<GamePhrase | null>(null);
 export const gameLevelSignal = signal<number>(1);
 export const gameInitSignal = signal<boolean>(false);
 
@@ -39,8 +39,8 @@ export const setZombie4Action = (action: ActionType) => {
   zombie4ActionSignal.value = action;
 };
 
-export const setCurrentPhrase = (phrase: GamePhrase | null) => {
-  currentPhraseSignal.value = phrase;
+export const setGamePhrase = (phrase: GamePhrase | null) => {
+  gamePhraseSignal.value = phrase;
 };
 
 export const setGameLevel = (level: number) => {

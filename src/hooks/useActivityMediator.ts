@@ -2,10 +2,10 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { Tutorial, ActivityType, ParsedCommand } from '../types/Types';
 import { ActionType } from '../game/types/ActionTypes';
 import { IGameHandle } from '../game/Game';
-import { GamePhrase } from '../utils/GamePhrases';
+import GamePhrases, { GamePhrase } from '../utils/GamePhrases';
 import { useActivityMediatorContext } from '../contexts/ActivityMediatorContext';
 import { useTutorial } from './useTutorials';
-import { initializeGame,setActivity, activitySignal, tutorialGroupSignal, tutorialSignal } from 'src/signals/activitySignals';
+import { initializeGame, setActivity, activitySignal, tutorialGroupSignal, tutorialSignal, setGamePhrase, setTutorial } from 'src/signals/activitySignals';
 import { useComputed } from '@preact/signals-react';
 
 export type IActivityMediatorReturn = {
@@ -33,9 +33,9 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
   const [heroAction, setHeroAction] = useState<ActionType>('Idle');
   const [zombie4Action, setZombie4Action] = useState<ActionType>('Walk');
   const { unlockTutorial, resetTutorial, getNextTutorial } = useTutorial();
-  const activity = useComputed(()=> activitySignal.value);
-  const tutorialGroup = useComputed(()=> tutorialGroupSignal.value);
-  const tutorial = useComputed(()=> tutorialSignal.value);
+  const activity = useComputed(() => activitySignal.value);
+  const tutorialGroup = useComputed(() => tutorialGroupSignal.value);
+  const tutorial = useComputed(() => tutorialSignal.value);
 
   const determineActivityState = useCallback((commandActivity: ActivityType | null = null) => {
     if (commandActivity && commandActivity !== activity.value) {
@@ -58,7 +58,7 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
     }
 
     return activity.value;
-  }, [activity.value, tutorialSignal, tutorialGroupSignal, setActivity ]);
+  }, [activity.value, tutorialSignal, tutorialGroupSignal, setActivity]);
 
   const handleCommandExecuted = useCallback((parsedCommand: ParsedCommand): boolean => {
     let result = false;
@@ -110,15 +110,28 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
     return { resultActivity: ActivityType.GAME, nextTutorial: null, response: "Continuing to Game" };
   };
 
-  const checkGameProgress = (successPhrase: GamePhrase): { resultActivityType: ActivityType } => {
-    const nextAchievement = getNextTutorial();
+  const checkGameProgress = (successPhrase: GamePhrase) => {
+    const nextTutorial = getNextTutorial();
     if (tutorialGroup.value) {
-      return { resultActivityType: ActivityType.GAME }
+      const nextGamePhrase = GamePhrases.getGamePhrasesByTutorialGroup(tutorialGroup.value)
+        .find(p => !p.isComplete);
+      if (nextGamePhrase) {
+        // Set the next phrase
+        setGamePhrase(nextGamePhrase);
+        setActivity(ActivityType.GAME);
+      }
     }
-    if (nextAchievement) {
-      return { resultActivityType: ActivityType.TUTORIAL };
+    if (nextTutorial) {
+      setTutorial(nextTutorial);
+      setActivity(ActivityType.TUTORIAL);
     }
-    return { resultActivityType: ActivityType.GAME };
+    const nextGamePhrase = GamePhrases.getGamePhrasesNotAchieved()[0];
+    if(nextGamePhrase){
+      // Set next phrase
+      setGamePhrase(nextGamePhrase);
+      setActivity(ActivityType.GAME);
+    }
+    setActivity(ActivityType.NORMAL);
   };
 
   return {
