@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback, useImperativeHandle, ReactNode } from 'react';
-import { ActivityType, OutputElement, Tutorial } from '../types/Types';
+import { ActivityType, OutputElement } from '../types/Types';
 import { useActivityMediator, IActivityMediatorProps, IActivityMediatorReturn } from 'src/hooks/useActivityMediator';
 import Game, { IGameHandle } from '../game/Game';
 import { IAuthProps } from '../lib/useAuth';
@@ -8,15 +8,11 @@ import GamePhrases, { GamePhrase } from '../utils/GamePhrases';
 import NextCharsDisplay, { NextCharsDisplayHandle } from './NextCharsDisplay';
 import { TutorialManager } from './TutorialManager';
 import { Chord } from './Chord';
-import { Phrase } from '../utils/Phrase';
 import { Prompt } from './Prompt';
 import { LogKeys } from '../types/TerminalTypes';
 import { useResizeCanvasAndFont } from '../hooks/useResizeCanvasAndFont';
 import { useTerminal } from '../hooks/useTerminal';
 import { useWPMCalculator } from '../hooks/useWPMCaculator';
-import { useAppContext } from '../contexts/AppContext';
-import { useCommand } from '../hooks/useCommand';
-import { useActivityMediatorContext } from 'src/contexts/ActivityMediatorContext';
 import { useTutorial } from 'src/hooks/useTutorials';
 import {
   activitySignal,
@@ -31,6 +27,7 @@ import {
   setGameLevel,
   gameInitSignal
 } from '../signals/activitySignals';
+import { commandLineSignal, commandSignal, commandTimeSignal } from 'src/signals/commandLineSignals';
 import { useComputed } from '@preact/signals-react';
 
 
@@ -64,6 +61,10 @@ export interface IHandTermWrapperMethods {
   // Add other methods as needed
 }
 
+const getTimestamp = (date:Date) => {
+  return date.toTimeString().split(' ')[0];
+}
+
 export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTermWrapperProps>((props, forwardedRef) => {
   const { xtermRef, commandLine, writeToTerminal, resetPrompt } = useTerminal();
 
@@ -73,7 +74,6 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
   const wpmCalculator = useWPMCalculator();
   const gameHandleRef = useRef<IGameHandle>(null);
   const nextCharsDisplayRef: React.RefObject<NextCharsDisplayHandle> = React.createRef();
-  const timestamp = new Date().toTimeString().split(' ')[0];
   const zombie4StartPosition = { leftX: -70, topY: 0 };
 
   const [domain] = useState<string>('handterm.com');
@@ -101,7 +101,7 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
   const tutorialGroup = useComputed(() => tutorialGroupSignal.value);
   const gameInit = useComputed(() => gameInitSignal.value);
   const currentPhrase = useComputed(() => gamePhraseSignal.value);
-
+  const commandTime = useComputed(() => commandTimeSignal.value);
   // Create a mutable ref that will always have a current value
   const internalRef = useRef<IHandTermWrapperMethods>({
     writeOutput: () => { },
@@ -332,7 +332,7 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
         username={userName || 'guest'}
         domain={domain || 'handterm.com'}
         githubUsername={githubUsername}
-        timestamp={timestamp}
+        timestamp={getTimestamp(commandTime.value)}
       />
       <div ref={xtermRef} />
     </>

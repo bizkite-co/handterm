@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo } from 'react';
 import { WPM, WPMs } from '../types/Types';
-import { keystrokesSignal, addKeystroke, clearKeystrokes } from 'src/signals/wpmSignals';
+import { keystrokesSignal, addKeystroke, clearKeystrokes } from 'src/signals/commandLineSignals';
 import { useComputed } from '@preact/signals-react';
 
 

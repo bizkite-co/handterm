@@ -6,7 +6,7 @@ import { XtermAdapterConfig } from '../components/XtermAdapterConfig';
 import { useCommand } from './useCommand';
 import { useWPMCalculator } from './useWPMCaculator';
 import { WPM } from 'src/types/Types';
-import { addKeystroke } from 'src/signals/wpmSignals';
+import { addKeystroke } from 'src/signals/commandLineSignals';
 
 export const useTerminal = () => {
   const { instance, ref: xtermRef } = useXTerm({ options: XtermAdapterConfig });

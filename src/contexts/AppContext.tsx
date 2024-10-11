@@ -43,11 +43,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return updatedElements.slice(-2);
     });
 
-    // Call handleCommandExecuted if the element is a command output
-    if ('command' in newElement) {
-      const parsedCommand: ParsedCommand = parseCommand(newElement.command);
-      handleCommandExecuted(parsedCommand);
-    }
   }, [handleCommandExecuted]);
 
   const value: AppContextType = {

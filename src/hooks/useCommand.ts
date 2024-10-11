@@ -11,6 +11,7 @@ import { useTutorial } from './useTutorials';
 import { activitySignal } from 'src/signals/activitySignals';
 import { useComputed } from '@preact/signals-react';
 import { useWPMCalculator } from './useWPMCaculator';
+import { setCommandTime } from 'src/signals/commandLineSignals';
 
 export interface IUseCommandProps { }
 
@@ -106,6 +107,7 @@ export const useCommand = () => {
     }, [context, processCommandOutput, handleCommandExecuted]);
 
     const handleCommand = useCallback((input: string) => {
+        setCommandTime(new Date);
         if (currentActivity.value === ActivityType.TUTORIAL) {
             checkTutorialProgress(input);
             // TODO: Write result to output
