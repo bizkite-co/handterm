@@ -5,12 +5,12 @@ import { parseCommand } from '../utils/commandUtils';
 import { LogKeys } from '../types/TerminalTypes';
 import { commandRegistry } from '../commands/commandRegistry';
 import { useAppContext } from '../contexts/AppContext';
-import { useActivityMediatorContext } from '../contexts/ActivityMediatorContext';
-import { ActivityType, OutputElement, ParsedCommand, WPM, WPMs } from '../types/Types';
+import { ActivityType, OutputElement, ParsedCommand, WPMs } from '../types/Types';
 import { useActivityMediator } from './useActivityMediator';
 import { useTutorial } from './useTutorials';
 import { activitySignal } from 'src/signals/activitySignals';
 import { useComputed } from '@preact/signals-react';
+import { useWPMCalculator } from './useWPMCaculator';
 
 export interface IUseCommandProps { }
 
@@ -24,11 +24,11 @@ export const useCommand = () => {
     const currentActivity = useComputed(() => activitySignal.value);
     const { 
         handleCommandExecuted, determineActivityState, 
-        checkGameProgress, checkTutorialProgress 
+        checkTutorialProgress 
     } = useActivityMediator({
         currentActivity,
     });
-
+    const wpmCalculator = useWPMCalculator();
     const context = useContext(CommandContext);
 
     if (context === undefined) {
@@ -66,9 +66,9 @@ export const useCommand = () => {
         command: string,
         response: string,
         status: number,
-        wpms: WPMs,
         commandTime: Date
     ): OutputElement => {
+        const wpms = wpmCalculator.getWPMs();
         return {
             command,
             response,
@@ -83,37 +83,35 @@ export const useCommand = () => {
         command: string,
         response: string,
         status: number,
-        wpms: WPMs
     ): void => {
         const commandTime = new Date();
-        const outputElement = createCommandRecord(command, response, status, wpms, commandTime);
+        const outputElement = createCommandRecord(command, response, status, commandTime);
         appendToOutput(outputElement);
         addToCommandHistory(command);
     }, [createCommandRecord, appendToOutput, addToCommandHistory]);
 
-    const executeCommand = useCallback(async (inputCmd: string, wpms: WPMs) => {
+    const executeCommand = useCallback(async (inputCmd: string) => {
         const parsedCommand: ParsedCommand = parseCommand(inputCmd);
         const command = commandRegistry.getCommand(parsedCommand.command);
         if (command && context) {
             const response = await command.execute(context, parsedCommand);
-            processCommandOutput(inputCmd, response.message, response.status, wpms);
+            processCommandOutput(inputCmd, response.message, response.status);
             handleCommandExecuted(parsedCommand);
         } else {
             // Fix: Correct the arguments for processCommandOutput
             const response = currentActivity.value === ActivityType.TUTORIAL ? `Tutorial attempt: ${inputCmd}` : `Command not found: ${inputCmd}`;
-            processCommandOutput(inputCmd, response, 404, wpms);
+            processCommandOutput(inputCmd, response, 404);
             handleCommandExecuted(parsedCommand);
         }
     }, [context, processCommandOutput, handleCommandExecuted]);
 
-    const handleCommand = useCallback((input: string, wpms: WPMs) => {
+    const handleCommand = useCallback((input: string) => {
         if (currentActivity.value === ActivityType.TUTORIAL) {
-            const result = checkTutorialProgress(input);
-            console.log(result);
+            checkTutorialProgress(input);
             // TODO: Write result to output
         }
 
-        executeCommand(input, wpms);
+        executeCommand(input);
     }, [currentActivity.value, unlockTutorial, executeCommand, getNextTutorial, determineActivityState]);
 
     return {

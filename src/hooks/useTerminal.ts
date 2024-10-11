@@ -61,8 +61,7 @@ export const useTerminal = () => {
       if (data === '\r') { // Enter key
         const currentCommand = getCurrentCommand();
         instance.write('\r\n');
-        const wpms = wpmCalculator.getWPMs();
-        handleCommand(currentCommand, wpms);
+        handleCommand(currentCommand);
         resetPrompt();
         wpmCalculator.clearKeystrokes();
       } else if (data === '\x7F') { // Backspace
