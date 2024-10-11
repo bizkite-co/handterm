@@ -90,15 +90,17 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
     command: string,
   ): { resultActivity: ActivityType, nextTutorial: Tutorial | null, response: string } => {
     let response = "";
-    if (!getNextTutorial()) return { resultActivity: activity.value, nextTutorial: null, response: response };
+    const currentTutorial = getNextTutorial();
+    if (!currentTutorial) return { resultActivity: activity.value, nextTutorial: null, response: response };
 
-    if (getNextTutorial()?.tutorialGroup) {
+    if (currentTutorial?.tutorialGroup) {
       setActivity(ActivityType.GAME);
       initializeGame(tutorialGroup.value);
       return { resultActivity: ActivityType.GAME, nextTutorial: null, response: "Starting game for this tutorial." };
     }
     const isUnlocked = unlockTutorial(command);
     response = isUnlocked ? `Tutorial ${command} unlocked!` : "Try again.";
+    // TODO: if the tutorial is not completed until the tutorialGroup is completed, how do we know if the tutorialGroup is completed, and which tutorial to complete when it is completed?
     const nextTutorial = getNextTutorial();
     if (nextTutorial) {
       determineActivityState(ActivityType.TUTORIAL);
