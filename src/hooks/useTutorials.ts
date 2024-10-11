@@ -39,7 +39,7 @@ export const useTutorial = () => {
     const unlockTutorial = useCallback((command: string): boolean => {
         let nextTutorial = getNextTutorial();
         if (!nextTutorial) return false;
-        if (command === '') command = 'Return (ENTER)';
+        if (command === '\r') command = 'Return (ENTER)';
         if (nextTutorial.phrase.join('') === command) {
             const updatedCompletedTutorials = [...completedTutorials, nextTutorial.phrase.join('')];
             setCompletedTutorials(updatedCompletedTutorials);
