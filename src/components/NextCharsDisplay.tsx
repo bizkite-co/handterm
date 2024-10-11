@@ -5,9 +5,10 @@ import Timer from './Timer'; // Import the React component
 import ErrorDisplay from "./ErrorDisplay";
 import { Phrase } from "../utils/Phrase";
 import { GamePhrase } from "src/utils/GamePhrases";
+import { commandLineSignal } from "src/signals/commandLineSignals";
+import { useComputed, useSignalEffect } from "@preact/signals-react";
 
 export interface INextCharsDisplayProps {
-    commandLine: string;
     isInPhraseMode: boolean;
     newPhrase: GamePhrase;
     onPhraseSuccess: (phrase: GamePhrase) => void;
@@ -20,7 +21,6 @@ export interface NextCharsDisplayHandle {
 }
 
 const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, INextCharsDisplayProps>(({
-    commandLine,
     isInPhraseMode,
     newPhrase,
     onPhraseSuccess,
@@ -40,15 +40,16 @@ const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, INextCharsDisp
     const nextCharsRateRef = useRef<HTMLDivElement>(null);
     const timerRef = useRef<any>(null);
     const wpmRef = useRef<HTMLSpanElement>(null);
+    const commandLine = useComputed(()=> commandLineSignal.value);
 
     useEffect(() => {
         setPhrase(new Phrase(newPhrase.value.split('')));
         setNextChars(newPhrase.value);
     }, [newPhrase]);
 
-    useEffect(() => {
-        handleCommandLineChange(commandLine);
-    }, [commandLine]);
+    useSignalEffect(() => {
+        handleCommandLineChange(commandLine.value);
+    });
 
     const handleCommandLineChange = (stringBeingTested: string) => {
         startTimer();

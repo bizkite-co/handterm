@@ -66,8 +66,8 @@ const getTimestamp = (date:Date) => {
 }
 
 export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTermWrapperProps>((props, forwardedRef) => {
-  const { xtermRef, commandLine, writeToTerminal, resetPrompt } = useTerminal();
-
+  const { xtermRef, writeToTerminal, resetPrompt } = useTerminal();
+  const commandLine = useComputed(()=> commandLineSignal.value);
   const { getNextTutorial, currentTutorial } = useTutorial();
 
   const targetWPM = 10;
@@ -312,7 +312,6 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
       {currentPhrase?.value?.value && activity.value === ActivityType.GAME && (
         <NextCharsDisplay
           ref={nextCharsDisplayRef}
-          commandLine={commandLine}
           isInPhraseMode={true}
           newPhrase={currentPhrase.value}
           onPhraseSuccess={handlePhraseSuccess}

@@ -5,16 +5,16 @@ import { FitAddon } from '@xterm/addon-fit';
 import { XtermAdapterConfig } from '../components/XtermAdapterConfig';
 import { useCommand } from './useCommand';
 import { useWPMCalculator } from './useWPMCaculator';
-import { WPM } from 'src/types/Types';
-import { addKeystroke } from 'src/signals/commandLineSignals';
+import { addKeystroke, commandLineSignal, setCommand } from 'src/signals/commandLineSignals';
+import { useComputed } from '@preact/signals-react';
+import { setCommandLine } from 'src/signals/commandLineSignals';
 
 export const useTerminal = () => {
   const { instance, ref: xtermRef } = useXTerm({ options: XtermAdapterConfig });
   const { handleCommand } = useCommand();
   const wpmCalculator = useWPMCalculator();
+  const commandLine = useComputed(()=> commandLineSignal.value)
 
-  const [commandLine, setCommandLine] = useState('');
-  const [currentWPMs, setCurrentWPMs] = useState<WPM[]>([]);
   const fitAddon = useRef(new FitAddon());
   const PROMPT = '> ';
   const promptLength = PROMPT.length;
@@ -61,20 +61,22 @@ export const useTerminal = () => {
       if (data === '\r') { // Enter key
         const currentCommand = getCurrentCommand();
         instance.write('\r\n');
+        setCommandLine('');
         handleCommand(currentCommand === '' ? '\r': currentCommand);
         resetPrompt();
         wpmCalculator.clearKeystrokes();
       } else if (data === '\x7F') { // Backspace
         if (cursorX > promptLength) {
           instance.write('\b \b');
-          setCommandLine(prev => prev.slice(0, -1));
+          setCommandLine(commandLine.value.slice(0, -1));
         }
       } else if (data === '\x1b[D') { // Left arrow
         if (cursorX > promptLength) {
           instance.write(data);
         }
       } else {
-        setCommandLine(prev => prev + data);
+        const newCommandLine = commandLine.value + data;
+        setCommandLine(newCommandLine);
         instance.write(data);
         addKeystroke(data);
       }
@@ -92,7 +94,6 @@ export const useTerminal = () => {
 
   return {
     xtermRef,
-    commandLine,
     writeToTerminal,
     resetPrompt,
   };
