@@ -9,6 +9,8 @@ import { useActivityMediatorContext } from '../contexts/ActivityMediatorContext'
 import { ActivityType, OutputElement, ParsedCommand, WPM, WPMs } from '../types/Types';
 import { useActivityMediator } from './useActivityMediator';
 import { useTutorial } from './useTutorials';
+import { activitySignal } from 'src/signals/activitySignals';
+import { useComputed } from '@preact/signals-react';
 
 export interface IUseCommandProps { }
 
@@ -18,8 +20,8 @@ export const useCommand = () => {
     const [commandHistoryIndex, setCommandHistoryIndex] = useState(-1);
     const [commandHistoryFilter, setCommandHistoryFilter] = useState<string | null>(null);
     const { appendToOutput } = useAppContext();
-    const { currentActivity } = useActivityMediatorContext();
     const { unlockTutorial, getNextTutorial } = useTutorial();
+    const currentActivity = useComputed(() => activitySignal.value);
     const { 
         handleCommandExecuted, determineActivityState, 
         checkGameProgress, checkTutorialProgress 
@@ -98,21 +100,21 @@ export const useCommand = () => {
             handleCommandExecuted(parsedCommand);
         } else {
             // Fix: Correct the arguments for processCommandOutput
-            const response = currentActivity === ActivityType.TUTORIAL ? `Tutorial attempt: ${inputCmd}` : `Command not found: ${inputCmd}`;
+            const response = currentActivity.value === ActivityType.TUTORIAL ? `Tutorial attempt: ${inputCmd}` : `Command not found: ${inputCmd}`;
             processCommandOutput(inputCmd, response, 404, wpms);
             handleCommandExecuted(parsedCommand);
         }
     }, [context, processCommandOutput, handleCommandExecuted]);
 
     const handleCommand = useCallback((input: string, wpms: WPMs) => {
-        if (currentActivity === ActivityType.TUTORIAL) {
+        if (currentActivity.value === ActivityType.TUTORIAL) {
             const result = checkTutorialProgress(input);
             console.log(result);
             // TODO: Write result to output
         }
 
         executeCommand(input, wpms);
-    }, [currentActivity, unlockTutorial, executeCommand, getNextTutorial, determineActivityState]);
+    }, [currentActivity.value, unlockTutorial, executeCommand, getNextTutorial, determineActivityState]);
 
     return {
         output,

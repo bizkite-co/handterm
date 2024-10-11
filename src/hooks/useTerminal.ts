@@ -77,6 +77,7 @@ export const useTerminal = () => {
         setCommandLine(prev => prev + data);
         instance.write(data);
         wpmCalculator.addKeystroke(data);
+        
       }
     }
     const resizeHandler = () => { fitAddon.current.fit(); instance.scrollToBottom(); };

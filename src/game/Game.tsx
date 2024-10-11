@@ -9,16 +9,19 @@ import { Sprite } from './sprites/Sprite';
 import { IParallaxLayer, ParallaxLayer } from './ParallaxLayer';
 import ScrollingTextLayer from './ScrollingTextLayer';
 import confetti from 'canvas-confetti';
+import { useComputed } from "@preact/signals-react";
+import { 
+  heroActionSignal, 
+  zombie4ActionSignal, 
+  setHeroAction, 
+  setZombie4Action 
+} from '../signals/activitySignals';
 
 export interface IGameProps {
   canvasHeight: number
   canvasWidth: number
   isInGameMode: boolean
-  heroActionType: ActionType
-  zombie4ActionType: ActionType
   zombie4StartPosition: SpritePosition
-  onSetHeroAction: (action: ActionType) => void;
-  onSetZombie4Action: (action: ActionType) => void;
 }
 
 export interface IGameHandle {
@@ -40,12 +43,10 @@ const Game = React.forwardRef<IGameHandle, IGameProps>((props, ref) => {
     canvasHeight,
     canvasWidth,
     isInGameMode,
-    heroActionType,
-    zombie4ActionType,
     zombie4StartPosition,
-    onSetHeroAction,
-    onSetZombie4Action,
   } = props;
+  const heroActionType = useComputed(()=> heroActionSignal.value);
+  const zombie4ActionType = useComputed(() => zombie4ActionSignal.value);
 
   const startGame = (tutorialGroup?:string) => {
     if (context) {
@@ -145,19 +146,12 @@ const Game = React.forwardRef<IGameHandle, IGameProps>((props, ref) => {
         setHeroAction('Death');
       }
     } else {
-      if (zombie4ActionType === 'Attack') {
+      if (zombie4ActionType.value === 'Attack') {
         setZombie4Action('Walk');
       }
     }
   };
 
-  const setZombie4Action = (action: ActionType) => {
-    onSetZombie4Action(action);
-  };
-
-  const setHeroAction = (action: ActionType) => {
-    onSetHeroAction(action);
-  };
 
   const updateCharacterAndBackgroundPostion = (_context: CanvasRenderingContext2D): number => {
     const canvasCenterX = canvasWidth * heroXPercent;
@@ -296,12 +290,12 @@ const Game = React.forwardRef<IGameHandle, IGameProps>((props, ref) => {
           />
           <Hero
             ref={heroRef}
-            currentActionType={heroActionType}
+            currentActionType={heroActionType.value}
             scale={1.95}
           />
           <Zombie4
             ref={zombie4Ref}
-            currentActionType={zombie4ActionType}
+            currentActionType={zombie4ActionType.value}
             scale={1.90}
           />
         </div>

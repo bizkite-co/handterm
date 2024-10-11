@@ -18,7 +18,19 @@ import { useAppContext } from '../contexts/AppContext';
 import { useCommand } from '../hooks/useCommand';
 import { useActivityMediatorContext } from 'src/contexts/ActivityMediatorContext';
 import { useTutorial } from 'src/hooks/useTutorials';
-import { gameActivitySignal, startGameSignal, signalGameStart } from 'src/signals/gameSignals';
+import { 
+  activitySignal, 
+  heroActionSignal,
+  zombie4ActionSignal,
+  currentPhraseSignal,
+  gameLevelSignal,
+  setHeroAction,
+  setZombie4Action,
+  setCurrentPhrase,
+  tutorialGroupSignal,
+  setGameLevel,
+  gameInitSignal
+} from '../signals/activitySignals';
 import { useComputed } from '@preact/signals-react';
 
 
@@ -55,7 +67,6 @@ export interface IHandTermWrapperMethods {
 }
 
 export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTermWrapperProps>((props, forwardedRef) => {
-  const { currentActivity } = useActivityMediatorContext();
   const { xtermRef, commandLine, writeToTerminal, resetPrompt } = useTerminal();
 
   const { getNextTutorial, resetTutorial, currentTutorial } = useTutorial();
@@ -68,7 +79,6 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
   const zombie4StartPosition = { leftX: -70, topY: 0 };
 
   const [domain] = useState<string>('handterm.com');
-  const [currentPhrase] = useState<GamePhrase | null>(null);
   const initialCanvasHeight = localStorage.getItem('canvasHeight') || '100';
   const [canvasHeight] = useState(parseInt(initialCanvasHeight));
   const [lastTypedCharacter, setLastTypedCharacter] = useState<string | null>(null);
@@ -88,7 +98,8 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
   const [editFilePath, setEditFilePath] = useState('_index');
   const [editFileExtension, setEditFileExtension] = useState('md');
   const [userName, setUserName] = useState<string | null>(null);
-  const currentGameActivity = useComputed(() => gameActivitySignal.value);
+  const currentGameActivity = useComputed(() => activitySignal.value);
+  const isGameIntialized = useComputed(()=> gameInitSignal.value);
 
   // Create a mutable ref that will always have a current value
   const internalRef = useRef<IHandTermWrapperMethods>({
@@ -130,22 +141,22 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
     internalRef.current.refreshComponent(); // Call the new method to force a re-render
   }, [internalRef]);
 
-  const startGame = useCallback((tutorialGroup?:string) => {
-    signalGameStart(tutorialGroup)
-    console.log("startGame called:", gameHandleRef);
-  }, []);
 
   useEffect(()=>{
-    if(currentGameActivity.value === ActivityType.GAME && gameHandleRef.current){
-      gameHandleRef.current.startGame(startGameSignal.value);
-      startGameSignal.value = undefined;
+    if(isGameIntialized.value && gameHandleRef.current){
+      const currentPhrase
+        = (tutorialGroupSignal.value
+        ? GamePhrases.getGamePhrasesByTutorialGroup(tutorialGroupSignal.value)
+        : GamePhrases.getGamePhrasesNotAchieved()[0]) as GamePhrase;
+      setCurrentPhrase(currentPhrase);
+      gameHandleRef.current.startGame(tutorialGroupSignal.value);
+      gameInitSignal.value = false;
     }
-  },[currentGameActivity])
+  },[isGameIntialized.value, gameHandleRef])
 
   const activityMediatorProps: IActivityMediatorProps = {
     currentTutorial: getNextTutorial(),
-    currentActivity,
-    startGame,
+    currentActivity: activitySignal.value,
   }
 
   // Initialize activityMediator with the appropriate initial values
@@ -219,8 +230,9 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
     localStorage.setItem('phrasesAchieved', JSON.stringify(storedPhrasesAchieved));
   }
 
+  // Why isn't this used?
   const { } = usePhraseHandler({
-    currentActivity: activityMediator.currentActivity,
+    currentActivity: activitySignal.value,
   });
 
   const handleGitHubAuth = useCallback(() => {
@@ -251,7 +263,7 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
       }
     }
     terminalMethods.scrollBottom();
-  }, [activityMediator, currentActivity, terminalMethods, setTerminalSize]);
+  }, [activityMediator, terminalMethods, setTerminalSize]);
 
   useEffect(() => {
     initializeActivity();
@@ -275,14 +287,14 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
       savePhrasesAchieved(phraseKey, wpmAverage);
     }
 
-    activityMediator.gameHandleRef.current?.completeGame();
+    gameHandleRef.current?.completeGame();
     // TODO: Find if there's a tutorialGroupPhrase that matches the current phrase value.
 
     // const successPhrase = tutorialGroupPhrase ?? GamePhrases.getGamePhraseByValue(phrase.value.join(''));
     // if (successPhrase) {
     //   const { resultActivityType, nextPhrase } = props.activityMediator.checkGameProgress(successPhrase);
     // }
-    activityMediator.gameHandleRef.current?.levelUp();
+    gameHandleRef.current?.levelUp();
     handlePhraseComplete();
   }
 
@@ -297,25 +309,21 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
 
   return (
     <>
-      {(currentActivity === ActivityType.GAME || currentGameActivity.value === ActivityType.GAME) && (
+      {(activitySignal.value === ActivityType.GAME ) && (
         <Game
           ref={gameHandleRef}
           canvasHeight={canvasHeight}
           canvasWidth={props.terminalWidth}
           isInGameMode={true}
-          heroActionType={activityMediator.heroAction}
-          zombie4ActionType={activityMediator.zombie4Action}
-          onSetHeroAction={activityMediator.setHeroAction}
-          onSetZombie4Action={activityMediator.setZombie4Action}
           zombie4StartPosition={zombie4StartPosition}
         />
       )}
-      {currentPhrase && (
+      {currentPhraseSignal?.value?.value && currentGameActivity.value === ActivityType.GAME && (
         <NextCharsDisplay
           ref={nextCharsDisplayRef}
           commandLine={commandLine}
-          isInPhraseMode={currentActivity === ActivityType.GAME}
-          newPhrase={currentPhrase.value}
+          isInPhraseMode={true}
+          newPhrase={currentPhraseSignal.value.value}
           onPhraseSuccess={handlePhraseSuccess}
           onError={handlePhraseErrorState}
         />
@@ -323,7 +331,7 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
       {lastTypedCharacter && (
         <Chord displayChar={lastTypedCharacter} />
       )}
-      {activityMediator.currentActivity === ActivityType.TUTORIAL && getNextTutorial() && (
+      {currentGameActivity.value === ActivityType.TUTORIAL && getNextTutorial() && (
         <TutorialManager
           isInTutorial={true}
           achievement={getNextTutorial()}

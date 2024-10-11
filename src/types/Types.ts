@@ -1,6 +1,3 @@
-import { IGameHandle } from "../game/Game";
-import { ActionType } from "../game/types/ActionTypes";
-import { GamePhrase } from "../utils/GamePhrases";
 
 export const spaceDisplayChar = "&#x2581;";
 export const tabDisplayChar = "&#x2B7E;";

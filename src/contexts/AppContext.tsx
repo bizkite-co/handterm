@@ -34,9 +34,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const { currentActivity } = useActivityMediatorContext();
   const { handleCommandExecuted } = useActivityMediator({
     currentActivity,
-    startGame: function (): void {
-      throw new Error('Function not implemented.');
-    }
   })
 
   const appendToOutput = useCallback((newElement: ReactElement<OutputElement>) => {
