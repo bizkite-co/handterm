@@ -1,6 +1,6 @@
 // useBaseCharacter.tsx
 
-import { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Sprite } from './sprites/Sprite';
 import { SpriteAnimation } from './types/SpriteTypes';
 import { Action, ActionType } from './types/ActionTypes';
@@ -12,6 +12,7 @@ interface BaseCharacterProps {
   actions: Record<ActionType, Action>;
   name: string;
   scale: number;
+  positionRef: React.RefObject<SpritePosition>;
 }
 
 export const useBaseCharacter = (props: BaseCharacterProps) => {
@@ -40,7 +41,7 @@ export const useBaseCharacter = (props: BaseCharacterProps) => {
   ): number => {
     const sprite = spritesRef.current[props.currentActionType];
     const action = props.actions[props.currentActionType];
-    const newX = (positionRef.leftX ?? 0) + action.dx;
+    const newX = (positionRef?.current?.leftX ?? 0) + action.dx;
     incrementFrameIndex();
     // console.log(`${props.name.toLowerCase()} draw: positionRef=${JSON.stringify(positionRef)}, newX=${newX}, action.dx=${action.dx}`);
 
@@ -49,7 +50,7 @@ export const useBaseCharacter = (props: BaseCharacterProps) => {
         context,
         frameIndexRef.current,
         newX,
-        positionRef.topY,
+        positionRef?.current?.topY ?? 0,
         scale ?? props.scale
       );
     }

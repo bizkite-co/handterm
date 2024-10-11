@@ -316,13 +316,13 @@ const Game = React.forwardRef<IGameHandle, IGameProps>((props, ref) => {
           />
           <Hero
             ref={heroRef}
-            positionRef={herpoPositionRef.current}
+            positionRef={herpoPositionRef}
             currentActionType={heroAction}
             scale={1.95}
           />
           <Zombie4
             ref={zombie4Ref}
-            positionRef={zombie4PositionRef.current}
+            positionRef={zombie4PositionRef}
             currentActionType={zombie4Action}
             scale={1.90}
           />

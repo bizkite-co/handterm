@@ -19,6 +19,7 @@ export const Zombie4 = forwardRef((props: ICharacterProps, ref) => {
     currentActionType: props.currentActionType, // Replace with actual default action
     name: 'Zombie4',
     scale: props.scale,
+    positionRef: props.positionRef
   });
 
   useImperativeHandle(ref, () => ({

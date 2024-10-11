@@ -3,6 +3,6 @@ import { SpritePosition } from "./types/Position";
 
 export interface ICharacterProps {
   currentActionType: ActionType;
-  positionRef: SpritePosition;
+  positionRef: React.RefObject<SpritePosition>,
   scale: number;
 }
