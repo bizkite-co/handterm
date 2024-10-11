@@ -270,12 +270,12 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
     }
   }, [setErrorCharIndex]);
 
-  const handlePhraseSuccess = (_phrase: Phrase) => {
+  const handlePhraseSuccess = (phrase: GamePhrase) => {
     const wpms = wpmCalculator.getWPMs();
     const wpmAverage = wpms.wpmAverage;
 
     if (wpmAverage > targetWPM) {
-      savePhrasesAchieved(phraseKey, wpmAverage);
+      savePhrasesAchieved(phrase.key, wpmAverage);
     }
 
     gameHandleRef.current?.completeGame();
@@ -315,7 +315,7 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
           ref={nextCharsDisplayRef}
           commandLine={commandLine}
           isInPhraseMode={true}
-          newPhrase={currentPhrase.value.value}
+          newPhrase={currentPhrase.value}
           onPhraseSuccess={handlePhraseSuccess}
           onError={handlePhraseErrorState}
         />

@@ -1,11 +1,12 @@
 // hooks/useTerminal.ts
-import React, { useCallback, useState, useEffect, useRef, MutableRefObject } from 'react';
+import { useCallback, useState, useEffect, useRef, MutableRefObject } from 'react';
 import { useXTerm } from 'react-xtermjs';
 import { FitAddon } from '@xterm/addon-fit';
 import { XtermAdapterConfig } from '../components/XtermAdapterConfig';
 import { useCommand } from './useCommand';
 import { useWPMCalculator } from './useWPMCaculator';
 import { WPM } from 'src/types/Types';
+import { addKeystroke } from 'src/signals/wpmSignals';
 
 export const useTerminal = () => {
   const { instance, ref: xtermRef } = useXTerm({ options: XtermAdapterConfig });
@@ -76,8 +77,7 @@ export const useTerminal = () => {
       } else {
         setCommandLine(prev => prev + data);
         instance.write(data);
-        wpmCalculator.addKeystroke(data);
-        
+        addKeystroke(data);
       }
     }
     const resizeHandler = () => { fitAddon.current.fit(); instance.scrollToBottom(); };

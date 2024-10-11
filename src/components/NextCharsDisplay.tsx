@@ -4,12 +4,13 @@ import React, { useState, useEffect, useRef, useImperativeHandle } from 'react';
 import Timer from './Timer'; // Import the React component
 import ErrorDisplay from "./ErrorDisplay";
 import { Phrase } from "../utils/Phrase";
+import { GamePhrase } from "src/utils/GamePhrases";
 
 export interface INextCharsDisplayProps {
     commandLine: string;
     isInPhraseMode: boolean;
-    newPhrase: string;
-    onPhraseSuccess: (phrase: Phrase) => void;
+    newPhrase: GamePhrase;
+    onPhraseSuccess: (phrase: GamePhrase) => void;
     onError: (error: number | undefined) => void;
 }
 
@@ -32,8 +33,8 @@ const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, INextCharsDisp
 
     const [mismatchedChar, setMismatchedChar] = useState<string | null>(null);
     const [mismatchedIsVisible, setMismatchedIsVisible] = useState(false);
-    const [nextChars, setNextChars] = useState<string>(newPhrase);
-    const [phrase, setPhrase] = useState<Phrase>(new Phrase(newPhrase.split('')));
+    const [nextChars, setNextChars] = useState<string>(newPhrase.value);
+    const [phrase, setPhrase] = useState<Phrase>(new Phrase(newPhrase.value.split('')));
 
     const nextCharsRef = useRef<HTMLPreElement>(null);
     const nextCharsRateRef = useRef<HTMLDivElement>(null);
@@ -41,8 +42,8 @@ const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, INextCharsDisp
     const wpmRef = useRef<HTMLSpanElement>(null);
 
     useEffect(() => {
-        setPhrase(new Phrase(newPhrase.split('')));
-        setNextChars(newPhrase);
+        setPhrase(new Phrase(newPhrase.value.split('')));
+        setNextChars(newPhrase.value);
     }, [newPhrase]);
 
     useEffect(() => {
@@ -133,7 +134,7 @@ const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, INextCharsDisp
         setMismatchedChar('');
         setMismatchedIsVisible(false);
         setNextChars('');
-        onPhraseSuccess(phrase);
+        onPhraseSuccess(newPhrase);
     };
 
     const stopTimer = () => {
@@ -162,7 +163,7 @@ const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, INextCharsDisp
     };
 
     return (
-        (isInPhraseMode && newPhrase.length > 0 &&
+        (isInPhraseMode && newPhrase.value.length > 0 &&
             <div
                 id={TerminalCssClasses.NextChars}
                 hidden={!isInPhraseMode}

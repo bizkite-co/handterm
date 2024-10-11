@@ -7,6 +7,11 @@ export interface CharTime {
   time: number;
 }
 
+export interface Keystroke {
+  char: string;
+  timestamp: number;
+}
+
 export enum ActivityType {
   NORMAL,
   TUTORIAL,
