@@ -1,9 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { Tutorial, ActivityType, ParsedCommand } from '../types/Types';
 import { ActionType } from '../game/types/ActionTypes';
-import { IGameHandle } from '../game/Game';
 import GamePhrases, { GamePhrase } from '../utils/GamePhrases';
-import { useActivityMediatorContext } from '../contexts/ActivityMediatorContext';
 import { useTutorial } from './useTutorials';
 import { initializeGame, setActivity, activitySignal, tutorialGroupSignal, tutorialSignal, setGamePhrase, setTutorial } from 'src/signals/activitySignals';
 import { useComputed } from '@preact/signals-react';
@@ -30,7 +28,9 @@ export interface IActivityMediatorProps {
 export function useActivityMediator(props: IActivityMediatorProps): IActivityMediatorReturn {
   const [heroAction, setHeroAction] = useState<ActionType>('Idle');
   const [zombie4Action, setZombie4Action] = useState<ActionType>('Walk');
-  const { unlockTutorial, resetTutorial, getNextTutorial } = useTutorial();
+  const { 
+    unlockTutorial, resetTutorial, getNextTutorial, getIncompleteTutorialsInGroup, saveTutorial 
+  } = useTutorial();
   const activity = useComputed(() => activitySignal.value);
   const tutorialGroup = useComputed(() => tutorialGroupSignal.value);
   const tutorial = useComputed(() => tutorialSignal.value);
@@ -111,16 +111,24 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
   };
 
   const checkGameProgress = (successPhrase: GamePhrase) => {
-    const nextTutorial = getNextTutorial();
-    if (tutorialGroup.value) {
-      const nextGamePhrase = GamePhrases.getGamePhrasesByTutorialGroup(tutorialGroup.value)
+    // Called after phrase completion.
+    if (successPhrase?.tutorialGroup) {
+      //TODO: isComplete is IMMUTABLE in the JSON file. THis is not a list of incomplete phrases.
+      const nextGamePhrase = GamePhrases.getGamePhrasesByTutorialGroup(successPhrase.tutorialGroup)
         .find(p => !p.isComplete);
       if (nextGamePhrase) {
         // Set the next phrase
         setGamePhrase(nextGamePhrase);
         setActivity(ActivityType.GAME);
+        return;
       }
+      //TODO: Set Tutorial completed
+      const incompleteTutorialInGroup = getIncompleteTutorialsInGroup(successPhrase.tutorialGroup);
+      incompleteTutorialInGroup.forEach(itig => {
+        saveTutorial(itig.phrase.join(''))
+      });
     }
+    const nextTutorial = getNextTutorial();
     if (nextTutorial) {
       setTutorial(nextTutorial);
       setActivity(ActivityType.TUTORIAL);

@@ -16,15 +16,9 @@ import { useWPMCalculator } from '../hooks/useWPMCaculator';
 import { useTutorial } from 'src/hooks/useTutorials';
 import {
   activitySignal,
-  heroActionSignal,
-  zombie4ActionSignal,
   gamePhraseSignal,
-  gameLevelSignal,
-  setHeroAction,
-  setZombie4Action,
   setGamePhrase,
   tutorialGroupSignal,
-  setGameLevel,
   gameInitSignal
 } from '../signals/activitySignals';
 import { commandLineSignal, commandSignal, commandTimeSignal } from 'src/signals/commandLineSignals';
@@ -300,7 +294,8 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
 
   return (
     <>
-      {(activity.value === ActivityType.GAME) && (
+      {(activity.value === ActivityType.GAME) 
+      && (
         <Game
           ref={gameHandleRef}
           canvasHeight={canvasHeight}

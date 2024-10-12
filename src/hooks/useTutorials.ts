@@ -8,10 +8,6 @@ export const useTutorial = () => {
     const [completedTutorials, setCompletedTutorials] = useState<string[]>([]);
     const [currentTutorial, setCurrentTutorial] = useState<Tutorial | null>(null);
 
-    const loadTutorials = useCallback((): string[] => {
-        const storedAchievements = localStorage.getItem(completedTutorialsKey);
-        return storedAchievements ? JSON.parse(storedAchievements) : [];
-    }, []);
 
     const getNextTutorial = useCallback((): Tutorial | null => {
         const completedTuts = getCompletedTutorials();
@@ -24,6 +20,26 @@ export const useTutorial = () => {
         const storedAchievements = localStorage.getItem(completedTutorialsKey);
         return storedAchievements ? JSON.parse(storedAchievements) : [];
     }, []);
+
+    const getIncompleteTutorials = useCallback((): Tutorial[] => {
+        const completedTutorials = getCompletedTutorials();
+
+        const incomplete = Tutorials.filter(tut => !completedTutorials.includes(tut.phrase.join('')));
+        return incomplete;
+    }, [])
+
+    const getTutorialsInGroup = (groupName:string) => {
+        const result = Tutorials.filter(t => t.tutorialGroup === groupName);
+        return result;
+    }
+
+    const getIncompleteTutorialsInGroup = (groupName:string) => {
+        const incompleteTutorials = new Set(getIncompleteTutorials());
+        const tutorialsInGroup = new Set(getTutorialsInGroup(groupName));
+
+        const result = tutorialsInGroup.intersection(incompleteTutorials);
+        return Array.from(result);
+    }
 
     const saveTutorial = useCallback((achievementId: string) => {
         setCompletedTutorials(prev => {
@@ -51,7 +67,7 @@ export const useTutorial = () => {
             return true;
         }
         return false;
-    }, [currentTutorial, saveTutorial]);
+    }, [currentTutorial]);
 
     const resetTutorial = useCallback(() => {
         localStorage.removeItem(completedTutorialsKey);
@@ -62,21 +78,20 @@ export const useTutorial = () => {
     }, []);
 
     useEffect(() => {
-        const loadedTutorials = loadTutorials();
-        setCompletedTutorials(loadedTutorials);
-    }, [loadTutorials]);
-
-    useEffect(() => {
         const nextTutorial = getNextTutorial();
         setCurrentTutorial(nextTutorial);
     }, [completedTutorials, getNextTutorial]);
 
     return {
         currentTutorial,
+        saveTutorial,
         unlockTutorial,
         resetTutorial,
         completedTutorials,
         getCurrentTutorial: () => currentTutorial,
-        getNextTutorial
+        getNextTutorial,
+        getIncompleteTutorials,
+        getTutorialsInGroup,
+        getIncompleteTutorialsInGroup
     };
 };

@@ -176,3 +176,38 @@ flowchart TD
     HCE --> |Calls| DAS
     DAS --> |Updates| CA
 ```
+
+```mermaid
+graph LR
+    A[App] --> AC[AppContext]
+    A --> AMC[ActivityMediatorContext]
+    A --> CP[CommandProvider]
+    A --> HTW[HandTermWrapper]
+    HTW --> T[Terminal]
+    HTW --> G[Game]
+    HTW --> E[Editor]
+    HTW --> TM[TutorialManager]
+
+    subgraph Signals
+        AS[Activity Signals]
+        CLS[Command Line Signals]
+    end
+
+    HTW --> AS
+    HTW --> CLS
+    T --> CLS
+    G --> AS
+    TM --> AS
+
+    subgraph Hooks
+        UAM[useActivityMediator]
+        UT[useTerminal]
+        UWPM[useWPMCalculator]
+        UTut[useTutorial]
+    end
+
+    HTW --> UAM
+    HTW --> UT
+    HTW --> UWPM
+    HTW --> UTut
+```
