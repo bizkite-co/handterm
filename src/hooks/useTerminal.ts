@@ -76,8 +76,8 @@ export const useTerminal = () => {
         }
       } else {
         const newCommandLine = commandLine.value + data;
-        setCommandLine(newCommandLine);
         instance.write(data);
+        setCommandLine(newCommandLine);
         addKeystroke(data);
       }
     }
