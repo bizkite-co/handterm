@@ -1,5 +1,7 @@
 import React from 'react';
 import { TerminalCssClasses } from "../types/TerminalTypes"
+import { useComputed, useSignalEffect } from '@preact/signals-react';
+import { promptInfoSignal } from 'src/signals/commandLineSignals';
 
 interface PromptProps {
     domain: string;
@@ -9,6 +11,8 @@ interface PromptProps {
 }
 
 const PromptComponent: React.FC<PromptProps> = ({ domain, username, timestamp, githubUsername }) => {
+    const promptInfo = useComputed(()=> promptInfoSignal.value);
+
     return (
         <pre id={TerminalCssClasses.Prompt}>
             <span className="timestamp">{timestamp}</span>
@@ -20,6 +24,7 @@ const PromptComponent: React.FC<PromptProps> = ({ domain, username, timestamp, g
                     {githubUsername}
                 </span>
             }
+            <span>{promptInfo.value}</span>
         </pre>
     )
 }

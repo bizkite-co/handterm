@@ -6,6 +6,7 @@ import { SpriteAnimation } from './types/SpriteTypes';
 import { Action, ActionType } from './types/ActionTypes';
 import { SpriteManager } from './sprites/SpriteManager';
 import { SpritePosition } from './types/Position';
+import { setPromptInfo } from 'src/signals/commandLineSignals';
 
 interface BaseCharacterProps {
   currentActionType: ActionType;
@@ -42,8 +43,12 @@ export const useBaseCharacter = (props: BaseCharacterProps) => {
     const sprite = spritesRef.current[props.currentActionType];
     const action = props.actions[props.currentActionType];
     const newX = (positionRef?.current?.leftX ?? 0) + action.dx;
+
     incrementFrameIndex();
-    // console.log(`${props.name.toLowerCase()} draw: positionRef=${JSON.stringify(positionRef)}, newX=${newX}, action.dx=${action.dx}`);
+    if (false && props.name.toLowerCase() === 'zombie4') {
+      setPromptInfo(` name: ${props.name}, posX:${newX}`)
+      console.log(`${props.name.toLowerCase()} draw: positionRef=${JSON.stringify(positionRef)}, newX=${newX}, action.dx=${action.dx}`);
+    }
 
     if (sprite) {
       sprite.draw(

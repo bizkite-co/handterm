@@ -6,6 +6,11 @@ export const keystrokesSignal = signal<Keystroke[]>([]);
 export const commandSignal = signal<ParsedCommand>();
 export const commandLineSignal = signal<string>('');
 export const commandTimeSignal = signal<Date>(new Date);
+export const promptInfoSignal = signal<string>('');
+
+export const setPromptInfo = (info:string) => {
+  promptInfoSignal.value = info;
+}
 
 export const addKeystroke = (char: string) => {
   keystrokesSignal.value = [...keystrokesSignal.value, { char, timestamp: performance.now() }];

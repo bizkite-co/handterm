@@ -13,10 +13,13 @@ export const Hero = forwardRef((props: ICharacterProps, ref) => {
     currentActionType: props.currentActionType, // Replace with actual default action
     name: 'Hero',
     scale: props.scale,
+    positionRef: props.positionRef
   });
 
   useImperativeHandle(ref, () => ({
-    draw
+    draw: (context: CanvasRenderingContext2D) => {
+      return draw(context, props.positionRef, props.scale);
+    }
   }));
 
   return null;

@@ -40,7 +40,7 @@ const Game = React.forwardRef<IGameHandle, IGameProps>((props, ref) => {
     isInGameMode,
   } = props;
   const zombie4StartPosition = { leftX: -70, topY: 0 };
-  const heroStartPosition = { leftX: 125, topY: 30 };
+  const heroStartPosition = { leftX: 165, topY: 29 };
   const zombie4PositionRef = useRef<SpritePosition>(zombie4StartPosition);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const heroRef = useRef<ICharacterRefMethods>(null);
