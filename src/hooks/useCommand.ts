@@ -21,7 +21,7 @@ export const useCommand = () => {
     const [commandHistoryIndex, setCommandHistoryIndex] = useState(-1);
     const [commandHistoryFilter, setCommandHistoryFilter] = useState<string | null>(null);
     const { appendToOutput } = useAppContext();
-    const { unlockTutorial, getNextTutorial } = useTutorial();
+    const { getNextTutorial } = useTutorial();
     const currentActivity = useComputed(() => activitySignal.value);
     const { 
         handleCommandExecuted, determineActivityState, 
@@ -114,7 +114,7 @@ export const useCommand = () => {
         }
 
         executeCommand(input);
-    }, [currentActivity.value, unlockTutorial, executeCommand, getNextTutorial, determineActivityState]);
+    }, [currentActivity.value, executeCommand, getNextTutorial, determineActivityState]);
 
     return {
         output,

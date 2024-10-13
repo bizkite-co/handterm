@@ -52,6 +52,12 @@ export default class GamePhrases {
         return phrases;
     }
 
+    public static getIncompletePhrasesByTutorialGroup=(tutorialGroup: string): GamePhrase[] => {
+        const gamePhrasesByGroup = this.getGamePhrasesByTutorialGroup(tutorialGroup);
+        const incompletePhrases = this.getGamePhrasesNotAchieved();
+        return gamePhrasesByGroup.filter(p => incompletePhrases.includes(p));
+    }
+
     public checkGamePhrases = (): MyResponse<any> => {
         let response: MyResponse<any> = {
             status: 200,
