@@ -8,18 +8,22 @@ import { Output } from './components/Output';
 import { AppProvider } from './contexts/AppContext';
 import { CommandProvider } from './contexts/CommandProvider';
 import { ActivityMediatorProvider } from './contexts/ActivityMediatorContext';
+import { useSignal, useSignalEffect } from '@preact/signals-react';
 
-const MemoizedOutput = React.memo(Output);
+// const MemoizedOutput = React.memo(Output);
 
 const App = () => {
   const containerRef = React.createRef<HTMLDivElement>();
   const [containerWidth, setContainerWidth] = React.useState<number>(0);
-  const [outputElements, setOutputElements] = useState<OutputElement[]>([]);
+
+  const auth = useAuth();
+  const handexTermWrapperRef = useRef<IHandTermWrapperMethods>(null);
 
   const getContainerWidth = () => {
     return containerRef.current?.clientWidth ?? 0
   }
 
+  let output : OutputElement[] = [];
   useEffect(() => {
     const handleResize = () => {
       const w = getContainerWidth();
@@ -31,7 +35,7 @@ const App = () => {
   }, []);
 
   const handleOutputUpdate = useCallback((newOutput: OutputElement) => {
-    setOutputElements((prevOutputs: OutputElement[]) => [...prevOutputs, newOutput]);
+    // setOutputElements((prevOutputs: OutputElement[]) => [...prevOutputs, newOutput]);
   }, []);
 
   const handleTouchStart = useCallback(() => {
@@ -43,9 +47,6 @@ const App = () => {
     // Implement your touch end logic here
     console.log("Handling touch end");
   }, []);
-
-  const auth = useAuth();
-  const handexTermWrapperRef = useRef<IHandTermWrapperMethods>(null);
   useEffect(() => {
     const w = getContainerWidth();
     setContainerWidth(w);
@@ -86,7 +87,7 @@ const App = () => {
             auth={auth}
             handTermRef={handexTermWrapperRef}
           >
-            <MemoizedOutput />
+            <Output />
             <HandTermWrapper
               ref={handexTermWrapperRef}
               auth={auth}

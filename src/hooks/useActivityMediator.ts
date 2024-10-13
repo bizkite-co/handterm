@@ -3,7 +3,13 @@ import { Tutorial, ActivityType, ParsedCommand } from '../types/Types';
 import { ActionType } from '../game/types/ActionTypes';
 import GamePhrases, { GamePhrase } from '../utils/GamePhrases';
 import { useTutorial } from './useTutorials';
-import { initializeGame, setActivity, activitySignal, tutorialGroupSignal, tutorialSignal, setGamePhrase, setTutorial } from 'src/signals/activitySignals';
+import { updateTutorial, unlockTutorial, resetCompletedTutorials, tutorialSignal, getNextTutorial } from 'src/signals/tutorialSignals';
+import { 
+  initializeGame, 
+  setActivity, 
+  activitySignal, 
+  setGamePhrase, 
+} from 'src/signals/activitySignals';
 import { useComputed } from '@preact/signals-react';
 
 export type IActivityMediatorReturn = {
@@ -29,11 +35,10 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
   const [heroAction, setHeroAction] = useState<ActionType>('Idle');
   const [zombie4Action, setZombie4Action] = useState<ActionType>('Walk');
   const { 
-    unlockTutorial, resetTutorial, getNextTutorial, getIncompleteTutorialsInGroup, saveTutorial 
+    getIncompleteTutorialsInGroup 
   } = useTutorial();
-  const activity = useComputed(() => activitySignal.value);
-  const tutorialGroup = useComputed(() => tutorialGroupSignal.value);
-  const tutorial = useComputed(() => tutorialSignal.value);
+  const activity = useComputed(() => activitySignal.value).value;
+  const tutorial = useComputed(() => tutorialSignal.value).value;
 
   const determineActivityState = useCallback((commandActivity: ActivityType | null = null) => {
     /*
@@ -41,27 +46,28 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
       If the user was in tutorial and completed an achievement that has accompanying game levels, start game play.
       Otherwise, just obey the command.
     */
-    if (commandActivity && commandActivity !== activity.value) {
+    if (commandActivity && commandActivity !== activity) {
       setActivity(commandActivity);
       if (commandActivity === ActivityType.GAME) {
-        initializeGame(tutorialGroup.value);
+        //TODO: how do we know the tutorial has a tutorial group in this case?
+        initializeGame(tutorial?.tutorialGroup);
       }
       return commandActivity;
     }
 
-    if (tutorial.value && activity.value !== ActivityType.TUTORIAL) {
+    if (tutorial && activity !== ActivityType.TUTORIAL) {
       setActivity(ActivityType.TUTORIAL);
       return ActivityType.TUTORIAL;
     }
 
-    if (tutorialGroup.value && activity.value !== ActivityType.GAME) {
+    if (tutorial?.tutorialGroup && activity !== ActivityType.GAME) {
       setActivity(ActivityType.GAME);
-      initializeGame(tutorialGroup.value);
+      initializeGame(tutorial.tutorialGroup);
       return ActivityType.GAME;
     }
 
-    return activity.value;
-  }, [activity.value, tutorialSignal, tutorialGroupSignal, setActivity]);
+    return activity;
+  }, [activity, tutorialSignal, setActivity]);
 
   const handleCommandExecuted = useCallback((parsedCommand: ParsedCommand): boolean => {
     let result = false;
@@ -72,7 +78,7 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
         break;
       case 'tut':
         if ('r' in parsedCommand.switches) {
-          resetTutorial();
+          resetCompletedTutorials();
         }
         determineActivityState(ActivityType.TUTORIAL);
         result = true;
@@ -85,7 +91,7 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
         result = false;
     }
     return result;
-  }, [determineActivityState, resetTutorial]);
+  }, [determineActivityState]);
 
   useEffect(() => {
     determineActivityState();
@@ -104,12 +110,11 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
     // If the current tutorial has attached GamePhrases.
     // Don't unlock until the game is played.
     let response = "";
-    const currentTutorial = getNextTutorial();
-    if (!currentTutorial) return { resultActivity: activity.value, nextTutorial: null, response: response };
+    if (!tutorial) return { resultActivity: activity, nextTutorial: null, response: response };
 
-    if (currentTutorial?.tutorialGroup) {
+    if (tutorial?.tutorialGroup) {
       setActivity(ActivityType.GAME);
-      initializeGame(tutorialGroup.value);
+      initializeGame(tutorial.tutorialGroup);
       return { resultActivity: ActivityType.GAME, nextTutorial: null, response: "Starting game for this tutorial." };
     }
     const isUnlocked = command ? unlockTutorial(command) : false;
@@ -118,7 +123,7 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
     const nextTutorial = getNextTutorial();
     if (nextTutorial) {
       determineActivityState(ActivityType.TUTORIAL);
-      return { resultActivity: activity.value, nextTutorial, response: response };
+      return { resultActivity: activity, nextTutorial, response: response };
     }
     setActivity(ActivityType.GAME);
     return { resultActivity: ActivityType.GAME, nextTutorial: null, response: "Continuing to Game" };
@@ -141,25 +146,28 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
         unlockTutorial(itig.phrase.join(''))
       });
     }
+
     const nextTutorial = getNextTutorial();
-    if (nextTutorial) {
-      setTutorial(nextTutorial);
+    if ((updateTutorial())) {
       setActivity(ActivityType.TUTORIAL);
+      return;
     }
+
     const nextGamePhrase = GamePhrases.getGamePhrasesNotAchieved()[0];
     if(nextGamePhrase){
       // Set next phrase
       setGamePhrase(nextGamePhrase);
       setActivity(ActivityType.GAME);
+      return;
     }
     setActivity(ActivityType.NORMAL);
   };
 
   return {
-    isInGameMode: activity.value === ActivityType.GAME,
-    isInTutorial: activity.value === ActivityType.TUTORIAL,
-    isInEdit: activity.value === ActivityType.EDIT,
-    isInNormal: activity.value === ActivityType.NORMAL,
+    isInGameMode: activity === ActivityType.GAME,
+    isInTutorial: activity === ActivityType.TUTORIAL,
+    isInEdit: activity === ActivityType.EDIT,
+    isInNormal: activity === ActivityType.NORMAL,
     determineActivityState,
     checkTutorialProgress,
     heroAction,

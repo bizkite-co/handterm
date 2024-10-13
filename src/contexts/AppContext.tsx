@@ -13,7 +13,6 @@ interface AppContextType {
   userName: string | null;
   setUserName: (userName: string | null) => void;
   outputElements: OutputElement[];
-  appendToOutput: (element: OutputElement) => void;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -36,15 +35,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     currentActivity,
   });
 
-  const appendToOutput = useCallback((newElement: OutputElement) => {
-    setOutputElements((prev) => {
-      const updatedElements = [...prev, newElement];
-      // Keep only the last two elements
-      return updatedElements.slice(-2);
-    });
-
-  }, [handleCommandExecuted]);
-
   const value: AppContextType = {
     currentActivity,
     isLoggedIn,
@@ -52,7 +42,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     userName,
     setUserName,
     outputElements,
-    appendToOutput,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

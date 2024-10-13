@@ -2,7 +2,10 @@
 import { useState, useCallback, useEffect } from 'react';
 import { Tutorial, Tutorials } from "../types/Types";
 import { useComputed } from '@preact/signals-react';
-import { completedTutorialsSignal, setCompletedTutorial, resetCompletedTutorials } from 'src/signals/gameSignals';
+import {
+    completedTutorialsSignal,
+    getNextTutorial,
+} from 'src/signals/tutorialSignals';
 
 
 export const useTutorial = () => {
@@ -13,12 +16,6 @@ export const useTutorial = () => {
     const completedTutorialsArray = () => {
         return [...completedTutorialsSignal.value];
     }
-
-    const getNextTutorial = useCallback((): Tutorial | null => {
-        const nextTutorial = Tutorials
-            .find(a => !completedTutorialsArray().some(ua => ua === a.phrase.join('')));
-        return nextTutorial || null;
-    }, [completedTutorials]);
 
     const getIncompleteTutorials = useCallback((): Tutorial[] => {
         const incomplete = Tutorials.filter(tut => !completedTutorialsArray().includes(tut.phrase.join('')));
@@ -39,24 +36,6 @@ export const useTutorial = () => {
         return result;
     }
 
-    const unlockTutorial = useCallback((command: string): boolean => {
-        let nextTutorial = getNextTutorial();
-        if (!nextTutorial) return false;
-        if (command === '\r') command = 'Return (ENTER)';
-        if (nextTutorial.phrase.join('') === command) {
-            setCompletedTutorial(command);
-            // Update nextTutorial
-            nextTutorial = getNextTutorial();
-            setCurrentTutorial(nextTutorial);
-            return true;
-        }
-        return false;
-    }, []);
-
-    const resetTutorial = () => {
-        resetCompletedTutorials();
-    }
-
     useEffect(() => {
         const nextTutorial = getNextTutorial();
         setCurrentTutorial(nextTutorial);
@@ -64,12 +43,7 @@ export const useTutorial = () => {
 
     return {
         currentTutorial,
-        unlockTutorial,
-        resetTutorial,
-        completedTutorials,
         getCurrentTutorial: () => currentTutorial,
-        getNextTutorial,
-        getIncompleteTutorials,
         getTutorialsInGroup,
         getIncompleteTutorialsInGroup
     };

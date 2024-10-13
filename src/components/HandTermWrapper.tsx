@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback, useImperativeHandle, ReactNode } from 'react';
 import { ActivityType, OutputElement } from '../types/Types';
-import { useActivityMediator, IActivityMediatorProps, IActivityMediatorReturn } from 'src/hooks/useActivityMediator';
+import { useActivityMediator, IActivityMediatorProps } from 'src/hooks/useActivityMediator';
 import Game, { IGameHandle } from '../game/Game';
 import { IAuthProps } from '../lib/useAuth';
 import { usePhraseHandler } from '../hooks/usePhraseHandler';
@@ -13,16 +13,15 @@ import { LogKeys } from '../types/TerminalTypes';
 import { useResizeCanvasAndFont } from '../hooks/useResizeCanvasAndFont';
 import { useTerminal } from '../hooks/useTerminal';
 import { useWPMCalculator } from '../hooks/useWPMCaculator';
-import { useTutorial } from 'src/hooks/useTutorials';
 import {
   activitySignal,
   gamePhraseSignal,
   setGamePhrase,
-  tutorialGroupSignal,
   gameInitSignal
 } from '../signals/activitySignals';
 import { commandLineSignal, commandSignal, commandTimeSignal } from 'src/signals/commandLineSignals';
 import { useComputed } from '@preact/signals-react';
+import { getNextTutorial, tutorialSignal } from 'src/signals/tutorialSignals';
 
 
 export interface IHandTermWrapperProps {
@@ -62,8 +61,6 @@ const getTimestamp = (date:Date) => {
 export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTermWrapperProps>((props, forwardedRef) => {
   const { xtermRef, writeToTerminal, resetPrompt } = useTerminal();
   const commandLine = useComputed(()=> commandLineSignal.value);
-  const { getNextTutorial, currentTutorial } = useTutorial();
-
   const targetWPM = 10;
   const wpmCalculator = useWPMCalculator();
   const gameHandleRef = useRef<IGameHandle>(null);
@@ -92,7 +89,7 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
   const [userName, setUserName] = useState<string | null>(null);
   const activity = useComputed(() => activitySignal.value);
   const isGameIntialized = useComputed(() => gameInitSignal.value);
-  const tutorialGroup = useComputed(() => tutorialGroupSignal.value);
+  const tutorial = useComputed(() => tutorialSignal.value).value;
   const gameInit = useComputed(() => gameInitSignal.value);
   const currentPhrase = useComputed(() => gamePhraseSignal.value);
   const commandTime = useComputed(() => commandTimeSignal.value);
@@ -132,11 +129,11 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
   useEffect(() => {
     if (isGameIntialized.value && gameHandleRef.current) {
       const phrase
-        = (tutorialGroup.value
-          ? GamePhrases.getGamePhrasesByTutorialGroup(tutorialGroup.value)
+        = (tutorial?.tutorialGroup
+          ? GamePhrases.getGamePhrasesByTutorialGroup(tutorial?.tutorialGroup)
           : GamePhrases.getGamePhrasesNotAchieved()[0]) as GamePhrase;
       setGamePhrase(phrase);
-      gameHandleRef.current.startGame(tutorialGroup.value);
+      gameHandleRef.current.startGame(tutorial?.tutorialGroup);
       // gameInit.value = false;
     }
   }, [isGameIntialized.value, gameHandleRef])

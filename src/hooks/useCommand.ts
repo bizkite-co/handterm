@@ -12,6 +12,7 @@ import { activitySignal } from 'src/signals/activitySignals';
 import { useComputed } from '@preact/signals-react';
 import { useWPMCalculator } from './useWPMCaculator';
 import { setCommandTime } from 'src/signals/commandLineSignals';
+import { appendToOutput } from 'src/signals/appSignals';
 
 export interface IUseCommandProps { }
 
@@ -20,8 +21,6 @@ export const useCommand = () => {
     const [commandHistory, setCommandHistory] = useState<string[]>([]);
     const [commandHistoryIndex, setCommandHistoryIndex] = useState(-1);
     const [commandHistoryFilter, setCommandHistoryFilter] = useState<string | null>(null);
-    const { appendToOutput } = useAppContext();
-    const { getNextTutorial } = useTutorial();
     const currentActivity = useComputed(() => activitySignal.value);
     const { 
         handleCommandExecuted, determineActivityState, 
@@ -114,7 +113,7 @@ export const useCommand = () => {
         }
 
         executeCommand(input);
-    }, [currentActivity.value, executeCommand, getNextTutorial, determineActivityState]);
+    }, [currentActivity.value, executeCommand, determineActivityState]);
 
     return {
         output,
