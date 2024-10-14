@@ -14,13 +14,13 @@ import { useResizeCanvasAndFont } from '../hooks/useResizeCanvasAndFont';
 import { useTerminal } from '../hooks/useTerminal';
 import { useWPMCalculator } from '../hooks/useWPMCaculator';
 import { activitySignal } from 'src/signals/appSignals';
-import {
-  setGamePhrase,
+import { 
+  setGamePhrase, 
   gameInitSignal,
 } from 'src/signals/gameSignals'
 import { commandLineSignal, commandSignal, commandTimeSignal } from 'src/signals/commandLineSignals';
 import { useComputed } from '@preact/signals-react';
-import { getNextTutorial, tutorialSignal } from 'src/signals/tutorialSignals';
+import { getNextTutorial, setNextTutorial, tutorialSignal } from 'src/signals/tutorialSignals';
 
 
 export interface IHandTermWrapperProps {
@@ -129,6 +129,7 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
       if(gamePhrases.length === 0){
         gamePhrases = GamePhrases.getGamePhrasesNotAchieved();
       }
+      if(gamePhrases.length === 0) return;
       setGamePhrase(gamePhrases[0]);
       gameHandleRef.current.startGame(tutorial?.tutorialGroup);
       // gameInit.value = false;
@@ -229,10 +230,6 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
     }
   }, [githubAuthHandled]);
 
-  useEffect(() => {
-    activityMediator.determineActivityState();
-  }, [activityMediator]);
-
   // Determine the initial achievement and activity type
   const initializeActivity = useCallback(() => {
     if (terminalMethods.getTerminalSize) {
@@ -242,11 +239,11 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
       }
     }
     terminalMethods.scrollBottom();
-    activityMediator.checkTutorialProgress(null);
   }, [activityMediator, terminalMethods, setTerminalSize]);
 
   useEffect(() => {
     initializeActivity();
+    setNextTutorial();
   }, []);
 
   useEffect(() => {
@@ -309,10 +306,10 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
       {lastTypedCharacter && (
         <Chord displayChar={lastTypedCharacter} />
       )}
-      {activity.value === ActivityType.TUTORIAL && getNextTutorial() && (
+      {activity.value === ActivityType.TUTORIAL && tutorialSignal.value && (
         <TutorialManager
           isInTutorial={true}
-          achievement={getNextTutorial()}
+          tutorial={tutorialSignal.value}
         />
       )}
       <Prompt

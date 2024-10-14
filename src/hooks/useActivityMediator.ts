@@ -3,11 +3,11 @@ import { Tutorial, ActivityType, ParsedCommand, GamePhrase } from '../types/Type
 import { ActionType } from '../game/types/ActionTypes';
 import GamePhrases from '../utils/GamePhrases';
 import { useTutorial } from './useTutorials';
-import { updateTutorial, unlockTutorial, resetCompletedTutorials, tutorialSignal, getNextTutorial } from 'src/signals/tutorialSignals';
-import { 
-  initializeGame, 
+import { setNextTutorial, canUnlockTutorial, resetCompletedTutorials, tutorialSignal, getNextTutorial, setCompletedTutorial } from 'src/signals/tutorialSignals';
+import {
+  initializeGame,
 } from 'src/signals/gameSignals';
-import { setActivity, activitySignal } from 'src/signals/appSignals'
+import { setActivity, activitySignal, setNotification } from 'src/signals/appSignals'
 import { useComputed } from '@preact/signals-react';
 import { setGamePhrase } from 'src/signals/gameSignals';
 
@@ -22,7 +22,7 @@ export type IActivityMediatorReturn = {
   handleCommandExecuted: (parsedCommand: ParsedCommand) => boolean;
   setHeroAction: React.Dispatch<React.SetStateAction<ActionType>>,
   setZombie4Action: React.Dispatch<React.SetStateAction<ActionType>>;
-  checkTutorialProgress: (command: string | null) => { resultActivity: ActivityType, nextTutorial: Tutorial | null };
+  checkTutorialProgress: (command: string | null) => void;
   checkGameProgress: (successPhrase: GamePhrase) => void;
 }
 
@@ -33,8 +33,8 @@ export interface IActivityMediatorProps {
 export function useActivityMediator(props: IActivityMediatorProps): IActivityMediatorReturn {
   const [heroAction, setHeroAction] = useState<ActionType>('Idle');
   const [zombie4Action, setZombie4Action] = useState<ActionType>('Walk');
-  const { 
-    getIncompleteTutorialsInGroup 
+  const {
+    getIncompleteTutorialsInGroup
   } = useTutorial();
   const activity = useComputed(() => activitySignal.value).value;
 
@@ -53,15 +53,14 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
       return commandActivity;
     }
 
-    if (tutorialSignal.value && activity !== ActivityType.TUTORIAL) {
-      setActivity(ActivityType.TUTORIAL);
-      return ActivityType.TUTORIAL;
-    }
-
     if (tutorialSignal.value?.tutorialGroup && activity !== ActivityType.GAME) {
       setActivity(ActivityType.GAME);
       initializeGame(tutorialSignal.value.tutorialGroup);
       return ActivityType.GAME;
+    }
+
+    if (tutorialSignal.value && activity !== ActivityType.GAME){
+      setActivity(ActivityType.TUTORIAL);
     }
 
     return activity;
@@ -107,23 +106,34 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
 
     // If the current tutorial has attached GamePhrases.
     // Don't unlock until the game is played.
-    let response = "";
-    if (!tutorialSignal.value) return { resultActivity: activity, nextTutorial: null, response: response };
-    if (tutorialSignal.value?.tutorialGroup) {
-      setActivity(ActivityType.GAME);
-      initializeGame(tutorialSignal.value.tutorialGroup);
-      return { resultActivity: ActivityType.GAME, nextTutorial: null, response: "Starting game for this tutorial." };
+    if (!tutorialSignal.value) return;
+    console.log("activity:", ActivityType[activitySignal.value], "tutorial:", tutorialSignal.value?.phrase);
+    const canUnlock = command ? canUnlockTutorial(command) : false;
+    if (canUnlock) {
+      console.log(`Tutorial ${tutorialSignal.value.phrase.join('')} CAN BE unlocked with ${command}`);
+      if (tutorialSignal.value?.tutorialGroup) {
+        // Will only be unlocked in checkGameProgress.
+        setActivity(ActivityType.GAME);
+        initializeGame(tutorialSignal.value.tutorialGroup);
+        return;
+      }
+      setCompletedTutorial(tutorialSignal.value.phrase.join(''))
     }
-    const isUnlocked = command ? unlockTutorial(command) : false;
-    response = isUnlocked ? `Tutorial ${command} unlocked!` : "Try again.";
+    else {
+      console.log(`Tutorial ${tutorialSignal.value} not unlocked with ${command}`);
+      setNotification(`Tutorial ${tutorialSignal.value} not unlocked with ${command}`)
+      return;
+    }
     // TODO: if the tutorial is not completed until the tutorialGroup is completed, how do we know if the tutorialGroup is completed, and which tutorial to complete when it is completed?
     const nextTutorial = getNextTutorial();
+    console.log("nextTutorial:", nextTutorial?.phrase.join(''));
     if (nextTutorial) {
       determineActivityState(ActivityType.TUTORIAL);
-      return { resultActivity: activity, nextTutorial, response: response };
+      setNextTutorial();
+      return;
     }
     setActivity(ActivityType.GAME);
-    return { resultActivity: ActivityType.GAME, nextTutorial: null, response: "Continuing to Game" };
+    return;
   };
 
   const checkGameProgress = (successPhrase: GamePhrase) => {
@@ -140,18 +150,18 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
       //TODO: Set Tutorial completed
       const incompleteTutorialInGroup = getIncompleteTutorialsInGroup(successPhrase.tutorialGroup);
       incompleteTutorialInGroup.forEach(itig => {
-        unlockTutorial(itig.phrase.join(''))
+        setCompletedTutorial(itig.phrase.join(''))
       });
     }
 
     const nextTutorial = getNextTutorial();
-    if ((updateTutorial())) {
+    if ((setNextTutorial())) {
       setActivity(ActivityType.TUTORIAL);
       return;
     }
 
     const nextGamePhrase = GamePhrases.getGamePhrasesNotAchieved()[0];
-    if(nextGamePhrase){
+    if (nextGamePhrase) {
       // Set next phrase
       setGamePhrase(nextGamePhrase);
       setActivity(ActivityType.GAME);

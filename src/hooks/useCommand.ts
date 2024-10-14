@@ -20,7 +20,7 @@ export const useCommand = () => {
     const [commandHistoryFilter, setCommandHistoryFilter] = useState<string | null>(null);
     const currentActivity = useComputed(() => activitySignal.value);
     const { 
-        handleCommandExecuted, determineActivityState, 
+        handleCommandExecuted, 
         checkTutorialProgress 
     } = useActivityMediator({
         currentActivity,
@@ -110,7 +110,7 @@ export const useCommand = () => {
         }
 
         executeCommand(input);
-    }, [currentActivity.value, executeCommand, determineActivityState]);
+    }, [currentActivity.value, executeCommand]);
 
     return {
         output,
