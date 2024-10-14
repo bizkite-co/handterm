@@ -38,7 +38,6 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
     getIncompleteTutorialsInGroup 
   } = useTutorial();
   const activity = useComputed(() => activitySignal.value).value;
-  const tutorial = useComputed(() => tutorialSignal.value).value;
 
   const determineActivityState = useCallback((commandActivity: ActivityType | null = null) => {
     /*
@@ -50,19 +49,19 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
       setActivity(commandActivity);
       if (commandActivity === ActivityType.GAME) {
         //TODO: how do we know the tutorial has a tutorial group in this case?
-        initializeGame(tutorial?.tutorialGroup);
+        initializeGame(tutorialSignal.value?.tutorialGroup);
       }
       return commandActivity;
     }
 
-    if (tutorial && activity !== ActivityType.TUTORIAL) {
+    if (tutorialSignal.value && activity !== ActivityType.TUTORIAL) {
       setActivity(ActivityType.TUTORIAL);
       return ActivityType.TUTORIAL;
     }
 
-    if (tutorial?.tutorialGroup && activity !== ActivityType.GAME) {
+    if (tutorialSignal.value?.tutorialGroup && activity !== ActivityType.GAME) {
       setActivity(ActivityType.GAME);
-      initializeGame(tutorial.tutorialGroup);
+      initializeGame(tutorialSignal.value.tutorialGroup);
       return ActivityType.GAME;
     }
 
@@ -110,11 +109,10 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
     // If the current tutorial has attached GamePhrases.
     // Don't unlock until the game is played.
     let response = "";
-    if (!tutorial) return { resultActivity: activity, nextTutorial: null, response: response };
-
-    if (tutorial?.tutorialGroup) {
+    if (!tutorialSignal.value) return { resultActivity: activity, nextTutorial: null, response: response };
+    if (tutorialSignal.value?.tutorialGroup) {
       setActivity(ActivityType.GAME);
-      initializeGame(tutorial.tutorialGroup);
+      initializeGame(tutorialSignal.value.tutorialGroup);
       return { resultActivity: ActivityType.GAME, nextTutorial: null, response: "Starting game for this tutorial." };
     }
     const isUnlocked = command ? unlockTutorial(command) : false;

@@ -35,7 +35,6 @@ export function createPersistentSignal<T>({
     } else {
       signal.value = newValue;
     }
-    console.log('Signal updated:', signal.value);
     persistToLocalStorage(signal.value);
   };
 

@@ -16,12 +16,11 @@ export { completedTutorialsSignal };
 
 export const tutorialSignal = signal<Tutorial | null>(null);
 
-export const updateTutorial = () => {
+export const updateTutorial = ():boolean => {
   // get next tutoral that is not in completed tutorials.
   const nextTutorial = Tutorials
     .find(t => !completedTutorialsSignal.value.has(t.phrase.join('')));
   if(nextTutorial){
-    console.log("Next tutorial:", nextTutorial);
     tutorialSignal.value = nextTutorial;
     return true;
   }
@@ -57,20 +56,22 @@ export const resetCompletedTutorials = () => {
 };
 
 export const getNextTutorial = (): Tutorial | null => {
-  return tutorialSignal.value;
+  const nextTutorial = Tutorials
+    .find(t => !completedTutorialsSignal.value.has(t.phrase.join('')));
+  return nextTutorial ?? null;
 };
 
 export const unlockTutorial = (command: string): boolean => {
-  const nextTutorial = tutorialSignal.value;
-  if (!nextTutorial) return false;
+  const currentTutorial = tutorialSignal.value;
+  if (!currentTutorial) return false;
   
   const normalizedCommand = command === '\r' ? 'Return (ENTER)' : command;
-  if (nextTutorial.phrase.join('') === normalizedCommand) {
-    console.log("Matched:", normalizedCommand);
+  if (currentTutorial.phrase.join('') === normalizedCommand) {
     setCompletedTutorial(normalizedCommand);
+    updateTutorial();
+    console.log(tutorialSignal.value);
     return true;
   }
-  console.log("unmatched:", normalizedCommand);
   return false;
 };
 
