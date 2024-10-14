@@ -5,21 +5,21 @@ import { Chord } from './Chord';
 
 interface TutorialManagerProps {
     isInTutorial: boolean;
-    achievement: Tutorial | null;
+    tutorial: Tutorial | null;
 }
 
 export const TutorialManager: React.FC<TutorialManagerProps> = memo(({ 
     isInTutorial,
-    achievement,
+    tutorial,
 }) => {
     if (!isInTutorial) {
         return null;
     }
-    return (achievement &&
+    return (tutorial &&
         <div className="tutorial-component">
-            <pre className="tutorial-prompt">{achievement.prompt}</pre>
+            <pre className="tutorial-prompt">{tutorial.prompt}</pre>
             <div className="chord-display-container">
-                {achievement.phrase.map((character, index) => (
+                {tutorial.phrase.map((character, index) => (
                     <Chord key={index} displayChar={character} />
                 ))}
             </div>
