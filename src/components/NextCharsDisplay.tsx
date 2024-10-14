@@ -43,15 +43,15 @@ const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, INextCharsDisp
     const gamePhrase = useComputed(() => gamePhraseSignal.value);
 
     useEffect(() => {
-        if(!gamePhraseSignal.value?.value) return;
-        const newPhrase:string = gamePhraseSignal.value.value;
+        if(!gamePhrase.value?.value) return;
+        const newPhrase:string = gamePhrase.value.value;
         setPhrase(new Phrase(newPhrase.split('')));
         setNextChars(newPhrase);
-    }, [gamePhrase]);
+    }, [gamePhrase.value]);
 
     useEffect(()=>{
         // once on load.
-        handleCommandLineChange(commandLine.value);
+        // handleCommandLineChange(commandLine.value);
     }, [commandLine.value])
 
     useSignalEffect(() => {
@@ -60,7 +60,7 @@ const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, INextCharsDisp
     });
 
     const handleCommandLineChange = (stringBeingTested: string) => {
-        startTimer();
+        startOrContinueTimer();
 
         const nextIndex = getFirstNonMatchingChar(stringBeingTested);
         if (nextIndex < 0) {
@@ -70,9 +70,6 @@ const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, INextCharsDisp
         if (nextIndex > phrase.value.length) {
             return null;
         }
-
-        const nextCharactersString = getNextCharacters(stringBeingTested);
-        setNextChars(nextCharactersString);
 
         const nextChordHTML = phrase.chordsHTML[nextIndex] as HTMLElement;
 
@@ -100,6 +97,10 @@ const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, INextCharsDisp
             handleSuccess();
             return;
         }
+
+        const nextCharactersString = getNextCharacters(stringBeingTested);
+        // TODO: figure out a better way to handle initial value.
+        setNextChars(nextCharactersString);
     };
 
     const getNextCharacters = (stringBeingTested: string): string => {
@@ -152,7 +153,7 @@ const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, INextCharsDisp
         }
     };
 
-    const startTimer = () => {
+    const startOrContinueTimer = () => {
         if (timerRef.current) {
             timerRef.current.start();
         }
@@ -187,7 +188,7 @@ const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, INextCharsDisp
                 <div id={TerminalCssClasses.NextCharsRate} ref={nextCharsRateRef}></div>
                 <span id={TerminalCssClasses.WPM} ref={wpmRef}></span>
                 <pre id={TerminalCssClasses.NextChars} ref={nextCharsRef}>
-                    {nextChars || gamePhrase.value.value}
+                    {nextChars}
                 </pre>
             </div>
         )
