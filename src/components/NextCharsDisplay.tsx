@@ -4,10 +4,9 @@ import React, { useState, useEffect, useRef, useImperativeHandle } from 'react';
 import Timer from './Timer'; // Import the React component
 import ErrorDisplay from "./ErrorDisplay";
 import { Phrase } from "../utils/Phrase";
-import { GamePhrase } from "src/utils/GamePhrases";
 import { commandLineSignal } from "src/signals/commandLineSignals";
 import { useComputed, useSignalEffect } from "@preact/signals-react";
-import { gamePhraseSignal } from "src/signals/activitySignals";
+import { GamePhrase } from "src/types/Types";
 
 export interface INextCharsDisplayProps {
     isInPhraseMode: boolean;

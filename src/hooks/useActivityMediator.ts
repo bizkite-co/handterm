@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { Tutorial, ActivityType, ParsedCommand } from '../types/Types';
+import { Tutorial, ActivityType, ParsedCommand, GamePhrase } from '../types/Types';
 import { ActionType } from '../game/types/ActionTypes';
-import GamePhrases, { GamePhrase } from '../utils/GamePhrases';
+import GamePhrases from '../utils/GamePhrases';
 import { useTutorial } from './useTutorials';
 import { updateTutorial, unlockTutorial, resetCompletedTutorials, tutorialSignal, getNextTutorial } from 'src/signals/tutorialSignals';
 import { 

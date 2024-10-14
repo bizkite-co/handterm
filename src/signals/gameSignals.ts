@@ -2,7 +2,8 @@
 // gameSignals.ts
 import { signal, computed } from "@preact/signals-react";
 import { ActionType } from "src/game/types/ActionTypes";
-import { GamePhrase } from "src/utils/GamePhrases";
+import GamePhrases from "src/utils/GamePhrases";
+import { ActivityType, GamePhrase } from "src/types/Types";
 
 export const completedGamePhraseSignal = signal<Set<string>>(new Set());
 export const currentGamePhraseSignal = signal<GamePhrase | null>(null);

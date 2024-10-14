@@ -1,10 +1,10 @@
 import React, { useEffect, useRef, useState, useCallback, useImperativeHandle, ReactNode } from 'react';
-import { ActivityType, OutputElement } from '../types/Types';
+import { ActivityType, OutputElement, GamePhrase } from '../types/Types';
 import { useActivityMediator, IActivityMediatorProps } from 'src/hooks/useActivityMediator';
 import Game, { IGameHandle } from '../game/Game';
 import { IAuthProps } from '../lib/useAuth';
 import { usePhraseHandler } from '../hooks/usePhraseHandler';
-import GamePhrases, { GamePhrase } from '../utils/GamePhrases';
+import GamePhrases from '../utils/GamePhrases';
 import NextCharsDisplay, { NextCharsDisplayHandle } from './NextCharsDisplay';
 import { TutorialManager } from './TutorialManager';
 import { Chord } from './Chord';
