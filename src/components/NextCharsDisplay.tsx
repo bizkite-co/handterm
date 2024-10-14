@@ -6,6 +6,7 @@ import ErrorDisplay from "./ErrorDisplay";
 import { Phrase } from "../utils/Phrase";
 import { commandLineSignal } from "src/signals/commandLineSignals";
 import { useComputed, useSignalEffect } from "@preact/signals-react";
+import { gamePhraseSignal } from "src/signals/gameSignals";
 import { GamePhrase } from "src/types/Types";
 
 export interface INextCharsDisplayProps {
