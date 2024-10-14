@@ -13,12 +13,11 @@ import { LogKeys } from '../types/TerminalTypes';
 import { useResizeCanvasAndFont } from '../hooks/useResizeCanvasAndFont';
 import { useTerminal } from '../hooks/useTerminal';
 import { useWPMCalculator } from '../hooks/useWPMCaculator';
+import { activitySignal } from 'src/signals/appSignals';
 import {
-  activitySignal,
-  gamePhraseSignal,
   setGamePhrase,
-  gameInitSignal
-} from '../signals/activitySignals';
+  gameInitSignal,
+} from 'src/signals/gameSignals'
 import { commandLineSignal, commandSignal, commandTimeSignal } from 'src/signals/commandLineSignals';
 import { useComputed } from '@preact/signals-react';
 import { getNextTutorial, tutorialSignal } from 'src/signals/tutorialSignals';

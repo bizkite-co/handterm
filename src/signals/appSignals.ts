@@ -1,9 +1,11 @@
 // src/signals/appSignals.ts
 import { signal } from '@preact/signals-react';
-import { OutputElement } from 'src/types/Types';
+import { ActivityType, OutputElement } from 'src/types/Types';
 import { createPersistentSignal } from 'src/utils/signalPersistence';
 
 const currentOutputKey = 'current-output';
+export const activitySignal = signal<ActivityType>(ActivityType.NORMAL);
+
 const { signal: outputElementsSignal, update: updateOutput } = createPersistentSignal({
     key: currentOutputKey,
     signal: signal<OutputElement[]>([]),
@@ -12,6 +14,10 @@ const { signal: outputElementsSignal, update: updateOutput } = createPersistentS
 });
 
 export { outputElementsSignal };
+
+export const setActivity = (activity: ActivityType) => {
+  activitySignal.value = activity;
+};
 
 export const appendToOutput = (element: OutputElement) => {
   updateOutput(prevOutput => {

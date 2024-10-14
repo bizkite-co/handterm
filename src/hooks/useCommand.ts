@@ -4,15 +4,12 @@ import { CommandContext } from '../contexts/CommandContext';
 import { parseCommand } from '../utils/commandUtils';
 import { LogKeys } from '../types/TerminalTypes';
 import { commandRegistry } from '../commands/commandRegistry';
-import { useAppContext } from '../contexts/AppContext';
 import { ActivityType, OutputElement, ParsedCommand, WPMs } from '../types/Types';
 import { useActivityMediator } from './useActivityMediator';
-import { useTutorial } from './useTutorials';
-import { activitySignal } from 'src/signals/activitySignals';
+import { activitySignal, appendToOutput } from 'src/signals/appSignals';
 import { useComputed } from '@preact/signals-react';
 import { useWPMCalculator } from './useWPMCaculator';
 import { setCommandTime } from 'src/signals/commandLineSignals';
-import { appendToOutput } from 'src/signals/appSignals';
 
 export interface IUseCommandProps { }
 

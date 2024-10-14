@@ -6,11 +6,10 @@ import { useTutorial } from './useTutorials';
 import { updateTutorial, unlockTutorial, resetCompletedTutorials, tutorialSignal, getNextTutorial } from 'src/signals/tutorialSignals';
 import { 
   initializeGame, 
-  setActivity, 
-  activitySignal, 
-  setGamePhrase, 
-} from 'src/signals/activitySignals';
+} from 'src/signals/gameSignals';
+import { setActivity, activitySignal } from 'src/signals/appSignals'
 import { useComputed } from '@preact/signals-react';
+import { setGamePhrase } from 'src/signals/gameSignals';
 
 export type IActivityMediatorReturn = {
   isInGameMode: boolean;
