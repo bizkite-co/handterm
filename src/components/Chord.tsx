@@ -14,7 +14,7 @@ export const Chord: React.FC<ChordProps> = ({ displayChar }) => {
         foundChord = Array.from(allChords).find(x => x.key === displayChar);
     }
 
-    const foundChar = foundChord?.alias || foundChord?.key;
+    const foundChar = foundChord?.alias ?? foundChord?.key;
 
     return (
         <div className="chord-image-holder" id="chord-image-holder" data-source="ErrorDisplay.tsx">
