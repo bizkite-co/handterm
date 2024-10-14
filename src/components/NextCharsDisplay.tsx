@@ -7,11 +7,11 @@ import { Phrase } from "../utils/Phrase";
 import { GamePhrase } from "src/utils/GamePhrases";
 import { commandLineSignal } from "src/signals/commandLineSignals";
 import { useComputed, useSignalEffect } from "@preact/signals-react";
+import { gamePhraseSignal } from "src/signals/activitySignals";
 
 export interface INextCharsDisplayProps {
     isInPhraseMode: boolean;
-    newPhrase: GamePhrase;
-    onPhraseSuccess: (phrase: GamePhrase) => void;
+    onPhraseSuccess: (phrase: GamePhrase | null) => void;
     onError: (error: number | undefined) => void;
 }
 
@@ -22,7 +22,6 @@ export interface NextCharsDisplayHandle {
 
 const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, INextCharsDisplayProps>(({
     isInPhraseMode,
-    newPhrase,
     onPhraseSuccess,
     onError
 }, ref) => {
@@ -33,19 +32,22 @@ const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, INextCharsDisp
 
     const [mismatchedChar, setMismatchedChar] = useState<string | null>(null);
     const [mismatchedIsVisible, setMismatchedIsVisible] = useState(false);
-    const [nextChars, setNextChars] = useState<string>(newPhrase.value);
-    const [phrase, setPhrase] = useState<Phrase>(new Phrase(newPhrase.value.split('')));
+    const [nextChars, setNextChars] = useState<string>('');
+    const [phrase, setPhrase] = useState<Phrase>(new Phrase(['']));
 
     const nextCharsRef = useRef<HTMLPreElement>(null);
     const nextCharsRateRef = useRef<HTMLDivElement>(null);
     const timerRef = useRef<any>(null);
     const wpmRef = useRef<HTMLSpanElement>(null);
     const commandLine = useComputed(()=> commandLineSignal.value);
+    const gamePhrase = useComputed(() => gamePhraseSignal.value);
 
     useEffect(() => {
-        setPhrase(new Phrase(newPhrase.value.split('')));
-        setNextChars(newPhrase.value);
-    }, [newPhrase]);
+        if(!gamePhraseSignal.value?.value) return;
+        const newPhrase:string = gamePhraseSignal.value.value;
+        setPhrase(new Phrase(newPhrase.split('')));
+        setNextChars(newPhrase);
+    }, [gamePhraseSignal.value]);
 
     useSignalEffect(() => {
         handleCommandLineChange(commandLine.value);
@@ -135,7 +137,7 @@ const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, INextCharsDisp
         setMismatchedChar('');
         setMismatchedIsVisible(false);
         setNextChars('');
-        onPhraseSuccess(newPhrase);
+        onPhraseSuccess(gamePhrase.value);
     };
 
     const stopTimer = () => {
@@ -164,7 +166,7 @@ const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, INextCharsDisp
     };
 
     return (
-        (isInPhraseMode && newPhrase.value.length > 0 &&
+        (isInPhraseMode && gamePhrase.value?.value && gamePhrase.value.value.length > 0 &&
             <div
                 id={TerminalCssClasses.NextChars}
                 hidden={!isInPhraseMode}

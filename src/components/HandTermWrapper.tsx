@@ -60,12 +60,10 @@ const getTimestamp = (date:Date) => {
 
 export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTermWrapperProps>((props, forwardedRef) => {
   const { xtermRef, writeToTerminal, resetPrompt } = useTerminal();
-  const commandLine = useComputed(()=> commandLineSignal.value);
   const targetWPM = 10;
   const wpmCalculator = useWPMCalculator();
   const gameHandleRef = useRef<IGameHandle>(null);
   const nextCharsDisplayRef: React.RefObject<NextCharsDisplayHandle> = React.createRef();
-  const zombie4StartPosition = { leftX: -70, topY: 0 };
 
   const [domain] = useState<string>('handterm.com');
   const initialCanvasHeight = localStorage.getItem('canvasHeight') || '100';
@@ -81,9 +79,6 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
   const [githubAuthHandled, setGithubAuthHandled] = useState<boolean>(false);
   const [githubUsername, setGithubUsername] = useState<string | null>(null);
   const [isInSvgMode] = useState<boolean>(false);
-  const [isInLoginProcess, setIsInLoginProcess] = useState<boolean>(false);
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
-  const [editContent, setEditContent] = useState('');
   const [editFilePath, setEditFilePath] = useState('_index');
   const [editFileExtension, setEditFileExtension] = useState('md');
   const [userName, setUserName] = useState<string | null>(null);
@@ -91,7 +86,6 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
   const isGameIntialized = useComputed(() => gameInitSignal.value);
   const tutorial = useComputed(() => tutorialSignal.value).value;
   const gameInit = useComputed(() => gameInitSignal.value);
-  const currentPhrase = useComputed(() => gamePhraseSignal.value);
   const commandTime = useComputed(() => commandTimeSignal.value);
   // Create a mutable ref that will always have a current value
   const internalRef = useRef<IHandTermWrapperMethods>({
@@ -128,11 +122,15 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
 
   useEffect(() => {
     if (isGameIntialized.value && gameHandleRef.current) {
-      const phrase
-        = (tutorial?.tutorialGroup
-          ? GamePhrases.getGamePhrasesByTutorialGroup(tutorial?.tutorialGroup)
-          : GamePhrases.getGamePhrasesNotAchieved()[0]) as GamePhrase;
-      setGamePhrase(phrase);
+      
+      let gamePhrases: GamePhrase[] = [];
+      if(tutorial?.tutorialGroup){
+        gamePhrases = GamePhrases.getGamePhrasesByTutorialGroup(tutorial.tutorialGroup);
+      }
+      if(gamePhrases.length === 0){
+        gamePhrases = GamePhrases.getGamePhrasesNotAchieved();
+      }
+      setGamePhrase(gamePhrases[0]);
       gameHandleRef.current.startGame(tutorial?.tutorialGroup);
       // gameInit.value = false;
     }
@@ -262,7 +260,8 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
     }
   }, [setErrorCharIndex]);
 
-  const handlePhraseSuccess = (phrase: GamePhrase) => {
+  const handlePhraseSuccess = (phrase: GamePhrase|null) => {
+    if(!phrase) return;
     const wpms = wpmCalculator.getWPMs();
     const wpmAverage = wpms.wpmAverage;
 
@@ -300,11 +299,10 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
           isInGameMode={true}
         />
       )}
-      {currentPhrase?.value?.value && activity.value === ActivityType.GAME && (
+      {activity.value === ActivityType.GAME && (
         <NextCharsDisplay
           ref={nextCharsDisplayRef}
           isInPhraseMode={true}
-          newPhrase={currentPhrase.value}
           onPhraseSuccess={handlePhraseSuccess}
           onError={handlePhraseErrorState}
         />
