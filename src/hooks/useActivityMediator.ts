@@ -16,7 +16,6 @@ export type IActivityMediatorReturn = {
   isInTutorial: boolean;
   isInEdit: boolean;
   isInNormal: boolean;
-  determineActivityState: (commandActivity?: ActivityType | null) => ActivityType;
   heroAction: ActionType;
   zombie4Action: ActionType;
   handleCommandExecuted: (parsedCommand: ParsedCommand) => boolean;
@@ -44,6 +43,12 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
       If the user was in tutorial and completed an achievement that has accompanying game levels, start game play.
       Otherwise, just obey the command.
     */
+
+    if (tutorialSignal.value && !tutorialSignal.value?.tutorialGroup && activity !== ActivityType.GAME){
+      setActivity(ActivityType.TUTORIAL);
+      return;
+    }
+
     if (commandActivity && commandActivity !== activity) {
       setActivity(commandActivity);
       if (commandActivity === ActivityType.GAME) {
@@ -54,13 +59,8 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
     }
 
     if (tutorialSignal.value?.tutorialGroup && activity !== ActivityType.GAME) {
-      setActivity(ActivityType.GAME);
       initializeGame(tutorialSignal.value.tutorialGroup);
       return ActivityType.GAME;
-    }
-
-    if (tutorialSignal.value && activity !== ActivityType.GAME){
-      setActivity(ActivityType.TUTORIAL);
     }
 
     return activity;
@@ -91,7 +91,7 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
   }, [determineActivityState]);
 
   useEffect(() => {
-    determineActivityState();
+    determineActivityState(null);
   }, [determineActivityState]);
 
   const checkTutorialProgress = (
@@ -110,10 +110,9 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
     console.log("activity:", ActivityType[activitySignal.value], "tutorial:", tutorialSignal.value?.phrase);
     const canUnlock = command ? canUnlockTutorial(command) : false;
     if (canUnlock) {
-      console.log(`Tutorial ${tutorialSignal.value.phrase.join('')} CAN BE unlocked with ${command}`);
       if (tutorialSignal.value?.tutorialGroup) {
+        console.log(`Tutorial ${tutorialSignal.value.phrase.join('')} CAN BE unlocked after ${tutorialSignal.value.tutorialGroup}`);
         // Will only be unlocked in checkGameProgress.
-        setActivity(ActivityType.GAME);
         initializeGame(tutorialSignal.value.tutorialGroup);
         return;
       }
@@ -175,7 +174,6 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
     isInTutorial: activity === ActivityType.TUTORIAL,
     isInEdit: activity === ActivityType.EDIT,
     isInNormal: activity === ActivityType.NORMAL,
-    determineActivityState,
     checkTutorialProgress,
     heroAction,
     zombie4Action,

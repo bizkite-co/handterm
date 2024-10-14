@@ -3,7 +3,6 @@ import { ActivityType, OutputElement, GamePhrase } from '../types/Types';
 import { useActivityMediator, IActivityMediatorProps } from 'src/hooks/useActivityMediator';
 import Game, { IGameHandle } from '../game/Game';
 import { IAuthProps } from '../lib/useAuth';
-import { usePhraseHandler } from '../hooks/usePhraseHandler';
 import GamePhrases from '../utils/GamePhrases';
 import NextCharsDisplay, { NextCharsDisplayHandle } from './NextCharsDisplay';
 import { TutorialManager } from './TutorialManager';
@@ -69,10 +68,6 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
   const [canvasHeight] = useState(parseInt(initialCanvasHeight));
   const [lastTypedCharacter, setLastTypedCharacter] = useState<string | null>(null);
   const [, setErrorCharIndex] = useState<number | undefined>(undefined);
-  const gamePhrasesAchieved = GamePhrases
-    .getGamePhrasesAchieved()
-    .map((phrase: { wpm: number; phraseName: string }) => phrase.phraseName);
-  const [phrasesAchieved, setPhrasesAchieved] = useState<string[]>(gamePhrasesAchieved);
   const [phraseKey] = useState('');
   const [, setTerminalSize] = useState<{ width: number; height: number } | undefined>();
   const [githubAuthHandled, setGithubAuthHandled] = useState<boolean>(false);
@@ -195,26 +190,6 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
     fontSize,
   } = useResizeCanvasAndFont();
 
-  const savePhrasesAchieved = (phraseName: string, wpmAverage: number) => {
-    const wpmPhraseName = Math.round(wpmAverage) + ':' + phraseName;
-    const matchingPhrases = phrasesAchieved.filter(p => { return p.split(":")[1] === phraseKey });
-    if (matchingPhrases.length > 0) return;
-    setPhrasesAchieved(prevState => [...(prevState || []), wpmPhraseName])
-
-    const storedPhrasesAchievedString: string = localStorage.getItem('phrasesAchieved') || '';
-    const storedPhrasesAchieved: string[] = storedPhrasesAchievedString ? JSON.parse(storedPhrasesAchievedString) : [];
-    const matchingStoredPhrases = storedPhrasesAchieved
-      .filter((p: string) => { return p.split(":")[1] === phraseKey });
-    if (matchingStoredPhrases.length > 0) return;
-    storedPhrasesAchieved.push(wpmPhraseName);
-    localStorage.setItem('phrasesAchieved', JSON.stringify(storedPhrasesAchieved));
-  }
-
-  // Why isn't this used?
-  const { } = usePhraseHandler({
-    currentActivity: activity.value,
-  });
-
   const handleGitHubAuth = useCallback(() => {
     if (!githubAuthHandled) {
       const urlParams = new URLSearchParams(window.location.search);
@@ -262,7 +237,6 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
     const wpmAverage = wpms.wpmAverage;
 
     if (wpmAverage > targetWPM) {
-      savePhrasesAchieved(phrase.key, wpmAverage);
       let result = activityMediator.checkGameProgress(phrase);
       console.log("phrase result:", result, phrase)
     }

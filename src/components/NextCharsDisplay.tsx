@@ -47,9 +47,15 @@ const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, INextCharsDisp
         const newPhrase:string = gamePhraseSignal.value.value;
         setPhrase(new Phrase(newPhrase.split('')));
         setNextChars(newPhrase);
-    }, [gamePhraseSignal.value]);
+    }, [gamePhrase]);
+
+    useEffect(()=>{
+        // once on load.
+        handleCommandLineChange(commandLine.value);
+    }, [commandLine.value])
 
     useSignalEffect(() => {
+        // every time the command line changes.
         handleCommandLineChange(commandLine.value);
     });
 
@@ -181,7 +187,7 @@ const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, INextCharsDisp
                 <div id={TerminalCssClasses.NextCharsRate} ref={nextCharsRateRef}></div>
                 <span id={TerminalCssClasses.WPM} ref={wpmRef}></span>
                 <pre id={TerminalCssClasses.NextChars} ref={nextCharsRef}>
-                    {nextChars}
+                    {nextChars || gamePhrase.value.value}
                 </pre>
             </div>
         )
