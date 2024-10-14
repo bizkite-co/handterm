@@ -82,7 +82,7 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
   const [editFileExtension, setEditFileExtension] = useState('md');
   const [userName, setUserName] = useState<string | null>(null);
   const activity = useComputed(() => activitySignal.value);
-  const isGameIntialized = useComputed(() => gameInitSignal.value);
+  const isGameInitialized = useComputed(() => gameInitSignal.value);
   const tutorial = useComputed(() => tutorialSignal.value).value;
   const gameInit = useComputed(() => gameInitSignal.value);
   const commandTime = useComputed(() => commandTimeSignal.value);
@@ -120,7 +120,7 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
   }, []);
 
   useEffect(() => {
-    if (isGameIntialized.value && gameHandleRef.current) {
+    if (isGameInitialized.value && gameHandleRef.current) {
       
       let gamePhrases: GamePhrase[] = [];
       if(tutorial?.tutorialGroup){
@@ -133,7 +133,7 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
       gameHandleRef.current.startGame(tutorial?.tutorialGroup);
       // gameInit.value = false;
     }
-  }, [isGameIntialized.value, gameHandleRef])
+  }, [isGameInitialized.value, gameHandleRef])
 
   const activityMediatorProps: IActivityMediatorProps = {
     currentTutorial: getNextTutorial(),
