@@ -5,6 +5,7 @@ import { createPersistentSignal } from 'src/utils/signalPersistence';
 
 const currentOutputKey = 'current-output';
 export const activitySignal = signal<ActivityType>(ActivityType.NORMAL);
+export const notificationSignal = signal<string | null>(null)
 
 const { signal: outputElementsSignal, update: updateOutput } = createPersistentSignal({
     key: currentOutputKey,
@@ -16,12 +17,16 @@ const { signal: outputElementsSignal, update: updateOutput } = createPersistentS
 export { outputElementsSignal };
 
 export const setActivity = (activity: ActivityType) => {
-  activitySignal.value = activity;
+    activitySignal.value = activity;
 };
 
 export const appendToOutput = (element: OutputElement) => {
-  updateOutput(prevOutput => {
-    const newOutput = [...prevOutput, element].slice(-3);
-    return newOutput;
-  });
+    updateOutput(prevOutput => {
+        const newOutput = [...prevOutput, element].slice(-3);
+        return newOutput;
+    });
 };
+
+export const setNotification = (notification: string) => {
+    notificationSignal.value = notification;
+}
