@@ -4,12 +4,12 @@ import { signal, computed } from "@preact/signals-react";
 import { setActivity } from "src/signals/appSignals";
 import { ActionType } from "src/game/types/ActionTypes";
 import { ActivityType, GamePhrase, Phrases } from "src/types/Types";
-import GamePhrases from "src/utils/GamePhrases";
 import { createPersistentSignal } from "src/utils/signalPersistence";
 
 export const startGameSignal = signal<string | undefined>(undefined);
 export const gamePhraseSignal = signal<GamePhrase | null>(null);
 export const gameInitSignal = signal<boolean>(false);
+export const isInGameModeSignal = signal<boolean>(false);
 export const currentGamePhraseSignal = signal<GamePhrase | null>(null);
 export const gameLevelSignal = signal<number | null>(null);
 export const heroActionSignal = signal<ActionType>('Idle');
@@ -17,6 +17,9 @@ export const zombie4ActionSignal = signal<ActionType>('Walk');
 
 const completedGamePhrasesKey = 'completed-game-phrases';
 
+export const setIsInGameMode = (isInGameMode:boolean) => {
+  isInGameModeSignal.value= isInGameMode;
+}
 export const setHeroAction = (action: ActionType) => {
   heroActionSignal.value = action;
 };
@@ -68,6 +71,7 @@ export const setNextGamePhrase = ():boolean => {
 export const initializeGame = (tutorialGroup?: string) => {
   setActivity(ActivityType.GAME);
   gameInitSignal.value = true;
+  isInGameModeSignal.value = true;
   if (tutorialGroup) {
     const tutorialGroupGamePhrase = getIncompletePhrasesByTutorialGroup(tutorialGroup);
     if (tutorialGroupGamePhrase.length > 0) {

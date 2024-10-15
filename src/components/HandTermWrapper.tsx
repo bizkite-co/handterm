@@ -16,6 +16,7 @@ import { activitySignal } from 'src/signals/appSignals';
 import {
   setGamePhrase,
   gameInitSignal,
+  isInGameModeSignal,
 } from 'src/signals/gameSignals'
 import { commandLineSignal, commandSignal, commandTimeSignal } from 'src/signals/commandLineSignals';
 import { useComputed } from '@preact/signals-react';
@@ -259,16 +260,18 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
 
   return (
     <>
-      {(activity.value === ActivityType.GAME)
+      {(activity.value === ActivityType.GAME 
+        && isInGameModeSignal.value)
         && (
           <Game
             ref={gameHandleRef}
             canvasHeight={canvasHeight}
             canvasWidth={props.terminalWidth}
-            isInGameMode={true}
           />
         )}
-      {activity.value === ActivityType.GAME && (
+      {activity.value === ActivityType.GAME 
+        && isInGameModeSignal.value 
+        && (
         <NextCharsDisplay
           ref={nextCharsDisplayRef}
           isInPhraseMode={true}

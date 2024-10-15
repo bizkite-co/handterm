@@ -11,12 +11,12 @@ import ScrollingTextLayer from './ScrollingTextLayer';
 import confetti from 'canvas-confetti';
 import { useComputed, useSignalEffect } from "@preact/signals-react";
 import { commandLineSignal } from "src/signals/commandLineSignals";
+import { isInGameModeSignal } from 'src/signals/gameSignals';
 
 
 export interface IGameProps {
   canvasHeight: number
   canvasWidth: number
-  isInGameMode: boolean
 }
 
 export interface IGameHandle {
@@ -37,7 +37,6 @@ const Game = React.forwardRef<IGameHandle, IGameProps>((props, ref) => {
   const {
     canvasHeight,
     canvasWidth,
-    isInGameMode,
   } = props;
   const zombie4StartPosition = { leftX: -70, topY: 0 };
   const heroStartPosition = { leftX: 165, topY: 29 };
@@ -287,7 +286,7 @@ const Game = React.forwardRef<IGameHandle, IGameProps>((props, ref) => {
 
   return (
     <>
-      {isInGameMode ? (
+      {isInGameModeSignal.value && (
         <div
           id="terminal-game"
           style={{ position: "relative", height: canvasHeight }}
@@ -327,7 +326,7 @@ const Game = React.forwardRef<IGameHandle, IGameProps>((props, ref) => {
             scale={1.90}
           />
         </div>
-      ) : null}
+      )}
     </>
   );
 });

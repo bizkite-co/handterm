@@ -7,7 +7,9 @@ import { setNextTutorial, canUnlockTutorial, resetCompletedTutorials, tutorialSi
 import {
   getIncompletePhrasesByTutorialGroup,
   initializeGame,
+  isInGameModeSignal,
   setCompletedGamePhrase,
+  setIsInGameMode,
   setNextGamePhrase,
 } from 'src/signals/gameSignals';
 import { setActivity, activitySignal, setNotification } from 'src/signals/appSignals'
@@ -48,8 +50,9 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
       Otherwise, just obey the command.
     */
 
-    if (tutorialSignal.value && !tutorialSignal.value?.tutorialGroup && activity !== ActivityType.GAME){
+    if (tutorialSignal.value && !tutorialSignal.value?.tutorialGroup && activity !== ActivityType.GAME) {
       setActivity(ActivityType.TUTORIAL);
+      isInGameModeSignal.value = false;
       return;
     }
 
@@ -64,6 +67,8 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
 
     if (tutorialSignal.value?.tutorialGroup && activity !== ActivityType.GAME) {
       initializeGame(tutorialSignal.value.tutorialGroup);
+      setActivity(ActivityType.GAME);
+      isInGameModeSignal.value = true;
       return ActivityType.GAME;
     }
 
@@ -132,10 +137,12 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
     console.log("nextTutorial:", nextTutorial?.phrase.join(''));
     if (nextTutorial) {
       determineActivityState(ActivityType.TUTORIAL);
+      setIsInGameMode(false);
       setNextTutorial();
       return;
     }
     setActivity(ActivityType.GAME);
+    setIsInGameMode(true);
     return;
   };
 
@@ -149,6 +156,7 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
         // Set the next phrase
         setNextGamePhrase();
         setActivity(ActivityType.GAME);
+        setIsInGameMode(true)
         return;
       }
       //TODO: Set Tutorial completed
@@ -157,14 +165,15 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
         console.log('Setting group tutoral complete', itig.phrase.join(''));
         setCompletedTutorial(itig.phrase.join(''));
       });
-      
-      setNextTutorial();
+
+      const didSetNext = setNextTutorial();
       determineActivityState(ActivityType.TUTORIAL);
+
     }
 
-    const nextTutorial = getNextTutorial();
     if ((setNextTutorial())) {
       setActivity(ActivityType.TUTORIAL);
+      isInGameModeSignal.value = false;
       return;
     }
 
@@ -173,6 +182,7 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
       // Set next phrase
       setNextGamePhrase();
       setActivity(ActivityType.GAME);
+      isInGameModeSignal.value = true;
       return;
     }
     setActivity(ActivityType.NORMAL);

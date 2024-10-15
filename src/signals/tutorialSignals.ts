@@ -16,15 +16,14 @@ export { completedTutorialsSignal };
 
 export const tutorialSignal = signal<Tutorial | null>(null);
 
-export const setNextTutorial = ():boolean => {
+export const setNextTutorial = (): boolean => {
   // get next tutoral that is not in completed tutorials.
   const nextTutorial = Tutorials
     .find(t => !completedTutorialsSignal.value.has(t.phrase.join('')));
-  if(nextTutorial){
+  if (nextTutorial) {
     tutorialSignal.value = nextTutorial;
     return true;
-  }
-  else{
+  } else {
     tutorialSignal.value = null;
     return false;
   }
@@ -63,7 +62,7 @@ export const getNextTutorial = (): Tutorial | null => {
 export const canUnlockTutorial = (command: string): boolean => {
   const currentTutorial = tutorialSignal.value;
   if (!currentTutorial) return false;
- 
+
   // TODO: This is probably the single biggest problem blocking unification of GamePhrases and Tutorials.
   const normalizedCommand = command === '\r' ? 'Return (ENTER)' : command;
   if (currentTutorial.phrase.join('') === normalizedCommand) {
