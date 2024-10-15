@@ -8,6 +8,8 @@ import { useWPMCalculator } from './useWPMCaculator';
 import { addKeystroke, commandLineSignal, setCommand } from 'src/signals/commandLineSignals';
 import { useComputed } from '@preact/signals-react';
 import { setCommandLine } from 'src/signals/commandLineSignals';
+import { setActivity } from 'src/signals/appSignals';
+import { ActivityType } from 'src/types/Types';
 
 export const useTerminal = () => {
   const { instance, ref: xtermRef } = useXTerm({ options: XtermAdapterConfig });
@@ -58,6 +60,14 @@ export const useTerminal = () => {
     const handleData = (data: string) => {
       if (!instance) return;
       const cursorX = instance.buffer.active.cursorX;
+      if (data === '\x03') { // Handle Ctrl+C
+        // Cancel game and tutorial
+        setCommandLine('');
+        setActivity(ActivityType.NORMAL);
+        instance.write('^C');
+        resetPrompt();
+        return;
+      }
       if (data === '\r') { // Enter key
         const currentCommand = getCurrentCommand();
         instance.write('\r\n');
@@ -90,7 +100,7 @@ export const useTerminal = () => {
       window.removeEventListener('resize', resizeHandler);
       dataHandler.dispose();
     };
-}, [instance, getCurrentCommand, resetPrompt, wpmCalculator, commandLine ]);
+}, [instance, getCurrentCommand, resetPrompt, wpmCalculator, commandLine, setCommandLine]);
 
   return {
     xtermRef,
