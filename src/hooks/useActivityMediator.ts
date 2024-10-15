@@ -5,11 +5,15 @@ import GamePhrases from '../utils/GamePhrases';
 import { useTutorial } from './useTutorials';
 import { setNextTutorial, canUnlockTutorial, resetCompletedTutorials, tutorialSignal, getNextTutorial, setCompletedTutorial } from 'src/signals/tutorialSignals';
 import {
+  getIncompletePhrasesByTutorialGroup,
   initializeGame,
+  setCompletedGamePhrase,
+  setNextGamePhrase,
 } from 'src/signals/gameSignals';
 import { setActivity, activitySignal, setNotification } from 'src/signals/appSignals'
 import { useComputed } from '@preact/signals-react';
 import { setGamePhrase } from 'src/signals/gameSignals';
+import { setFlagsFromString } from 'v8';
 
 export type IActivityMediatorReturn = {
   isInGameMode: boolean;
@@ -137,20 +141,25 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
 
   const checkGameProgress = (successPhrase: GamePhrase) => {
     // Called after phrase completion.
+    setCompletedGamePhrase(successPhrase.key);
     if (successPhrase?.tutorialGroup) {
-      //TODO: isComplete is IMMUTABLE in the JSON file. THis is not a list of incomplete phrases.
-      const incompletePhrasesInGroup = GamePhrases.getIncompletePhrasesByTutorialGroup(successPhrase.tutorialGroup);
+      const completedTutorialGroupKey = successPhrase.tutorialGroup;
+      const incompletePhrasesInGroup = getIncompletePhrasesByTutorialGroup(completedTutorialGroupKey);
       if (incompletePhrasesInGroup.length > 0) {
         // Set the next phrase
-        setGamePhrase(incompletePhrasesInGroup[0]);
+        setNextGamePhrase();
         setActivity(ActivityType.GAME);
         return;
       }
       //TODO: Set Tutorial completed
-      const incompleteTutorialInGroup = getIncompleteTutorialsInGroup(successPhrase.tutorialGroup);
+      const incompleteTutorialInGroup = getIncompleteTutorialsInGroup(completedTutorialGroupKey);
       incompleteTutorialInGroup.forEach(itig => {
-        setCompletedTutorial(itig.phrase.join(''))
+        console.log('Setting group tutoral complete', itig.phrase.join(''));
+        setCompletedTutorial(itig.phrase.join(''));
       });
+      
+      setNextTutorial();
+      determineActivityState(ActivityType.TUTORIAL);
     }
 
     const nextTutorial = getNextTutorial();
@@ -162,7 +171,7 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
     const nextGamePhrase = GamePhrases.getGamePhrasesNotAchieved()[0];
     if (nextGamePhrase) {
       // Set next phrase
-      setGamePhrase(nextGamePhrase);
+      setNextGamePhrase();
       setActivity(ActivityType.GAME);
       return;
     }

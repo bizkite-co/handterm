@@ -13,8 +13,8 @@ import { useResizeCanvasAndFont } from '../hooks/useResizeCanvasAndFont';
 import { useTerminal } from '../hooks/useTerminal';
 import { useWPMCalculator } from '../hooks/useWPMCaculator';
 import { activitySignal } from 'src/signals/appSignals';
-import { 
-  setGamePhrase, 
+import {
+  setGamePhrase,
   gameInitSignal,
 } from 'src/signals/gameSignals'
 import { commandLineSignal, commandSignal, commandTimeSignal } from 'src/signals/commandLineSignals';
@@ -52,7 +52,7 @@ export interface IHandTermWrapperMethods {
   // Add other methods as needed
 }
 
-const getTimestamp = (date:Date) => {
+const getTimestamp = (date: Date) => {
   return date.toTimeString().split(' ')[0];
 }
 
@@ -116,15 +116,15 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
 
   useEffect(() => {
     if (isGameInitialized.value && gameHandleRef.current) {
-      
+
       let gamePhrases: GamePhrase[] = [];
-      if(tutorial?.tutorialGroup){
+      if (tutorial?.tutorialGroup) {
         gamePhrases = GamePhrases.getGamePhrasesByTutorialGroup(tutorial.tutorialGroup);
       }
-      if(gamePhrases.length === 0){
+      if (gamePhrases.length === 0) {
         gamePhrases = GamePhrases.getGamePhrasesNotAchieved();
       }
-      if(gamePhrases.length === 0) return;
+      if (gamePhrases.length === 0) return;
       setGamePhrase(gamePhrases[0]);
       gameHandleRef.current.startGame(tutorial?.tutorialGroup);
       // gameInit.value = false;
@@ -231,14 +231,13 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
     }
   }, [setErrorCharIndex]);
 
-  const handlePhraseSuccess = (phrase: GamePhrase|null) => {
-    if(!phrase) return;
+  const handlePhraseSuccess = (phrase: GamePhrase | null) => {
+    if (!phrase) return;
     const wpms = wpmCalculator.getWPMs();
     const wpmAverage = wpms.wpmAverage;
 
     if (wpmAverage > targetWPM) {
-      let result = activityMediator.checkGameProgress(phrase);
-      console.log("phrase result:", result, phrase)
+      activityMediator.checkGameProgress(phrase);
     }
 
     gameHandleRef.current?.completeGame();
@@ -260,15 +259,15 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
 
   return (
     <>
-      {(activity.value === ActivityType.GAME) 
-      && (
-        <Game
-          ref={gameHandleRef}
-          canvasHeight={canvasHeight}
-          canvasWidth={props.terminalWidth}
-          isInGameMode={true}
-        />
-      )}
+      {(activity.value === ActivityType.GAME)
+        && (
+          <Game
+            ref={gameHandleRef}
+            canvasHeight={canvasHeight}
+            canvasWidth={props.terminalWidth}
+            isInGameMode={true}
+          />
+        )}
       {activity.value === ActivityType.GAME && (
         <NextCharsDisplay
           ref={nextCharsDisplayRef}

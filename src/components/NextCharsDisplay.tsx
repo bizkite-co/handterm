@@ -6,7 +6,7 @@ import ErrorDisplay from "./ErrorDisplay";
 import { Phrase } from "../utils/Phrase";
 import { commandLineSignal } from "src/signals/commandLineSignals";
 import { useComputed, useSignalEffect } from "@preact/signals-react";
-import { gamePhraseSignal } from "src/signals/gameSignals";
+import { gamePhraseSignal, setCompletedGamePhrase } from "src/signals/gameSignals";
 import { GamePhrase } from "src/types/Types";
 
 export interface INextCharsDisplayProps {
@@ -47,12 +47,15 @@ const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, INextCharsDisp
         const newPhrase:string = gamePhrase.value.value;
         setPhrase(new Phrase(newPhrase.split('')));
         setNextChars(newPhrase);
+        console.log(newPhrase);
     }, [gamePhrase.value]);
 
-    useEffect(()=>{
-        // once on load.
-        // handleCommandLineChange(commandLine.value);
-    }, [commandLine.value])
+    // useSignalEffect(() => {
+    //     if(!gamePhraseSignal.value?.value) return;
+    //     const newPhrase:string = gamePhraseSignal.value.value;
+    //     setPhrase(new Phrase(newPhrase.split('')));
+    //     setNextChars(newPhrase);
+    // });
 
     useSignalEffect(() => {
         // every time the command line changes.
@@ -144,6 +147,7 @@ const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, INextCharsDisp
         setMismatchedChar('');
         setMismatchedIsVisible(false);
         setNextChars('');
+        if(gamePhrase.value) setCompletedGamePhrase(gamePhrase.value.key)
         onPhraseSuccess(gamePhrase.value);
     };
 
