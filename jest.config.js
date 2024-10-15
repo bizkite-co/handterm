@@ -1,6 +1,8 @@
+
 export default {
   preset: 'ts-jest',
   injectGlobals: true,
+  sourceMapsEnabled: true,
   testEnvironment: 'jest-environment-jsdom',
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
   moduleNameMapper: {
