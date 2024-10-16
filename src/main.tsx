@@ -1,21 +1,32 @@
 import { Buffer } from 'buffer';
 import './commands';
-// import { StrictMode } from 'react';
+import React from 'react';
+import { createBrowserRouter, Router, RouterProvider } from 'react-router-dom';
+import App from './App'
+
 window.Buffer = Buffer;
 
 // Define 'global' if it's undefined (for browser environments)
 if (typeof global === 'undefined') {
   window.global = window;
 }
+
+
 (async () => {
   const ReactDOM = await import('react-dom/client');
-  const App = await import('./App');
+
+  const router = createBrowserRouter([
+    {
+      path: '/',
+      element: <App />,
+    }
+  ])
 
   ReactDOM
     .createRoot(document.getElementById('root')!)
     .render(
-      // <StrictMode>
-        <App.default />
-      // </StrictMode>
+      <React.StrictMode>
+        <RouterProvider router={router} />
+      </React.StrictMode>
     );
 })();

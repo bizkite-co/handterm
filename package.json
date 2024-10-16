@@ -33,6 +33,7 @@
     "prettier-plugin-tailwind": "^2.2.12",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-router-dom": "^6.27.0",
     "react-xtermjs": "^1.0.9",
     "recast": "^0.23.9",
     "vite-plugin-monaco-editor": "^1.1.0"

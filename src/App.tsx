@@ -11,7 +11,7 @@ import { ActivityMediatorProvider } from './contexts/ActivityMediatorContext';
 
 // const MemoizedOutput = React.memo(Output);
 
-const App = () => {
+export default function App () {
   const containerRef = React.createRef<HTMLDivElement>();
   const [containerWidth, setContainerWidth] = React.useState<number>(0);
 
@@ -22,7 +22,7 @@ const App = () => {
     return containerRef.current?.clientWidth ?? 0
   }
 
-  let output : OutputElement[] = [];
+  let output: OutputElement[] = [];
   useEffect(() => {
     const handleResize = () => {
       const w = getContainerWidth();
@@ -97,7 +97,6 @@ const App = () => {
         </AppProvider>
       </div>
     </ActivityMediatorProvider>
+
   );
 };
-
-export default App;
