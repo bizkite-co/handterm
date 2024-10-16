@@ -13,8 +13,7 @@ import {
 } from 'src/signals/gameSignals';
 import { activitySignal, setNotification } from 'src/signals/appSignals'
 import { useComputed } from '@preact/signals-react';
-import { setGamePhrase } from 'src/signals/gameSignals';
-import { setFlagsFromString } from 'v8';
+import { useNavigate, useLocation, Navigate, useNavigation } from 'react-router-dom';
 
 export type IActivityMediatorReturn = {
   isInGameMode: boolean;
@@ -41,7 +40,27 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
     getIncompleteTutorialsInGroup
   } = useTutorial();
   const activity = useComputed(() => activitySignal.value).value;
+  const navigate = useNavigate();
+  const location = useLocation();
 
+  const setActivityNav = (newActivity: ActivityType) => {
+    let navTo = '/';
+    switch (newActivity) {
+      case ActivityType.GAME:
+        navTo = '/game';
+        break;
+      case ActivityType.TUTORIAL:
+        navTo = '/tutorial';
+        break;
+      case ActivityType.EDIT:
+        navTo = '/edit';
+        break;
+      default:
+        navigate('/');
+    }
+    console.log("Navigating to:", navTo);
+    navigate(navTo);
+  }
   const determineActivityState = useCallback((commandActivity: ActivityType | null = null) => {
     /*
       If the user is new to the site, start the tutorial.
@@ -51,12 +70,14 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
 
     if (tutorialSignal.value && !tutorialSignal.value?.tutorialGroup && activity !== ActivityType.GAME) {
       activitySignal.value = ActivityType.TUTORIAL;
+      setActivityNav(ActivityType.TUTORIAL);
       isInGameModeSignal.value = false;
       return;
     }
 
     if (commandActivity && commandActivity !== activity) {
       activitySignal.value = commandActivity;
+      setActivityNav(commandActivity);
       if (commandActivity === ActivityType.GAME) {
         //TODO: how do we know the tutorial has a tutorial group in this case?
         initializeGame(tutorialSignal.value?.tutorialGroup);
@@ -67,6 +88,7 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
     if (tutorialSignal.value?.tutorialGroup && activity !== ActivityType.GAME) {
       initializeGame(tutorialSignal.value.tutorialGroup);
       activitySignal.value = ActivityType.GAME;
+      setActivityNav(ActivityType.GAME);
       isInGameModeSignal.value = true;
       return ActivityType.GAME;
     }
@@ -119,6 +141,8 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
     if (canUnlock) {
       if (tutorialSignal.value?.tutorialGroup) {
         // Will only be unlocked in checkGameProgress.
+        activitySignal.value = ActivityType.GAME;
+        setActivityNav(ActivityType.GAME);
         initializeGame(tutorialSignal.value.tutorialGroup);
         return;
       }
@@ -136,6 +160,7 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
       return;
     }
     activitySignal.value = ActivityType.GAME;
+    setActivityNav(ActivityType.GAME);
     return;
   };
 
@@ -149,6 +174,7 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
         // Set the next phrase
         setNextGamePhrase();
         activitySignal.value = ActivityType.GAME;
+        setActivityNav(ActivityType.GAME);
         return;
       }
       //TODO: Set Tutorial completed
@@ -164,6 +190,7 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
 
     if ((setNextTutorial())) {
       activitySignal.value = ActivityType.TUTORIAL;
+      setActivityNav(ActivityType.TUTORIAL);
       isInGameModeSignal.value = false;
       return;
     }
@@ -173,10 +200,12 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
       // Set next phrase
       setNextGamePhrase();
       activitySignal.value = ActivityType.GAME;
+      setActivityNav(ActivityType.GAME);
       isInGameModeSignal.value = true;
       return;
     }
     activitySignal.value = ActivityType.NORMAL;
+    setActivityNav(ActivityType.NORMAL);
   };
 
   return {

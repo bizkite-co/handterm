@@ -1,7 +1,7 @@
 import { Buffer } from 'buffer';
 import './commands';
 import React from 'react';
-import { createBrowserRouter, Router, RouterProvider } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import App from './App'
 
 window.Buffer = Buffer;
@@ -11,22 +11,25 @@ if (typeof global === 'undefined') {
   window.global = window;
 }
 
-
 (async () => {
   const ReactDOM = await import('react-dom/client');
-
   const router = createBrowserRouter([
     {
       path: '/',
       element: <App />,
+      children: [
+        { path: 'game', element: <App /> },
+        { path: 'tutorial', element: <App /> },
+        { path: 'edit', element: <App /> },
+      ]
     }
   ])
 
   ReactDOM
     .createRoot(document.getElementById('root')!)
     .render(
-      <React.StrictMode>
+      // <React.StrictMode>
         <RouterProvider router={router} />
-      </React.StrictMode>
+      // </React.StrictMode>
     );
 })();

@@ -66,7 +66,6 @@ export const setNextGamePhrase = ():boolean => {
 };
 
 export const initializeGame = (tutorialGroup?: string) => {
-  setActivity(ActivityType.GAME);
   gameInitSignal.value = true;
   isInGameModeSignal.value = true;
   if (tutorialGroup) {
