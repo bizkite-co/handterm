@@ -17,9 +17,6 @@ export const zombie4ActionSignal = signal<ActionType>('Walk');
 
 const completedGamePhrasesKey = 'completed-game-phrases';
 
-export const setIsInGameMode = (isInGameMode:boolean) => {
-  isInGameModeSignal.value= isInGameMode;
-}
 export const setHeroAction = (action: ActionType) => {
   heroActionSignal.value = action;
 };

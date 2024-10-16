@@ -12,15 +12,17 @@ import { LogKeys } from '../types/TerminalTypes';
 import { useResizeCanvasAndFont } from '../hooks/useResizeCanvasAndFont';
 import { useTerminal } from '../hooks/useTerminal';
 import { useWPMCalculator } from '../hooks/useWPMCaculator';
-import { activitySignal } from 'src/signals/appSignals';
+import { activitySignal, isEditModeSignal, isInTutorialModeSignal, isShowVideoSignal } from 'src/signals/appSignals';
 import {
   setGamePhrase,
   gameInitSignal,
   isInGameModeSignal,
 } from 'src/signals/gameSignals'
 import { commandLineSignal, commandSignal, commandTimeSignal } from 'src/signals/commandLineSignals';
-import { useComputed } from '@preact/signals-react';
+import { useComputed, useSignalEffect } from '@preact/signals-react';
 import { getNextTutorial, setNextTutorial, tutorialSignal } from 'src/signals/tutorialSignals';
+import MonacoEditor from './MonacoEditor';
+import WebCam from 'src/utils/WebCam';
 
 
 export interface IHandTermWrapperProps {
@@ -78,8 +80,10 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
   const [editFileExtension, setEditFileExtension] = useState('md');
   const [userName, setUserName] = useState<string | null>(null);
   const activity = useComputed(() => activitySignal.value);
-  const isGameInitialized = useComputed(() => gameInitSignal.value);
-  const tutorial = useComputed(() => tutorialSignal.value).value;
+  const [localActivity, setLocalActivity] = useState<ActivityType>(ActivityType.NORMAL);
+  const isInTutorialMode = useComputed(() => isInTutorialModeSignal.value);
+  const isGameInitialized = useComputed(() => isInGameModeSignal.value);
+  const tutorial = useComputed(() => tutorialSignal.value);
   const gameInit = useComputed(() => gameInitSignal.value);
   const commandTime = useComputed(() => commandTimeSignal.value);
   // Create a mutable ref that will always have a current value
@@ -95,7 +99,7 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
     setEditMode: () => { },
     handleEditSave: () => { },
   });
-
+  const isInGameMode = useComputed(() => isInGameModeSignal.value).value;
   // Use useImperativeHandle to update both refs
   useImperativeHandle(forwardedRef, () => internalRef.current);
 
@@ -116,21 +120,21 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
   }, []);
 
   useEffect(() => {
-    if (isGameInitialized.value && gameHandleRef.current) {
+    if (isGameInitialized && gameHandleRef.current) {
 
       let gamePhrases: GamePhrase[] = [];
-      if (tutorial?.tutorialGroup) {
-        gamePhrases = GamePhrases.getGamePhrasesByTutorialGroup(tutorial.tutorialGroup);
+      if (tutorial.value?.tutorialGroup) {
+        gamePhrases = GamePhrases.getGamePhrasesByTutorialGroup(tutorial.value.tutorialGroup);
       }
       if (gamePhrases.length === 0) {
         gamePhrases = GamePhrases.getGamePhrasesNotAchieved();
       }
       if (gamePhrases.length === 0) return;
       setGamePhrase(gamePhrases[0]);
-      gameHandleRef.current.startGame(tutorial?.tutorialGroup);
+      gameHandleRef.current.startGame(tutorial.value?.tutorialGroup);
       // gameInit.value = false;
     }
-  }, [isGameInitialized.value, gameHandleRef])
+  }, [isGameInitialized, gameHandleRef])
 
   const activityMediatorProps: IActivityMediatorProps = {
     currentTutorial: getNextTutorial(),
@@ -234,6 +238,7 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
 
   const handlePhraseSuccess = (phrase: GamePhrase | null) => {
     if (!phrase) return;
+    console.log(`handlePhraseSuccess called with phrase:`, phrase.key, "Activity:", ActivityType[activitySignal.value]);
     const wpms = wpmCalculator.getWPMs();
     const wpmAverage = wpms.wpmAverage;
 
@@ -248,7 +253,13 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
     handlePhraseComplete();
   }
 
+  useSignalEffect(()=>{
+    console.log("Wrapper activity:", ActivityType[activitySignal.value]);
+    setLocalActivity(activitySignal.value);
+  })
+
   const handlePhraseComplete = () => {
+
     localStorage.setItem('currentCommand', '');
     setGamePhrase(null);
     if (nextCharsDisplayRef.current && nextCharsDisplayRef.current.cancelTimer) {
@@ -260,8 +271,8 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
 
   return (
     <>
-      {(activity.value === ActivityType.GAME 
-        && isInGameModeSignal.value)
+      {(activity.value === ActivityType.GAME
+        && isInGameMode)
         && (
           <Game
             ref={gameHandleRef}
@@ -269,32 +280,47 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
             canvasWidth={props.terminalWidth}
           />
         )}
-      {activity.value === ActivityType.GAME 
-        && isInGameModeSignal.value 
+      {activity.value === ActivityType.GAME
+        && isInGameModeSignal.value
         && (
-        <NextCharsDisplay
-          ref={nextCharsDisplayRef}
-          isInPhraseMode={true}
-          onPhraseSuccess={handlePhraseSuccess}
-          onError={handlePhraseErrorState}
-        />
-      )}
+          <NextCharsDisplay
+            ref={nextCharsDisplayRef}
+            isInPhraseMode={true}
+            onPhraseSuccess={handlePhraseSuccess}
+            onError={handlePhraseErrorState}
+          />
+        )}
       {lastTypedCharacter && (
         <Chord displayChar={lastTypedCharacter} />
       )}
-      {activity.value === ActivityType.TUTORIAL && tutorialSignal.value && (
-        <TutorialManager
-          isInTutorial={true}
-          tutorial={tutorialSignal.value}
-        />
-      )}
+      <TutorialManager
+        isInTutorial={localActivity === ActivityType.TUTORIAL}
+        tutorial={tutorialSignal.value}
+      />
       <Prompt
         username={userName || 'guest'}
         domain={domain || 'handterm.com'}
         githubUsername={githubUsername}
         timestamp={getTimestamp(commandTime.value)}
       />
-      <div ref={xtermRef} />
+      {!isEditModeSignal.value &&
+        <div ref={xtermRef} />
+      }
+      {isEditModeSignal.value && (
+        <MonacoEditor
+          initialValue={editContent}
+          language={editLanguage}
+          onChange={(value) => handleEditChange(value || '')}
+          onSave={handleEditSave}
+          onClose={handleEditorClose}
+          toggleVideo={toggleVideo}
+        />
+      )}
+      {isShowVideoSignal.value && (
+        <WebCam
+          setOn={isShowVideoSignal.value}
+        />
+      )}
     </>
   );
 });

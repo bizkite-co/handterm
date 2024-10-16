@@ -8,7 +8,6 @@ import { Output } from './components/Output';
 import { AppProvider } from './contexts/AppContext';
 import { CommandProvider } from './contexts/CommandProvider';
 import { ActivityMediatorProvider } from './contexts/ActivityMediatorContext';
-import { useSignal, useSignalEffect } from '@preact/signals-react';
 
 // const MemoizedOutput = React.memo(Output);
 

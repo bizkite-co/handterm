@@ -1,11 +1,13 @@
 // src/signals/appSignals.ts
-import { signal } from '@preact/signals-react';
+import { computed, signal } from '@preact/signals-react';
 import { ActivityType, OutputElement } from 'src/types/Types';
 import { createPersistentSignal } from 'src/utils/signalPersistence';
 
 const currentOutputKey = 'current-output';
 export const activitySignal = signal<ActivityType>(ActivityType.NORMAL);
 export const notificationSignal = signal<string | null>(null)
+export const isEditModeSignal = signal<boolean>(false);
+export const isShowVideoSignal = signal<boolean>(false);
 
 const { signal: outputElementsSignal, update: updateOutput } = createPersistentSignal({
     key: currentOutputKey,
@@ -16,8 +18,12 @@ const { signal: outputElementsSignal, update: updateOutput } = createPersistentS
 
 export { outputElementsSignal };
 
+export const isInGameModeSignal = computed(() => activitySignal.value === ActivityType.GAME);
+export const isInTutorialModeSignal = computed(() => activitySignal.value === ActivityType.TUTORIAL);
+
 export const setActivity = (activity: ActivityType) => {
     activitySignal.value = activity;
+    console.log(ActivityType[activitySignal.value]);
 };
 
 export const appendToOutput = (element: OutputElement) => {

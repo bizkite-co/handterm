@@ -63,6 +63,7 @@ const Game = React.forwardRef<IGameHandle, IGameProps>((props, ref) => {
   let heroRunTimeoutId: number | null = null;
 
   const commandLine = useComputed(() => commandLineSignal.value);
+  const isInGameMode = useComputed(()=> isInGameModeSignal.value).value;
 
   useSignalEffect(() => {
     handleCommandLineChange(commandLine.value);
@@ -286,7 +287,7 @@ const Game = React.forwardRef<IGameHandle, IGameProps>((props, ref) => {
 
   return (
     <>
-      {isInGameModeSignal.value && (
+      {isInGameMode && (
         <div
           id="terminal-game"
           style={{ position: "relative", height: canvasHeight }}

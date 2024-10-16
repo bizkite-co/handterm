@@ -9,10 +9,9 @@ import {
   initializeGame,
   isInGameModeSignal,
   setCompletedGamePhrase,
-  setIsInGameMode,
   setNextGamePhrase,
 } from 'src/signals/gameSignals';
-import { setActivity, activitySignal, setNotification } from 'src/signals/appSignals'
+import { activitySignal, setNotification } from 'src/signals/appSignals'
 import { useComputed } from '@preact/signals-react';
 import { setGamePhrase } from 'src/signals/gameSignals';
 import { setFlagsFromString } from 'v8';
@@ -51,13 +50,13 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
     */
 
     if (tutorialSignal.value && !tutorialSignal.value?.tutorialGroup && activity !== ActivityType.GAME) {
-      setActivity(ActivityType.TUTORIAL);
+      activitySignal.value = ActivityType.TUTORIAL;
       isInGameModeSignal.value = false;
       return;
     }
 
     if (commandActivity && commandActivity !== activity) {
-      setActivity(commandActivity);
+      activitySignal.value = commandActivity;
       if (commandActivity === ActivityType.GAME) {
         //TODO: how do we know the tutorial has a tutorial group in this case?
         initializeGame(tutorialSignal.value?.tutorialGroup);
@@ -67,13 +66,13 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
 
     if (tutorialSignal.value?.tutorialGroup && activity !== ActivityType.GAME) {
       initializeGame(tutorialSignal.value.tutorialGroup);
-      setActivity(ActivityType.GAME);
+      activitySignal.value = ActivityType.GAME;
       isInGameModeSignal.value = true;
       return ActivityType.GAME;
     }
 
     return activity;
-  }, [activity, tutorialSignal, setActivity]);
+  }, [activity, tutorialSignal ]);
 
   const handleCommandExecuted = useCallback((parsedCommand: ParsedCommand): boolean => {
     let result = false;
@@ -116,11 +115,9 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
     // If the current tutorial has attached GamePhrases.
     // Don't unlock until the game is played.
     if (!tutorialSignal.value) return;
-    console.log("activity:", ActivityType[activitySignal.value], "tutorial:", tutorialSignal.value?.phrase);
     const canUnlock = command ? canUnlockTutorial(command) : false;
     if (canUnlock) {
       if (tutorialSignal.value?.tutorialGroup) {
-        console.log(`Tutorial ${tutorialSignal.value.phrase.join('')} CAN BE unlocked after ${tutorialSignal.value.tutorialGroup}`);
         // Will only be unlocked in checkGameProgress.
         initializeGame(tutorialSignal.value.tutorialGroup);
         return;
@@ -128,21 +125,17 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
       setCompletedTutorial(tutorialSignal.value.phrase.join(''))
     }
     else {
-      console.log(`Tutorial ${tutorialSignal.value} not unlocked with ${command}`);
       setNotification(`Tutorial ${tutorialSignal.value} not unlocked with ${command}`)
       return;
     }
     // TODO: if the tutorial is not completed until the tutorialGroup is completed, how do we know if the tutorialGroup is completed, and which tutorial to complete when it is completed?
     const nextTutorial = getNextTutorial();
-    console.log("nextTutorial:", nextTutorial?.phrase.join(''));
     if (nextTutorial) {
       determineActivityState(ActivityType.TUTORIAL);
-      setIsInGameMode(false);
       setNextTutorial();
       return;
     }
-    setActivity(ActivityType.GAME);
-    setIsInGameMode(true);
+    activitySignal.value = ActivityType.GAME;
     return;
   };
 
@@ -155,14 +148,12 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
       if (incompletePhrasesInGroup.length > 0) {
         // Set the next phrase
         setNextGamePhrase();
-        setActivity(ActivityType.GAME);
-        setIsInGameMode(true)
+        activitySignal.value = ActivityType.GAME;
         return;
       }
       //TODO: Set Tutorial completed
       const incompleteTutorialInGroup = getIncompleteTutorialsInGroup(completedTutorialGroupKey);
       incompleteTutorialInGroup.forEach(itig => {
-        console.log('Setting group tutoral complete', itig.phrase.join(''));
         setCompletedTutorial(itig.phrase.join(''));
       });
 
@@ -172,7 +163,7 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
     }
 
     if ((setNextTutorial())) {
-      setActivity(ActivityType.TUTORIAL);
+      activitySignal.value = ActivityType.TUTORIAL;
       isInGameModeSignal.value = false;
       return;
     }
@@ -181,11 +172,11 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
     if (nextGamePhrase) {
       // Set next phrase
       setNextGamePhrase();
-      setActivity(ActivityType.GAME);
+      activitySignal.value = ActivityType.GAME;
       isInGameModeSignal.value = true;
       return;
     }
-    setActivity(ActivityType.NORMAL);
+    activitySignal.value = ActivityType.NORMAL;
   };
 
   return {

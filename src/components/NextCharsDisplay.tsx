@@ -47,15 +47,7 @@ const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, INextCharsDisp
         const newPhrase:string = gamePhrase.value.value;
         setPhrase(new Phrase(newPhrase.split('')));
         setNextChars(newPhrase);
-        console.log(newPhrase);
     }, [gamePhrase.value]);
-
-    // useSignalEffect(() => {
-    //     if(!gamePhraseSignal.value?.value) return;
-    //     const newPhrase:string = gamePhraseSignal.value.value;
-    //     setPhrase(new Phrase(newPhrase.split('')));
-    //     setNextChars(newPhrase);
-    // });
 
     useSignalEffect(() => {
         // every time the command line changes.
