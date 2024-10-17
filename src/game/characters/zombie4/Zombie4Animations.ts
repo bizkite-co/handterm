@@ -9,37 +9,37 @@ import { SpriteAnimation } from "../../types/SpriteTypes";
 
 export const Zombie4Animations = {
     Idle: {
-        imagePath: 'images/Zombie4Package/Sprites/Idle.png',
+        imagePath: '/images/Zombie4Package/Sprites/Idle.png',
         frameCount: 5,
         frameWidth: 62,
         frameHeight: 62,
     } as SpriteAnimation,
     Walk: {
-        imagePath: 'images/Zombie4Package/Sprites/Walk.png',
+        imagePath: '/images/Zombie4Package/Sprites/Walk.png',
         frameCount: 13,
         frameWidth: 62,
         frameHeight: 62,
     } as SpriteAnimation,
     Attack: {
-        imagePath: 'images/Zombie4Package/Sprites/Attack.png',
+        imagePath: '/images/Zombie4Package/Sprites/Attack.png',
         frameCount: 15,
         frameWidth: 62,
         frameHeight: 62,
     } as SpriteAnimation,
     Hurt: {
-        imagePath: 'images/Zombie4Package/Sprites/Hurt.png',
+        imagePath: '/images/Zombie4Package/Sprites/Hurt.png',
         frameCount: 7,
         frameWidth: 62,
         frameHeight: 62,
     } as SpriteAnimation,
     Death: {
-        imagePath: 'images/Zombie4Package/Sprites/Death.png',
+        imagePath: '/images/Zombie4Package/Sprites/Death.png',
         frameCount: 12,
         frameWidth: 62,
         frameHeight: 62,
     } as SpriteAnimation,
     Spawn: {
-        imagePath: 'images/Zombie4Package/Sprites/Spawn.png',
+        imagePath: '/images/Zombie4Package/Sprites/Spawn.png',
         frameCount: 10,
         frameWidth: 62,
         frameHeight: 62,
