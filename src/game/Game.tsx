@@ -86,7 +86,7 @@ const Game = React.forwardRef<IGameHandle, IGameProps>((props, ref) => {
     setHeroRunAction();
   }
 
-  const startGame = (tutorialGroup?: string) => {
+  const startGame = () => {
     if (context) {
       startAnimationLoop(context);
     }
@@ -94,7 +94,7 @@ const Game = React.forwardRef<IGameHandle, IGameProps>((props, ref) => {
     setIsPhraseComplete(false);
     // Add any other necessary game start logic
   };
-
+  
 
   const getLevel = () => currentLevel;
   const setLevel = (newLevel: number) => {

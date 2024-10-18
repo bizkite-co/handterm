@@ -1,19 +1,23 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
-import { Tutorial, ActivityType, ParsedCommand, GamePhrase } from '../types/Types';
+import { useState, useCallback, useEffect } from 'react';
+import { ActivityType, ParsedCommand, GamePhrase } from '../types/Types';
 import { ActionType } from '../game/types/ActionTypes';
 import GamePhrases from '../utils/GamePhrases';
 import { useTutorial } from './useTutorials';
-import { setNextTutorial, canUnlockTutorial, resetCompletedTutorials, tutorialSignal, getNextTutorial, setCompletedTutorial } from 'src/signals/tutorialSignals';
 import {
-  getIncompletePhrasesByTutorialGroup,
-  initializeGame,
-  isInGameModeSignal,
-  setCompletedGamePhrase,
+  setNextTutorial, resetCompletedTutorials,
+  tutorialSignal, getNextTutorial, setCompletedTutorial
+} from 'src/signals/tutorialSignals';
+import {
+  gamePhraseSignal,
+  getIncompletePhrasesByTutorialGroup, initializeGame,
+  isInGameModeSignal, setCompletedGamePhrase,
   setNextGamePhrase,
 } from 'src/signals/gameSignals';
 import { activitySignal, setNotification } from 'src/signals/appSignals'
 import { useComputed } from '@preact/signals-react';
-import { useNavigate, useLocation, Navigate, useNavigation } from 'react-router-dom';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
+import { useCustomLocation } from './useCustomLocation';
+import { group } from 'console';
 
 export type IActivityMediatorReturn = {
   isInGameMode: boolean;
@@ -29,6 +33,12 @@ export type IActivityMediatorReturn = {
   checkGameProgress: (successPhrase: GamePhrase) => void;
 }
 
+class activityPath {
+  public activity: ActivityType
+  constructor(activity: ActivityType) {
+    this.activity = activity;
+  }
+}
 
 export interface IActivityMediatorProps {
 }
@@ -37,46 +47,78 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
   const [heroAction, setHeroAction] = useState<ActionType>('Idle');
   const [zombie4Action, setZombie4Action] = useState<ActionType>('Walk');
   const {
-    getIncompleteTutorialsInGroup
+    getIncompleteTutorialsInGroup,
+    canUnlockTutorial
   } = useTutorial();
   const activity = useComputed(() => activitySignal.value).value;
-  const navigate = useNavigate();
-  const location = useLocation();
+  const routerNavigate = useNavigate();
+  const routerLocation = useLocation();
+  const [ searchParams, setSearchParams ] = useSearchParams();
+  const [activityGroupKey, setActivityGroupKey] = useState<string>('');
 
-  const setActivityNav = (newActivity: ActivityType) => {
+  const customLocation = useCustomLocation();
+
+  const baseUrl = window.location.origin;
+
+  useEffect(()=>{
+    const _activityGroup = routerLocation.search.includes('group')
+      ? routerLocation.search.split('?')[1].split('=')[1]
+      : '';
+      if(_activityGroup) setActivityGroupKey(_activityGroup);
+  }, [routerLocation.pathname])
+
+  const setActivityNav = (
+    newActivity: ActivityType,
+    phraseId: string = '',
+    groupId: string = ''
+  ) => {
+    const encodedId = phraseId ? encodeURIComponent(phraseId) : '';
+    const queryString = groupId ? '?' + new URLSearchParams({group:groupId}) : '';
     let navTo = '/';
     switch (newActivity) {
       case ActivityType.GAME:
-        navTo = '/game';
+        navTo = `/game/${encodedId}${queryString}`;
         break;
       case ActivityType.TUTORIAL:
-        navTo = '/tutorial';
+        navTo = `/tutorial/${encodedId}${queryString}`;
         break;
       case ActivityType.EDIT:
-        navTo = '/edit';
+        navTo = `/edit/${encodedId}`;
         break;
       default:
-        navigate('/');
+        routerNavigate('/');
     }
-    console.log("Navigating to:", navTo);
-    navigate(navTo);
+    
+    // Get the stack trace
+    const stack = new Error().stack;
+    // Parse the stack to get the caller information
+    const caller = stack?.split('\n').slice(2,5).join('\n').trim();
+    const trimmedCaller = caller?.replaceAll(baseUrl,'').replaceAll(/\?t=\d*/g,'');
+    console.log(`Nav to: ${navTo}`,`From: ${trimmedCaller}`);
+    routerNavigate(navTo);
   }
+
   const determineActivityState = useCallback((commandActivity: ActivityType | null = null) => {
     /*
       If the user is new to the site, start the tutorial.
-      If the user was in tutorial and completed an achievement that has accompanying game levels, start game play.
-      Otherwise, just obey the command.
+      If the user was in tutorial AND completed an achievement that has accompanying game levels, start game play.
+      If the user is in a game that has accompanying tutorials, AND it's the last level associated with that tutorial, then complete that tutorial and this game level and then check if there are addtional tutorials, otherwise go to the next game level.
+      Otherwise, got to the next phrase in the current activity.
     */
 
     if (tutorialSignal.value && !tutorialSignal.value?.tutorialGroup && activity !== ActivityType.GAME) {
       activitySignal.value = ActivityType.TUTORIAL;
-      setActivityNav(ActivityType.TUTORIAL);
+      setActivityNav(
+        ActivityType.TUTORIAL,
+        tutorialSignal.value.phrase.join('')
+      );
       isInGameModeSignal.value = false;
       return;
     }
 
     if (commandActivity && commandActivity !== activity) {
       activitySignal.value = commandActivity;
+      console.error("is this ever used?");
       setActivityNav(commandActivity);
       if (commandActivity === ActivityType.GAME) {
         //TODO: how do we know the tutorial has a tutorial group in this case?
@@ -86,15 +128,20 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
     }
 
     if (tutorialSignal.value?.tutorialGroup && activity !== ActivityType.GAME) {
-      initializeGame(tutorialSignal.value.tutorialGroup);
+      initializeGame(activityGroupKey);
+      const gamePhraseInGroup = getIncompletePhrasesByTutorialGroup(activityGroupKey)[0];
       activitySignal.value = ActivityType.GAME;
-      setActivityNav(ActivityType.GAME);
+      setActivityNav(
+        ActivityType.GAME,
+        gamePhraseInGroup?.key
+      );
       isInGameModeSignal.value = true;
       return ActivityType.GAME;
     }
 
     return activity;
-  }, [activity, tutorialSignal ]);
+  }, [activity, tutorialSignal]);
+
 
   const handleCommandExecuted = useCallback((parsedCommand: ParsedCommand): boolean => {
     let result = false;
@@ -137,13 +184,24 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
     // If the current tutorial has attached GamePhrases.
     // Don't unlock until the game is played.
     if (!tutorialSignal.value) return;
+
+    const groupKey = searchParams.get('group') ?? '';
     const canUnlock = command ? canUnlockTutorial(command) : false;
     if (canUnlock) {
-      if (tutorialSignal.value?.tutorialGroup) {
+      if (groupKey) {
+
         // Will only be unlocked in checkGameProgress.
-        activitySignal.value = ActivityType.GAME;
-        setActivityNav(ActivityType.GAME);
-        initializeGame(tutorialSignal.value.tutorialGroup);
+        const incompletePhrasesInGroup = getIncompletePhrasesByTutorialGroup(activityGroupKey)[0];
+        if (incompletePhrasesInGroup) {
+          activitySignal.value = ActivityType.GAME;
+          //TODO: Select the phrase
+          setActivityNav(
+            ActivityType.GAME,
+            incompletePhrasesInGroup.key,
+            groupKey
+          );
+          initializeGame(groupKey);
+        }
         return;
       }
       setCompletedTutorial(tutorialSignal.value.phrase.join(''))
@@ -154,31 +212,53 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
     }
     // TODO: if the tutorial is not completed until the tutorialGroup is completed, how do we know if the tutorialGroup is completed, and which tutorial to complete when it is completed?
     const nextTutorial = getNextTutorial();
-    if (nextTutorial) {
+    if (nextTutorial?.phrase) {
       determineActivityState(ActivityType.TUTORIAL);
       setNextTutorial();
+      setActivityNav(
+        activitySignal.value,
+        nextTutorial?.phrase.join(''),
+        nextTutorial?.tutorialGroup
+      )
       return;
     }
     activitySignal.value = ActivityType.GAME;
-    setActivityNav(ActivityType.GAME);
+    setActivityNav(
+      ActivityType.GAME,
+      GamePhrases.getGamePhrasesNotAchieved()[0].key,
+      groupKey
+    );
     return;
   };
 
+  const getNextGamePhrase = () => {
+    let gamePhrases: GamePhrase[] = [];
+    const [, activityName, id, group] = routerLocation.pathname.split('/');
+    if (group) {
+      gamePhrases = GamePhrases.getGamePhrasesByTutorialGroup(group);
+    }
+    if (gamePhrases.length === 0) {
+      gamePhrases = GamePhrases.getGamePhrasesNotAchieved();
+    }
+    if (gamePhrases.length === 0) return;
+
+  }
+
   const checkGameProgress = (successPhrase: GamePhrase) => {
     // Called after phrase completion.
+    const groupKey = searchParams.get('group') ?? '';
     setCompletedGamePhrase(successPhrase.key);
-    if (successPhrase?.tutorialGroup) {
-      const completedTutorialGroupKey = successPhrase.tutorialGroup;
-      const incompletePhrasesInGroup = getIncompletePhrasesByTutorialGroup(completedTutorialGroupKey);
+    if (groupKey) {
+      const incompletePhrasesInGroup = getIncompletePhrasesByTutorialGroup(groupKey);
       if (incompletePhrasesInGroup.length > 0) {
         // Set the next phrase
         setNextGamePhrase();
         activitySignal.value = ActivityType.GAME;
-        setActivityNav(ActivityType.GAME);
+        setActivityNav(ActivityType.GAME, incompletePhrasesInGroup[0].key);
         return;
       }
       //TODO: Set Tutorial completed
-      const incompleteTutorialInGroup = getIncompleteTutorialsInGroup(completedTutorialGroupKey);
+      const incompleteTutorialInGroup = getIncompleteTutorialsInGroup(groupKey);
       incompleteTutorialInGroup.forEach(itig => {
         setCompletedTutorial(itig.phrase.join(''));
       });
@@ -186,11 +266,21 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
       const didSetNext = setNextTutorial();
       determineActivityState(ActivityType.TUTORIAL);
 
+      setActivityNav(
+        activitySignal.value,
+        tutorialSignal.value?.phrase.join(''),
+        tutorialSignal.value?.tutorialGroup
+      )
+      return;
     }
 
     if ((setNextTutorial())) {
       activitySignal.value = ActivityType.TUTORIAL;
-      setActivityNav(ActivityType.TUTORIAL);
+      setActivityNav(
+        activitySignal.value,
+        tutorialSignal.value?.phrase.join(''),
+        tutorialSignal.value?.tutorialGroup
+      )
       isInGameModeSignal.value = false;
       return;
     }
@@ -200,7 +290,7 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
       // Set next phrase
       setNextGamePhrase();
       activitySignal.value = ActivityType.GAME;
-      setActivityNav(ActivityType.GAME);
+      setActivityNav(ActivityType.GAME, nextGamePhrase.key);
       isInGameModeSignal.value = true;
       return;
     }

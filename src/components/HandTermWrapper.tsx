@@ -17,6 +17,7 @@ import {
   setGamePhrase,
   gameInitSignal,
   isInGameModeSignal,
+  gamePhraseSignal,
 } from 'src/signals/gameSignals'
 import { commandLineSignal, commandSignal, commandTimeSignal } from 'src/signals/commandLineSignals';
 import { useComputed, useSignalEffect } from '@preact/signals-react';
@@ -121,17 +122,8 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
 
   useEffect(() => {
     if (isGameInitialized && gameHandleRef.current) {
-
-      let gamePhrases: GamePhrase[] = [];
-      if (tutorial.value?.tutorialGroup) {
-        gamePhrases = GamePhrases.getGamePhrasesByTutorialGroup(tutorial.value.tutorialGroup);
-      }
-      if (gamePhrases.length === 0) {
-        gamePhrases = GamePhrases.getGamePhrasesNotAchieved();
-      }
-      if (gamePhrases.length === 0) return;
-      setGamePhrase(gamePhrases[0]);
-      gameHandleRef.current.startGame(tutorial.value?.tutorialGroup);
+      // TODOO: This is half-implemented URL path state
+      gameHandleRef.current.startGame();
       // gameInit.value = false;
     }
   }, [isGameInitialized, gameHandleRef])
@@ -253,7 +245,7 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
     handlePhraseComplete();
   }
 
-  useSignalEffect(()=>{
+  useSignalEffect(() => {
     console.log("Wrapper activity:", ActivityType[activitySignal.value]);
     setLocalActivity(activitySignal.value);
   })

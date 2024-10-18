@@ -15,11 +15,11 @@ if (typeof global === 'undefined') {
   const ReactDOM = await import('react-dom/client');
   const router = createBrowserRouter([
     {
-      path: '/',
+      path: '/*',
       element: <App />,
       children: [
-        { path: 'game', element: <App /> },
-        { path: 'tutorial', element: <App /> },
+        { path: 'game/:phraseId', element: <App /> },
+        { path: 'tutorial/:tutorialId', element: <App /> },
         { path: 'edit', element: <App /> },
       ]
     }
@@ -28,8 +28,8 @@ if (typeof global === 'undefined') {
   ReactDOM
     .createRoot(document.getElementById('root')!)
     .render(
-      // <React.StrictMode>
+      <React.StrictMode>
         <RouterProvider router={router} />
-      // </React.StrictMode>
+      </React.StrictMode>
     );
 })();

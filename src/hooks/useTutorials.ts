@@ -5,12 +5,17 @@ import { useComputed } from '@preact/signals-react';
 import {
     completedTutorialsSignal,
     getNextTutorial,
+    tutorialSignal,
 } from 'src/signals/tutorialSignals';
-
+import { useLocation } from 'react-router-dom';
 
 export const useTutorial = () => {
     const [currentTutorial, setCurrentTutorial] = useState<Tutorial | null>(null);
     const completedTutorials = useComputed(() => completedTutorialsSignal.value);
+
+    const routerLocation = useLocation();
+    const [, activityKey, phraseKey] = routerLocation.pathname.split('/');
+
 
     // Get all completed tutorials as an array if needed
     const completedTutorialsArray = () => {
@@ -26,6 +31,18 @@ export const useTutorial = () => {
         const result = Tutorials.filter(t => t.tutorialGroup === groupName);
         return result;
     }
+
+    const canUnlockTutorial = (command: string): boolean => {
+        const currentTutorial = tutorialSignal.value;
+        if (!currentTutorial) return false;
+
+        // TODO: This is probably the single biggest problem blocking unification of GamePhrases and Tutorials.
+        const normalizedCommand = command === '\r' ? 'Return (ENTER)' : command;
+        if (currentTutorial.phrase.join('') === normalizedCommand) {
+            return true;
+        }
+        return false;
+    };
 
     const getIncompleteTutorialsInGroup = (groupName: string) => {
         const incompleteTutorials = getIncompleteTutorials();
@@ -43,6 +60,7 @@ export const useTutorial = () => {
 
     return {
         currentTutorial,
+        canUnlockTutorial,
         getCurrentTutorial: () => currentTutorial,
         getTutorialsInGroup,
         getIncompleteTutorialsInGroup
