@@ -31,6 +31,7 @@ export type IActivityMediatorReturn = {
   setZombie4Action: React.Dispatch<React.SetStateAction<ActionType>>;
   checkTutorialProgress: (command: string | null) => void;
   checkGameProgress: (successPhrase: GamePhrase) => void;
+  setActivityNav: (newActivity: ActivityType, phraseId?: string, groupId?: string) => void;
 }
 
 class activityPath {
@@ -89,12 +90,6 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
         routerNavigate('/');
     }
     
-    // Get the stack trace
-    const stack = new Error().stack;
-    // Parse the stack to get the caller information
-    const caller = stack?.split('\n').slice(2,5).join('\n').trim();
-    const trimmedCaller = caller?.replaceAll(baseUrl,'').replaceAll(/\?t=\d*/g,'');
-    console.log(`Nav to: ${navTo}`,`From: ${trimmedCaller}`);
     routerNavigate(navTo);
   }
 
@@ -310,5 +305,6 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
     setHeroAction,
     setZombie4Action,
     checkGameProgress,
+    setActivityNav,
   };
 }
