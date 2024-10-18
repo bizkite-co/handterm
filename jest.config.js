@@ -2,10 +2,11 @@
 export default {
   preset: 'ts-jest',
   injectGlobals: true,
-  sourceMapsEnabled: true,
   testEnvironment: 'jest-environment-jsdom',
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
+  moduleDirectories:['node_modules', 'src'],
   moduleNameMapper: {
+    '^src/(.*)$': '<rootDir>/src/$1',
     '^.+\\.(css|less|scss|sass)$': 'identity-obj-proxy',
   },
   transform: {
