@@ -17,14 +17,19 @@ export function useReactiveLocation() {
   }, [location]);
 
   const parsedLocation = useComputed<ParsedLocation>(() => {
-    const [, activity, id] = pathSignal.value.split('/');
-    const parsedActivity = ActivityType[activity.toString().toUpperCase()];
+    const [, activityString, id] = pathSignal.value.split('/');
+    const parsedActivity = parseActivityType(activityString);
     return {
-      activity: (parsedActivity || ActivityType.NORMAL),
+      activity: parsedActivity,
       phraseId: id || undefined,
       tutorialGroup: searchParams.get('group') || undefined
     };
   });
+
+  const parseActivityType = (activityString: string): ActivityType => {
+    const normalizedActivity = activityString.toUpperCase();
+    return ActivityType[normalizedActivity as keyof typeof ActivityType] || ActivityType.NORMAL;
+  };
 
   const reactiveLocation = {
     get activity() { return parsedLocation.value.activity; },
@@ -34,7 +39,7 @@ export function useReactiveLocation() {
     get groupKey() { return parsedLocation.value.tutorialGroup; },
     set groupKey(value: string | undefined) { updateLocation({ groupKey: value }); },
     getPath() {
-      const activity = this.activity === ActivityType.NORMAL ? '' : this.activity;
+      const activity = this.activity === ActivityType.NORMAL ? '' : ActivityType[this.activity].toLowerCase();
       const phraseKey = this.phraseKey ? `/${encodeURIComponent(this.phraseKey)}` : '';
       const groupKey = this.groupKey ? `?group=${encodeURIComponent(this.groupKey)}` : '';
       return `/${activity}${phraseKey}${groupKey}`;
@@ -53,14 +58,8 @@ export function useReactiveLocation() {
     const encodedId = newPhraseKey ? encodeURIComponent(newPhraseKey) : '';
     const queryString = newGroupKey ? `?group=${encodeURIComponent(newGroupKey)}` : '';
     
-    let path = '/';
-    switch (newActivity) {
-      case ActivityType.GAME:
-      case ActivityType.TUTORIAL:
-      case ActivityType.EDIT:
-        path = `/${newActivity}/${encodedId}${queryString}`;
-        break;
-    }
+    const activityPath = newActivity === ActivityType.NORMAL ? '' : ActivityType[newActivity].toLowerCase();
+    const path = `/${activityPath}${encodedId ? `/${encodedId}` : ''}${queryString}`;
 
     navigate(path);
   };
