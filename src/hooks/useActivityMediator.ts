@@ -16,9 +16,7 @@ import {
 } from 'src/signals/gameSignals';
 import { activitySignal, setNotification } from 'src/signals/appSignals'
 import { useComputed } from '@preact/signals-react';
-import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
-import { useCustomLocation } from './useCustomLocation';
-import { group } from 'console';
+import { useReactiveLocation } from './useReactiveLocation';
 
 export type IActivityMediatorReturn = {
   isInGameMode: boolean;
@@ -53,21 +51,15 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
     canUnlockTutorial
   } = useTutorial();
   const activity = useComputed(() => activitySignal.value).value;
-  const routerNavigate = useNavigate();
-  const routerLocation = useLocation();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const { parsedLocation, navigateTo } = useReactiveLocation();
   const [activityGroupKey, setActivityGroupKey] = useState<string>('');
-
-  const parsedLocation = useCustomLocation();
 
   const baseUrl = window.location.origin;
 
   useEffect(() => {
-    const _activityGroup = routerLocation.search.includes('group')
-      ? routerLocation.search.split('?')[1].split('=')[1]
-      : '';
+    const _activityGroup = parsedLocation.value.tutorialGroup || '';
     if (_activityGroup) setActivityGroupKey(_activityGroup);
-  }, [routerLocation.pathname])
+  }, [parsedLocation.value.tutorialGroup])
 
   const setActivityNav = (
     newActivity: ActivityType,
@@ -88,7 +80,7 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
         navTo = `/edit/${encodedId}`;
         break;
       default:
-        routerNavigate('/');
+        navTo = '/';
     }
 
     // Get the stack trace
@@ -97,17 +89,10 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
     const caller = stack?.split('\n').slice(2, 5).join('\n').trim();
     const trimmedCaller = caller?.replaceAll(baseUrl, '').replaceAll(/\?t=\d*/g, '');
     console.log(`Nav to: ${navTo}`, `From: ${trimmedCaller}`);
-    routerNavigate(navTo);
+    navigateTo(navTo);
   }
 
   const decideActivityChange = useCallback((commandActivity: ActivityType | null = null): ActivityType => {
-    /*
-      If the user is new to the site, start the tutorial.
-      If the user was in tutorial AND completed an achievement that has accompanying game levels, start game play.
-      If the user is in a game that has accompanying tutorials, AND it's the last level associated with that tutorial, then complete that tutorial and this game level and then check if there are addtional tutorials, otherwise go to the next game level.
-      Otherwise, got to the next phrase in the current activity.
-    */
-
     if (tutorialSignal.value && !tutorialSignal.value?.tutorialGroup && activity !== ActivityType.GAME) {
       return ActivityType.TUTORIAL;
     }
@@ -156,16 +141,16 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
       default:
         result = false;
     }
-    if(window.location.pathname.includes('tutorial')) 
+    if(parsedLocation.value.activity === 'tutorial') 
       checkTutorialProgress(parsedCommand.command);
-    if(parsedLocation.activity === 'game' && parsedLocation.phraseId)
+    if(parsedLocation.value.activity === 'game' && parsedLocation.value.phraseId)
     {
-      const gamePhrase = GamePhrases.getGamePhraseByKey(parsedLocation.phraseId)
+      const gamePhrase = GamePhrases.getGamePhraseByKey(parsedLocation.value.phraseId)
       if(gamePhrase) checkGameProgress(gamePhrase);
     }
 
     return result;
-  }, [decideActivityChange]);
+  }, [decideActivityChange, parsedLocation]);
 
   useEffect(() => {
     const resultActivity = decideActivityChange(null);
@@ -177,27 +162,16 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
   const checkTutorialProgress = (
     command: string | null,
   ) => {
-    /*
-      If args include 'r', reset the tutorial and set TUTORIAL
-      If the current tutorial achievement contains a tutorialGroupPhrase, then switch to GAME
-      If there is a next tutorial achievement, stay in TUTORIAL
-      If neither is true, return to NORMAL
-    */
-
-    // If the current tutorial has attached GamePhrases.
-    // Don't unlock until the game is played.
     const nextTutorial = getNextTutorial();
     if (!nextTutorial) return;
 
-    const groupKey = searchParams.get('group') ?? '';
+    const groupKey = parsedLocation.value.tutorialGroup ?? '';
     if (command) {
       if (canUnlockTutorial(command)) {
         if (groupKey) {
-          // Will only be unlocked in checkGameProgress.
           const incompletePhrasesInGroup = getIncompletePhrasesByTutorialGroup(activityGroupKey)[0];
           if (incompletePhrasesInGroup) {
             activitySignal.value = ActivityType.GAME;
-            //TODO: Select the phrase
             setActivityNav(
               ActivityType.GAME,
               incompletePhrasesInGroup.key,
@@ -216,12 +190,9 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
         return;
       }
     }
-    // TODO: if the tutorial is not completed until the tutorialGroup is completed, how do we know if the tutorialGroup is completed, and which tutorial to complete when it is completed?
     if (nextTutorial?.phrase) {
       const resultActivity = decideActivityChange(ActivityType.TUTORIAL);
-      // I think we are already sure this is to be TUTORIAL?
       setNextTutorial(nextTutorial);
-      //TODO: Should we just set it to TUTORIAL always here?
       setActivityNav(
         resultActivity,
         nextTutorial?.phrase,
@@ -239,14 +210,11 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
   };
 
   const checkGameProgress = (successPhrase: GamePhrase) => {
-    // Called after phrase completion.
-    const groupKey = searchParams.get('group') ?? '';
+    const groupKey = parsedLocation.value.tutorialGroup ?? '';
     setCompletedGamePhrase(successPhrase.key);
     if (groupKey) {
-      // If the game is part of a group, see if we can assign the next game in the group.
       const nextPhraseInGroup = getIncompletePhrasesByTutorialGroup(groupKey)[0];
       if (nextPhraseInGroup) {
-        // Set the next phrase
         setGamePhrase(getNextGamePhrase());
         activitySignal.value = ActivityType.GAME;
         setActivityNav(
@@ -256,16 +224,13 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
         );
         return;
       }
-      // Otherweise, complete the related tutorial ...
       const incompleteTutorialInGroup = getIncompleteTutorialsInGroup(groupKey);
       incompleteTutorialInGroup.forEach(itig => {
         setCompletedTutorial(itig.phrase);
       });
-      // And then get the next incomplete tutorial.
       const nextTutorial = getNextTutorial();
       if (nextTutorial) {
         const resultActivity = decideActivityChange(ActivityType.TUTORIAL);
-        // I think we are already sure this is TUTORIAL.
         setActivityNav(
           activitySignal.value,
           nextTutorial.phrase,
@@ -277,7 +242,6 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
 
     const nextGamePhrase = GamePhrases.getGamePhrasesNotAchieved()[0];
     if (nextGamePhrase) {
-      // Set next phrase
       setGamePhrase(getNextGamePhrase());
       activitySignal.value = ActivityType.GAME;
       setActivityNav(
