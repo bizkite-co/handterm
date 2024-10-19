@@ -263,8 +263,7 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
 
   return (
     <>
-      {(activity.value === ActivityType.GAME
-        && isInGameMode)
+      {(location.pathname.includes('game'))
         && (
           <Game
             ref={gameHandleRef}
@@ -272,8 +271,7 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
             canvasWidth={props.terminalWidth}
           />
         )}
-      {activity.value === ActivityType.GAME
-        && isInGameModeSignal.value
+      {location.pathname.includes('game')
         && (
           <NextCharsDisplay
             ref={nextCharsDisplayRef}
