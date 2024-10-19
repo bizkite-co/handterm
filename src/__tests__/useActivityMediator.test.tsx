@@ -10,8 +10,20 @@ jest.mock('react-router-dom', () => ({
   useNavigate: jest.fn(),
 }));
 
+// Mock the useReactiveLocation hook
+jest.mock('../hooks/useReactiveLocation', () => ({
+  useReactiveLocation: () => ({
+    reactiveLocation: {
+      activity: 'normal',
+      phraseKey: '',
+      groupKey: '',
+      getPath: jest.fn(),
+    },
+  }),
+}));
+
 describe('useActivityMediator', () => {
-  it('should navigate to the correct URL when activity changes', () => {
+  it('should update reactiveLocation when activity changes', () => {
     const mockNavigate = jest.fn();
     (useNavigate as jest.Mock).mockReturnValue(mockNavigate);
 
@@ -24,29 +36,21 @@ describe('useActivityMediator', () => {
     const { result } = renderHook(() => useActivityMediator({}), { wrapper });
 
     act(() => {
-      result.current.setActivityNav({ activity: ActivityType.GAME, phraseKey: 'testPhrase', groupKey: 'testGroup' });
+      result.current.handleCommandExecuted({ command: 'play', args: [], switches: {} });
     });
 
-    expect(mockNavigate).toHaveBeenCalledWith('/game/testPhrase?group=testGroup');
+    expect(result.current.isInGameMode).toBe(true);
 
     act(() => {
-      result.current.setActivityNav({ activity: ActivityType.TUTORIAL, phraseKey: 'tutorialPhrase', groupKey: 'tutorialGroup' });
+      result.current.handleCommandExecuted({ command: 'tut', args: [], switches: {} });
     });
 
-    expect(mockNavigate).toHaveBeenCalledWith('/tutorial/tutorialPhrase?group=tutorialGroup');
+    expect(result.current.isInTutorial).toBe(true);
 
-    // Test updating only phraseKey
     act(() => {
-      result.current.setActivityNav({ phraseKey: 'newPhrase' });
+      result.current.handleCommandExecuted({ command: 'edit', args: ['testFile'], switches: {} });
     });
 
-    expect(mockNavigate).toHaveBeenCalledWith('/tutorial/newPhrase?group=tutorialGroup');
-
-    // Test updating only groupKey
-    act(() => {
-      result.current.setActivityNav({ groupKey: 'newGroup' });
-    });
-
-    expect(mockNavigate).toHaveBeenCalledWith('/tutorial/newPhrase?group=newGroup');
+    expect(result.current.isInEdit).toBe(true);
   });
 });

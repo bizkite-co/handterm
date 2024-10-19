@@ -30,7 +30,6 @@ export type IActivityMediatorReturn = {
   setZombie4Action: React.Dispatch<React.SetStateAction<ActionType>>;
   checkTutorialProgress: (command: string | null) => void;
   checkGameProgress: (successPhrase: GamePhrase) => void;
-  setActivityNav: (newActivity: ActivityType, phraseId?: string, groupId?: string) => void;
 }
 
 class activityPath {
@@ -51,56 +50,15 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
     canUnlockTutorial
   } = useTutorial();
   const activity = useComputed(() => activitySignal.value).value;
-  const { parsedLocation, navigateTo } = useReactiveLocation();
+  const { reactiveLocation } = useReactiveLocation();
   const [activityGroupKey, setActivityGroupKey] = useState<string>('');
 
   const baseUrl = window.location.origin;
 
   useEffect(() => {
-    const _activityGroup = parsedLocation.value.tutorialGroup || '';
+    const _activityGroup = reactiveLocation.groupKey || '';
     if (_activityGroup) setActivityGroupKey(_activityGroup);
-  }, [parsedLocation.value.tutorialGroup])
-
-  type NavOptions = {
-    activity?: ActivityType;
-    phraseKey?: string;
-    groupKey?: string;
-  };
-
-  const setActivityNav = (options: NavOptions) => {
-    const { activity, phraseKey, groupKey } = options;
-    
-    const currentPath = parsedLocation.value;
-    const newActivity = activity || currentPath.activity;
-    const newPhraseKey = phraseKey !== undefined ? phraseKey : currentPath.phraseId;
-    const newGroupKey = groupKey !== undefined ? groupKey : currentPath.tutorialGroup;
-
-    const encodedId = newPhraseKey ? encodeURIComponent(newPhraseKey) : '';
-    const queryString = newGroupKey ? '?' + new URLSearchParams({ group: newGroupKey }) : '';
-    
-    let navTo = '/';
-    switch (newActivity) {
-      case 'game':
-        navTo = `/game/${encodedId}${queryString}`;
-        break;
-      case 'tutorial':
-        navTo = `/tutorial/${encodedId.replace('%0D','_r')}${queryString}`;
-        break;
-      case 'edit':
-        navTo = `/edit/${encodedId}`;
-        break;
-      default:
-        navTo = '/';
-    }
-
-    // Get the stack trace
-    const stack = new Error().stack;
-    // Parse the stack to get the caller information
-    const caller = stack?.split('\n').slice(2, 5).join('\n').trim();
-    const trimmedCaller = caller?.replaceAll(baseUrl, '').replaceAll(/\?t=\d*/g, '');
-    console.log(`Nav to: ${navTo}`, `From: ${trimmedCaller}`);
-    navigateTo(navTo);
-  }
+  }, [reactiveLocation.groupKey])
 
   const decideActivityChange = useCallback((commandActivity: ActivityType | null = null): ActivityType => {
     if (tutorialSignal.value && !tutorialSignal.value?.tutorialGroup && activity !== ActivityType.GAME) {
@@ -120,10 +78,8 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
     switch (parsedCommand.command) {
       case 'play':
         decideActivityChange(ActivityType.GAME);
-        setActivityNav({
-          activity: ActivityType.GAME,
-          phraseKey: getNextGamePhrase()?.key,
-        })
+        reactiveLocation.activity = ActivityType.GAME;
+        reactiveLocation.phraseKey = getNextGamePhrase()?.key;
         result = true;
         break;
       case 'tut':
@@ -132,35 +88,31 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
         }
         decideActivityChange(ActivityType.TUTORIAL);
         const nextTutorial = getNextTutorial();
-        setActivityNav({
-          activity: ActivityType.TUTORIAL,
-          phraseKey: nextTutorial?.phrase,
-          groupKey: nextTutorial?.tutorialGroup
-        })
+        reactiveLocation.activity = ActivityType.TUTORIAL;
+        reactiveLocation.phraseKey = nextTutorial?.phrase;
+        reactiveLocation.groupKey = nextTutorial?.tutorialGroup;
         result = true;
         break;
       case 'edit':
         decideActivityChange(ActivityType.EDIT);
-        setActivityNav({
-          activity: ActivityType.EDIT,
-          phraseKey: parsedCommand.args.join(''),
-          groupKey: parsedCommand.switches.toString()
-        })
+        reactiveLocation.activity = ActivityType.EDIT;
+        reactiveLocation.phraseKey = parsedCommand.args.join('');
+        reactiveLocation.groupKey = parsedCommand.switches.toString();
         result = true;
         break;
       default:
         result = false;
     }
-    if(parsedLocation.value.activity === 'tutorial') 
+    if(reactiveLocation.activity === 'tutorial') 
       checkTutorialProgress(parsedCommand.command);
-    if(parsedLocation.value.activity === 'game' && parsedLocation.value.phraseId)
+    if(reactiveLocation.activity === 'game' && reactiveLocation.phraseKey)
     {
-      const gamePhrase = GamePhrases.getGamePhraseByKey(parsedLocation.value.phraseId)
+      const gamePhrase = GamePhrases.getGamePhraseByKey(reactiveLocation.phraseKey)
       if(gamePhrase) checkGameProgress(gamePhrase);
     }
 
     return result;
-  }, [decideActivityChange, parsedLocation]);
+  }, [decideActivityChange, reactiveLocation]);
 
   useEffect(() => {
     const resultActivity = decideActivityChange(null);
@@ -175,18 +127,16 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
     const nextTutorial = getNextTutorial();
     if (!nextTutorial) return;
 
-    const groupKey = parsedLocation.value.tutorialGroup ?? '';
+    const groupKey = reactiveLocation.groupKey ?? '';
     if (command) {
       if (canUnlockTutorial(command)) {
         if (groupKey) {
           const incompletePhrasesInGroup = getIncompletePhrasesByTutorialGroup(activityGroupKey)[0];
           if (incompletePhrasesInGroup) {
             activitySignal.value = ActivityType.GAME;
-            setActivityNav(
-              ActivityType.GAME,
-              incompletePhrasesInGroup.key,
-              groupKey
-            );
+            reactiveLocation.activity = ActivityType.GAME;
+            reactiveLocation.phraseKey = incompletePhrasesInGroup.key;
+            reactiveLocation.groupKey = groupKey;
             initializeGame(groupKey);
           }
           return;
@@ -203,35 +153,29 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
     if (nextTutorial?.phrase) {
       const resultActivity = decideActivityChange(ActivityType.TUTORIAL);
       setNextTutorial(nextTutorial);
-      setActivityNav(
-        resultActivity,
-        nextTutorial?.phrase,
-        nextTutorial?.tutorialGroup
-      )
+      reactiveLocation.activity = resultActivity;
+      reactiveLocation.phraseKey = nextTutorial?.phrase;
+      reactiveLocation.groupKey = nextTutorial?.tutorialGroup;
       return;
     }
     activitySignal.value = ActivityType.GAME;
-    setActivityNav(
-      ActivityType.GAME,
-      GamePhrases.getGamePhrasesNotAchieved()[0].key,
-      groupKey
-    );
+    reactiveLocation.activity = ActivityType.GAME;
+    reactiveLocation.phraseKey = GamePhrases.getGamePhrasesNotAchieved()[0].key;
+    reactiveLocation.groupKey = groupKey;
     return;
   };
 
   const checkGameProgress = (successPhrase: GamePhrase) => {
-    const groupKey = parsedLocation.value.tutorialGroup ?? '';
+    const groupKey = reactiveLocation.groupKey ?? '';
     setCompletedGamePhrase(successPhrase.key);
     if (groupKey) {
       const nextPhraseInGroup = getIncompletePhrasesByTutorialGroup(groupKey)[0];
       if (nextPhraseInGroup) {
         setGamePhrase(getNextGamePhrase());
         activitySignal.value = ActivityType.GAME;
-        setActivityNav(
-          ActivityType.GAME,
-          nextPhraseInGroup.key,
-          nextPhraseInGroup.tutorialGroup
-        );
+        reactiveLocation.activity = ActivityType.GAME;
+        reactiveLocation.phraseKey = nextPhraseInGroup.key;
+        reactiveLocation.groupKey = nextPhraseInGroup.tutorialGroup;
         return;
       }
       const incompleteTutorialInGroup = getIncompleteTutorialsInGroup(groupKey);
@@ -241,11 +185,9 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
       const nextTutorial = getNextTutorial();
       if (nextTutorial) {
         const resultActivity = decideActivityChange(ActivityType.TUTORIAL);
-        setActivityNav(
-          activitySignal.value,
-          nextTutorial.phrase,
-          nextTutorial.tutorialGroup
-        )
+        reactiveLocation.activity = activitySignal.value;
+        reactiveLocation.phraseKey = nextTutorial.phrase;
+        reactiveLocation.groupKey = nextTutorial.tutorialGroup;
         return;
       }
     }
@@ -254,16 +196,14 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
     if (nextGamePhrase) {
       setGamePhrase(getNextGamePhrase());
       activitySignal.value = ActivityType.GAME;
-      setActivityNav(
-        ActivityType.GAME,
-        nextGamePhrase.key,
-        nextGamePhrase.tutorialGroup
-      );
+      reactiveLocation.activity = ActivityType.GAME;
+      reactiveLocation.phraseKey = nextGamePhrase.key;
+      reactiveLocation.groupKey = nextGamePhrase.tutorialGroup;
       isInGameModeSignal.value = true;
       return;
     }
     activitySignal.value = ActivityType.NORMAL;
-    setActivityNav(ActivityType.NORMAL);
+    reactiveLocation.activity = ActivityType.NORMAL;
   };
 
   return {
