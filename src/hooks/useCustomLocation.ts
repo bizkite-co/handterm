@@ -1,11 +1,7 @@
 import { useLocation, useSearchParams } from 'react-router-dom';
 import { useMemo } from 'react';
+import { ParsedLocation } from 'src/types/Types';
 
-type ParsedLocation = {
-  activity: 'normal' | 'game' | 'tutorial' | 'edit';
-  phraseId?: string;
-  tutorialGroup?: string;
-};
 
 export function useCustomLocation(): ParsedLocation {
   const location = useLocation();

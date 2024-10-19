@@ -178,3 +178,12 @@ export const Phrases: GamePhrase[] = [
   { key: "f()", value: "f() { return $(($1 & $2)); }; f 4 5; echo \"Bitwise AND: $?\"" },
   { key: "a=5", value: "a=5; b=3; c=$((a / b)); d=$((a - b)); echo $c $d; [ $a -gt $b ] && echo \"$a>$b\" || echo \"$a<$b\"; e=$(($a % $b)); echo \"Result: $e\"" }
 ];
+
+export const VALID_ACTIVITIES = ['normal', 'game', 'tutorial', 'edit'] as const;
+export type Activity = typeof VALID_ACTIVITIES[number];
+
+export type ParsedLocation = {
+  activity: 'normal' | 'game' | 'tutorial' | 'edit';
+  phraseId?: string;
+  tutorialGroup?: string;
+};

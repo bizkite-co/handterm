@@ -46,9 +46,9 @@ const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, INextCharsDisp
     const location = useLocation();
 
     useEffect(() => {
-        const [, activity, id, group] = location.pathname.split('/');
-        if(!activity || !id) return;
-        const foundPhrase = GamePhrases.getGamePhraseByKey(id);
+        const [, activity, phraseKey, group] = location.pathname.split('/');
+        if(!activity || !phraseKey) return;
+        const foundPhrase = GamePhrases.getGamePhraseByKey(phraseKey);
         if(!foundPhrase) return;
         setGamePhrase(foundPhrase);
         setPhrase(new Phrase(foundPhrase.value.split('')));
