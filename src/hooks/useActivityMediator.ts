@@ -61,22 +61,32 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
     if (_activityGroup) setActivityGroupKey(_activityGroup);
   }, [parsedLocation.value.tutorialGroup])
 
-  const setActivityNav = (
-    newActivity: ActivityType,
-    phraseKey: string = '',
-    groupKey: string = ''
-  ) => {
-    const encodedId = phraseKey ? encodeURIComponent(phraseKey) : '';
-    const queryString = groupKey ? '?' + new URLSearchParams({ group: groupKey }) : '';
+  type NavOptions = {
+    activity?: ActivityType;
+    phraseKey?: string;
+    groupKey?: string;
+  };
+
+  const setActivityNav = (options: NavOptions) => {
+    const { activity, phraseKey, groupKey } = options;
+    
+    const currentPath = parsedLocation.value;
+    const newActivity = activity || currentPath.activity;
+    const newPhraseKey = phraseKey !== undefined ? phraseKey : currentPath.phraseId;
+    const newGroupKey = groupKey !== undefined ? groupKey : currentPath.tutorialGroup;
+
+    const encodedId = newPhraseKey ? encodeURIComponent(newPhraseKey) : '';
+    const queryString = newGroupKey ? '?' + new URLSearchParams({ group: newGroupKey }) : '';
+    
     let navTo = '/';
     switch (newActivity) {
-      case ActivityType.GAME:
+      case 'game':
         navTo = `/game/${encodedId}${queryString}`;
         break;
-      case ActivityType.TUTORIAL:
+      case 'tutorial':
         navTo = `/tutorial/${encodedId.replace('%0D','_r')}${queryString}`;
         break;
-      case ActivityType.EDIT:
+      case 'edit':
         navTo = `/edit/${encodedId}`;
         break;
       default:
@@ -110,10 +120,10 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
     switch (parsedCommand.command) {
       case 'play':
         decideActivityChange(ActivityType.GAME);
-        setActivityNav(
-          ActivityType.GAME,
-          getNextGamePhrase()?.key,
-        )
+        setActivityNav({
+          activity: ActivityType.GAME,
+          phraseKey: getNextGamePhrase()?.key,
+        })
         result = true;
         break;
       case 'tut':
@@ -122,20 +132,20 @@ export function useActivityMediator(props: IActivityMediatorProps): IActivityMed
         }
         decideActivityChange(ActivityType.TUTORIAL);
         const nextTutorial = getNextTutorial();
-        setActivityNav(
-          ActivityType.TUTORIAL,
-          nextTutorial?.phrase,
-          nextTutorial?.tutorialGroup
-        )
+        setActivityNav({
+          activity: ActivityType.TUTORIAL,
+          phraseKey: nextTutorial?.phrase,
+          groupKey: nextTutorial?.tutorialGroup
+        })
         result = true;
         break;
       case 'edit':
         decideActivityChange(ActivityType.EDIT);
-        setActivityNav(
-          ActivityType.EDIT,
-          parsedCommand.args.join(''),
-          parsedCommand.switches.toString()
-        )
+        setActivityNav({
+          activity: ActivityType.EDIT,
+          phraseKey: parsedCommand.args.join(''),
+          groupKey: parsedCommand.switches.toString()
+        })
         result = true;
         break;
       default:

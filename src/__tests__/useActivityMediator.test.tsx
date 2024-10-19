@@ -24,15 +24,29 @@ describe('useActivityMediator', () => {
     const { result } = renderHook(() => useActivityMediator({}), { wrapper });
 
     act(() => {
-      result.current.setActivityNav(ActivityType.GAME, 'testPhrase', 'testGroup');
+      result.current.setActivityNav({ activity: ActivityType.GAME, phraseKey: 'testPhrase', groupKey: 'testGroup' });
     });
 
     expect(mockNavigate).toHaveBeenCalledWith('/game/testPhrase?group=testGroup');
 
     act(() => {
-      result.current.setActivityNav(ActivityType.TUTORIAL, 'tutorialPhrase', 'tutorialGroup');
+      result.current.setActivityNav({ activity: ActivityType.TUTORIAL, phraseKey: 'tutorialPhrase', groupKey: 'tutorialGroup' });
     });
 
     expect(mockNavigate).toHaveBeenCalledWith('/tutorial/tutorialPhrase?group=tutorialGroup');
+
+    // Test updating only phraseKey
+    act(() => {
+      result.current.setActivityNav({ phraseKey: 'newPhrase' });
+    });
+
+    expect(mockNavigate).toHaveBeenCalledWith('/tutorial/newPhrase?group=tutorialGroup');
+
+    // Test updating only groupKey
+    act(() => {
+      result.current.setActivityNav({ groupKey: 'newGroup' });
+    });
+
+    expect(mockNavigate).toHaveBeenCalledWith('/tutorial/newPhrase?group=newGroup');
   });
 });
