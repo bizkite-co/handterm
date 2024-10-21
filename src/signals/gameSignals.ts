@@ -1,7 +1,6 @@
 
 // gameSignals.ts
 import { signal, computed } from "@preact/signals-react";
-import { setActivity } from "src/signals/appSignals";
 import { ActionType } from "src/game/types/ActionTypes";
 import { ActivityType, GamePhrase, Phrases } from "src/types/Types";
 import { createPersistentSignal } from "src/utils/signalPersistence";
@@ -46,23 +45,14 @@ export const getIncompletePhrasesByTutorialGroup = (tutorialGroup: string):GameP
   const phrasesInGroup = Phrases.filter(p => p.tutorialGroup === tutorialGroup);
   const incompletePhrasesInGroup = phrasesInGroup
     .filter(pig => !Array.from(completedGamePhrasesSignal.value).includes(pig.key) ) 
-  const result = incompletePhrasesInGroup;
 
-  return result;
+  return incompletePhrasesInGroup;
 }
 
-export const setNextGamePhrase = ():boolean => {
-  // get next tutoral that is not in completed tutorials.
-  const nextTutorial = Phrases
+export const getNextGamePhrase = ():GamePhrase | null => {
+  const nextGamePhrase = Phrases
     .find(t => !completedGamePhrasesSignal.value.has(t.key));
-  if(nextTutorial){
-    gamePhraseSignal.value = nextTutorial;
-    return true;
-  }
-  else{
-    gamePhraseSignal.value = null;
-    return false;
-  }
+  return nextGamePhrase ?? null;
 };
 
 export const initializeGame = (tutorialGroup?: string) => {
@@ -86,7 +76,7 @@ const loadInitialState = () => {
   if (storedTutorials) {
     completedGamePhrasesSignal.value = new Set(JSON.parse(storedTutorials));
   }
-  setNextGamePhrase();
+  setGamePhrase(getNextGamePhrase());
 };
 
 loadInitialState();

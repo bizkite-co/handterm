@@ -16,18 +16,16 @@ export { completedTutorialsSignal };
 
 export const tutorialSignal = signal<Tutorial | null>(null);
 
-export const setNextTutorial = (): boolean => {
+export const getNextTutorial = (): Tutorial | null => {
+  const nextTutorial = Tutorials
+    .find(t => !completedTutorialsSignal.value.has(t.phrase));
+  return nextTutorial ?? null;
+};
+
+export const setNextTutorial = (nextTutorial: Tutorial | null) => {
   // get next tutoral that is not in completed tutorials.
   // use getTutorialSignal to return the result.
-  const nextTutorial = Tutorials
-    .find(t => !completedTutorialsSignal.value.has(t.phrase.join('')));
-  if (nextTutorial) {
-    tutorialSignal.value = nextTutorial;
-    return true;
-  } else {
-    tutorialSignal.value = null;
-    return false;
-  }
+  tutorialSignal.value = nextTutorial;
 };
 
 // Load initial state
@@ -36,7 +34,7 @@ const loadInitialState = () => {
   if (storedTutorials) {
     completedTutorialsSignal.value = new Set(JSON.parse(storedTutorials));
   }
-  setNextTutorial();
+  setNextTutorial(getNextTutorial());
 };
 
 loadInitialState();
@@ -51,12 +49,7 @@ export const setCompletedTutorial = (tutorialId: string) => {
 
 export const resetCompletedTutorials = () => {
   updateCompletedTutorials(new Set());
-  setNextTutorial();
+  setNextTutorial(getNextTutorial());
 };
 
-export const getNextTutorial = (): Tutorial | null => {
-  const nextTutorial = Tutorials
-    .find(t => !completedTutorialsSignal.value.has(t.phrase.join('')));
-  return nextTutorial ?? null;
-};
 

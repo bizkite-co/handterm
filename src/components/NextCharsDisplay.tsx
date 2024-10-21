@@ -10,6 +10,7 @@ import { gamePhraseSignal, setCompletedGamePhrase } from "src/signals/gameSignal
 import { GamePhrase } from "src/types/Types";
 import { useLocation } from "react-router-dom";
 import GamePhrases from "src/utils/GamePhrases";
+import { useReactiveLocation } from "src/hooks/useReactiveLocation";
 
 export interface INextCharsDisplayProps {
     isInPhraseMode: boolean;
@@ -36,21 +37,23 @@ const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, INextCharsDisp
     const [mismatchedIsVisible, setMismatchedIsVisible] = useState(false);
     const [nextChars, setNextChars] = useState<string>('');
     const [phrase, setPhrase] = useState<Phrase>(new Phrase(['']));
-    const [gamePhrase, setGamePhrase] = useState<GamePhrase|null>(null);
+    const [gamePhrase, setGamePhrase] = useState<GamePhrase | null>(null);
 
     const nextCharsRef = useRef<HTMLPreElement>(null);
     const nextCharsRateRef = useRef<HTMLDivElement>(null);
     const timerRef = useRef<any>(null);
     const wpmRef = useRef<HTMLSpanElement>(null);
-    const commandLine = useComputed(()=> commandLineSignal.value);
-    const location = useLocation();
+    const commandLine = useComputed(() => commandLineSignal.value);
+    const { parseLocation } = useReactiveLocation();
 
     useEffect(() => {
         if (!parseLocation().activityKey || !parseLocation().phraseKey) return;
+        const foundPhrase = GamePhrases.getGamePhraseByKey(parseLocation().phraseKey ?? '');
+        if (!foundPhrase) return;
         setGamePhrase(foundPhrase);
         setPhrase(new Phrase(foundPhrase.value.split('')));
         setNextChars(foundPhrase.value);
-    }, [location.pathname]);
+    }, [window.location.pathname]);
 
     useSignalEffect(() => {
         // every time the command line changes.
@@ -142,7 +145,7 @@ const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, INextCharsDisp
         setMismatchedChar('');
         setMismatchedIsVisible(false);
         setNextChars('');
-        if(gamePhrase && gamePhrase.key) setCompletedGamePhrase(gamePhrase.key)
+        if (gamePhrase && gamePhrase.key) setCompletedGamePhrase(gamePhrase.key)
         onPhraseSuccess(gamePhrase);
     };
 
@@ -172,7 +175,7 @@ const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, INextCharsDisp
     };
 
     return (
-        (isInPhraseMode && gamePhrase?.value && gamePhrase.value.length > 0 &&
+        (parseLocation().phraseKey &&
             <div
                 id={TerminalCssClasses.NextChars}
                 hidden={!isInPhraseMode}

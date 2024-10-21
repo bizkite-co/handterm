@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback, useImperativeHandle, ReactNode } from 'react';
 import { ActivityType, OutputElement, GamePhrase } from '../types/Types';
-import { useActivityMediator, IActivityMediatorProps } from 'src/hooks/useActivityMediator';
+import { useActivityMediator } from 'src/hooks/useActivityMediator';
 import Game, { IGameHandle } from '../game/Game';
 import { IAuthProps } from '../lib/useAuth';
 import GamePhrases from '../utils/GamePhrases';
@@ -15,16 +15,19 @@ import { useWPMCalculator } from '../hooks/useWPMCaculator';
 import { activitySignal, isEditModeSignal, isInTutorialModeSignal, isShowVideoSignal } from 'src/signals/appSignals';
 import {
   setGamePhrase,
-  gameInitSignal,
   isInGameModeSignal,
-  gamePhraseSignal,
 } from 'src/signals/gameSignals'
 import { commandLineSignal, commandSignal, commandTimeSignal } from 'src/signals/commandLineSignals';
 import { useComputed, useSignalEffect } from '@preact/signals-react';
 import { getNextTutorial, setNextTutorial, tutorialSignal } from 'src/signals/tutorialSignals';
 import MonacoEditor from './MonacoEditor';
 import WebCam from 'src/utils/WebCam';
+import { useLocation, useSearchParams } from 'react-router-dom';
+import { useReactiveLocation } from 'src/hooks/useReactiveLocation';
+import { createLogger, LogLevel } from 'src/utils/Logger';
+import { parse } from 'path';
 
+const logger = createLogger('useReactiveLocation', LogLevel.DEBUG);
 
 export interface IHandTermWrapperProps {
   // Define the interface for your HandexTerm logic
@@ -72,20 +75,12 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
   const [canvasHeight] = useState(parseInt(initialCanvasHeight));
   const [lastTypedCharacter, setLastTypedCharacter] = useState<string | null>(null);
   const [, setErrorCharIndex] = useState<number | undefined>(undefined);
-  const [phraseKey] = useState('');
   const [, setTerminalSize] = useState<{ width: number; height: number } | undefined>();
   const [githubAuthHandled, setGithubAuthHandled] = useState<boolean>(false);
   const [githubUsername, setGithubUsername] = useState<string | null>(null);
-  const [isInSvgMode] = useState<boolean>(false);
-  const [editFilePath, setEditFilePath] = useState('_index');
-  const [editFileExtension, setEditFileExtension] = useState('md');
   const [userName, setUserName] = useState<string | null>(null);
   const activity = useComputed(() => activitySignal.value);
-  const [localActivity, setLocalActivity] = useState<ActivityType>(ActivityType.NORMAL);
-  const isInTutorialMode = useComputed(() => isInTutorialModeSignal.value);
   const isGameInitialized = useComputed(() => isInGameModeSignal.value);
-  const tutorial = useComputed(() => tutorialSignal.value);
-  const gameInit = useComputed(() => gameInitSignal.value);
   const commandTime = useComputed(() => commandTimeSignal.value);
   // Create a mutable ref that will always have a current value
   const internalRef = useRef<IHandTermWrapperMethods>({
@@ -100,25 +95,9 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
     setEditMode: () => { },
     handleEditSave: () => { },
   });
-  const isInGameMode = useComputed(() => isInGameModeSignal.value).value;
   // Use useImperativeHandle to update both refs
   useImperativeHandle(forwardedRef, () => internalRef.current);
-
-  const updateUserName = useCallback(() => {
-    const isLoggedIn = props.auth.isLoggedIn;
-    if (isLoggedIn) {
-      const userName = localStorage.getItem(LogKeys.Username);
-      setUserName(userName || null);
-    } else {
-      setUserName(null);
-    }
-  }, [props.auth.isLoggedIn]);
-
-  const handleFocusEditor = useCallback(() => {
-    // Implement focus editor logic here
-    // TODO: put the focus into the editor
-
-  }, []);
+  const {parseLocation} = useReactiveLocation();
 
   useEffect(() => {
     if (isGameInitialized && gameHandleRef.current) {
@@ -128,13 +107,8 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
     }
   }, [isGameInitialized, gameHandleRef])
 
-  const activityMediatorProps: IActivityMediatorProps = {
-    currentTutorial: getNextTutorial(),
-    currentActivity: activity.value,
-  }
-
   // Initialize activityMediator with the appropriate initial values
-  const activityMediator = useActivityMediator(activityMediatorProps);
+  const activityMediator = useActivityMediator();
 
   // Expose methods via ref
   useImperativeHandle(internalRef, () => {
@@ -143,11 +117,11 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
       prompt: () => {
         // Implement prompt logic
       },
-      saveCommandResponseHistory: (command: string, response: string, status: number) => {
+      saveCommandResponseHistory: () => {
         // Implement saveCommandResponseHistory logic
         return ''; // Return appropriate string
       },
-      handleCharacter: (character: string) => {
+      handleCharacter: () => {
         // Implement handleCharacter logic
       },
       toggleVideo: () => {
@@ -215,7 +189,6 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
 
   useEffect(() => {
     initializeActivity();
-    setNextTutorial();
   }, []);
 
   useEffect(() => {
@@ -245,11 +218,6 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
     handlePhraseComplete();
   }
 
-  useSignalEffect(() => {
-    console.log("Wrapper activity:", ActivityType[activitySignal.value]);
-    setLocalActivity(activitySignal.value);
-  })
-
   const handlePhraseComplete = () => {
 
     localStorage.setItem('currentCommand', '');
@@ -263,7 +231,7 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
 
   return (
     <>
-      {(location.pathname.includes('game'))
+      {(parseLocation().activityKey === ActivityType.GAME)
         && (
           <Game
             ref={gameHandleRef}
@@ -271,7 +239,7 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
             canvasWidth={props.terminalWidth}
           />
         )}
-      {location.pathname.includes('game')
+      {parseLocation().activityKey === ActivityType.GAME
         && (
           <NextCharsDisplay
             ref={nextCharsDisplayRef}
@@ -283,10 +251,10 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
       {lastTypedCharacter && (
         <Chord displayChar={lastTypedCharacter} />
       )}
-      <TutorialManager
-        isInTutorial={localActivity === ActivityType.TUTORIAL}
-        tutorial={tutorialSignal.value}
-      />
+      {parseLocation().activityKey === ActivityType.TUTORIAL &&
+        <TutorialManager
+        />
+      }
       <Prompt
         username={userName || 'guest'}
         domain={domain || 'handterm.com'}
@@ -296,14 +264,13 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
       {!isEditModeSignal.value &&
         <div ref={xtermRef} />
       }
-      {isEditModeSignal.value && (
+      {parseLocation().activityKey === ActivityType.EDIT && (
         <MonacoEditor
           initialValue={editContent}
           language={editLanguage}
           onChange={(value) => handleEditChange(value || '')}
           onSave={handleEditSave}
           onClose={handleEditorClose}
-          toggleVideo={toggleVideo}
         />
       )}
       {isShowVideoSignal.value && (
