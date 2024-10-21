@@ -84,45 +84,51 @@ export type MyResponse<T> = {
 };
 
 export type Tutorial = {
-  phrase: string[];
+  phrase: string;
   prompt: string;
   command?: string;
-  unlocked: boolean;
+  unlocked?: boolean;
   tutorialGroup?: string;
+  display?: string;
 };
 
 export type GamePhrase = {
-    key: string,
-    value: string,
-    tutorialGroup?: string,
-    isComplete?: boolean
+  key: string,
+  value: string,
+  tutorialGroup?: string,
+  isComplete?: boolean
 };
 
 export const TutorialPhrases: GamePhrase[] = [
-  { 
-    value: 'The most important key is the Return (ENTER) key. Press the thumb tip and release. You\'ll use this key to enter every command.\n\nNOTE: Press enter to reset and redo any tutorial steps.', 
-    key: '\r', 
-    },
-  { 
-    value: 'Type `fdsa` & Enter. Notice that it requires only a finger-pinch and release for each character.', 
-    key: 'fdsa', 
-     },
-  { 
-    value: 'Do it again, but this time put a space in between the letters. Grasp the thumb and release to enter a space.', 
-    key: 'fdsa' },
+  {
+    value: 'The most important key is the Return (ENTER) key. Press the thumb tip and release. You\'ll use this key to enter every command.\n\nNOTE: Press enter to reset and redo any tutorial steps.',
+    key: '\r',
+  },
+  {
+    value: 'Type `fdsa` & Enter. Notice that it requires only a finger-pinch and release for each character.',
+    key: 'fdsa',
+  },
+  {
+    value: 'Do it again, but this time put a space in between the letters. Grasp the thumb and release to enter a space.',
+    key: 'fdsa'
+  },
   // { value: 'The second most important key is the Backspace key. To use it, pull back the index finger. Practice typing fdsa and then deleting it. Then press enter to continue.', key: ['DELETE (Backspace)'], },
-  { 
-    value: 'Type `jkl;`. Notice that it requires only a finger-grasp followed by a release.', 
-    key: 'jkl;', tutorialGroup: 'single-click' },
-  { 
-    value: 'Press the thumb tip followed by a finger tip to type numbers 0-4', 
-    key: '01234' },
-  { 
-    value: 'Press the thumb tip followed by a finger tip to type numbers 5-9', 
-    key: '56789', tutorialGroup: 'numbers' },
-  { 
-    value: 'Characters are only entered when the keys are released. For example, when you grasp the thumb and release it a space is entered.\n\nHowever, when you HOLD a grasp of your thumb it activates the shift key. Use Shift to type FDSA in uppercase letters. Remember to release your grip after each character.', 
-    key: 'FDSA' },
+  {
+    value: 'Type `jkl;`. Notice that it requires only a finger-grasp followed by a release.',
+    key: 'jkl;', tutorialGroup: 'single-click'
+  },
+  {
+    value: 'Press the thumb tip followed by a finger tip to type numbers 0-4',
+    key: '01234'
+  },
+  {
+    value: 'Press the thumb tip followed by a finger tip to type numbers 5-9',
+    key: '56789', tutorialGroup: 'numbers'
+  },
+  {
+    value: 'Characters are only entered when the keys are released. For example, when you grasp the thumb and release it a space is entered.\n\nHowever, when you HOLD a grasp of your thumb it activates the shift key. Use Shift to type FDSA in uppercase letters. Remember to release your grip after each character.',
+    key: 'FDSA'
+  },
   { value: 'These two characters complete the traditional home-row keys, but require two finger keystrokes similar to numbers. \n\nNotice that both actions start from the middle finger and end on the index finger. G uses 2 pinches. H uses 2 grasps, like their home-row counterparts.', key: 'gh', tutorialGroup: 'home-row' },
   { value: 'These characters are all triggered by a single finger. Pinch first, then grasp to enter them.', key: 'nm,.' },
   { value: 'These characters are also triggered by a single finger. Grasp first, then pinch to enter them.', key: 'uiop' },
@@ -132,24 +138,24 @@ export const TutorialPhrases: GamePhrase[] = [
 ]
 
 export const Tutorials: Tutorial[] = [
-  { prompt: 'The most important key is the Return (ENTER) key. Press the thumb tip and release. You\'ll use this key to enter every command.\n\nNOTE: Press enter to reset and redo any tutorial steps.', 
-    phrase: ['Return (ENTER)'], 
-    unlocked: false },
-  { prompt: 'Type `fdsa` & Enter. Notice that it requires only a finger-pinch and release for each character.', 
-    phrase: 'fdsa'.split(''), 
-    unlocked: false },
-  { prompt: 'Do it again, but this time put a space in between the letters. Grasp the thumb and release to enter a space.', phrase: 'fdsa'.split(' '), unlocked: false },
-  // { prompt: 'The second most important key is the Backspace key. To use it, pull back the index finger. Practice typing fdsa and then deleting it. Then press enter to continue.', phrase: ['DELETE (Backspace)'], unlocked: false},
-  { prompt: 'Type `jkl;`. Notice that it requires only a finger-grasp followed by a release.', phrase: 'jkl;'.split(''), unlocked: false, tutorialGroup: 'single-click' },
-  { prompt: 'Press the thumb tip followed by a finger tip to type numbers 0-4', phrase: '01234'.split(''), unlocked: false },
-  { prompt: 'Press the thumb tip followed by a finger tip to type numbers 5-9', phrase: '56789'.split(''), unlocked: false, tutorialGroup: 'numbers' },
-  { prompt: 'Characters are only entered when the keys are released. For example, when you grasp the thumb and release it a space is entered.\n\nHowever, when you HOLD a grasp of your thumb it activates the shift key. Use Shift to type FDSA in uppercase letters. Remember to release your grip after each character.', phrase: 'FDSA'.split(''), unlocked: false },
-  { prompt: 'These two characters complete the traditional home-row keys, but require two finger keystrokes similar to numbers. \n\nNotice that both actions start from the middle finger and end on the index finger. G uses 2 pinches. H uses 2 grasps, like their home-row counterparts.', phrase: 'gh'.split(''), unlocked: false, tutorialGroup: 'home-row' },
-  { prompt: 'These characters are all triggered by a single finger. Pinch first, then grasp to enter them.', phrase: 'nm,.'.split(''), unlocked: false },
-  { prompt: 'These characters are also triggered by a single finger. Grasp first, then pinch to enter them.', phrase: 'uiop'.split(''), unlocked: false },
-  { prompt: 'Many characters require combinations followed by releasing all keys. Type `zxcv` and we\'ll show corrections as you type.', phrase: 'zxcv'.split(''), unlocked: false },
-  { prompt: 'Remember this one so that you can restart this tutorial', phrase: 'tut'.split(''), unlocked: false },
-  { prompt: 'Type `play` to play a guided typing game with chord-hints.', phrase: 'play'.split(''), unlocked: false },
+  {
+    prompt: 'The most important key is the Return (ENTER) key. Press the thumb tip and release. You\'ll use this key to enter every command.\n\nNOTE: Press enter to reset and redo any tutorial steps.',
+    display: 'Return (ENTER)', phrase: '\r'
+  },
+  {
+    prompt: 'Type `fdsa` & Enter. Notice that it requires only a finger-pinch and release for each character.', phrase: 'fdsa' },
+  { prompt: 'Do it again, but this time put a space in between the letters. Grasp the thumb and release to enter a space.', phrase: 'fdsa' },
+  // { prompt: 'The second most important key is the Backspace key. To use it, pull back the index finger. Practice typing fdsa and then deleting it. Then press enter to continue.', phrase: ['DELETE (Backspace)']},
+  { prompt: 'Type `jkl;`. Notice that it requires only a finger-grasp followed by a release.', phrase: 'jkl;', tutorialGroup: 'single-click' },
+  { prompt: 'Press the thumb tip followed by a finger tip to type numbers 0-4', phrase: '01234' },
+  { prompt: 'Press the thumb tip followed by a finger tip to type numbers 5-9', phrase: '56789', tutorialGroup: 'numbers' },
+  { prompt: 'Characters are only entered when the keys are released. For example, when you grasp the thumb and release it a space is entered.\n\nHowever, when you HOLD a grasp of your thumb it activates the shift key. Use Shift to type FDSA in uppercase letters. Remember to release your grip after each character.', phrase: 'FDSA' },
+  { prompt: 'These two characters complete the traditional home-row keys, but require two finger keystrokes similar to numbers. \n\nNotice that both actions start from the middle finger and end on the index finger. G uses 2 pinches. H uses 2 grasps, like their home-row counterparts.', phrase: 'gh', tutorialGroup: 'home-row' },
+  { prompt: 'These characters are all triggered by a single finger. Pinch first, then grasp to enter them.', phrase: 'nm,.' },
+  { prompt: 'These characters are also triggered by a single finger. Grasp first, then pinch to enter them.', phrase: 'uiop' },
+  { prompt: 'Many characters require combinations followed by releasing all keys. Type `zxcv` and we\'ll show corrections as you type.', phrase: 'zxcv' },
+  { prompt: 'Remember this one so that you can restart this tutorial', phrase: 'tut' },
+  { prompt: 'Type `play` to play a guided typing game with chord-hints.', phrase: 'play' },
 ]
 
 export const Phrases: GamePhrase[] = [
@@ -183,7 +189,7 @@ export const VALID_ACTIVITIES = ['normal', 'game', 'tutorial', 'edit'] as const;
 export type Activity = typeof VALID_ACTIVITIES[number];
 
 export type ParsedLocation = {
-  activity: 'normal' | 'game' | 'tutorial' | 'edit';
-  phraseId?: string;
-  tutorialGroup?: string;
+  activityKey: ActivityType;
+  phraseKey?: string;
+  groupKey?: string;
 };

@@ -19,9 +19,20 @@ export const TutorialManager: React.FC<TutorialManagerProps> = memo(({
         <div className="tutorial-component">
             <pre className="tutorial-prompt">{tutorial.prompt}</pre>
             <div className="chord-display-container">
-                {tutorial.phrase.map((character, index) => (
-                    <Chord key={index} displayChar={character} />
-                ))}
+                {tutorial.display &&
+                    <Chord
+                        key={tutorial.phrase}
+                        displayChar={tutorial.display}
+                    />
+                }
+                {!tutorial.display &&
+                    tutorial.phrase.split('').map((character, index) => (
+                        <Chord
+                            key={index}
+                            displayChar={character}
+                        />
+                    ))
+                }
             </div>
         </div>
     );

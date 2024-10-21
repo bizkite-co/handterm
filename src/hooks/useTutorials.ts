@@ -23,7 +23,7 @@ export const useTutorial = () => {
     }
 
     const getIncompleteTutorials = useCallback((): Tutorial[] => {
-        const incomplete = Tutorials.filter(tut => !completedTutorialsArray().includes(tut.phrase.join('')));
+        const incomplete = Tutorials.filter(tut => !completedTutorialsArray().includes(tut.phrase));
         return incomplete;
     }, [])
 
@@ -31,14 +31,17 @@ export const useTutorial = () => {
         const result = Tutorials.filter(t => t.tutorialGroup === groupName);
         return result;
     }
+    const getTutorialByPhrasekey = (phraseKey: string) => {
+        const currentTutorial = Tutorials.find(t => t.phrase === phraseKey?.replace('_r', '\r'));
+        return currentTutorial;
+    }
 
     const canUnlockTutorial = (command: string): boolean => {
         const currentTutorial = tutorialSignal.value;
         if (!currentTutorial) return false;
 
         // TODO: This is probably the single biggest problem blocking unification of GamePhrases and Tutorials.
-        const normalizedCommand = command === '\r' ? 'Return (ENTER)' : command;
-        if (currentTutorial.phrase.join('') === normalizedCommand) {
+        if (currentTutorial.phrase === command) {
             return true;
         }
         return false;
