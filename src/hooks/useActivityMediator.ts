@@ -65,6 +65,13 @@ export function useActivityMediator(): IActivityMediatorReturn {
 
   const handleCommandExecuted = useCallback((parsedCommand: ParsedCommand): boolean => {
     let result = false;
+    if (parseLocation().activityKey === ActivityType.TUTORIAL){
+      checkTutorialProgress(parsedCommand.command);
+    }
+    else if (parseLocation().activityKey === ActivityType.GAME && parseLocation().phraseKey) {
+      const gamePhrase = GamePhrases.getGamePhraseByKey(parseLocation().phraseKey || '')
+      if (gamePhrase) checkGameProgress(gamePhrase);
+    }
     switch (parsedCommand.command) {
       case 'play':
         decideActivityChange(ActivityType.GAME);
@@ -99,13 +106,6 @@ export function useActivityMediator(): IActivityMediatorReturn {
         break;
       default:
         result = false;
-    }
-    if (parseLocation().activityKey === ActivityType.TUTORIAL){
-      checkTutorialProgress(parsedCommand.command);
-    }
-    else if (parseLocation().activityKey === ActivityType.GAME && parseLocation().phraseKey) {
-      const gamePhrase = GamePhrases.getGamePhraseByKey(parseLocation().phraseKey || '')
-      if (gamePhrase) checkGameProgress(gamePhrase);
     }
 
     return result;
