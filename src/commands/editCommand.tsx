@@ -13,7 +13,7 @@ const EditCommand: ICommand = {
         context: ICommandContext,
         parsedCommand: ParsedCommand,
     ): ICommandResponse => {
-        if (parsedCommand.command === 'edit') {
+        if (parsedCommand.command.toLowerCase() === 'edit') {
             context.updateLocation({
                 activity: ActivityType.EDIT
             })
