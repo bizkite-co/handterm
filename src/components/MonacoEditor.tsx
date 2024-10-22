@@ -7,8 +7,6 @@ import { ActivityType } from 'src/types/Types';
 interface MonacoEditorProps {
   initialValue: string;
   language: 'javascript' | 'typescript' | 'markdown';
-  onChange?: (value: string | undefined) => void;
-  onSave?: (value: string) => void;
   onClose?: () => void;
   height?: string;
   toggleVideo?: () => boolean;
@@ -27,10 +25,22 @@ export interface MonacoEditorHandle {
   focus: () => void;
 }
 
-const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(({ initialValue, language, onChange, onSave, onClose, height = '80vh', toggleVideo }, ref) => {
+const handleEditSave = (value?: string): void => {
+  localStorage.setItem('edit-content', JSON.stringify(value));
+}
+
+const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(({ initialValue, language, onClose, height = '80vh', toggleVideo }, ref) => {
   const editorRef = useRef<any>(null);
   const statusNodeRef = useRef<HTMLDivElement>(null);
   const { parseLocation, updateLocation } = useReactiveLocation();
+
+  const handleEditorClose = (): void => {
+    updateLocation({
+      activity: ActivityType.NORMAL,
+      contentKey: null,
+      groupKey: null
+    })
+  }
 
   useImperativeHandle(ref, () => ({
     focus: () => {
@@ -57,9 +67,7 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(({ initia
       label: "Save Content",
       keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_S],
       run: function (editor: any) {
-        if (onSave) {
-          onSave(editor.getValue());
-        }
+        handleEditSave(editor.getValue());
         return null;
       }
     });
@@ -70,17 +78,6 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(({ initia
       }
     });
 
-    const handleEditSave = (value: string): void => {
-      localStorage.setItem('edit-content', value);
-    }
-
-    const handleEditorClose = (): void => {
-      updateLocation({
-        activity: ActivityType.NORMAL,
-        contentKey: null,
-        groupKey: null
-      })
-    }
 
     // @ts-ignore
     window.require(["monaco-vim"], (MonacoVim: any) => {
@@ -91,9 +88,7 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(({ initia
       // Define Vim commands
       const Vim = MonacoVim.VimMode.Vim;
       Vim.defineEx('w', '', () => {
-        if (onSave) {
-          onSave(editor.getValue());
-        }
+        handleEditSave(editor.getValue());
       });
 
       Vim.defineEx('q', '', () => {
@@ -102,9 +97,7 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(({ initia
         }
       });
       Vim.defineEx('wq', '', () => {
-        if (onSave) {
-          onSave(editor.getValue());
-        }
+        handleEditSave(editor.getValue());
         if (onClose) {
           onClose();
         }
@@ -126,7 +119,7 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(({ initia
         defaultLanguage={language}
         defaultValue={initialValue}
         onMount={handleEditorDidMount}
-        onChange={onChange}
+        onChange={handleEditSave}
         theme="vs-dark"
       />
       <div ref={statusNodeRef} className="status-node"></div>

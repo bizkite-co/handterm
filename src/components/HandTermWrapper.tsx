@@ -275,8 +275,6 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
         <MonacoEditor
           initialValue={localStorage.getItem('edit-content') || ''}
           language="markdown"
-          onChange={(value) => handleEditSave(value || '')}
-          onSave={handleEditSave}
           onClose={handleEditorClose}
         />
       )}
