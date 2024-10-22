@@ -262,14 +262,14 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
         <TutorialManager
         />
       }
-      <Prompt
-        username={userName || 'guest'}
-        domain={domain || 'handterm.com'}
-        githubUsername={githubUsername}
-        timestamp={getTimestamp(commandTime.value)}
-      />
-      {!isEditModeSignal.value &&
-        <div ref={xtermRef} />
+      {parseLocation().activityKey !== ActivityType.EDIT
+        && <Prompt
+          username={userName || 'guest'}
+          domain={domain || 'handterm.com'}
+          githubUsername={githubUsername}
+          timestamp={getTimestamp(commandTime.value)}
+        />
+        && <div ref={xtermRef} />
       }
       {parseLocation().activityKey === ActivityType.EDIT && (
         <MonacoEditor

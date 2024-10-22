@@ -1,6 +1,8 @@
 // src/components/MonacoEditor.tsx
 import { useRef, useEffect, useImperativeHandle, forwardRef } from 'react';
 import Editor from "@monaco-editor/react";
+import { useReactiveLocation } from 'src/hooks/useReactiveLocation';
+import { ActivityType } from 'src/types/Types';
 
 interface MonacoEditorProps {
   initialValue: string;
@@ -28,6 +30,7 @@ export interface MonacoEditorHandle {
 const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(({ initialValue, language, onChange, onSave, onClose, height = '80vh', toggleVideo }, ref) => {
   const editorRef = useRef<any>(null);
   const statusNodeRef = useRef<HTMLDivElement>(null);
+  const { parseLocation, updateLocation } = useReactiveLocation();
 
   useImperativeHandle(ref, () => ({
     focus: () => {
@@ -37,7 +40,7 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(({ initia
     }
   }));
 
-  useEffect(() => { 
+  useEffect(() => {
     return () => {
       if (window.MonacoVim) {
         window.MonacoVim.VimMode.Vim.dispose();
@@ -66,6 +69,18 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(({ initia
         "monaco-vim": "https://unpkg.com/monaco-vim/dist/monaco-vim"
       }
     });
+
+    const handleEditSave = (value: string): void => {
+      localStorage.setItem('edit-content', value);
+    }
+
+    const handleEditorClose = (): void => {
+      updateLocation({
+        activity: ActivityType.NORMAL,
+        contentKey: null,
+        groupKey: null
+      })
+    }
 
     // @ts-ignore
     window.require(["monaco-vim"], (MonacoVim: any) => {

@@ -4,7 +4,7 @@ import { useEffect, useCallback, useMemo, useRef } from 'react';
 import { ParsedLocation, ActivityType } from 'src/types/Types';
 import { createLogger, LogLevel } from 'src/utils/Logger';
 
-const logger = createLogger('useReactiveLocation', LogLevel.DEBUG);
+// const logger = createLogger('useReactiveLocation', LogLevel.DEBUG);
 
 export function useReactiveLocation() {
   const navigate = useNavigate();
@@ -21,7 +21,6 @@ export function useReactiveLocation() {
       pathSignal.value = initialPathRef.current;
       searchSignal.value = location.search;
       isInitialized.value = true;
-      logger.debug('Location initialized:', initialPathRef.current);
     } else {
       pathSignal.value = location.pathname;
       searchSignal.value = location.search;
@@ -66,7 +65,6 @@ export function useReactiveLocation() {
     const path = `/${activityPath}${encodedPhraseKey ? `/${encodedPhraseKey}` : ''}${queryString}`;
 
     pathSignal.value = path 
-    logger.debug('Updating path:', path, 'Current path:', window.location.pathname);
     navigate(path);
   }, [navigate]);
 

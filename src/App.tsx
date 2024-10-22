@@ -1,6 +1,6 @@
 // App.tsx
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { OutputElement } from './types/Types';
+import { ActivityType, OutputElement } from './types/Types';
 import { HandTermWrapper, IHandTermWrapperMethods } from './components/HandTermWrapper';
 import { TerminalCssClasses } from './types/TerminalTypes';
 import { useAuth } from './lib/useAuth';
@@ -8,21 +8,22 @@ import { Output } from './components/Output';
 import { AppProvider } from './contexts/AppContext';
 import { CommandProvider } from './contexts/CommandProvider';
 import { ActivityMediatorProvider } from './contexts/ActivityMediatorContext';
+import { useReactiveLocation } from './hooks/useReactiveLocation';
 
 // const MemoizedOutput = React.memo(Output);
 
-export default function App () {
+export default function App() {
   const containerRef = React.createRef<HTMLDivElement>();
   const [containerWidth, setContainerWidth] = React.useState<number>(0);
 
   const auth = useAuth();
   const handexTermWrapperRef = useRef<IHandTermWrapperMethods>(null);
+  const { parseLocation } = useReactiveLocation();
 
   const getContainerWidth = () => {
     return containerRef.current?.clientWidth ?? 0
   }
 
-  let output: OutputElement[] = [];
   useEffect(() => {
     const handleResize = () => {
       const w = getContainerWidth();
@@ -46,6 +47,7 @@ export default function App () {
     // Implement your touch end logic here
     console.log("Handling touch end");
   }, []);
+
   useEffect(() => {
     const w = getContainerWidth();
     setContainerWidth(w);
@@ -86,7 +88,9 @@ export default function App () {
             auth={auth}
             handTermRef={handexTermWrapperRef}
           >
-            <Output />
+            {parseLocation().activityKey !== ActivityType.EDIT
+              && <Output />
+            }
             <HandTermWrapper
               ref={handexTermWrapperRef}
               auth={auth}
