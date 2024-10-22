@@ -1,12 +1,14 @@
 // src/contexts/CommandContext.tsx
-import React, { createContext, useContext } from 'react';
+import React, { createContext, ReactDOM, useContext } from 'react';
 import { IAuthProps } from '../lib/useAuth';
 import { IHandTermWrapperMethods } from '../components/HandTermWrapper';
-import { OutputElement, ParsedCommand } from '../types/Types';
+import { ActivityType, OutputElement, ParsedCommand } from '../types/Types';
+import { useReactiveLocation } from 'src/hooks/useReactiveLocation';
 
 export interface ICommandResponse {
   status: number;
   message: string;
+  body?: string | null;
 }
 
 export interface ICommand {
@@ -18,6 +20,7 @@ export interface ICommand {
     parsedCommand: ParsedCommand,
   ) => ICommandResponse;
 }
+
 export interface ICommandContext {
   executeCommand: (command: string) => Promise<void>;
   commandHistory: string[];
@@ -25,12 +28,18 @@ export interface ICommandContext {
   output: OutputElement[];
   appendToOutput: (output: OutputElement) => void;
   handTermRef: React.RefObject<IHandTermWrapperMethods>;
-  auth: IAuthProps;
+  auth: IAuthProps;  
+  updateLocation: (options: {
+    activity?: ActivityType | null;
+    phraseKey?: string | null;
+    groupKey?: string | null;
+  }) => void;
 }
 
 export const CommandContext = createContext<ICommandContext | null>(null);
 
 export const useCommandContext = () => {
+  
   const context = useContext(CommandContext);
   if (!context) {
     throw new Error('useCommandContext must be used within a CommandProvider');

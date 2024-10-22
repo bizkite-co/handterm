@@ -7,6 +7,7 @@ import { archiveCommand } from './archiveCommand';
 import { wrtCommand } from './wrtCommand';
 import { cleanCommand } from './cleanCommand';
 import HelpCommand from './HelpCommand';
+import EditCommand from './editCommand';
 
 commandRegistry.register(clearCommand);
 commandRegistry.register(cleanCommand);
@@ -14,3 +15,4 @@ commandRegistry.register(ListPhrasesCommand);
 commandRegistry.register(archiveCommand);
 commandRegistry.register(wrtCommand);
 commandRegistry.register(HelpCommand);
+commandRegistry.register(EditCommand);

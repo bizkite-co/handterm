@@ -4,6 +4,7 @@ import { CommandContext } from './CommandContext';
 import { useCommand } from '../hooks/useCommand';
 import { IAuthProps } from '../lib/useAuth';
 import { IHandTermWrapperMethods } from '../components/HandTermWrapper';
+import { useReactiveLocation } from 'src/hooks/useReactiveLocation';
 
 interface CommandProviderProps {
   children: React.ReactNode;
@@ -13,21 +14,22 @@ interface CommandProviderProps {
 
 export const CommandProvider: React.FC<CommandProviderProps> = ({ children, handTermRef, auth }) => {
   const {
-    executeCommand,
     commandHistory,
     addToCommandHistory,
     output,
-    appendToOutput
+    appendToOutput,
   } = useCommand();
 
+  const { updateLocation } = useReactiveLocation();
+
   const contextValue = {
-    executeCommand,
     commandHistory,
     addToCommandHistory,
     output,
     appendToOutput,
     handTermRef,
-    auth
+    auth,
+    updateLocation
   };
 
   return (

@@ -27,7 +27,7 @@ const HelpCommand: ICommand = {
         return ReactDOMServer.renderToStaticMarkup(element);
       }).join('');
       const response = "<div class='chord-display-container'>" + commandChordsHtml + "</div>";
-      return { status: 200, message: "Help information displayed" };
+      return { status: 200, message: response };
     }
     return { status: 404, message: "Help command not recognized" };
   }

@@ -9,4 +9,4 @@ Vite, TypeScript, React, `@xterm/xterm`, Monacaco editor, web-based TUI develope
 * Robust, expert-level React implementation. 
 * Prefer functional components and other modern React best practices.
 * use `props` interfaces and don't destructure `props`. We want clarity on when a `prop` is being used.
-* The `HandTerm.tsx` class component is mostly converted to the `HandTermWrapper` functional component. Always prefer to move code in the functional direction and to use `hooks` when most appropriate.
+* Always prefer to move code in the functional direction and to use `hooks` when most appropriate.

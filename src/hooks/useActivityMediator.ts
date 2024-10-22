@@ -77,7 +77,7 @@ export function useActivityMediator(): IActivityMediatorReturn {
         decideActivityChange(ActivityType.GAME);
         updateLocation({
           activity: ActivityType.GAME,
-          phraseKey: getNextGamePhrase()?.key
+          contentKey: getNextGamePhrase()?.key
         })
         result = true;
         break;
@@ -90,17 +90,8 @@ export function useActivityMediator(): IActivityMediatorReturn {
 
         updateLocation({
           activity: ActivityType.TUTORIAL,
-          phraseKey: nextTutorial?.phrase,
+          contentKey: nextTutorial?.phrase,
           groupKey: nextTutorial?.tutorialGroup
-        })
-        result = true;
-        break;
-      case 'edit':
-        decideActivityChange(ActivityType.EDIT);
-        updateLocation({
-          activity: ActivityType.EDIT,
-          phraseKey: parsedCommand.args.join(''),
-          groupKey: parsedCommand.switches.toString()
         })
         result = true;
         break;
@@ -134,7 +125,7 @@ export function useActivityMediator(): IActivityMediatorReturn {
             activitySignal.value = ActivityType.GAME;
             updateLocation({
               activity: ActivityType.GAME,
-              phraseKey: incompletePhrasesInGroup.key,
+              contentKey: incompletePhrasesInGroup.key,
               groupKey: incompletePhrasesInGroup.tutorialGroup
             })
             initializeGame(groupKey);
@@ -157,7 +148,7 @@ export function useActivityMediator(): IActivityMediatorReturn {
       setNextTutorial(nextTutorial);
       updateLocation({
         activity: resultActivity,
-        phraseKey: nextTutorial.phrase,
+        contentKey: nextTutorial.phrase,
         groupKey: nextTutorial.tutorialGroup
       })
       return;
@@ -166,7 +157,7 @@ export function useActivityMediator(): IActivityMediatorReturn {
       const nextGamePhrase = getNextGamePhrase();
       if(nextGamePhrase) updateLocation({
         activity: ActivityType.GAME,
-        phraseKey: nextGamePhrase?.key,
+        contentKey: nextGamePhrase?.key,
         groupKey: groupKey
       })
     return;
@@ -182,7 +173,7 @@ export function useActivityMediator(): IActivityMediatorReturn {
         activitySignal.value = ActivityType.GAME;
         updateLocation({
           activity: ActivityType.GAME,
-          phraseKey: nextPhraseInGroup.key,
+          contentKey: nextPhraseInGroup.key,
           groupKey: nextPhraseInGroup.tutorialGroup
         })
         return;
@@ -197,7 +188,7 @@ export function useActivityMediator(): IActivityMediatorReturn {
         //TODO: The properties have to have a way to be zeroed out.
         updateLocation({
           activity: resultActivity,
-          phraseKey: nextTutorial.phrase ?? '',
+          contentKey: nextTutorial.phrase ?? '',
           groupKey: nextTutorial.tutorialGroup ?? ''
         })
         return;
@@ -209,7 +200,7 @@ export function useActivityMediator(): IActivityMediatorReturn {
       setGamePhrase(nextGamePhrase);
       updateLocation({
         activity:ActivityType.GAME,
-        phraseKey: nextGamePhrase.key,
+        contentKey: nextGamePhrase.key,
         groupKey: nextGamePhrase.tutorialGroup
       })
       activitySignal.value = ActivityType.GAME;

@@ -45,7 +45,7 @@ export function useReactiveLocation() {
 
   const updateLocation = useCallback((options: {
     activity?: ActivityType | null;
-    phraseKey?: string | null;
+    contentKey?: string | null;
     groupKey?: string | null;
   }) => {
     const currentLocation = parseLocation();
@@ -53,8 +53,8 @@ export function useReactiveLocation() {
     const newActivity = options.activity === undefined ? currentLocation.activityKey :
       (options.activity === null ? ActivityType.NORMAL : options.activity);
 
-    const newPhraseKey = options.phraseKey === undefined ? currentLocation.phraseKey :
-      (options.phraseKey === null ? '' : options.phraseKey.replace('\r', '_r'));
+    const newPhraseKey = options.contentKey === undefined ? currentLocation.phraseKey :
+      (options.contentKey === null ? '' : options.contentKey.replace('\r', '_r'));
 
     const newGroupKey = options.groupKey === undefined ? currentLocation.groupKey :
       (options.groupKey === null ? '' : options.groupKey);

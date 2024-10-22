@@ -4,6 +4,7 @@ import { ICommand } from '../contexts/CommandContext';
 import { clearCommand } from './clearCommand';
 import { ListPhrasesCommand } from './ListPhrasesCommand';
 import { wrtCommand } from './wrtCommand';
+import EditCommand from './editCommand'
 
 export type ICommandRegistryItems = Record<string, ICommand>;
 
@@ -14,6 +15,7 @@ class CommandRegistry {
         'clear': clearCommand,
         'ls': ListPhrasesCommand,
         'wrt': wrtCommand,
+        'edit': EditCommand,
     };
 
     register(command: ICommand) {

@@ -1,33 +1,28 @@
-import React, { useEffect, useRef, useState, useCallback, useImperativeHandle, ReactNode } from 'react';
+import React, { useEffect, useRef, useState, useCallback, useImperativeHandle } from 'react';
 import { ActivityType, OutputElement, GamePhrase } from '../types/Types';
 import { useActivityMediator } from 'src/hooks/useActivityMediator';
 import Game, { IGameHandle } from '../game/Game';
 import { IAuthProps } from '../lib/useAuth';
-import GamePhrases from '../utils/GamePhrases';
 import NextCharsDisplay, { NextCharsDisplayHandle } from './NextCharsDisplay';
 import { TutorialManager } from './TutorialManager';
 import { Chord } from './Chord';
 import { Prompt } from './Prompt';
-import { LogKeys } from '../types/TerminalTypes';
 import { useResizeCanvasAndFont } from '../hooks/useResizeCanvasAndFont';
 import { useTerminal } from '../hooks/useTerminal';
 import { useWPMCalculator } from '../hooks/useWPMCaculator';
-import { activitySignal, isEditModeSignal, isInTutorialModeSignal, isShowVideoSignal } from 'src/signals/appSignals';
+import { activitySignal, isEditModeSignal, isShowVideoSignal } from 'src/signals/appSignals';
 import {
   setGamePhrase,
   isInGameModeSignal,
 } from 'src/signals/gameSignals'
-import { commandLineSignal, commandSignal, commandTimeSignal } from 'src/signals/commandLineSignals';
-import { useComputed, useSignalEffect } from '@preact/signals-react';
-import { getNextTutorial, setNextTutorial, tutorialSignal } from 'src/signals/tutorialSignals';
+import { useComputed } from '@preact/signals-react';
 import MonacoEditor from './MonacoEditor';
 import WebCam from 'src/utils/WebCam';
-import { useLocation, useSearchParams } from 'react-router-dom';
 import { useReactiveLocation } from 'src/hooks/useReactiveLocation';
 import { createLogger, LogLevel } from 'src/utils/Logger';
-import { parse } from 'path';
+import { commandTimeSignal } from 'src/signals/commandLineSignals';
 
-const logger = createLogger('useReactiveLocation', LogLevel.DEBUG);
+const logger = createLogger('HandTermWrapper', LogLevel.DEBUG);
 
 export interface IHandTermWrapperProps {
   // Define the interface for your HandexTerm logic
@@ -97,7 +92,7 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
   });
   // Use useImperativeHandle to update both refs
   useImperativeHandle(forwardedRef, () => internalRef.current);
-  const {parseLocation} = useReactiveLocation();
+  const { parseLocation, updateLocation } = useReactiveLocation();
 
   useEffect(() => {
     if (isGameInitialized && gameHandleRef.current) {
@@ -229,6 +224,18 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
     resetPrompt();
   }
 
+  function handleEditSave(value: string): void {
+    localStorage.setItem('edit-content', value);
+  }
+
+  function handleEditorClose(): void {
+    updateLocation({
+      activity: ActivityType.NORMAL,
+      contentKey: null,
+      groupKey: null
+    })
+  }
+
   return (
     <>
       {(parseLocation().activityKey === ActivityType.GAME)
@@ -266,9 +273,9 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
       }
       {parseLocation().activityKey === ActivityType.EDIT && (
         <MonacoEditor
-          initialValue={editContent}
-          language={editLanguage}
-          onChange={(value) => handleEditChange(value || '')}
+          initialValue={localStorage.getItem('edit-content') || ''}
+          language="markdown"
+          onChange={(value) => handleEditSave(value || '')}
           onSave={handleEditSave}
           onClose={handleEditorClose}
         />
