@@ -163,9 +163,10 @@ export function useActivityMediator(): IActivityMediatorReturn {
       return;
     }
     activitySignal.value = ActivityType.GAME;
-      updateLocation({
+      const nextGamePhrase = getNextGamePhrase();
+      if(nextGamePhrase) updateLocation({
         activity: ActivityType.GAME,
-        phraseKey: GamePhrases.getGamePhrasesNotAchieved()[0].key,
+        phraseKey: nextGamePhrase?.key,
         groupKey: groupKey
       })
     return;
@@ -203,9 +204,9 @@ export function useActivityMediator(): IActivityMediatorReturn {
       }
     }
 
-    const nextGamePhrase = GamePhrases.getGamePhrasesNotAchieved()[0];
+    const nextGamePhrase = getNextGamePhrase();
     if (nextGamePhrase) {
-      setGamePhrase(getNextGamePhrase());
+      setGamePhrase(nextGamePhrase);
       updateLocation({
         activity:ActivityType.GAME,
         phraseKey: nextGamePhrase.key,

@@ -45,7 +45,6 @@ export const getIncompletePhrasesByTutorialGroup = (tutorialGroup: string):GameP
   const phrasesInGroup = Phrases.filter(p => p.tutorialGroup === tutorialGroup);
   const incompletePhrasesInGroup = phrasesInGroup
     .filter(pig => !Array.from(completedGamePhrasesSignal.value).includes(pig.key) ) 
-
   return incompletePhrasesInGroup;
 }
 

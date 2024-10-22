@@ -19,12 +19,6 @@ export default class GamePhrases {
         return phrases;
     }
 
-    public static getIncompletePhrasesByTutorialGroup=(tutorialGroup: string): GamePhrase[] => {
-        const gamePhrasesByGroup = this.getGamePhrasesByTutorialGroup(tutorialGroup);
-        const incompletePhrases = this.getGamePhrasesNotAchieved();
-        return gamePhrasesByGroup.filter(p => incompletePhrases.includes(p));
-    }
-
     public checkGamePhrases = (): MyResponse<any> => {
         let response: MyResponse<any> = {
             status: 200,
@@ -73,16 +67,6 @@ export default class GamePhrases {
             return { wpm, phraseName };
         });
         return phrasesAchieved;
-    }
-
-    public static getGamePhrasesNotAchieved = () => {
-        const phrasesAchieved = this.getGamePhrasesAchieved().map((phrase: { wpm: number; phraseName: string }) => phrase.phraseName);
-        return Phrases.filter((phrase) => !phrasesAchieved.includes(phrase.key));
-    }
-
-    public static getNthGamePhraseNotAchieved = (n: number) => {
-        const gamePhrasesNotAchieved = this.getGamePhrasesNotAchieved();
-        return gamePhrasesNotAchieved[n];
     }
 
     public static resetGamePhrasesAchieved = () => {
