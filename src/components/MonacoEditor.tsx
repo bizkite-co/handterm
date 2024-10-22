@@ -2,15 +2,6 @@
 import { useRef, useEffect, useImperativeHandle, forwardRef } from 'react';
 import Editor from "@monaco-editor/react";
 
-interface MonacoEditorProps {
-  initialValue: string;
-  language: 'javascript' | 'typescript' | 'markdown';
-  onChange?: (value: string | undefined) => void;
-  onSave?: (value: string) => void;
-  onClose?: () => void;
-  height?: string;
-  toggleVideo?: () => boolean;
-}
 
 declare global {
   interface Window {
@@ -25,7 +16,7 @@ export interface MonacoEditorHandle {
   focus: () => void;
 }
 
-const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(({ initialValue, language, onChange, onSave, onClose, height = '80vh', toggleVideo }, ref) => {
+const MonacoEditor = forwardRef<MonacoEditorHandle>(({}, ref) => {
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const statusNodeRef = useRef<HTMLDivElement>(null);
 

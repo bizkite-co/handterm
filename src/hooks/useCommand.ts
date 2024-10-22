@@ -22,9 +22,7 @@ export const useCommand = () => {
     const { 
         handleCommandExecuted, 
         checkTutorialProgress 
-    } = useActivityMediator({
-        currentActivity,
-    });
+    } = useActivityMediator();
     const wpmCalculator = useWPMCalculator();
     const context = useContext(CommandContext);
 
