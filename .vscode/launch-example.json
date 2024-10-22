@@ -1,25 +1,20 @@
-{
-    "configurations": [
-        {
-            "type": "msedge",
-            "request": "launch",
-            "name": "Launch Edge",
-            "url": "http://localhost:5173",
-            "webRoot": "${workspaceFolder}",
-            "sourceMaps": true,
-            "resolveSourceMapLocations": [
-                "${workspaceFolder}/**",
-                "!**/node_modules/**"
-            ],
-            "sourceMapPathOverrides": {
-                "webpack:///./*": "${webRoot}/*",
-                "webpack:///*": "*",
-                "webpack:///src/*": "${webRoot}/src/*"
-            },
-            "runtimeArgs": [
-                "--preserve-symlinks",
-                "--inprivate"
-            ]
-        }
-    ]
-}
+{                                                                      
+   "version": "0.2.0",                                                  
+   "configurations": [                                                  
+     {                                                                  
+       "type": "chrome",                                                
+       "request": "launch",                                             
+       "name": "Launch Chrome in Incognito Mode",                       
+       "url": "http://localhost:5173", // Default Vite dev server port  
+       "webRoot": "${workspaceFolder}",                                 
+       "runtimeArgs": [                                                 
+         "--incognito",                                                 
+         "--new-window"                                                 
+       ],                                                               
+       "sourceMaps": true,                                              
+       "sourceMapPathOverrides": {                                      
+         "webpack:///./src/*": "${webRoot}/src/*"                       
+       }                                                                
+     }                                                                  
+   ]                                                                    
+ }          
