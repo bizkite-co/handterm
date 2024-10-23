@@ -47,8 +47,8 @@ const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, INextCharsDisp
     const { parseLocation } = useReactiveLocation();
 
     useEffect(() => {
-        if (!parseLocation().activityKey || !parseLocation().phraseKey) return;
-        const foundPhrase = GamePhrases.getGamePhraseByKey(parseLocation().phraseKey ?? '');
+        if (!parseLocation().activityKey || !parseLocation().contentKey) return;
+        const foundPhrase = GamePhrases.getGamePhraseByKey(parseLocation().contentKey ?? '');
         if (!foundPhrase) return;
         setGamePhrase(foundPhrase);
         setPhrase(new Phrase(foundPhrase.value.split('')));
@@ -175,7 +175,7 @@ const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, INextCharsDisp
     };
 
     return (
-        (parseLocation().phraseKey &&
+        (parseLocation().contentKey &&
             <div
                 id={TerminalCssClasses.NextChars}
                 hidden={!isInPhraseMode}

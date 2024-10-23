@@ -36,7 +36,7 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(({ initia
 
   const handleEditorClose = (): void => {
     updateLocation({
-      activity: ActivityType.NORMAL,
+      activityKey: ActivityType.NORMAL,
       contentKey: null,
       groupKey: null
     })

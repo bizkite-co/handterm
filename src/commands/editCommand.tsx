@@ -15,7 +15,9 @@ const EditCommand: ICommand = {
     ): ICommandResponse => {
         if (parsedCommand.command.toLowerCase() === 'edit') {
             context.updateLocation({
-                activity: ActivityType.EDIT
+                activityKey: ActivityType.EDIT,
+                contentKey: parsedCommand.args[0] || '_index.md',
+                groupKey: null
             })
             return { status: 200, message: "Editing file content" };
         }

@@ -190,6 +190,6 @@ export type Activity = typeof VALID_ACTIVITIES[number];
 
 export type ParsedLocation = {
   activityKey: ActivityType;
-  phraseKey?: string;
-  groupKey?: string;
+  contentKey?: string | null;
+  groupKey?: string | null;
 };

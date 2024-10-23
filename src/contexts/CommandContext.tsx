@@ -2,7 +2,7 @@
 import React, { createContext, ReactDOM, useContext } from 'react';
 import { IAuthProps } from '../lib/useAuth';
 import { IHandTermWrapperMethods } from '../components/HandTermWrapper';
-import { ActivityType, OutputElement, ParsedCommand } from '../types/Types';
+import { ActivityType, OutputElement, ParsedCommand, ParsedLocation } from '../types/Types';
 import { useReactiveLocation } from 'src/hooks/useReactiveLocation';
 
 export interface ICommandResponse {
@@ -29,11 +29,7 @@ export interface ICommandContext {
   appendToOutput: (output: OutputElement) => void;
   handTermRef: React.RefObject<IHandTermWrapperMethods>;
   auth: IAuthProps;  
-  updateLocation: (options: {
-    activity?: ActivityType | null;
-    phraseKey?: string | null;
-    groupKey?: string | null;
-  }) => void;
+  updateLocation: (options: ParsedLocation) => void;
 }
 
 export const CommandContext = createContext<ICommandContext | null>(null);

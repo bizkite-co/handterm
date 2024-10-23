@@ -230,7 +230,7 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
 
   function handleEditorClose(): void {
     updateLocation({
-      activity: ActivityType.NORMAL,
+      activityKey: ActivityType.NORMAL,
       contentKey: null,
       groupKey: null
     })

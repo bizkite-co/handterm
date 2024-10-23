@@ -37,22 +37,18 @@ export function useReactiveLocation() {
     const parsedActivity: ActivityType = parseActivityType(activityKey || '');
     return {
       activityKey: parsedActivity,
-      phraseKey: decodeURIComponent(phraseKey) || undefined,
+      contentKey: decodeURIComponent(phraseKey) || undefined,
       groupKey: decodeURIComponent(searchParams.get('group') ?? '') || undefined
     };
   }
 
-  const updateLocation = useCallback((options: {
-    activity?: ActivityType | null;
-    contentKey?: string | null;
-    groupKey?: string | null;
-  }) => {
+  const updateLocation = useCallback((options: ParsedLocation) => {
     const currentLocation = parseLocation();
 
-    const newActivity = options.activity === undefined ? currentLocation.activityKey :
-      (options.activity === null ? ActivityType.NORMAL : options.activity);
+    const newActivity = options.activityKey === undefined ? currentLocation.activityKey :
+      (options.activityKey === null ? ActivityType.NORMAL : options.activityKey);
 
-    const newPhraseKey = options.contentKey === undefined ? currentLocation.phraseKey :
+    const newPhraseKey = options.contentKey === undefined ? currentLocation.contentKey :
       (options.contentKey === null ? '' : options.contentKey.replace('\r', '_r'));
 
     const newGroupKey = options.groupKey === undefined ? currentLocation.groupKey :

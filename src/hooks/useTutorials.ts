@@ -38,7 +38,7 @@ export const useTutorial = () => {
     }
 
     const canUnlockTutorial = (command: string): boolean => {
-        const phraseKey = parseLocation().phraseKey ?? '';
+        const phraseKey = parseLocation().contentKey ?? '';
         const currentTutorial = getTutorialByPhrasekey(phraseKey);
         if (!currentTutorial?.phrase) {
             return false;

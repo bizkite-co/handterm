@@ -9,7 +9,7 @@ import { useTutorial } from 'src/hooks/useTutorials';
 
 export const TutorialManager: React.FC = memo(() => {
     const {parseLocation} = useReactiveLocation();
-    const phraseKey = parseLocation().phraseKey
+    const phraseKey = parseLocation().contentKey
     const tutorial = Tutorials.find(t => t.phrase === phraseKey?.replace('_r', '\r'));
     return (tutorial &&
         <div className="tutorial-component">
