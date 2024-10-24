@@ -1,7 +1,4 @@
-// src/lib/useAuth.ts
-
-import { useState, useEffect } from 'react';
-import axios, { AxiosResponse } from 'axios';
+// src/hooks/useAuth.ts
 import { ENDPOINTS } from '../shared/endpoints';
 import { MyResponse } from '../types/Types';
 import { LogKeys } from '../types/TerminalTypes';
@@ -12,8 +9,6 @@ import { useComputed } from '@preact/signals-react';
 export interface IAuthProps {
   login: (username: string, password: string) => Promise<MyResponse<unknown>>;
   logout: () => void;
-  isLoggedIn: boolean;
-  setIsLoggedIn: (value:boolean) => void;
   signUp: (
     username: string,
     password: string,
@@ -412,8 +407,6 @@ export const useAuth = ():IAuthProps => {
   };
 
   return {
-    isLoggedIn: isLoggedIn.value,
-    setIsLoggedIn,
     login: signIn,
     logout: signOut,
     signUp,
