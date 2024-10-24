@@ -71,8 +71,8 @@ export interface OutputElement {
   command: string;
   response: string;
   status: number;
-  wpmAverage: number;
-  characterAverages: ReadonlyArray<WPM>;
+  wpmAverage?: number;
+  characterAverages?: ReadonlyArray<WPM>;
   commandTime: Date;
 }
 
@@ -81,6 +81,15 @@ export type MyResponse<T> = {
   data?: T | undefined;
   message: string | undefined;
   error: string[];
+};
+
+export const VALID_ACTIVITIES = ['normal', 'game', 'tutorial', 'edit'] as const;
+export type Activity = typeof VALID_ACTIVITIES[number];
+
+export type ParsedLocation = {
+  activityKey: ActivityType;
+  contentKey?: string | null;
+  groupKey?: string | null;
 };
 
 export type Tutorial = {
@@ -184,12 +193,3 @@ export const Phrases: GamePhrase[] = [
   { key: "f()", value: "f() { return $(($1 & $2)); }; f 4 5; echo \"Bitwise AND: $?\"" },
   { key: "a=5", value: "a=5; b=3; c=$((a / b)); d=$((a - b)); echo $c $d; [ $a -gt $b ] && echo \"$a>$b\" || echo \"$a<$b\"; e=$(($a % $b)); echo \"Result: $e\"" }
 ];
-
-export const VALID_ACTIVITIES = ['normal', 'game', 'tutorial', 'edit'] as const;
-export type Activity = typeof VALID_ACTIVITIES[number];
-
-export type ParsedLocation = {
-  activityKey: ActivityType;
-  contentKey?: string | null;
-  groupKey?: string | null;
-};

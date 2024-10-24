@@ -8,6 +8,26 @@ export const activitySignal = signal<ActivityType>(ActivityType.NORMAL);
 export const notificationSignal = signal<string | null>(null)
 export const isEditModeSignal = signal<boolean>(false);
 export const isShowVideoSignal = signal<boolean>(false);
+export const bypassTutorialSignal = signal<boolean>(false);
+export const isInLoginProcessSignal = signal<boolean>(false);
+export const tempUserNameSignal = signal<string>('');
+export const tempPasswordSignal = signal<string>('');
+
+export const setIsInLoginProcess = (value: boolean) => {
+    isInLoginProcessSignal.value = value;
+};
+
+export const setTempUserName = (value: string) => {
+    tempUserNameSignal.value = value;
+};
+
+export const setTempPassword = (value: string) => {
+    tempPasswordSignal.value = value;
+};
+
+export const setBypassTutorial = (value: boolean) => {
+  bypassTutorialSignal.value = value;
+};
 
 const { signal: outputElementsSignal, update: updateOutput } = createPersistentSignal({
     key: currentOutputKey,
@@ -36,3 +56,14 @@ export const appendToOutput = (element: OutputElement) => {
 export const setNotification = (notification: string) => {
     notificationSignal.value = notification;
 }
+
+export const isLoggedInSignal = signal<boolean>(false);
+export const userNameSignal = signal<string | null>(null);
+
+export const setIsLoggedIn = (value: boolean) => {
+  isLoggedInSignal.value = value;
+};
+
+export const setUserName = (name: string | null) => {
+  userNameSignal.value = name;
+};

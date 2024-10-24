@@ -1,213 +1,129 @@
 # Arrange Component and State Hierarchy
 
-## Component State Interactions
+## State Location Decision Tree
 
-1. Component-Specific State:
-   - Editor state (like editContent, editFilePath, etc.) should be managed within the MonacoEditor.tsx and related files.
-   - Game state should be managed within the Game component.
-     - The game needs access to the terminal state, which controls the game.
-   - Terminal-specific state should stay within the Terminal component.
+1. Local Component State (useState)
+   - Use when: State is only used within one component
+   - Example: Form input temporary values, UI toggle states
+   - ✅ RECOMMENDED for single-component state
 
-2. Shared/Global State:
-   - Keep only truly global states in AppContext, such as:
-     - currentActivity
-     - Command output history
-     - isLoggedIn
-     - userName
-   - These are states that genuinely affect multiple components or the overall app behavior.
+2. Parent-to-Child Props
+   - Use when: State needs to be shared with exactly one child
+   - Example: Passing configuration options down one level
+   - ✅ ACCEPTABLE for single-level sharing
+   - ⚠️ Consider alternatives if child needs to update parent
 
-3. Command Handling:
-   - Use CommandContext to manage command-related state and functions:
-     - executeCommand
-     - commandHistory
-     - WPM calculation
+3. Multi-Component State Sharing
+   - When state needs to be accessed/modified by multiple components:
+   - ❌ AVOID prop drilling (passing through multiple components)
+   - ✅ USE instead:
+     a. Signals (for global reactive state)
+     b. Context (for subtree state with many consumers)
+     c. State management library (for complex state logic)
 
-4. Terminal Management:
-   - Use useTerminal hook for xterm-specific functionality:
-     - xtermRef
-     - commandLine
-     - writeToTerminal
-     - resetPrompt
+## State Management Selection Criteria
 
-5. Activity Mediation:
-   - Use ActivityMediatorContext for managing transitions between different activities (normal, game, tutorial, edit).
-   - ActivityMediatorContext should include methods to start and stop activities, including the Game.
-
-6. Game Initialization:
-   - The ActivityMediator should be responsible for initiating the Game when currentActivity changes to GAME.
-   - The ActivityMediator should pass necessary data (like tutorialGroup) to the Game when starting it.
-
-Here's an updated component and state structure:
-
-```
-App
-├── AppContext (global state)
-│   ├── currentActivity
-│   ├── Command output history
-│   ├── isLoggedIn
-│   └── userName
-├── ActivityMediatorContext
-│   ├── currentActivity
-│   ├── startGame(tutorialGroup?)
-│   ├── stopGame()
-│   └── determineActivityState()
-├── Terminal
-│   ├── State: commandHistory, currentCommand
-│   └── Context: TerminalContext (if needed)
-├── Editor
-│   ├── State: editContent, editFilePath, isEditMode
-│   └── Context: EditorContext (if needed)
-├── Game
-│   ├── State: gameState, score, currentCommand, animation level, challenge phrase
-│   └── Context: GameContext (if needed)
-└── Authentication
-    ├── State: authStatus
-    └── Context: AuthContext
+| Scenario                          | Recommended Approach | Rationale                     |
+| --------------------------------- | -------------------- | ----------------------------- |
+| UI-only state in single component | Local useState       | Simplest, most encapsulated   |
+| Shared between parent/child       | Props                | Direct relationship           |
+| Used across component tree        | Signals/Context      | Avoid prop drilling           |
+| Global app state                  | Signals              | Reactive, easy to debug       |
+| Complex state logic               | State library        | Better state management tools |
 ```
 
+For diagramming, I'd suggest a combination of:
+
+1. Component/State Flow Diagram:
 ```mermaid
-flowchart TD
-    A[App] --> AC[AppContext]
-    A --> AMC[ActivityMediatorContext]
-    AMC --> T[Terminal]
-    AMC --> E[Editor]
-    AMC --> G[Game]
-
-    T --> |Uses| TS[TerminalState]
-    E --> |Uses| ES[EditorState]
-    G --> |Uses| GSt[GameState]
-
-    subgraph history
-      direction TB
-      AC --> |Updates| CI[commandHistory]
-      AC --> TO[Terminal<br/>Output]
+graph TD
+    subgraph State Types
+        L[Local State<br/>useState] --- P[Props<br/>parent→child]
+        G[Global State<br/>signals] --- C[Context<br/>subtree state]
     end
 
-    TS --> |Updates| CLI[currentCommandLine]
-    ES --> |Updates| EC[editContent]
-    GSt --> |Updates| GSc[gameScore]
-
-    CLI --> |Updates| GSt
-
-    U[User Input] --> |Triggers| T
-    T --> |Triggers| E
-    T --> |commandLine,Command| G
-    T ==> |Command| AMC
-
-    N[API] --> |Fetches Data| AC
-
-    subgraph auth
-      direction TB
-      AC --> |Updates Global State| O[isLoggedIn]
-      AC --> |Updates Global State| UN[userName]
+    subgraph Decision Points
+        D1{Multiple<br/>Components?} -->|No| L
+        D1 -->|Yes| D2{How Many?}
+        D2 -->|One Level| P
+        D2 -->|Multiple| D3{Scope?}
+        D3 -->|Global| G
+        D3 -->|Subtree| C
     end
-
-    AMC --> |Manages| CA[currentActivity]
-    AMC --> |Provides| SG[startGame]
-    AMC --> |Provides| StG[stopGame]
-    AMC --> |Provides| DAS[determineActivityState]
 ```
 
-## Activity State Flow
-
-1. The `ActivityMediatorProvider` wraps the main `App` component and provides the `ActivityMediatorContext`.
-
-2. The `ActivityMediatorContext` contains the `currentActivity` state, methods to update it, and methods to start/stop activities.
-
-3. Various components (HandTermWrapper, TutorialManager, and others) consume the ActivityMediatorContext.
-
-4. The `useActivityMediator` hook is used to interact with the ActivityMediatorContext.
-
-5. When a command is executed (either through user interaction or programmatically), it triggers the `handleCommandExecuted` function.
-
-6. `handleCommandExecuted` calls `determineActivityState`, which decides whether to update the `currentActivity`.
-
-7. If an update is needed, the `currentActivity` in the ActivityMediatorContext is updated.
-
-8. If the new `currentActivity` is GAME, the `startGame` method in ActivityMediatorContext is called, potentially with a `tutorialGroup` parameter.
-
-9. The `startGame` method is responsible for initializing the Game component with the necessary data.
-
-10. This update triggers re-renders in components that depend on `currentActivity`.
-
-### Implementation
-
-1. Keep the `currentActivity` state in the `ActivityMediatorContext`, making it globally accessible.
-2. Maintain the `useActivityMediator` hook with all its existing functionality.
-3. Update `useActivityMediator` to include `startGame` and `stopGame` methods.
-4. In the Game component, use the ActivityMediatorContext to receive the signal to start or stop the game.
-5. When `startGame` is called from `useActivityMediator`, it should pass any necessary data (like `tutorialGroup`) to the Game component.
-
-This structure allows for a clear separation of concerns:
-- The ActivityMediator determines when to start or stop the game.
-- The Game component manages its own internal state and logic.
-- The command handling (in useCommand) can trigger activity changes through the ActivityMediator.
-
+2. C4 Container Diagram for Component Relationships:
 ```mermaid
-flowchart TD
-    A[App] --> AC[ActivityMediatorContext]
-    AC --> |Provides currentActivity| UAM[useActivityMediator]
-    UAM --> T[Terminal]
-    UAM --> E[Editor]
-    UAM --> G[Game]
-
-    T --> |Uses| TS[TerminalState]
-    E --> |Uses| ES[EditorState]
-    G --> |Uses| GSt[GameState]
-
-    subgraph ActivityMediatorContext
-      direction TB
-      AC --> |Manages| CA[currentActivity]
-      UAM --> |Reads| CA
-      UAM --> |Provides| DAS[determineActivityState]
-      UAM --> |Provides| HCE[handleCommandExecuted]
-    end
-
-    TS --> |Updates| CLI[currentCommandLine]
-    ES --> |Updates| EC[editContent]
-    GSt --> |Updates| GSc[gameScore]
-
-    CLI --> |Updates| GSt
-
-    U[User Input] --> |Triggers| T
-    T --> |Triggers| E
-    T --> |commandLine,Command| G
-    T ==> |Command| HCE
-    HCE --> |Calls| DAS
-    DAS --> |Updates| CA
+C4Container
+    Container(app, "App", "React", "Application container")
+    Container(term, "Terminal", "Component", "Terminal interface")
+    Container(login, "Login", "Component", "Login handling")
+    Container(signals, "AppSignals", "State", "Global reactive state")
+    
+    Rel(term, "reads/writes", signals, "login state")
+    Rel(login, "updates", signals, "auth state")
+    UpdateRelStyle(term, signals, "red", "dashed")
 ```
 
+3. State Flow Matrix:
 ```mermaid
-graph LR
-    A[App] --> AC[AppContext]
-    A --> AMC[ActivityMediatorContext]
-    A --> CP[CommandProvider]
-    A --> HTW[HandTermWrapper]
-    HTW --> T[Terminal]
-    HTW --> G[Game]
-    HTW --> E[Editor]
-    HTW --> TM[TutorialManager]
-
-    subgraph Signals
-        AS[Activity Signals]
-        CLS[Command Line Signals]
-    end
-
-    HTW --> AS
-    HTW --> CLS
-    T --> CLS
-    G --> AS
-    TM --> AS
-
-    subgraph Hooks
-        UAM[useActivityMediator]
-        UT[useTerminal]
-        UWPM[useWPMCalculator]
-        UTut[useTutorial]
-    end
-
-    HTW --> UAM
-    HTW --> UT
-    HTW --> UWPM
-    HTW --> UTut
+journey
+    section Local State
+        Single Component: 5: useState
+        UI Toggles: 5: useState
+    section Props
+        Parent to Child: 3: props
+        Child to Parent: 1: avoid
+    section Global State
+        Auth State: 5: signals
+        App Config: 5: signals
+        Feature Flags: 5: signals
 ```
+
+**Signals vs Context**
+- **Signals** (like @preact/signals-react):
+  - Best for: Global state that needs reactive updates
+  - Advantages:
+    - Simple API (get/set values)
+    - No provider wrapping needed
+    - Automatic re-rendering optimization
+    - Easy to debug (values are inspectable)
+  - Use when:
+    - State needs to be accessed anywhere in the app
+    - You want immediate reactive updates
+    - State is relatively simple (key-value pairs)
+    - Example: User auth state, theme settings, feature flags
+
+- **Context**:
+  - Best for: Subtree-specific state that multiple components need
+  - Advantages:
+    - Scoped to specific component tree
+    - Can provide complex objects/functions
+    - Built into React
+    - Explicit provider boundary
+  - Use when:
+    - State is specific to a feature/section
+    - You need to provide multiple related values/functions together
+    - You want to avoid global namespace pollution
+    - Example: Form context, localization context for a section
+
+**State Libraries**:
+- **XState**: 
+  - For complex state machines and workflows
+  - When you need visual state charts
+  - Complex business logic with many states/transitions
+
+- **Redux**:
+  - Large applications with complex state interactions
+  - When you need strong dev tools and time-travel debugging
+  - Centralized state management with strict patterns
+
+- **MobX**:
+  - Complex observable state trees
+  - When you need fine-grained reactivity
+  - Object-oriented state management
+
+- **Zustand**:
+  - Simpler alternative to Redux
+  - When you need middleware but want less boilerplate
+  - Modern alternative to complex state libraries

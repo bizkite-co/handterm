@@ -9,6 +9,8 @@ import { AppProvider } from './contexts/AppContext';
 import { CommandProvider } from './contexts/CommandProvider';
 import { ActivityMediatorProvider } from './contexts/ActivityMediatorContext';
 import { useReactiveLocation } from './hooks/useReactiveLocation';
+import { bypassTutorialSignal } from './signals/appSignals';
+import { useComputed } from '@preact/signals-react';
 
 // const MemoizedOutput = React.memo(Output);
 
@@ -19,6 +21,7 @@ export default function App() {
   const auth = useAuth();
   const handexTermWrapperRef = useRef<IHandTermWrapperMethods>(null);
   const { parseLocation } = useReactiveLocation();
+  const isBypassActive = useComputed(() => bypassTutorialSignal.value);
 
   const getContainerWidth = () => {
     return containerRef.current?.clientWidth ?? 0
@@ -91,6 +94,11 @@ export default function App() {
             {parseLocation().activityKey !== ActivityType.EDIT
               && <Output />
             }
+            {isBypassActive.value && (
+              <div style={{ position: 'fixed', top: 0, right: 0, background: 'yellow', padding: '5px' }}>
+                Bypass Mode Active
+              </div>
+            )}
             <HandTermWrapper
               ref={handexTermWrapperRef}
               auth={auth}

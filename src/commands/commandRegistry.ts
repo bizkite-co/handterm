@@ -5,6 +5,7 @@ import { clearCommand } from './clearCommand';
 import { ListPhrasesCommand } from './ListPhrasesCommand';
 import { wrtCommand } from './wrtCommand';
 import EditCommand from './editCommand'
+import { LoginCommand } from './LoginCommand';
 
 export type ICommandRegistryItems = Record<string, ICommand>;
 
@@ -16,6 +17,7 @@ class CommandRegistry {
         'ls': ListPhrasesCommand,
         'wrt': wrtCommand,
         'edit': EditCommand,
+        'login': LoginCommand, 
     };
 
     register(command: ICommand) {

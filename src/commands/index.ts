@@ -8,6 +8,8 @@ import { wrtCommand } from './wrtCommand';
 import { cleanCommand } from './cleanCommand';
 import HelpCommand from './HelpCommand';
 import EditCommand from './editCommand';
+import { LoginCommand } from './LoginCommand';
+import { BypassCommand } from './BypassCommand';
 
 commandRegistry.register(clearCommand);
 commandRegistry.register(cleanCommand);
@@ -16,3 +18,5 @@ commandRegistry.register(archiveCommand);
 commandRegistry.register(wrtCommand);
 commandRegistry.register(HelpCommand);
 commandRegistry.register(EditCommand);
+commandRegistry.register(LoginCommand);
+commandRegistry.register(BypassCommand);

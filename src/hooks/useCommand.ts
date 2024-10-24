@@ -10,8 +10,7 @@ import { activitySignal, appendToOutput } from 'src/signals/appSignals';
 import { useComputed } from '@preact/signals-react';
 import { useWPMCalculator } from './useWPMCaculator';
 import { setCommandTime } from 'src/signals/commandLineSignals';
-
-export interface IUseCommandProps { }
+import { useAuth } from 'src/lib/useAuth';
 
 export const useCommand = () => {
     const [output, setOutput] = useState<React.ReactNode[]>([]);
@@ -85,30 +84,28 @@ export const useCommand = () => {
         addToCommandHistory(command);
     }, [createCommandRecord, appendToOutput, addToCommandHistory]);
 
-    const executeCommand = useCallback(async (inputCmd: string) => {
-        const parsedCommand: ParsedCommand = parseCommand(inputCmd);
+    const executeCommand = useCallback(async (parsedCommand: ParsedCommand) => {
         const command = commandRegistry.getCommand(parsedCommand.command);
         if (command && context) {
-            const response = await command.execute(context, parsedCommand);
-            processCommandOutput(inputCmd, response.message, response.status);
+            const response = command.execute(context, parsedCommand);
+            processCommandOutput(parsedCommand.command, response.message, response.status);
             handleCommandExecuted(parsedCommand);
         } else {
-            // Fix: Correct the arguments for processCommandOutput
-            const response = currentActivity.value === ActivityType.TUTORIAL ? `Tutorial attempt: ${inputCmd}` : `Command not found: ${inputCmd}`;
-            processCommandOutput(inputCmd, response, 404);
+            const response = currentActivity.value === ActivityType.TUTORIAL ? `Tutorial attempt: ${parsedCommand.command}` : `Command not found: ${parsedCommand.command}`;
+            processCommandOutput(parsedCommand.command, response, 404);
             handleCommandExecuted(parsedCommand);
         }
-    }, [context, processCommandOutput, handleCommandExecuted]);
+    }, [context, processCommandOutput, handleCommandExecuted, currentActivity]);
 
-    const handleCommand = useCallback((input: string) => {
-        setCommandTime(new Date);
+    const handleCommand = useCallback((parsedCommand: ParsedCommand) => {
+        setCommandTime(new Date());
         if (currentActivity.value === ActivityType.TUTORIAL) {
-            checkTutorialProgress(input);
+            checkTutorialProgress(parsedCommand.command);
             // TODO: Write result to output
         }
 
-        executeCommand(input);
-    }, [currentActivity.value, executeCommand]);
+        executeCommand(parsedCommand);
+    }, [currentActivity.value, executeCommand, setCommandTime, checkTutorialProgress]);
 
     return {
         output,

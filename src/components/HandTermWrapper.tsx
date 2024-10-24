@@ -51,7 +51,6 @@ export interface IHandTermWrapperMethods {
   setHeroSummersaultAction: () => void;
   setEditMode: (isEditMode: boolean) => void;
   handleEditSave: (content: string) => void;
-  // Add other methods as needed
 }
 
 const getTimestamp = (date: Date) => {
@@ -77,9 +76,12 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
   const activity = useComputed(() => activitySignal.value);
   const isGameInitialized = useComputed(() => isInGameModeSignal.value);
   const commandTime = useComputed(() => commandTimeSignal.value);
+  const [tempUserName, setTempUserName] = useState('');
+  const [tempPassword, setTempPassword] = useState('');
+
   // Create a mutable ref that will always have a current value
   const internalRef = useRef<IHandTermWrapperMethods>({
-    writeOutput: () => { },
+    writeOutput: (output: string) => { },
     prompt: () => { },
     saveCommandResponseHistory: () => '',
     handleCharacter: () => { },
@@ -90,6 +92,7 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
     setEditMode: () => { },
     handleEditSave: () => { },
   });
+
   // Use useImperativeHandle to update both refs
   useImperativeHandle(forwardedRef, () => internalRef.current);
   const { parseLocation, updateLocation } = useReactiveLocation();
@@ -263,14 +266,17 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
         />
       }
       {parseLocation().activityKey !== ActivityType.EDIT
-        && <Prompt
+        && ( 
+          <>
+        <Prompt
           username={userName || 'guest'}
           domain={domain || 'handterm.com'}
           githubUsername={githubUsername}
           timestamp={getTimestamp(commandTime.value)}
         />
-        && <div ref={xtermRef} />
-      }
+        <div ref={xtermRef} />
+        </>
+)}
       {parseLocation().activityKey === ActivityType.EDIT && (
         <MonacoEditor
           initialValue={localStorage.getItem('edit-content') || ''}

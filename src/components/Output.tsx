@@ -22,8 +22,8 @@ export const Output: React.FC = () => {
           response={element.response}
           status={element.status}
           wpms={{
-            wpmAverage: element.wpmAverage,
-            charWpms: element.characterAverages
+            wpmAverage: element?.wpmAverage ?? 0,
+            charWpms: element?.characterAverages ?? []
           }}
           commandTime={element.commandTime}
         />

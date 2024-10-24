@@ -1,10 +1,7 @@
 // src/contexts/AppContext.tsx
 import React, { createContext, useContext, useState, useCallback, ReactElement } from 'react';
 import { ActivityType, OutputElement, ParsedCommand } from '../types/Types';
-import { useCommandContext } from './CommandContext';
 import { useActivityMediatorContext } from './ActivityMediatorContext';
-import { parseCommand } from '../utils/commandUtils';
-import { useActivityMediator } from 'src/hooks/useActivityMediator';
 
 interface AppContextType {
   currentActivity: ActivityType;
@@ -28,12 +25,9 @@ export const useAppContext = () => {
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userName, setUserName] = useState<string | null>(null);
-  const [outputElements, setOutputElements] = useState<OutputElement[]>([]);
+  const [outputElements] = useState<OutputElement[]>([]);
 
   const { currentActivity } = useActivityMediatorContext();
-  const { handleCommandExecuted } = useActivityMediator({
-    currentActivity,
-  });
 
   const value: AppContextType = {
     currentActivity,

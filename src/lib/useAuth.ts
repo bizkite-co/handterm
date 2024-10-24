@@ -5,13 +5,15 @@ import axios, { AxiosResponse } from 'axios';
 import { ENDPOINTS } from '../shared/endpoints';
 import { MyResponse } from '../types/Types';
 import { LogKeys } from '../types/TerminalTypes';
+import { isLoggedInSignal, setIsLoggedIn, userNameSignal, setUserName } from '../signals/appSignals';
+import { useComputed } from '@preact/signals-react';
 
 // Define the interface for the auth object                                      
 export interface IAuthProps {
   login: (username: string, password: string) => Promise<MyResponse<unknown>>;
   logout: () => void;
   isLoggedIn: boolean;
-  setIsLoggedIn: React.Dispatch<React.SetStateAction<boolean>>;
+  setIsLoggedIn: (value:boolean) => void;
   signUp: (
     username: string,
     password: string,
@@ -43,10 +45,7 @@ export interface IAuthProps {
 }
 
 export const useAuth = ():IAuthProps => {
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() => {
-    const storedValue = localStorage.getItem('isLoggedIn') === 'true';
-    return storedValue;
-  });
+  const isLoggedIn = useComputed(() => isLoggedInSignal.value);
 
   const API_URL = ENDPOINTS.api.BaseUrl;
 
@@ -200,7 +199,8 @@ export const useAuth = ():IAuthProps => {
     // Ensure refreshTokenIfNeeded is awaited to complete the refresh before proceeding
     const refreshResponse = await refreshTokenIfNeeded();
     if (refreshResponse.status !== 200) {
-      console.error('Error refreshing access token:', refreshResponse.error);
+      // TODO: This is probably not an error. For instance, the user has not logged in yet.
+      // console.log('Error refreshing access token:', refreshResponse.error);
       return refreshResponse;
     }
     const accessToken = localStorage.getItem('AccessToken');
@@ -364,6 +364,7 @@ export const useAuth = ():IAuthProps => {
       const response = await axios.post(`${API_URL}${ENDPOINTS.api.SignIn}`, { username, password });
       console.log('Login successful:', response.data);
       setIsLoggedIn(true);
+      setUserName(username);
       localStorage.setItem('isLoggedIn', 'true');
       localStorage.setItem('AccessToken', response.data.AccessToken);
       localStorage.setItem('RefreshToken', response.data.RefreshToken);
@@ -390,6 +391,7 @@ export const useAuth = ():IAuthProps => {
       if (authConfig.status !== 200) return authConfig;
       await axios.get(`${API_URL}${ENDPOINTS.api.SignOut}`, authConfig.data);
       setIsLoggedIn(false);
+      setUserName(null)
       localStorage.removeItem('isLoggedIn');
       console.log('Signed out, isLoggedIn removed from localStorage');
     } catch (error) {
@@ -410,7 +412,7 @@ export const useAuth = ():IAuthProps => {
   };
 
   return {
-    isLoggedIn,
+    isLoggedIn: isLoggedIn.value,
     setIsLoggedIn,
     login: signIn,
     logout: signOut,

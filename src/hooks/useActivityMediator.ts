@@ -14,7 +14,7 @@ import {
   getNextGamePhrase,
   setGamePhrase,
 } from 'src/signals/gameSignals';
-import { activitySignal, setNotification } from 'src/signals/appSignals'
+import { activitySignal, setNotification, bypassTutorialSignal } from 'src/signals/appSignals'
 import { useComputed } from '@preact/signals-react';
 import { useReactiveLocation } from './useReactiveLocation';
 
@@ -41,9 +41,8 @@ export function useActivityMediator(): IActivityMediatorReturn {
   } = useTutorial();
   const activity = useComputed(() => activitySignal.value).value;
   const { updateLocation, parseLocation } = useReactiveLocation();
-  const [activityGroupKey, setActivityGroupKey] = useState<string>('');
-
-  const baseUrl = window.location.origin;
+  const [, setActivityGroupKey] = useState<string>('');
+  const bypassTutorial = useComputed(() => bypassTutorialSignal.value);
 
   useEffect(() => {
     const _activityGroup = parseLocation().groupKey || '';
@@ -51,6 +50,9 @@ export function useActivityMediator(): IActivityMediatorReturn {
   }, [window.location.pathname])
 
   const decideActivityChange = useCallback((commandActivity: ActivityType | null = null): ActivityType => {
+    if (bypassTutorial.value) {
+      return ActivityType.NORMAL;
+    }
     if (tutorialSignal.value && !tutorialSignal.value?.tutorialGroup && activity !== ActivityType.GAME) {
       return ActivityType.TUTORIAL;
     }
@@ -61,7 +63,7 @@ export function useActivityMediator(): IActivityMediatorReturn {
     if (getNextTutorial()) commandActivity = ActivityType.TUTORIAL;
 
     return commandActivity ?? ActivityType.NORMAL;
-  }, [activity, tutorialSignal]);
+  }, [activity, tutorialSignal, bypassTutorial]);
 
   const handleCommandExecuted = useCallback((parsedCommand: ParsedCommand): boolean => {
     let result = false;

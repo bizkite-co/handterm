@@ -10,8 +10,8 @@ interface PromptProps {
     githubUsername: string | null;
 }
 
-const PromptComponent: React.FC<PromptProps> = ({ domain, username, timestamp, githubUsername }) => {
-    const promptInfo = useComputed(()=> promptInfoSignal.value);
+export const Prompt: React.FC<PromptProps> = ({ domain, username, timestamp, githubUsername }) => {
+    const promptInfo = useComputed(() => promptInfoSignal.value);
 
     return (
         <pre id={TerminalCssClasses.Prompt}>
@@ -20,7 +20,7 @@ const PromptComponent: React.FC<PromptProps> = ({ domain, username, timestamp, g
             <span className="domain">@{domain}</span>
             {githubUsername &&
                 <span className="github">
-                    <i className="fa fa-github" aria-hidden="true"></i> 
+                    <i className="fa fa-github" aria-hidden="true"></i>
                     {githubUsername}
                 </span>
             }
@@ -29,4 +29,3 @@ const PromptComponent: React.FC<PromptProps> = ({ domain, username, timestamp, g
     )
 }
 
-export const Prompt = React.memo(PromptComponent);
