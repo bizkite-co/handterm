@@ -8,11 +8,11 @@ import { useWPMCalculator } from './useWPMCaculator';
 import { addKeystroke, commandLineSignal, setCommand } from 'src/signals/commandLineSignals';
 import { useComputed } from '@preact/signals-react';
 import { setCommandLine } from 'src/signals/commandLineSignals';
-import { isInLoginProcessSignal, setActivity, setIsInLoginProcess, setTempPassword, setTempUserName, tempPasswordSignal, tempUserNameSignal } from 'src/signals/appSignals';
+import { isInLoginProcessSignal, isInSignUpProcessSignal, setActivity, setIsInLoginProcess, setIsInSignUpProcess, setTempEmail, setTempPassword, setTempUserName, tempEmailSignal, tempPasswordSignal, tempUserNameSignal } from 'src/signals/appSignals';
 import { ActivityType, ParsedCommand } from 'src/types/Types';
 import { IUseCharacterHandlerProps, useCharacterHandler } from './useCharacterHandler';
 import { isLoggedInSignal, setIsLoggedIn, userNameSignal, setUserName } from '../signals/appSignals';
-import { useAuth } from 'src/lib/useAuth';
+import { useAuth } from 'src/hooks/useAuth';
 import { parseCommand } from 'src/utils/commandUtils';
 import { write } from 'fs';
 
@@ -72,64 +72,90 @@ export const useTerminal = () => {
   useEffect(() => {
     if (!instance) return;
 
-    const handleData = (data: string) => {
-      if (!instance) return;
-      const cursorX = instance.buffer.active.cursorX;
-
-      // Handle special control characters first
+    const handleControlCharacters = (data: string, cursorX: number) => {
       switch (data) {
         case '\x03': // Ctrl+C
           setCommandLine('');
           setActivity(ActivityType.NORMAL);
-          instance.write('^C');
+          instance?.write('^C');
           resetPrompt();
-          return;
+          return true;
 
         case '\r': // Enter key
-          if (isInLoginProcessSignal.value) {
-            // Handle login completion
-            const loginCommand = parseCommand([
-              'login',
-              tempUserNameSignal.value,
-              tempPasswordSignal.value
-            ].join(' '));
-            handleCommand(loginCommand);
-            setIsInLoginProcess(false);
-            setTempPassword('');
-            setTempUserName('');
-          } else {
-            // Handle normal command execution
-            const currentCommand = getCurrentCommand();
-            const parsedCommand = parseCommand(currentCommand === '' ? '\r' : currentCommand);
-            instance.write('\r\n');
-            setCommandLine('');
-            handleCommand(parsedCommand);
-            wpmCalculator.clearKeystrokes();
-          }
-          resetPrompt();
-          return;
+          handleEnterKey();
+          return true;
 
         case '\x7F': // Backspace
-          if (isInLoginProcessSignal.value) {
-            if (tempPasswordSignal.value.length > 0) {
-              tempPasswordSignal.value = tempPasswordSignal.value.slice(0, -1);
-              instance.write('\b \b');
-            }
-          } else if (cursorX > promptLength) {
-            instance.write('\b \b');
-            setCommandLine(commandLine.value.slice(0, -1));
-          }
-          return;
+          handleBackspace(cursorX);
+          return true;
 
         case '\x1b[D': // Left arrow
           if (cursorX > promptLength) {
-            instance.write(data);
+            instance?.write(data);
           }
-          return;
+          return true;
+
+        default:
+          return false;
+      }
+    };
+
+    const handleEnterKey = () => {
+      if (isInLoginProcessSignal.value) {
+        const loginCommand = parseCommand([
+          'login',
+          tempUserNameSignal.value,
+          tempPasswordSignal.value
+        ].join(' '));
+        handleCommand(loginCommand);
+        setIsInLoginProcess(false);
+        setTempPassword('');
+        setTempUserName('');
+      } else if (isInSignUpProcessSignal.value) {
+        const signupCommand = parseCommand([
+          'signup',
+          tempUserNameSignal.value,
+          tempEmailSignal.value,
+          tempPasswordSignal.value
+        ].join(' '));
+        handleCommand(signupCommand);
+        setIsInSignUpProcess(false);
+        setTempPassword('');
+        setTempUserName('');
+        setTempEmail('');
+      } else {
+        const currentCommand = getCurrentCommand();
+        const parsedCommand = parseCommand(currentCommand === '' ? '\r' : currentCommand);
+        instance?.write('\r\n');
+        setCommandLine('');
+        handleCommand(parsedCommand);
+        wpmCalculator.clearKeystrokes();
+      }
+      resetPrompt();
+    };
+
+    const handleBackspace = (cursorX: number) => {
+      if (isInLoginProcessSignal.value || isInSignUpProcessSignal.value) {
+        if (tempPasswordSignal.value.length > 0) {
+          tempPasswordSignal.value = tempPasswordSignal.value.slice(0, -1);
+          instance?.write('\b \b');
+        }
+      } else if (cursorX > promptLength) {
+        instance?.write('\b \b');
+        setCommandLine(commandLine.value.slice(0, -1));
+      }
+    };
+
+    const handleData = (data: string) => {
+      if (!instance) return;
+      const cursorX = instance.buffer.active.cursorX;
+
+      if (handleControlCharacters(data, cursorX)) {
+        return;
       }
 
       // Handle regular character input
-      if (isInLoginProcessSignal.value) {
+      if (isInLoginProcessSignal.value || isInSignUpProcessSignal.value) {
         tempPasswordSignal.value += data;
         handleCharacter(data); // This will handle masking
       } else {

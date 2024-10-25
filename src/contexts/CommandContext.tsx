@@ -1,6 +1,6 @@
 // src/contexts/CommandContext.tsx
 import React, { createContext, useContext } from 'react';
-import { IAuthProps } from '../lib/useAuth';
+import { IAuthProps } from '../hooks/useAuth';
 import { IHandTermWrapperMethods } from '../components/HandTermWrapper';
 import { OutputElement, ParsedCommand, ParsedLocation } from '../types/Types';
 
@@ -27,7 +27,7 @@ export interface ICommandContext {
   output: OutputElement[];
   appendToOutput: (output: OutputElement) => void;
   handTermRef: React.RefObject<IHandTermWrapperMethods>;
-  auth: IAuthProps;  
+  auth: IAuthProps;
   updateLocation: (options: ParsedLocation) => void;
 }
 

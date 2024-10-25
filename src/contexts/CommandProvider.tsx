@@ -2,7 +2,7 @@
 import React from 'react';
 import { CommandContext } from './CommandContext';
 import { useCommand } from '../hooks/useCommand';
-import { IAuthProps } from '../lib/useAuth';
+import { IAuthProps } from '../hooks/useAuth';
 import { IHandTermWrapperMethods } from '../components/HandTermWrapper';
 import { useReactiveLocation } from 'src/hooks/useReactiveLocation';
 

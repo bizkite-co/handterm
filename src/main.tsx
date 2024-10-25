@@ -2,6 +2,7 @@ import { Buffer } from 'buffer';
 import './commands';
 import React from 'react';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import { QueryProvider } from './providers/QueryProvider';
 import App from './App'
 
 window.Buffer = Buffer;
@@ -29,7 +30,9 @@ if (typeof global === 'undefined') {
     .createRoot(document.getElementById('root')!)
     .render(
       <React.StrictMode>
-        <RouterProvider router={router} />
+        <QueryProvider>
+          <RouterProvider router={router} />
+        </QueryProvider>
       </React.StrictMode>
     );
 })();

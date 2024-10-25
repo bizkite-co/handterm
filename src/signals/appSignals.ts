@@ -10,8 +10,17 @@ export const isEditModeSignal = signal<boolean>(false);
 export const isShowVideoSignal = signal<boolean>(false);
 export const bypassTutorialSignal = signal<boolean>(false);
 export const isInLoginProcessSignal = signal<boolean>(false);
+export const isInSignUpProcessSignal = signal<boolean>(false);
 export const tempUserNameSignal = signal<string>('');
 export const tempPasswordSignal = signal<string>('');
+export const tempEmailSignal = signal<string>('');
+
+export const setIsInSignUpProcess = (value: boolean) => {
+    isInSignUpProcessSignal.value = value;
+}
+export const setTempEmail = (value: string) => {
+    tempEmailSignal.value = value;
+}
 
 export const setIsInLoginProcess = (value: boolean) => {
     isInLoginProcessSignal.value = value;

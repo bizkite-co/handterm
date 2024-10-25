@@ -10,7 +10,7 @@ import { activitySignal, appendToOutput } from 'src/signals/appSignals';
 import { useComputed } from '@preact/signals-react';
 import { useWPMCalculator } from './useWPMCaculator';
 import { setCommandTime } from 'src/signals/commandLineSignals';
-import { useAuth } from 'src/lib/useAuth';
+import { useAuth } from 'src/hooks/useAuth';
 
 export const useCommand = () => {
     const [output, setOutput] = useState<React.ReactNode[]>([]);

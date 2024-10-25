@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { isInLoginProcessSignal } from 'src/signals/appSignals';
+import { isInLoginProcessSignal, isInSignUpProcessSignal } from 'src/signals/appSignals';
 
 interface IUseCharacterHandlerProps {
   setCommandLine: React.Dispatch<React.SetStateAction<string>>;
@@ -27,7 +27,7 @@ export const useCharacterHandler = ({
       setLastTypedCharacter(null);
     }
 
-    if (isInLoginProcessSignal.value) {
+    if (isInSignUpProcessSignal.value || isInLoginProcessSignal.value) {
       writeOutputInternal('*');
     }
 

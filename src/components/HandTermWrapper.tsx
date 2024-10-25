@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState, useCallback, useImperativeHandle } 
 import { ActivityType, OutputElement, GamePhrase } from '../types/Types';
 import { useActivityMediator } from 'src/hooks/useActivityMediator';
 import Game, { IGameHandle } from '../game/Game';
-import { IAuthProps } from '../lib/useAuth';
+import { IAuthProps } from '../hooks/useAuth';
 import NextCharsDisplay, { NextCharsDisplayHandle } from './NextCharsDisplay';
 import { TutorialManager } from './TutorialManager';
 import { Chord } from './Chord';

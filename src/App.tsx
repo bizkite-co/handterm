@@ -1,9 +1,10 @@
 // App.tsx
 import React, { useEffect, useRef, useState, useCallback } from 'react';
+import { QueryProvider } from './providers/QueryProvider';
 import { ActivityType, OutputElement } from './types/Types';
 import { HandTermWrapper, IHandTermWrapperMethods } from './components/HandTermWrapper';
 import { TerminalCssClasses } from './types/TerminalTypes';
-import { useAuth } from './lib/useAuth';
+import { useAuth } from './hooks/useAuth';
 import { Output } from './components/Output';
 import { AppProvider } from './contexts/AppContext';
 import { CommandProvider } from './contexts/CommandProvider';
@@ -85,9 +86,9 @@ export default function App() {
 
   return (
     <ActivityMediatorProvider>
-      <div ref={containerRef}>
-        <AppProvider>
-          <CommandProvider
+    <div ref={containerRef}>
+      <AppProvider>
+        <CommandProvider
             auth={auth}
             handTermRef={handexTermWrapperRef}
           >
@@ -105,9 +106,9 @@ export default function App() {
               terminalWidth={containerWidth}
               onOutputUpdate={handleOutputUpdate}
             />
-          </CommandProvider>
-        </AppProvider>
-      </div>
+        </CommandProvider>
+      </AppProvider>
+    </div>
     </ActivityMediatorProvider>
 
   );
