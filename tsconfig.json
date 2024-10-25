@@ -13,7 +13,11 @@
     ],
     "jsx": "react-jsx",
     "jsxImportSource": "react",
-    "types": ["node", "testing-library__jest-dom"],
+    "types": [
+      "node", 
+      "vite/client",
+      "testing-library__jest-dom"
+    ],
     "module": "ESNext",
     "skipLibCheck": true,
     "outDir": "./dist",

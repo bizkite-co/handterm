@@ -1,24 +1,14 @@
 // src/commands/index.ts
 
+// src/commands/index.ts
 import { commandRegistry } from './commandRegistry';
-import { clearCommand } from './clearCommand';
-import { ListPhrasesCommand } from "./ListPhrasesCommand";
-import { archiveCommand } from './archiveCommand';
-import { wrtCommand } from './wrtCommand';
-import { cleanCommand } from './cleanCommand';
-import HelpCommand from './HelpCommand';
-import EditCommand from './editCommand';
-import { LoginCommand } from './LoginCommand';
-import { BypassCommand } from './BypassCommand';
-import { SignUpCommand } from './SignUpCommand';
 
-commandRegistry.register(clearCommand);
-commandRegistry.register(cleanCommand);
-commandRegistry.register(ListPhrasesCommand);
-commandRegistry.register(archiveCommand);
-commandRegistry.register(wrtCommand);
-commandRegistry.register(HelpCommand);
-commandRegistry.register(EditCommand);
-commandRegistry.register(LoginCommand);
-commandRegistry.register(BypassCommand);
-commandRegistry.register(SignUpCommand);
+// Dynamically import and register all command files
+const commandModules = import.meta.glob('./*Command.ts', { eager: true });
+
+Object.values(commandModules).forEach((module: any) => {
+  const command = module.default || Object.values(module)[0];
+  if (command && command.name && command.execute) {
+    commandRegistry.register(command);
+  }
+});
