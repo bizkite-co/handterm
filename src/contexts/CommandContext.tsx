@@ -17,7 +17,7 @@ export interface ICommand {
   execute: (
     context: ICommandContext,
     parsedCommand: ParsedCommand,
-  ) => ICommandResponse;
+  ) => Promise<ICommandResponse>;
 }
 
 export interface ICommandContext {

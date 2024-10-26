@@ -4,13 +4,13 @@ import { ICommand, ICommandResponse } from '../contexts/CommandContext';
 import { ICommandContext } from '../contexts/CommandContext';
 import { ParsedCommand } from '../types/Types';
 
-const HelpCommand: ICommand = {
+export const HelpCommand: ICommand = {
   name: 'help',
   description: 'Display help information',
-  execute: (
+  execute: async (
     context: ICommandContext,
     parsedCommand: ParsedCommand,
-  ): ICommandResponse => {
+  ): Promise<ICommandResponse> => {
     if (parsedCommand.command === 'help' || parsedCommand.command === '411') {
       const commandChords = [
         'DELETE (Backspace)',
@@ -32,5 +32,3 @@ const HelpCommand: ICommand = {
     return { status: 404, message: "Help command not recognized" };
   }
 };
-
-export default HelpCommand;

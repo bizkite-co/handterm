@@ -6,7 +6,10 @@ import { tempUserNameSignal, setTempEmail, tempEmailSignal, setTempUserName, tem
 export const SignUpCommand: ICommand = {
     name: 'signup',
     description: 'Create a new account',
-    execute: (context: ICommandContext, parsedCommand: ParsedCommand): ICommandResponse => {
+    execute: async (
+        context: ICommandContext, 
+        parsedCommand: ParsedCommand
+    ): Promise<ICommandResponse> => {
         const { auth } = context;
 
         if (parsedCommand.args.length === 2) {
@@ -21,36 +24,28 @@ export const SignUpCommand: ICommand = {
             const password = tempPasswordSignal.value;
             const email = tempEmailSignal.value;
             
-            auth.signup({ username, password, email })
-                .then((result: MyResponse<unknown>) => {
-                    setIsInSignUpProcess(false);
-                    if (result.status === 200) {
-                        context.appendToOutput({
-                            command: 'signup',
-                            response: 'Account created successfully! Please check your email for verification.',
-                            status: 200,
-                            commandTime: new Date()
-                        });
-                    } else {
-                        context.appendToOutput({
-                            command: 'signup',
-                            response: `Signup failed: ${result.message}`,
-                            status: result.status,
-                            commandTime: new Date()
-                        });
-                    }
-                })
-                .catch((error: Error) => {
-                    setIsInSignUpProcess(false);
-                    context.appendToOutput({
-                        command: 'signup',
-                        response: `Signup error: ${error.message}`,
-                        status: 500,
-                        commandTime: new Date()
-                    });
-                });
-
-            return { status: 202, message: 'Processing signup...' };
+            try {
+                const result = await auth.signup({ username, password, email });
+                setIsInSignUpProcess(false);
+                
+                if (result.status === 200) {
+                    return {
+                        status: 200,
+                        message: 'Account created successfully! Please check your email for verification.'
+                    };
+                } else {
+                    return {
+                        status: result.status,
+                        message: `Signup failed: ${result.message}`
+                    };
+                }
+            } catch (error) {
+                setIsInSignUpProcess(false);
+                return {
+                    status: 500,
+                    message: `Signup error: ${error instanceof Error ? error.message : 'Unknown error'}`
+                };
+            }
         } else {
             return { status: 400, message: 'Usage: signup <username> <email>' };
         }

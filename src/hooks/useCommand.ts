@@ -87,9 +87,15 @@ export const useCommand = () => {
     const executeCommand = useCallback(async (parsedCommand: ParsedCommand) => {
         const command = commandRegistry.getCommand(parsedCommand.command);
         if (command && context) {
-            const response = command.execute(context, parsedCommand);
-            processCommandOutput(parsedCommand.command, response.message, response.status);
-            handleCommandExecuted(parsedCommand);
+            try {
+                const response = await command.execute(context, parsedCommand);
+                processCommandOutput(parsedCommand.command, response.message, response.status);
+                handleCommandExecuted(parsedCommand);
+            } catch (error) {
+                const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+                processCommandOutput(parsedCommand.command, errorMessage, 500);
+                handleCommandExecuted(parsedCommand);
+            }
         } else {
             const response = currentActivity.value === ActivityType.TUTORIAL ? `Tutorial attempt: ${parsedCommand.command}` : `Command not found: ${parsedCommand.command}`;
             processCommandOutput(parsedCommand.command, response, 404);
@@ -97,14 +103,14 @@ export const useCommand = () => {
         }
     }, [context, processCommandOutput, handleCommandExecuted, currentActivity]);
 
-    const handleCommand = useCallback((parsedCommand: ParsedCommand) => {
+    const handleCommand = useCallback(async (parsedCommand: ParsedCommand) => {
         setCommandTime(new Date());
         if (currentActivity.value === ActivityType.TUTORIAL) {
             checkTutorialProgress(parsedCommand.command);
             // TODO: Write result to output
         }
 
-        executeCommand(parsedCommand);
+        await executeCommand(parsedCommand);
     }, [currentActivity.value, executeCommand, setCommandTime, checkTutorialProgress]);
 
     return {
