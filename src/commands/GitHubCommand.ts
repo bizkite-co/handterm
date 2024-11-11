@@ -29,6 +29,7 @@ export const GitHubCommand: ICommand = {
 
         // Check if user is logged in
         if (!context.auth.isLoggedIn) {
+            //TODO: Allow signup with GitHub auth.
             return {
                 status: 401,
                 message: 'You must be logged in to use GitHub integration.'

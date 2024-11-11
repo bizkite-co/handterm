@@ -15,7 +15,6 @@
     "jsxImportSource": "react",
     "types": [
       "node", 
-      "vite/client",
       "testing-library__jest-dom"
     ],
     "module": "ESNext",

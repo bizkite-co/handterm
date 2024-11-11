@@ -15,7 +15,7 @@ export const ENDPOINTS = {
         api: 'https://api.github.com'
     },
     api: {
-        BaseUrl: 'https://22k5nam6ed.execute-api.us-east-1.amazonaws.com',
+        BaseUrl: 'https://drypicnke5.execute-api.us-east-1.amazonaws.com/',
         SignUp: '/signUp',
         ConfirmSignUp: '/confirm-signup',
         GetLog: '/getLog',

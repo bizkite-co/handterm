@@ -3,10 +3,10 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { ENDPOINTS } from '../shared/endpoints';
 import { MyResponse } from '../types/Types';
-import { 
-  setIsLoggedIn, 
+import {
+  setIsLoggedIn,
   setUserName,
-  setIsInLoginProcess 
+  setIsInLoginProcess
 } from '../signals/appSignals';
 
 const API_URL = ENDPOINTS.api.BaseUrl;
@@ -25,6 +25,7 @@ interface AuthResponse {
   RefreshToken: string;
   IdToken: string;
   ExpiresIn: string;
+  ExpiresAt?: number;  // Added ExpiresAt
   githubUsername?: string;
 }
 
@@ -49,7 +50,12 @@ export function useAuth(): IAuthProps {
     queryFn: async (): Promise<MyResponse<AuthResponse>> => {
       try {
         const accessToken = localStorage.getItem('AccessToken');
-        if (!accessToken) throw new Error('No access token');
+        const expiresAt = localStorage.getItem('ExpiresAt');
+
+        // Check if token is expired
+        if (!accessToken || (expiresAt && parseInt(expiresAt) < Date.now())) {
+          throw new Error('Token expired');
+        }
 
         const config = {
           headers: {
@@ -60,25 +66,29 @@ export function useAuth(): IAuthProps {
         };
 
         const response = await axios.get(`${API_URL}${ENDPOINTS.api.GetUser}`, config);
-        return { 
-          status: 200, 
-          data: response.data as AuthResponse, 
-          message: 'Session valid', 
-          error: [] 
+        return {
+          status: 200,
+          data: response.data as AuthResponse,
+          message: 'Session valid',
+          error: []
         };
       } catch (error) {
         localStorage.removeItem('AccessToken');
         localStorage.removeItem('RefreshToken');
+        localStorage.removeItem('ExpiresAt');
         setIsLoggedIn(false);
         setUserName(null);
-        return { 
-          status: 401, 
-          data: undefined, 
-          message: 'Session invalid', 
-          error: ['Session expired or invalid'] 
+        return {
+          status: 401,
+          data: undefined,
+          message: 'Session invalid',
+          error: ['Session expired or invalid']
         };
       }
     },
+    enabled: !!localStorage.getItem('AccessToken') &&
+             (!localStorage.getItem('ExpiresAt') ||
+              parseInt(localStorage.getItem('ExpiresAt') || '0') > Date.now()),
     retry: false,
     staleTime: 5 * 60 * 1000 // Consider session stale after 5 minutes
   });
@@ -90,21 +100,23 @@ export function useAuth(): IAuthProps {
       if (!refreshToken) throw new Error('No refresh token');
 
       const response = await axios.post(
-        `${API_URL}${ENDPOINTS.api.RefreshToken}`, 
+        `${API_URL}${ENDPOINTS.api.RefreshToken}`,
         { refreshToken },
         { withCredentials: true }
       );
-      return { 
-        status: 200, 
-        data: response.data, 
-        message: 'Token refreshed', 
-        error: [] 
+      return {
+        status: 200,
+        data: response.data,
+        message: 'Token refreshed',
+        error: []
       };
     },
     onSuccess: (data) => {
       if (data.data) {
+        const expiresAt = Date.now() + parseInt(data.data.ExpiresIn) * 1000;
+
         localStorage.setItem('AccessToken', data.data.AccessToken);
-        localStorage.setItem('ExpiresIn', data.data.ExpiresIn);
+        localStorage.setItem('ExpiresAt', expiresAt.toString());
         // Invalidate session query to trigger re-fetch with new token
         queryClient.invalidateQueries({ queryKey: ['auth', 'session'] });
       }
@@ -117,23 +129,26 @@ export function useAuth(): IAuthProps {
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginCredentials): Promise<MyResponse<AuthResponse>> => {
       const response = await axios.post(
-        `${API_URL}${ENDPOINTS.api.SignIn}`, 
+        `${API_URL}${ENDPOINTS.api.SignIn}`,
         credentials,
         { withCredentials: true }
       );
-      return { 
-        status: 200, 
-        data: response.data, 
-        message: 'Login successful', 
-        error: [] 
+      return {
+        status: 200,
+        data: response.data,
+        message: 'Login successful',
+        error: []
       };
     },
     onSuccess: (data) => {
       if (data.data) {
+        const expiresAt = Date.now() + parseInt(data.data.ExpiresIn) * 1000;
+
         localStorage.setItem('AccessToken', data.data.AccessToken);
         localStorage.setItem('RefreshToken', data.data.RefreshToken);
         localStorage.setItem('IdToken', data.data.IdToken);
-        localStorage.setItem('ExpiresIn', data.data.ExpiresIn);
+        localStorage.setItem('ExpiresAt', expiresAt.toString());
+
         if (data.data.githubUsername) {
           localStorage.setItem('githubUsername', data.data.githubUsername);
         }
@@ -152,15 +167,15 @@ export function useAuth(): IAuthProps {
   const signupMutation = useMutation({
     mutationFn: async (credentials: SignUpCredentials): Promise<MyResponse<unknown>> => {
       const response = await axios.post(
-        `${API_URL}${ENDPOINTS.api.SignUp}`, 
+        `${API_URL}${ENDPOINTS.api.SignUp}`,
         credentials,
         { withCredentials: true }
       );
-      return { 
-        status: 200, 
-        data: response.data, 
-        message: 'Signup successful', 
-        error: [] 
+      return {
+        status: 200,
+        data: response.data,
+        message: 'Signup successful',
+        error: []
       };
     },
     onSuccess: () => {
@@ -187,12 +202,12 @@ export function useAuth(): IAuthProps {
     // Session state
     isLoggedIn: !!session?.data,
     isPending,
-    
+
     // Auth methods
-    login: (username: string, password: string) => 
+    login: (username: string, password: string) =>
       loginMutation.mutateAsync({ username, password }),
     signup: signupMutation.mutateAsync,
-    verify: (username: string, code: string) => 
+    verify: (username: string, code: string) =>
       verifyMutation.mutateAsync({ username, code }),
     refreshToken: refreshMutation.mutateAsync,
 
