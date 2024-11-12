@@ -13,8 +13,6 @@ import { useReactiveLocation } from './hooks/useReactiveLocation';
 import { bypassTutorialSignal } from './signals/appSignals';
 import { useComputed } from '@preact/signals-react';
 
-// const MemoizedOutput = React.memo(Output);
-
 export default function App() {
   const containerRef = React.createRef<HTMLDivElement>();
   const [containerWidth, setContainerWidth] = React.useState<number>(0);
@@ -110,6 +108,5 @@ export default function App() {
       </AppProvider>
     </div>
     </ActivityMediatorProvider>
-
   );
 };

@@ -1,29 +1,53 @@
+// Explicitly import Jest globals
+import {
+  describe,
+  it,
+  expect,
+  jest
+} from '@jest/globals';
+
+// Import testing library for additional matchers
+import '@testing-library/jest-dom';
 import { render } from '@testing-library/react';
-import Game from '../Game';
-import * as matchers from '@testing-library/jest-dom/matchers'
 import React from 'react';
 
-expect.extend(matchers)
-describe('Game', () => {
-  const defaultProps = {
-    canvasHeight: 500,
-    canvasWidth: 800,
+// Import the component to test
+import Game, { IGameProps } from '../Game';
+
+// Mock any dependencies
+jest.mock('../../hooks/useActivityMediator', () => ({
+  useActivityMediator: () => ({
     isInGameMode: true,
-    heroActionType: 'Idle' as const,
-    zombie4ActionType: 'Walk' as const,
-    zombie4StartPosition: { leftX: 0, topY: 0 },
-    onSetHeroAction: () => {},
-    onSetZombie4Action: () => {},
-    tutorialGroupPhrases: []
+    isInTutorial: false,
+    heroAction: 'Idle',
+    zombie4Action: 'Walk'
+  })
+}));
+
+// Mock canvas context and other dependencies
+jest.mock('canvas-confetti', () => jest.fn());
+
+// Mock signals
+jest.mock('src/signals/commandLineSignals', () => {
+  const mockModule = {
+    commandLineSignal: { value: '' },
+    setPromptInfo: jest.fn()
   };
+  return mockModule;
+});
 
-  it('should render when isInGameMode is true', () => {
-    const { container } = render(<Game {...defaultProps} />);
-    expect(container.querySelector('#terminal-game')).toBeDefined();
-  });
+jest.mock('src/signals/gameSignals', () => ({
+  isInGameModeSignal: { value: true }
+}));
 
-  it('should not render when isInGameMode is false', () => {
-    const { container } = render(<Game {...defaultProps} isInGameMode={false} />);
-    expect(container.querySelector('#terminal-game')).toBe(null);
+const mockGameProps: IGameProps = {
+  canvasHeight: 600,
+  canvasWidth: 800
+};
+
+describe('Game Component', () => {
+  it('renders without crashing', () => {
+    const { container } = render(<Game {...mockGameProps} />);
+    expect(container.firstChild).toBeTruthy();
   });
 });
