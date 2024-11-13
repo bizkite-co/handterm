@@ -2,7 +2,8 @@
 // src/commands/GitHubCommand.ts
 import { ICommand, ICommandContext, ICommandResponse } from '../contexts/CommandContext';
 import { ParsedCommand } from '../types/Types';
-import { ENDPOINTS } from 'src/shared/endpoints';
+import { isLoggedInSignal } from 'src/signals/appSignals'
+import ENDPOINTS from 'src/shared/endpoints.json';
 
 export const GitHubCommand: ICommand = {
     name: 'github',
@@ -13,7 +14,7 @@ export const GitHubCommand: ICommand = {
         'u': 'Unlink GitHub account'
     },
     execute: async (
-        context: ICommandContext, 
+        context: ICommandContext,
         parsedCommand: ParsedCommand
     ): Promise<ICommandResponse> => {
         // Show help if requested
@@ -28,7 +29,7 @@ export const GitHubCommand: ICommand = {
         }
 
         // Check if user is logged in
-        if (!context.auth.isLoggedIn) {
+        if (!isLoggedInSignal) {
             //TODO: Allow signup with GitHub auth.
             return {
                 status: 401,

@@ -1,12 +1,13 @@
 // src/hooks/useAuth.ts
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
-import { ENDPOINTS } from '../shared/endpoints';
+import ENDPOINTS from 'src/shared/endpoints.json';
 import { MyResponse } from '../types/Types';
 import {
   setIsLoggedIn,
   setUserName,
-  setIsInLoginProcess
+  setIsInLoginProcess,
+  isLoggedInSignal
 } from '../signals/appSignals';
 
 const API_URL = ENDPOINTS.api.BaseUrl;
@@ -114,7 +115,7 @@ export function useAuth(): IAuthProps {
     onSuccess: (data) => {
       if (data.data) {
         const expiresAt = Date.now() + parseInt(data.data.ExpiresIn) * 1000;
-
+        setIsLoggedIn(true);
         localStorage.setItem('AccessToken', data.data.AccessToken);
         localStorage.setItem('ExpiresAt', expiresAt.toString());
         // Invalidate session query to trigger re-fetch with new token
@@ -143,7 +144,7 @@ export function useAuth(): IAuthProps {
     onSuccess: (data) => {
       if (data.data) {
         const expiresAt = Date.now() + parseInt(data.data.ExpiresIn) * 1000;
-
+        isLoggedInSignal.value = true;
         localStorage.setItem('AccessToken', data.data.AccessToken);
         localStorage.setItem('RefreshToken', data.data.RefreshToken);
         localStorage.setItem('IdToken', data.data.IdToken);
