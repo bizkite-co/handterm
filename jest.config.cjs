@@ -38,8 +38,12 @@ module.exports = {
     '**/?(*.)+(spec|test).ts?(x)'
   ],
 
-  // Setup files
-  setupFilesAfterEnv: ['<rootDir>/setupTests.ts'],
+  // Setup files - run before tests
+  setupFiles: [],
+  setupFilesAfterEnv: [
+    'expect',
+    '@testing-library/jest-dom'
+  ],
 
   // Module file extensions
   moduleFileExtensions: [
