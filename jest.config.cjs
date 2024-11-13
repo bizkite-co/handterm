@@ -39,8 +39,7 @@ module.exports = {
   ],
 
   // Setup files
-  setupFiles: ['<rootDir>/jest-setup.cjs'],
-  setupFilesAfterEnv: [],
+  setupFilesAfterEnv: ['<rootDir>/jest-setup.cjs'],
 
   // Module file extensions
   moduleFileExtensions: [

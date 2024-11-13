@@ -1,10 +1,7 @@
-const matchers = require('@testing-library/jest-dom/matchers');
-const expect = require('expect');
+require('@testing-library/jest-dom');
 
-Object.keys(matchers)
-  .filter(key => key !== 'default')
-  .forEach(key => {
-    expect.extend({
-      [key]: matchers[key]
-    });
-  });
+// Optional: Add a global console error handler to catch and log errors
+const originalConsoleError = console.error;
+console.error = (message, ...optionalParams) => {
+  originalConsoleError(message, ...optionalParams);
+};
