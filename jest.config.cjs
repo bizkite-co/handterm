@@ -1,29 +1,32 @@
 const path = require('path');
 
+/** @type {import('@jest/types').Config.InitialOptions} */
 module.exports = {
-  preset: 'ts-jest',
-  testEnvironment: 'jsdom',
+  preset: 'ts-jest/presets/default-esm', // Use ESM preset
 
   // Module resolution and mapping
   moduleNameMapper: {
-    // Handle CSS imports
+    '^src/(.*)$': '<rootDir>/src/$1',
     '\\.(css|less|scss|sass)$': 'identity-obj-proxy'
   },
 
-  // Custom resolver
+  // Custom resolver for mixed module systems
   resolver: '<rootDir>/moduleResolver.cjs',
 
   // Transformation settings
   transform: {
-    '^.+\\.(t|j)sx?$': ['babel-jest', {
-      presets: [
-        ['@babel/preset-env', {
-          targets: { node: 'current' },
-          modules: 'commonjs'
-        }],
-        '@babel/preset-typescript',
-        ['@babel/preset-react', { runtime: 'automatic' }]
-      ]
+    '^.+\\.(t|j)sx?$': ['ts-jest', {
+      tsconfig: {
+        jsx: 'react-jsx',
+        esModuleInterop: true,
+        allowSyntheticDefaultImports: true,
+        moduleResolution: 'node',
+        baseUrl: '.',
+        paths: {
+          'src/*': ['src/*']
+        }
+      },
+      useESM: true // Enable ESM support
     }]
   },
 
@@ -39,14 +42,15 @@ module.exports = {
   ],
 
   // Setup files
-  setupFilesAfterEnv: ['<rootDir>/jest-setup.cjs'],
+  setupFilesAfterEnv: ['<rootDir>/jest-setup.ts'],
 
   // Module file extensions
   moduleFileExtensions: [
-    'ts', 'tsx', 'js', 'jsx', 'json', 'node', 'cjs'
+    'ts', 'tsx', 'js', 'jsx', 'json', 'node', 'cjs', 'mjs'
   ],
 
   // Test environment options
+  testEnvironment: 'jsdom',
   testEnvironmentOptions: {
     url: 'http://localhost'
   },
@@ -55,19 +59,14 @@ module.exports = {
   moduleDirectories: ['node_modules', '.'],
   roots: ['<rootDir>'],
 
-  // TypeScript settings
+  // Enable ESM support
+  extensionsToTreatAsEsm: ['.ts', '.tsx'],
+
+  // Global settings
   globals: {
     'ts-jest': {
-      tsconfig: {
-        baseUrl: '.',
-        paths: {
-          'src/*': ['src/*']
-        },
-        jsx: 'react-jsx',
-        esModuleInterop: true,
-        allowSyntheticDefaultImports: true,
-        moduleResolution: 'node'
-      }
+      useESM: true,
+      isolatedModules: true
     }
   }
 };
