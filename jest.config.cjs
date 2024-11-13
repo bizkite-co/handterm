@@ -11,7 +11,7 @@ module.exports = {
   },
 
   // Custom resolver
-  resolver: '<rootDir>/moduleResolver.js',
+  resolver: '<rootDir>/moduleResolver.cjs',
 
   // Transformation settings
   transform: {
