@@ -67,7 +67,7 @@ export function useActivityMediator(): IActivityMediatorReturn {
 
   const handleCommandExecuted = useCallback((parsedCommand: ParsedCommand): boolean => {
     let result = false;
-    if (parseLocation().activityKey === ActivityType.TUTORIAL){
+    if (parseLocation().activityKey === ActivityType.TUTORIAL) {
       checkTutorialProgress(parsedCommand.command);
     }
     else if (parseLocation().activityKey === ActivityType.GAME && parseLocation().contentKey) {
@@ -156,12 +156,12 @@ export function useActivityMediator(): IActivityMediatorReturn {
       return;
     }
     activitySignal.value = ActivityType.GAME;
-      const nextGamePhrase = getNextGamePhrase();
-      if(nextGamePhrase) updateLocation({
-        activityKey: ActivityType.GAME,
-        contentKey: nextGamePhrase?.key,
-        groupKey: groupKey
-      })
+    const nextGamePhrase = getNextGamePhrase();
+    if (nextGamePhrase) updateLocation({
+      activityKey: ActivityType.GAME,
+      contentKey: nextGamePhrase?.key,
+      groupKey: groupKey
+    })
     return;
   };
 
@@ -201,7 +201,7 @@ export function useActivityMediator(): IActivityMediatorReturn {
     if (nextGamePhrase) {
       setGamePhrase(nextGamePhrase);
       updateLocation({
-        activityKey:ActivityType.GAME,
+        activityKey: ActivityType.GAME,
         contentKey: nextGamePhrase.key,
         groupKey: nextGamePhrase.tutorialGroup
       })
@@ -211,7 +211,7 @@ export function useActivityMediator(): IActivityMediatorReturn {
     }
     activitySignal.value = ActivityType.NORMAL;
 
-    updateLocation({activityKey: ActivityType.NORMAL})
+    updateLocation({ activityKey: ActivityType.NORMAL })
   };
 
   return {

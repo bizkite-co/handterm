@@ -1,13 +1,12 @@
-// Explicitly import Jest globals
 import {
   describe,
   it,
   expect,
-  jest
+  jest,
+  beforeEach
 } from '@jest/globals';
-
-// Import testing library for additional matchers
-import '@testing-library/jest-dom';
+import { renderHook } from '@testing-library/react';
+import { useActivityMediator } from '../../hooks/useActivityMediator';
 import { ActivityType } from '../../types/Types';
 
 // Mock dependencies
@@ -21,43 +20,63 @@ jest.mock('../../hooks/useReactiveLocation', () => ({
     },
     updateLocation: jest.fn(),
     parseLocation: () => ({
-      activityKey: 'normal',
+      activityKey: ActivityType.NORMAL,
       contentKey: '',
       groupKey: ''
     })
-  }),
+  })
 }));
 
-// Explicitly mock signals
-jest.mock('src/signals/appSignals', () => {
-  const mockModule = {
-    activitySignal: { value: ActivityType.NORMAL },
-    bypassTutorialSignal: { value: false },
-    isInLoginProcessSignal: { value: false },
-    tempUserNameSignal: { value: '' },
-    setNotification: jest.fn(),
-    setBypassTutorial: jest.fn(),
-    setIsInLoginProcess: jest.fn(),
-    setTempUserName: jest.fn(),
-    setActivity: jest.fn(),
-    isInGameModeSignal: { value: false },
-    isInTutorialModeSignal: { value: false }
-  };
-  return mockModule;
-});
+jest.mock('../../hooks/useTutorials', () => ({
+  useTutorial: () => ({
+    getIncompleteTutorialsInGroup: jest.fn(() => []),
+    canUnlockTutorial: jest.fn(() => true)
+  })
+}));
 
-jest.mock('src/signals/tutorialSignals', () => ({
+jest.mock('../../signals/tutorialSignals', () => ({
   tutorialSignal: { value: null },
-  getNextTutorial: jest.fn()
+  getNextTutorial: jest.fn(),
+  setNextTutorial: jest.fn(),
+  resetCompletedTutorials: jest.fn(),
+  setCompletedTutorial: jest.fn()
 }));
 
-jest.mock('src/signals/gameSignals', () => ({
-  getNextGamePhrase: jest.fn()
+jest.mock('../../signals/gameSignals', () => ({
+  gamePhraseSignal: { value: null },
+  isInGameModeSignal: { value: false },
+  getIncompletePhrasesByTutorialGroup: jest.fn(() => []),
+  initializeGame: jest.fn(),
+  setCompletedGamePhrase: jest.fn(),
+  getNextGamePhrase: jest.fn(),
+  setGamePhrase: jest.fn()
+}));
+
+jest.mock('../../signals/appSignals', () => ({
+  activitySignal: { value: ActivityType.NORMAL },
+  bypassTutorialSignal: { value: false },
+  setNotification: jest.fn()
 }));
 
 describe('useActivityMediator hook', () => {
-  it('should have basic functionality', () => {
-    // Placeholder test to ensure the hook can be imported and tested
-    expect(true).toBe(true);
+  beforeEach(() => {
+    jest.resetModules();
+  });
+
+  it('should initialize with default activity state', () => {
+    const { result } = renderHook(() => useActivityMediator());
+    expect(result.current).toBeDefined();
+    expect(result.current.isInNormal).toBe(true);
+    expect(result.current.heroAction).toBe('Idle');
+    expect(result.current.zombie4Action).toBe('Walk');
+  });
+
+  it('should handle activity transitions', () => {
+    const { result } = renderHook(() => useActivityMediator());
+    expect(result.current.handleCommandExecuted({
+      command: 'play',
+      args: [],
+      switches: {}
+    })).toBe(true);
   });
 });

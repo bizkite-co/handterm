@@ -9,8 +9,8 @@ import {
 import React from 'react';
 import { renderHook } from '@testing-library/react';
 import { act } from 'react';
-import { useActivityMediator } from '../hooks/useActivityMediator';
-import { ActivityType } from '../types/Types';
+import { useActivityMediator } from 'src/hooks/useActivityMediator';
+import { ActivityType } from 'src/types/Types';
 
 // Mock dependencies to avoid router conflicts
 jest.mock('react-router-dom', () => ({
@@ -25,7 +25,7 @@ jest.mock('react-router-dom', () => ({
 }));
 
 // Mock the useReactiveLocation hook
-jest.mock('../hooks/useReactiveLocation', () => ({
+jest.mock('src/hooks/useReactiveLocation', () => ({
   useReactiveLocation: () => ({
     reactiveLocation: {
       activity: 'normal',
@@ -35,7 +35,7 @@ jest.mock('../hooks/useReactiveLocation', () => ({
     },
     updateLocation: jest.fn(),
     parseLocation: () => ({
-      activityKey: 'normal',
+      activityKey: 'NORMAL', // Use string value instead of enum
       contentKey: '',
       groupKey: ''
     })
@@ -44,8 +44,8 @@ jest.mock('../hooks/useReactiveLocation', () => ({
 
 // Explicitly mock signals
 jest.mock('src/signals/appSignals', () => {
-  const mockModule = {
-    activitySignal: { value: ActivityType.NORMAL },
+  return {
+    activitySignal: { value: 'NORMAL' }, // Use string value
     bypassTutorialSignal: { value: false },
     isInLoginProcessSignal: { value: false },
     tempUserNameSignal: { value: '' },
@@ -57,7 +57,6 @@ jest.mock('src/signals/appSignals', () => {
     isInGameModeSignal: { value: false },
     isInTutorialModeSignal: { value: false }
   };
-  return mockModule;
 });
 
 jest.mock('src/signals/tutorialSignals', () => ({

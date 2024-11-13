@@ -1,36 +1,35 @@
+const path = require('path');
+
 module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'jsdom',
 
-  // Ensure testing libraries and globals are loaded
-  setupFilesAfterEnv: ['<rootDir>/setupTests.ts'],
-
   // Module resolution and mapping
   moduleNameMapper: {
-    '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
-    '^@/(.*)$': '<rootDir>/src/$1',
-    // Explicitly map signal imports
-    '^src/signals/(.*)$': '<rootDir>/src/signals/$1',
-    '^src/(.*)$': '<rootDir>/src/$1',
-    // Explicitly map testing library imports
-    '@testing-library/jest-dom/matchers': '@testing-library/jest-dom/matchers',
-    // Handle ES module imports
-    '^@preact/signals-react$': '@preact/signals-react/dist/signals.module.js',
-    '^@preact/signals-react/(.*)$': '@preact/signals-react/dist/$1'
+    // Handle CSS imports
+    '\\.(css|less|scss|sass)$': 'identity-obj-proxy'
   },
+
+  // Custom resolver
+  resolver: '<rootDir>/moduleResolver.js',
 
   // Transformation settings
   transform: {
-    '^.+\\.(js|jsx|ts|tsx)$': ['ts-jest', {
-      tsconfig: 'tsconfig.json',
-      babelConfig: true,
-      useESM: true
+    '^.+\\.(t|j)sx?$': ['babel-jest', {
+      presets: [
+        ['@babel/preset-env', {
+          targets: { node: 'current' },
+          modules: 'commonjs'
+        }],
+        '@babel/preset-typescript',
+        ['@babel/preset-react', { runtime: 'automatic' }]
+      ]
     }]
   },
 
-  // Ignore specific node_modules
+  // Transform node_modules that use ESM
   transformIgnorePatterns: [
-    'node_modules/(?!(@preact/signals-react|@testing-library|src/)/)'
+    'node_modules/(?!(@preact|@testing-library)/)'
   ],
 
   // Test file matching
@@ -39,32 +38,36 @@ module.exports = {
     '**/?(*.)+(spec|test).ts?(x)'
   ],
 
-  // File extensions to process
+  // Setup files
+  setupFilesAfterEnv: ['<rootDir>/setupTests.ts'],
+
+  // Module file extensions
   moduleFileExtensions: [
     'ts', 'tsx', 'js', 'jsx', 'json', 'node'
   ],
 
-  // Coverage configuration
-  collectCoverage: false,
-  coverageDirectory: 'coverage',
-  coverageReporters: ['text', 'lcov'],
-
-  // Verbose logging for diagnostics
-  verbose: true,
-
-  // Global configuration for Jest
-  globals: {
-    'ts-jest': {
-      diagnostics: {
-        warnOnly: true
-      },
-      useESM: true
-    }
+  // Test environment options
+  testEnvironmentOptions: {
+    url: 'http://localhost'
   },
 
-  // Enable ES Modules
-  extensionsToTreatAsEsm: ['.ts', '.tsx'],
+  // Module resolution settings
+  moduleDirectories: ['node_modules', '.'],
+  roots: ['<rootDir>'],
 
-  // Ensure mocks can be resolved
-  modulePaths: ['<rootDir>/src', '<rootDir>/src/signals']
+  // TypeScript settings
+  globals: {
+    'ts-jest': {
+      tsconfig: {
+        baseUrl: '.',
+        paths: {
+          'src/*': ['src/*']
+        },
+        jsx: 'react-jsx',
+        esModuleInterop: true,
+        allowSyntheticDefaultImports: true,
+        moduleResolution: 'node'
+      }
+    }
+  }
 };

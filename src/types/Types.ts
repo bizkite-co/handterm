@@ -11,12 +11,14 @@ export interface Keystroke {
   timestamp: number;
 }
 
-export enum ActivityType {
-  NORMAL,
-  TUTORIAL,
-  GAME,
-  EDIT,
-}
+export const ActivityType = {
+  NORMAL: 'NORMAL',
+  TUTORIAL: 'TUTORIAL',
+  GAME: 'GAME',
+  EDIT: 'EDIT'
+} as const;
+
+export type ActivityType = typeof ActivityType[keyof typeof ActivityType];
 
 export type ParsedCommand = Readonly<{
   command: string;

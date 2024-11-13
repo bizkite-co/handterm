@@ -13,7 +13,6 @@ import { useComputed, useSignalEffect } from "@preact/signals-react";
 import { commandLineSignal } from "src/signals/commandLineSignals";
 import { isInGameModeSignal } from 'src/signals/gameSignals';
 
-
 export interface IGameProps {
   canvasHeight: number
   canvasWidth: number
@@ -33,7 +32,7 @@ interface ICharacterRefMethods {
   draw: (context: CanvasRenderingContext2D, position: SpritePosition) => number;
 }
 
-const Game = React.forwardRef<IGameHandle, IGameProps>((props, ref) => {
+const Game: React.ForwardRefRenderFunction<IGameHandle, IGameProps> = (props, ref) => {
   const {
     canvasHeight,
     canvasWidth,
@@ -63,7 +62,7 @@ const Game = React.forwardRef<IGameHandle, IGameProps>((props, ref) => {
   let heroRunTimeoutId: number | null = null;
 
   const commandLine = useComputed(() => commandLineSignal.value);
-  const isInGameMode = useComputed(()=> isInGameModeSignal.value).value;
+  const isInGameMode = useComputed(() => isInGameModeSignal.value).value;
 
   useSignalEffect(() => {
     handleCommandLineChange(commandLine.value);
@@ -94,7 +93,6 @@ const Game = React.forwardRef<IGameHandle, IGameProps>((props, ref) => {
     setIsPhraseComplete(false);
     // Add any other necessary game start logic
   };
-  
 
   const getLevel = () => currentLevel;
   const setLevel = (newLevel: number) => {
@@ -154,8 +152,6 @@ const Game = React.forwardRef<IGameHandle, IGameProps>((props, ref) => {
     }, 3000);
   };
 
-
-
   const checkProximityAndSetAction = () => {
     const ATTACK_THRESHOLD = 100;
     const distance = heroPosition.leftX - zombie4PositionRef.current.leftX;
@@ -187,14 +183,11 @@ const Game = React.forwardRef<IGameHandle, IGameProps>((props, ref) => {
     }
 
     if (zombie4Ref.current && _context) {
-      // console.log('Before draw: zombie4Position=', JSON.stringify(zombie4PositionRef.current));
       const zombie4Dx = zombie4Ref.current.draw(_context, zombie4PositionRef.current);
-      // console.log('After draw: zombie4Dx=', zombie4Dx, 'heroDx=', heroDx);
       zombie4PositionRef.current = {
         ...zombie4PositionRef.current,
         leftX: zombie4PositionRef.current.leftX + zombie4Dx - heroDx
       };
-      // console.log('Updated zombie position:', JSON.stringify(zombie4PositionRef.current));
     }
 
     if (heroDx !== 0) {
@@ -332,4 +325,4 @@ const Game = React.forwardRef<IGameHandle, IGameProps>((props, ref) => {
   );
 });
 
-export default Game;
+export default React.forwardRef(Game);

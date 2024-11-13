@@ -12,7 +12,7 @@ import { render } from '@testing-library/react';
 import React from 'react';
 
 // Import the component to test
-import Game, { IGameProps } from '../Game';
+import Game from '../Game';
 
 // Mock any dependencies
 jest.mock('../../hooks/useActivityMediator', () => ({
@@ -28,19 +28,18 @@ jest.mock('../../hooks/useActivityMediator', () => ({
 jest.mock('canvas-confetti', () => jest.fn());
 
 // Mock signals
-jest.mock('src/signals/commandLineSignals', () => {
-  const mockModule = {
+jest.mock('../../signals/commandLineSignals', () => {
+  return {
     commandLineSignal: { value: '' },
     setPromptInfo: jest.fn()
   };
-  return mockModule;
 });
 
-jest.mock('src/signals/gameSignals', () => ({
+jest.mock('../../signals/gameSignals', () => ({
   isInGameModeSignal: { value: true }
 }));
 
-const mockGameProps: IGameProps = {
+const mockGameProps = {
   canvasHeight: 600,
   canvasWidth: 800
 };

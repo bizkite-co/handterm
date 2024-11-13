@@ -82,27 +82,27 @@ export const Zombie4Actions: Record<string, Action> = {
     continueous: false,
   },
   Idle: {
-      animation: Zombie4Animations.Idle, // HeroIdleAnimation is imported from HeroAnimations.ts
-      dx: 0,
-      dy: 0,
-      continueous: true,
+    animation: Zombie4Animations.Idle, // HeroIdleAnimation is imported from HeroAnimations.ts
+    dx: 0,
+    dy: 0,
+    continueous: true,
   },
   Walk: {
-      animation: Zombie4Animations.Walk, // HeroWalkAnimation is imported from HeroAnimations.ts
-      dx: 1,
-      dy: 0,
-      continueous: true,
+    animation: Zombie4Animations.Walk, // HeroWalkAnimation is imported from HeroAnimations.ts
+    dx: 1,
+    dy: 0,
+    continueous: true,
   },
   Hurt: {
-      animation: Zombie4Animations.Hurt, // HeroWalkAnimation is imported from HeroAnimations.ts
-      dx: 0,
-      dy: 0,
-      continueous: false,
+    animation: Zombie4Animations.Hurt, // HeroWalkAnimation is imported from HeroAnimations.ts
+    dx: 0,
+    dy: 0,
+    continueous: false,
   },
   Death: {
-      animation: Zombie4Animations.Death, // HeroWalkAnimation is imported from HeroAnimations.ts
-      dx: 0,
-      dy: 0,
-      continueous: false,
+    animation: Zombie4Animations.Death, // HeroWalkAnimation is imported from HeroAnimations.ts
+    dx: 0,
+    dy: 0,
+    continueous: false,
   }
 };
