@@ -1,4 +1,5 @@
 name: Build and Deploy to GitHub Pages
+
 on:
   push:
     branches:
@@ -9,10 +10,6 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Enable Corepack
-        run: corepack enable
-      - name: Install Yarn
-        run: corepack prepare yarn@4.5.0 --activate
       - uses: actions/checkout@v2
 
       - name: Setup Node.js
@@ -21,10 +18,10 @@ jobs:
           node-version: '20'  # Set this to the node version you prefer
 
       - name: Install dependencies
-        run: yarn  # or use yarn
+        run: npm install  # or use yarn
 
       - name: Build
-        run: yarn run build  # or use yarn
+        run: npm run build  # or use yarn
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
