@@ -153,11 +153,10 @@ export function useAuth(): IAuthProps {
     },
     onSuccess: (data) => {
       if (data.data) {
-        const expiresAt = Date.now() + parseInt(data.data.ExpiresIn) * 1000;
+        setExpiresAtLocalStorage(data.data.ExpiresIn);
         setIsLoggedIn(true);
         isLoggedInSignal.value = true;
         localStorage.setItem('AccessToken', data.data.AccessToken);
-        localStorage.setItem('ExpiresAt', expiresAt.toString());
         queryClient.invalidateQueries({ queryKey: ['auth', 'session'] });
       }
     },
@@ -181,12 +180,12 @@ export function useAuth(): IAuthProps {
     },
     onSuccess: (data) => {
       if (data.data) {
-        const expiresAt = Date.now() + parseInt(data.data.ExpiresIn) * 1000;
+        setExpiresAtLocalStorage(data.data.ExpiresIn);
+
         isLoggedInSignal.value = true;
         localStorage.setItem('AccessToken', data.data.AccessToken);
         localStorage.setItem('RefreshToken', data.data.RefreshToken);
         localStorage.setItem('IdToken', data.data.IdToken);
-        localStorage.setItem('ExpiresAt', expiresAt.toString());
 
         if (data.data.githubUsername) {
           localStorage.setItem('githubUsername', data.data.githubUsername);
@@ -201,6 +200,16 @@ export function useAuth(): IAuthProps {
       setIsInLoginProcess(false);
     }
   });
+
+  const setExpiresAtLocalStorage = (expiresIn: string) => {
+    const expiresAt = Date.now() + parseInt(expiresIn) * 1000;
+    if (Number.isNaN(expiresAt)) {
+      console.error("expiresAt is NaN", expiresAt);
+    }
+    else {
+      localStorage.setItem('ExpiresAt', expiresAt.toString());
+    }
+  }
 
   // Signup mutation
   const signupMutation = useMutation({

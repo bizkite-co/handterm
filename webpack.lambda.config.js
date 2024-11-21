@@ -3,10 +3,13 @@ const path = require('path');
 module.exports = {
     target: 'node18',
     mode: 'production',
-    entry: './dist/lambda/authentication/oauth_callback.js',
+    entry: {
+        'oauth_callback': './dist/lambda/authentication/oauth_callback.js',
+        'listRecentRepos': './dist/lambda/authentication/listRecentRepos.js'
+    },
     output: {
         path: path.resolve(__dirname, 'dist/lambda/authentication'),
-        filename: 'oauth_callback.bundle.js',
+        filename: '[name].bundle.js',
         libraryTarget: 'commonjs2'
     },
     resolve: {
