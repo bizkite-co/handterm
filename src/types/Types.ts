@@ -94,6 +94,16 @@ export type ParsedLocation = {
   groupKey?: string | null;
 };
 
+export type GitHubRepository = {
+  full_name: string;
+  language?: string;
+  description?: string;
+  html_url: string;
+  created_at: string;
+  updated_at: string;
+  stargazers_count: number;
+};
+
 export type Tutorial = {
   phrase: string;
   prompt: string;

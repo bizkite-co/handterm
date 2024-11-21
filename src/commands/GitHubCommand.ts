@@ -1,17 +1,17 @@
-
 // src/commands/GitHubCommand.ts
 import { ICommand, ICommandContext, ICommandResponse } from '../contexts/CommandContext';
 import { ParsedCommand } from '../types/Types';
-import { isLoggedInSignal } from 'src/signals/appSignals'
 import ENDPOINTS from 'src/shared/endpoints.json';
+import axios from 'axios';
 
 export const GitHubCommand: ICommand = {
     name: 'github',
-    description: 'Link your GitHub account',
+    description: 'GitHub account and repository management',
     switches: {
         'h': 'Show help for GitHub command',
         'l': 'Link GitHub account',
-        'u': 'Unlink GitHub account'
+        'u': 'Unlink GitHub account',
+        'r': 'List recent repositories'
     },
     execute: async (
         context: ICommandContext,
@@ -23,14 +23,15 @@ export const GitHubCommand: ICommand = {
                 status: 200,
                 message: `GitHub Command Usage:
                 github -l : Link your GitHub account
-                github -u : Unlink your GitHub account
+                github -u : Unlink GitHub account
+                github -r : List recent repositories
                 github -h : Show this help message`
             };
         }
 
-        // Check if user is logged in
-        if (!isLoggedInSignal) {
-            //TODO: Allow signup with GitHub auth.
+        // Validate authentication using the centralized auth check
+        const isAuthenticated = await context.auth.validateAndRefreshToken();
+        if (!isAuthenticated) {
             return {
                 status: 401,
                 message: 'You must be logged in to use GitHub integration.'
@@ -68,9 +69,54 @@ export const GitHubCommand: ICommand = {
                 };
             }
 
+            if ('r' in parsedCommand.switches) {
+                try {
+                    // Get the current access token
+                    const accessToken = localStorage.getItem('AccessToken');
+                    if (!accessToken) {
+                        return {
+                            status: 401,
+                            message: 'No access token found. Please log in again.'
+                        };
+                    }
+
+                    // Make the API request
+                    const response = await axios.get(`${ENDPOINTS.api.BaseUrl}${ENDPOINTS.api.ListRecentRepos}`, {
+                        headers: {
+                            'Authorization': `Bearer ${accessToken}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    const repos = response.data.repositories || [];
+                    const repoList = repos.map((repo: any) =>
+                        `${repo.full_name} (${repo.language || 'Unknown'}): ${repo.description || 'No description'}`
+                    ).join('\n');
+
+                    return {
+                        status: 200,
+                        message: repos.length > 0
+                            ? `Recent Repositories:\n${repoList}`
+                            : 'No recent repositories found.'
+                    };
+                } catch (error: any) {
+                    console.error('Failed to fetch repositories:', error);
+                    if (error.response?.status === 401) {
+                        return {
+                            status: 401,
+                            message: 'Authentication failed. Please log in again.'
+                        };
+                    }
+                    return {
+                        status: error.response?.status || 500,
+                        message: error.response?.data?.message || 'Failed to retrieve repositories. Please try again later.'
+                    };
+                }
+            }
+
             return {
                 status: 400,
-                message: 'Please specify either -l to link or -u to unlink your GitHub account. Use -h for help.'
+                message: 'Please specify a valid GitHub command. Use -h for help.'
             };
 
         } catch (error) {

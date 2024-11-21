@@ -1,6 +1,7 @@
 // src/hooks/useAuth.ts
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
+import { useEffect } from 'react';
 import ENDPOINTS from 'src/shared/endpoints.json';
 import { MyResponse } from '../types/Types';
 import {
@@ -26,7 +27,7 @@ interface AuthResponse {
   RefreshToken: string;
   IdToken: string;
   ExpiresIn: string;
-  ExpiresAt?: number;  // Added ExpiresAt
+  ExpiresAt?: number;
   githubUsername?: string;
 }
 
@@ -35,6 +36,7 @@ export interface IAuthProps {
   signup: (credentials: SignUpCredentials) => Promise<MyResponse<unknown>>;
   verify: (username: string, code: string) => Promise<unknown>;
   refreshToken: () => Promise<MyResponse<AuthResponse>>;
+  validateAndRefreshToken: () => Promise<boolean>;
   isLoggedIn: boolean;
   isLoading: boolean;
   isError: boolean;
@@ -45,25 +47,64 @@ export interface IAuthProps {
 export function useAuth(): IAuthProps {
   const queryClient = useQueryClient();
 
-  // Session management
-  const { data: session, isPending } = useQuery({
+  // Token validation and refresh function
+  const validateAndRefreshToken = async (): Promise<boolean> => {
+    try {
+      const accessToken = localStorage.getItem('AccessToken');
+      const expiresAt = localStorage.getItem('ExpiresAt');
+      const refreshToken = localStorage.getItem('RefreshToken');
+
+      if (!accessToken || !refreshToken) {
+        setIsLoggedIn(false);
+        isLoggedInSignal.value = false;
+        return false;
+      }
+
+      // Check if token is expired or will expire soon (within 5 minutes)
+      const isExpiringSoon = expiresAt && parseInt(expiresAt) - Date.now() < 5 * 60 * 1000;
+
+      if (isExpiringSoon) {
+        // Attempt to refresh the token
+        const response = await refreshMutation.mutateAsync();
+        if (response.data?.AccessToken) {
+          // Token refresh successful
+          setIsLoggedIn(true);
+          return true;
+        }
+      } else if (expiresAt && parseInt(expiresAt) > Date.now()) {
+        // Token is still valid
+        setIsLoggedIn(true);
+        return true;
+      }
+
+      // If we get here, either token refresh failed or token is expired
+      setIsLoggedIn(false);
+      isLoggedInSignal.value = false;
+      return false;
+    } catch (error) {
+      console.error('Token validation failed:', error);
+      setIsLoggedIn(false);
+      isLoggedInSignal.value = false;
+      return false;
+    }
+  };
+
+  // Session management with automatic token validation
+  const { data: session, isPending } = useQuery<MyResponse<AuthResponse>>({
     queryKey: ['auth', 'session'],
     queryFn: async (): Promise<MyResponse<AuthResponse>> => {
       try {
-        const accessToken = localStorage.getItem('AccessToken');
-        const expiresAt = localStorage.getItem('ExpiresAt');
-
-        // Check if token is expired
-        if (!accessToken || (expiresAt && parseInt(expiresAt) < Date.now())) {
-          throw new Error('Token expired');
+        const isValid = await validateAndRefreshToken();
+        if (!isValid) {
+          throw new Error('Token validation failed');
         }
 
+        const accessToken = localStorage.getItem('AccessToken');
         const config = {
           headers: {
             'Authorization': `Bearer ${accessToken}`,
             'Content-Type': 'application/json'
-          },
-          withCredentials: true
+          }
         };
 
         const response = await axios.get(`${API_URL}${ENDPOINTS.api.GetUser}`, config);
@@ -78,6 +119,7 @@ export function useAuth(): IAuthProps {
         localStorage.removeItem('RefreshToken');
         localStorage.removeItem('ExpiresAt');
         setIsLoggedIn(false);
+        isLoggedInSignal.value = false;
         setUserName(null);
         return {
           status: 401,
@@ -87,9 +129,7 @@ export function useAuth(): IAuthProps {
         };
       }
     },
-    enabled: !!localStorage.getItem('AccessToken') &&
-             (!localStorage.getItem('ExpiresAt') ||
-              parseInt(localStorage.getItem('ExpiresAt') || '0') > Date.now()),
+    enabled: !!localStorage.getItem('AccessToken'),
     retry: false,
     staleTime: 5 * 60 * 1000 // Consider session stale after 5 minutes
   });
@@ -102,8 +142,7 @@ export function useAuth(): IAuthProps {
 
       const response = await axios.post(
         `${API_URL}${ENDPOINTS.api.RefreshToken}`,
-        { refreshToken },
-        { withCredentials: true }
+        { refreshToken }
       );
       return {
         status: 200,
@@ -116,9 +155,9 @@ export function useAuth(): IAuthProps {
       if (data.data) {
         const expiresAt = Date.now() + parseInt(data.data.ExpiresIn) * 1000;
         setIsLoggedIn(true);
+        isLoggedInSignal.value = true;
         localStorage.setItem('AccessToken', data.data.AccessToken);
         localStorage.setItem('ExpiresAt', expiresAt.toString());
-        // Invalidate session query to trigger re-fetch with new token
         queryClient.invalidateQueries({ queryKey: ['auth', 'session'] });
       }
     },
@@ -131,8 +170,7 @@ export function useAuth(): IAuthProps {
     mutationFn: async (credentials: LoginCredentials): Promise<MyResponse<AuthResponse>> => {
       const response = await axios.post(
         `${API_URL}${ENDPOINTS.api.SignIn}`,
-        credentials,
-        { withCredentials: true }
+        credentials
       );
       return {
         status: 200,
@@ -169,8 +207,7 @@ export function useAuth(): IAuthProps {
     mutationFn: async (credentials: SignUpCredentials): Promise<MyResponse<unknown>> => {
       const response = await axios.post(
         `${API_URL}${ENDPOINTS.api.SignUp}`,
-        credentials,
-        { withCredentials: true }
+        credentials
       );
       return {
         status: 200,
@@ -192,27 +229,40 @@ export function useAuth(): IAuthProps {
     mutationFn: async ({ username, code }: { username: string; code: string }) => {
       const response = await axios.post(
         `${API_URL}${ENDPOINTS.api.ConfirmSignUp}`,
-        { username, code },
-        { withCredentials: true }
+        { username, code }
       );
       return response.data;
     }
   });
 
+  // Add a side effect to synchronize login state and validate token
+  useEffect(() => {
+    const syncLoginState = async () => {
+      const isValid = await validateAndRefreshToken();
+      isLoggedInSignal.value = isValid;
+      setIsLoggedIn(isValid);
+    };
+
+    // Sync on initial load and when storage changes
+    syncLoginState();
+    window.addEventListener('storage', () => syncLoginState());
+
+    return () => {
+      window.removeEventListener('storage', () => syncLoginState());
+    };
+  }, []);
+
   return {
-    // Session state
     isLoggedIn: !!session?.data,
     isPending,
-
-    // Auth methods
     login: (username: string, password: string) =>
       loginMutation.mutateAsync({ username, password }),
-    signup: signupMutation.mutateAsync,
+    signup: (credentials: SignUpCredentials) =>
+      signupMutation.mutateAsync(credentials),
     verify: (username: string, code: string) =>
       verifyMutation.mutateAsync({ username, code }),
     refreshToken: refreshMutation.mutateAsync,
-
-    // Loading states
+    validateAndRefreshToken,
     isLoading: loginMutation.isPending || signupMutation.isPending,
     isError: loginMutation.isError || signupMutation.isError,
     error: loginMutation.error || signupMutation.error,
