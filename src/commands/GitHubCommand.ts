@@ -40,11 +40,20 @@ export const GitHubCommand: ICommand = {
 
         try {
             if ('l' in parsedCommand.switches) {
+                // Get the IdToken which contains user identity information
+                const idToken = myAuthResponse.data.IdToken;
+                if (!idToken) {
+                    return {
+                        status: 401,
+                        message: 'Unable to authenticate with GitHub. Please try logging in again.'
+                    };
+                }
+
                 // Create a state parameter with timestamp and user context to prevent CSRF
                 const state = btoa(JSON.stringify({
                     timestamp: Date.now(),
-                    action: 'link',
-                    cognitoToken: myAuthResponse.data.AccessToken // Include user's Cognito token for identification
+                    refererUrl: encodeURIComponent(window.location.origin), // URL encode the referer
+                    cognitoUserId: idToken // Match the property name expected by backend
                 }));
 
                 // Store state in sessionStorage for verification when GitHub redirects back
@@ -72,9 +81,7 @@ export const GitHubCommand: ICommand = {
 
             if ('r' in parsedCommand.switches) {
                 try {
-                    // Get the current access token
-
-                    // Make the API request
+                    // Make the API request using the access token
                     const response = await axios.get(`${ENDPOINTS.api.BaseUrl}${ENDPOINTS.api.ListRecentRepos}`, {
                         headers: {
                             'Authorization': `Bearer ${myAuthResponse.data.AccessToken}`,

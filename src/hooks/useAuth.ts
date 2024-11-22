@@ -244,10 +244,7 @@ export function useAuth(): IAuthProps {
   const setExpiresAtLocalStorage = (expiresIn: string) => {
     const expiresAt = Date.now() + parseInt(expiresIn) * 1000;
     localStorage.setItem('ExpiresIn', expiresIn);
-    if (Number.isNaN(expiresAt)) {
-      console.error("expiresAt is NaN", expiresAt);
-    }
-    else {
+    if (!Number.isNaN(expiresAt)) {
       localStorage.setItem('ExpiresAt', expiresAt.toString());
     }
   }
