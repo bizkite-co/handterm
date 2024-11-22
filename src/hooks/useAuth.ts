@@ -26,8 +26,8 @@ interface AuthResponse {
   AccessToken: string;
   RefreshToken: string;
   IdToken: string;
+  ExpiresAt?: string;
   ExpiresIn: string;
-  ExpiresAt?: number;
   githubUsername?: string;
 }
 
@@ -36,7 +36,7 @@ export interface IAuthProps {
   signup: (credentials: SignUpCredentials) => Promise<MyResponse<unknown>>;
   verify: (username: string, code: string) => Promise<unknown>;
   refreshToken: () => Promise<MyResponse<AuthResponse>>;
-  validateAndRefreshToken: () => Promise<boolean>;
+  validateAndRefreshToken: () => Promise<MyResponse<AuthResponse>>;
   isLoggedIn: boolean;
   isLoading: boolean;
   isError: boolean;
@@ -48,20 +48,28 @@ export function useAuth(): IAuthProps {
   const queryClient = useQueryClient();
 
   // Token validation and refresh function
-  const validateAndRefreshToken = async (): Promise<boolean> => {
+  const validateAndRefreshToken = async (): Promise<MyResponse<AuthResponse>> => {
     try {
       const accessToken = localStorage.getItem('AccessToken');
       const expiresAt = localStorage.getItem('ExpiresAt');
+      const expiresIn = localStorage.getItem('ExpiresIn');
       const refreshToken = localStorage.getItem('RefreshToken');
+      const idToken = localStorage.getItem('IdToken');
+      const githubUsername = localStorage.getItem('githubUsername');
 
-      if (!accessToken || !refreshToken) {
+      // Exit early if any of these are missing
+      if (!accessToken || !refreshToken || !expiresAt || !expiresIn) {
         setIsLoggedIn(false);
         isLoggedInSignal.value = false;
-        return false;
+        return {
+          status: 401,
+          message: "You are not logged in.",
+          error: []
+        };
       }
 
       // Check if token is expired or will expire soon (within 5 minutes)
-      const isExpiringSoon = expiresAt && parseInt(expiresAt) - Date.now() < 5 * 60 * 1000;
+      const isExpiringSoon = parseInt(expiresAt) - Date.now() < 5 * 60 * 1000;
 
       if (isExpiringSoon) {
         // Attempt to refresh the token
@@ -69,23 +77,55 @@ export function useAuth(): IAuthProps {
         if (response.data?.AccessToken) {
           // Token refresh successful
           setIsLoggedIn(true);
-          return true;
+          return {
+            status: 200,
+            data: {
+              AccessToken: response.data.AccessToken,
+              ExpiresAt: response.data.ExpiresAt,
+              ExpiresIn: response.data.ExpiresIn,
+              IdToken: response.data.IdToken,
+              RefreshToken: response.data.RefreshToken,
+              githubUsername: response.data.githubUsername
+            },
+            message: "Token refreshed",
+            error: []
+          };
         }
-      } else if (expiresAt && parseInt(expiresAt) > Date.now()) {
+      } else if (parseInt(expiresAt) > Date.now()) {
         // Token is still valid
         setIsLoggedIn(true);
-        return true;
+        return {
+          status: 200,
+          data: {
+            AccessToken: accessToken,
+            ExpiresAt: expiresAt,
+            ExpiresIn: expiresIn,
+            IdToken: idToken || '',
+            RefreshToken: refreshToken,
+            githubUsername: githubUsername || ''
+          },
+          message: "Token refreshed",
+          error: []
+        };
       }
 
       // If we get here, either token refresh failed or token is expired
       setIsLoggedIn(false);
       isLoggedInSignal.value = false;
-      return false;
+      return {
+        status: 401,
+        message: "Token refresh failed.",
+        error: []
+      };
     } catch (error) {
       console.error('Token validation failed:', error);
       setIsLoggedIn(false);
       isLoggedInSignal.value = false;
-      return false;
+      return {
+        status: 401,
+        message: "Token validation failed",
+        error: []
+      };
     }
   };
 
@@ -203,6 +243,7 @@ export function useAuth(): IAuthProps {
 
   const setExpiresAtLocalStorage = (expiresIn: string) => {
     const expiresAt = Date.now() + parseInt(expiresIn) * 1000;
+    localStorage.setItem('ExpiresIn', expiresIn);
     if (Number.isNaN(expiresAt)) {
       console.error("expiresAt is NaN", expiresAt);
     }
@@ -247,9 +288,9 @@ export function useAuth(): IAuthProps {
   // Add a side effect to synchronize login state and validate token
   useEffect(() => {
     const syncLoginState = async () => {
-      const isValid = await validateAndRefreshToken();
-      isLoggedInSignal.value = isValid;
-      setIsLoggedIn(isValid);
+      const myResponse = await validateAndRefreshToken();
+      isLoggedInSignal.value = myResponse.status === 200;
+      setIsLoggedIn(myResponse.status === 200);
     };
 
     // Sync on initial load and when storage changes

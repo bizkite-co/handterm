@@ -1,8 +1,8 @@
-// src/commands/GitHubCommand.ts
 import { ICommand, ICommandContext, ICommandResponse } from '../contexts/CommandContext';
-import { ParsedCommand } from '../types/Types';
-import ENDPOINTS from 'src/shared/endpoints.json';
+import { MyResponse, ParsedCommand } from '../types/Types';
+import ENDPOINTS from '../shared/endpoints.json';
 import axios from 'axios';
+
 
 export const GitHubCommand: ICommand = {
     name: 'github',
@@ -29,9 +29,9 @@ export const GitHubCommand: ICommand = {
             };
         }
 
-        // Validate authentication using the centralized auth check
-        const isAuthenticated = await context.auth.validateAndRefreshToken();
-        if (!isAuthenticated) {
+        // Validate authentication and get auth info using the centralized auth check
+        const myAuthResponse = await context.auth.validateAndRefreshToken();
+        if (!myAuthResponse || myAuthResponse.status !== 200 || !myAuthResponse.data) {
             return {
                 status: 401,
                 message: 'You must be logged in to use GitHub integration.'
@@ -40,24 +40,25 @@ export const GitHubCommand: ICommand = {
 
         try {
             if ('l' in parsedCommand.switches) {
-                // Create a state parameter with timestamp to prevent CSRF
+                // Create a state parameter with timestamp and user context to prevent CSRF
                 const state = btoa(JSON.stringify({
                     timestamp: Date.now(),
-                    action: 'link'
+                    action: 'link',
+                    cognitoToken: myAuthResponse.data.AccessToken // Include user's Cognito token for identification
                 }));
 
                 // Store state in sessionStorage for verification when GitHub redirects back
                 sessionStorage.setItem('github_auth_state', state);
 
                 // Construct GitHub auth URL
-                const githubAuthUrl = `${ENDPOINTS.api.BaseUrl}/github_auth?state=${encodeURIComponent(state)}`;
+                const githubAuthUrl = `${ENDPOINTS.api.BaseUrl}${ENDPOINTS.api.GitHubAuth}?state=${encodeURIComponent(state)}`;
 
                 // Redirect to GitHub auth
                 window.location.href = githubAuthUrl;
 
                 return {
                     status: 202,
-                    message: 'Redirecting to GitHub authorization...'
+                    message: 'Redirecting to GitHub authorization...',
                 };
             }
 
@@ -72,18 +73,11 @@ export const GitHubCommand: ICommand = {
             if ('r' in parsedCommand.switches) {
                 try {
                     // Get the current access token
-                    const accessToken = localStorage.getItem('AccessToken');
-                    if (!accessToken) {
-                        return {
-                            status: 401,
-                            message: 'No access token found. Please log in again.'
-                        };
-                    }
 
                     // Make the API request
                     const response = await axios.get(`${ENDPOINTS.api.BaseUrl}${ENDPOINTS.api.ListRecentRepos}`, {
                         headers: {
-                            'Authorization': `Bearer ${accessToken}`,
+                            'Authorization': `Bearer ${myAuthResponse.data.AccessToken}`,
                             'Content-Type': 'application/json'
                         }
                     });
@@ -113,18 +107,16 @@ export const GitHubCommand: ICommand = {
                     };
                 }
             }
-
             return {
                 status: 400,
-                message: 'Please specify a valid GitHub command. Use -h for help.'
+                message: 'Invalid command. Use -h to show command help info',
             };
-
         } catch (error) {
             console.error('GitHub command error:', error);
             return {
-                status: 500,
-                message: `Failed to process GitHub command: ${error instanceof Error ? error.message : 'Unknown error'}`
+                status: 501,
+                message: 'Failed to process GitHub command',
             };
         }
     }
-};
+}
