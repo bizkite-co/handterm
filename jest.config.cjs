@@ -7,7 +7,10 @@ module.exports = {
   // Module resolution and mapping
   moduleNameMapper: {
     '^src/(.*)$': '<rootDir>/src/$1',
-    '\\.(css|less|scss|sass)$': 'identity-obj-proxy'
+    '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
+    '^@octokit/rest$': '<rootDir>/src/__mocks__/@octokit/rest.ts',
+    '^@octokit/app$': '<rootDir>/src/__mocks__/@octokit/app.ts',
+    '^@octokit/core$': '<rootDir>/src/__mocks__/@octokit/core.ts'
   },
 
   // Custom resolver for mixed module systems
@@ -32,7 +35,7 @@ module.exports = {
 
   // Transform node_modules that use ESM
   transformIgnorePatterns: [
-    'node_modules/(?!(@preact|@testing-library)/)'
+    'node_modules/(?!(@preact|@testing-library|@octokit)/)'
   ],
 
   // Test file matching

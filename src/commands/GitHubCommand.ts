@@ -3,7 +3,6 @@ import { MyResponse, ParsedCommand } from '../types/Types';
 import ENDPOINTS from '../shared/endpoints.json';
 import axios from 'axios';
 
-
 export const GitHubCommand: ICommand = {
     name: 'github',
     description: 'GitHub account and repository management',
@@ -89,31 +88,49 @@ export const GitHubCommand: ICommand = {
                         }
                     });
 
-                    const repos = response.data.repositories || [];
+                    const repos = response.data || [];
                     const repoList = repos.map((repo: any) =>
-                        `${repo.full_name} (${repo.language || 'Unknown'}): ${repo.description || 'No description'}`
-                    ).join('\n');
+                        `${repo.name}: ${repo.description || 'No description'}`
+                    ).join('<br />');
 
                     return {
                         status: 200,
                         message: repos.length > 0
-                            ? `Recent Repositories:\n${repoList}`
+                            ? `Recent Repositories:<br />${repoList}`
                             : 'No recent repositories found.'
                     };
                 } catch (error: any) {
                     console.error('Failed to fetch repositories:', error);
+
+                    // Check if this is a GitHub App installation required error
+                    if (error.response?.data?.message?.includes('installation required')) {
+                        const installUrl = error.response.data.message.match(/https:\/\/github\.com\/apps\/[^\/]+\/installations\/new/)?.[0];
+                        if (installUrl) {
+                            // Open the installation URL in a new tab
+                            window.open(installUrl, '_blank');
+                            return {
+                                status: 400,
+                                message: `The HandTerm GitHub App needs to be installed to access repositories.<br/><br/>
+                                A new tab has opened where you can install the app.<br/><br/>
+                                After installing, try the 'github -r' command again.`
+                            };
+                        }
+                    }
+
                     if (error.response?.status === 401) {
                         return {
                             status: 401,
                             message: 'Authentication failed. Please log in again.'
                         };
                     }
+
                     return {
                         status: error.response?.status || 500,
                         message: error.response?.data?.message || 'Failed to retrieve repositories. Please try again later.'
                     };
                 }
             }
+
             return {
                 status: 400,
                 message: 'Invalid command. Use -h to show command help info',

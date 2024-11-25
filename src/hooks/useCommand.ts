@@ -1,7 +1,7 @@
 // src/hooks/useCommand.ts
-import React, { useContext, useState, useCallback } from 'react';
+import React, { useContext, useState, useCallback, ReactNode } from 'react';
 import { CommandContext } from '../contexts/CommandContext';
-import { parseCommand } from '../utils/commandUtils';
+import { parseCommand, parsedCommandToString } from '../utils/commandUtils';
 import { LogKeys } from '../types/TerminalTypes';
 import { commandRegistry } from '../commands/commandRegistry';
 import { ActivityType, OutputElement, ParsedCommand, WPMs } from '../types/Types';
@@ -18,9 +18,9 @@ export const useCommand = () => {
     const [commandHistoryIndex, setCommandHistoryIndex] = useState(-1);
     const [commandHistoryFilter, setCommandHistoryFilter] = useState<string | null>(null);
     const currentActivity = useComputed(() => activitySignal.value);
-    const { 
-        handleCommandExecuted, 
-        checkTutorialProgress 
+    const {
+        handleCommandExecuted,
+        checkTutorialProgress
     } = useActivityMediator();
     const wpmCalculator = useWPMCalculator();
     const context = useContext(CommandContext);
@@ -57,8 +57,8 @@ export const useCommand = () => {
     }, []);
 
     const createCommandRecord = useCallback((
-        command: string,
-        response: string,
+        command: ParsedCommand,
+        response: ReactNode,
         status: number,
         commandTime: Date
     ): OutputElement => {
@@ -74,14 +74,14 @@ export const useCommand = () => {
     }, []);
 
     const processCommandOutput = useCallback((
-        command: string,
-        response: string,
+        command: ParsedCommand,
+        response: ReactNode,
         status: number,
     ): void => {
         const commandTime = new Date();
         const outputElement = createCommandRecord(command, response, status, commandTime);
         appendToOutput(outputElement);
-        addToCommandHistory(command);
+        addToCommandHistory(parsedCommandToString(command));
     }, [createCommandRecord, appendToOutput, addToCommandHistory]);
 
     const executeCommand = useCallback(async (parsedCommand: ParsedCommand) => {
@@ -89,16 +89,16 @@ export const useCommand = () => {
         if (command && context) {
             try {
                 const response = await command.execute(context, parsedCommand);
-                processCommandOutput(parsedCommand.command, response.message, response.status);
+                processCommandOutput(parsedCommand, response.message, response.status);
                 handleCommandExecuted(parsedCommand);
             } catch (error) {
                 const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-                processCommandOutput(parsedCommand.command, errorMessage, 500);
+                processCommandOutput(parsedCommand, errorMessage, 500);
                 handleCommandExecuted(parsedCommand);
             }
         } else {
             const response = currentActivity.value === ActivityType.TUTORIAL ? `Tutorial attempt: ${parsedCommand.command}` : `Command not found: ${parsedCommand.command}`;
-            processCommandOutput(parsedCommand.command, response, 404);
+            processCommandOutput(parsedCommand, response, 404);
             handleCommandExecuted(parsedCommand);
         }
     }, [context, processCommandOutput, handleCommandExecuted, currentActivity]);

@@ -15,17 +15,17 @@ export const Output: React.FC = () => {
 
   return (
     <div className="output-container">
-      {outputElements.map((element: OutputElement, index: number) => (
+      {outputElements.map((outputElement: OutputElement, index: number) => (
         <CommandOutput
           key={index}
-          command={element.command}
-          response={element.response}
-          status={element.status}
+          command={outputElement.command}
+          response={outputElement.response}
+          status={outputElement.status}
           wpms={{
-            wpmAverage: element?.wpmAverage ?? 0,
-            charWpms: element?.characterAverages ?? []
+            wpmAverage: outputElement?.wpmAverage ?? 0,
+            charWpms: outputElement?.characterAverages ?? []
           }}
-          commandTime={element.commandTime}
+          commandTime={outputElement.commandTime}
         />
       ))}
     </div>

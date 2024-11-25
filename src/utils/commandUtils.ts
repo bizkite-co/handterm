@@ -11,6 +11,23 @@ export const loadCommandHistory = () => {
 export const saveCommandHistory = (commandHistory: any) => {
   localStorage.setItem(LogKeys.CommandHistory, JSON.stringify(commandHistory));
 }
+export function parsedCommandToString(cmd: ParsedCommand): string {
+  const argsStr = cmd.args.join(' ');
+  const switchesStr = Object.entries(cmd.switches)
+    .map(([key, value]) => {
+      if (typeof value === 'boolean') {
+        return value ? `--${key}` : '';
+      }
+      return `--${key}=${value}`;
+    })
+    .filter(s => s)
+    .join(' ');
+
+  return [cmd.command, argsStr, switchesStr]
+    .filter(s => s)
+    .join(' ')
+    .trim();
+}
 
 export const parseCommand = (input: string): ParsedCommand => {
   const parts = input.split(/\s+/); // Split by whitespace
@@ -47,7 +64,7 @@ export const parseCommand = (input: string): ParsedCommand => {
 
   return {
     command: command || '',
-    args: args || [], 
+    args: args || [],
     switches: switches || {}
   } as const;
 }

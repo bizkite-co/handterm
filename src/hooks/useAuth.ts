@@ -155,9 +155,13 @@ export function useAuth(): IAuthProps {
           error: []
         };
       } catch (error) {
+        console.error('Session validation failed:', error);
         localStorage.removeItem('AccessToken');
         localStorage.removeItem('RefreshToken');
         localStorage.removeItem('ExpiresAt');
+        localStorage.removeItem('ExpiresIn');
+        localStorage.removeItem('IdToken');
+        localStorage.removeItem('githubUsername');
         setIsLoggedIn(false);
         isLoggedInSignal.value = false;
         setUserName(null);
@@ -243,7 +247,7 @@ export function useAuth(): IAuthProps {
 
   const setExpiresAtLocalStorage = (expiresIn: string) => {
     const expiresAt = Date.now() + parseInt(expiresIn) * 1000;
-    localStorage.setItem('ExpiresIn', expiresIn);
+    if(expiresIn) localStorage.setItem('ExpiresIn', expiresIn);
     if (!Number.isNaN(expiresAt)) {
       localStorage.setItem('ExpiresAt', expiresAt.toString());
     }

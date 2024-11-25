@@ -1,3 +1,7 @@
+import { ReactNode } from "react";
+import { commandLineSignal } from "src/signals/commandLineSignals";
+import { parseArgs } from "util";
+
 export const spaceDisplayChar = "&#x2581;";
 export const tabDisplayChar = "&#x2B7E;";
 export interface CharTime {
@@ -70,8 +74,8 @@ export type WPMs = Readonly<{
 }>
 
 export interface OutputElement {
-  command: string;
-  response: string;
+  command: ParsedCommand;
+  response: ReactNode;
   status: number;
   wpmAverage?: number;
   characterAverages?: ReadonlyArray<WPM>;
