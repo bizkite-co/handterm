@@ -13,7 +13,7 @@ export const saveCommandHistory = (commandHistory: any) => {
 }
 export function parsedCommandToString(cmd: ParsedCommand): string {
   const argsStr = cmd.args ? cmd.args.join(' ') : '';
-  const switchesStr = Object.entries(cmd.switches)
+  const switchesStr = !cmd.switches ? '' : Object.entries(cmd.switches)
     .map(([key, value]) => {
       if (typeof value === 'boolean') {
         return value ? `--${key}` : '';
