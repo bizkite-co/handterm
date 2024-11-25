@@ -4,6 +4,7 @@ import React, { ReactNode } from 'react';
 import { TimeDisplay } from './TimeDisplay';
 import WpmTable from './WpmTable';
 import { ParsedCommand, WPMs } from '../types/Types';
+import { parsedCommandToString } from 'src/utils/commandUtils';
 
 interface CommandOutputProps {
     command: ParsedCommand;
@@ -41,7 +42,7 @@ export const CommandOutput: React.FC<CommandOutputProps> = ({
                 </span>
                 <span className="wpm-label">WPM:</span>
                 <span className="wpm">{(wpms.wpmAverage ?? 0).toFixed(0)}</span>
-                {command.command} {command.args ? command.args.join(' ') : ''}
+                {parsedCommandToString(command)}
             </div>
             {renderResponse()}
             {wpms && wpms.charWpms && wpms.charWpms.length > 0 && (
