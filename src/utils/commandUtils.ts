@@ -16,9 +16,9 @@ export function parsedCommandToString(cmd: ParsedCommand): string {
   const switchesStr = !cmd.switches ? '' : Object.entries(cmd.switches)
     .map(([key, value]) => {
       if (typeof value === 'boolean') {
-        return value ? `--${key}` : '';
+        return value ? `-${key}` : '';
       }
-      return `--${key}=${value}`;
+      return `-${key}=${value}`;
     })
     .filter(s => s)
     .join(' ');

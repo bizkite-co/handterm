@@ -1,5 +1,5 @@
 import { ICommand, ICommandContext, ICommandResponse } from '../contexts/CommandContext';
-import { MyResponse, ParsedCommand } from '../types/Types';
+import { ParsedCommand } from '../types/Types';
 import ENDPOINTS from '../shared/endpoints.json';
 import axios from 'axios';
 
@@ -10,7 +10,8 @@ export const GitHubCommand: ICommand = {
         'h': 'Show help for GitHub command',
         'l': 'Link GitHub account',
         'u': 'Unlink GitHub account',
-        'r': 'List recent repositories'
+        'r': 'List recent repositories',
+        't': 'Get repository tree (Usage: -t owner/repo [path] [sha])'
     },
     execute: async (
         context: ICommandContext,
@@ -24,6 +25,7 @@ export const GitHubCommand: ICommand = {
                 github -l : Link your GitHub account
                 github -u : Unlink GitHub account
                 github -r : List recent repositories
+                github -t owner/repo [path] [sha] : Get repository tree
                 github -h : Show this help message`
             };
         }
@@ -127,6 +129,76 @@ export const GitHubCommand: ICommand = {
                     return {
                         status: error.response?.status || 500,
                         message: error.response?.data?.message || 'Failed to retrieve repositories. Please try again later.'
+                    };
+                }
+            }
+
+            if ('t' in parsedCommand.switches) {
+                // Get repo tree requires at least the repo parameter
+                if (!parsedCommand.switches.t) {
+                    return {
+                        status: 400,
+                        message: 'Repository parameter required. Usage: github -t owner/repo [path] [sha]'
+                    };
+                }
+
+                const repo = parsedCommand.switches.t;
+                const path = parsedCommand.args[1] || '';
+                const sha = parsedCommand.args[2] || '';
+
+                try {
+                    const response = await axios.get(`${ENDPOINTS.api.BaseUrl}${ENDPOINTS.api.GetRepoTree}`, {
+                        headers: {
+                            'Authorization': `Bearer ${myAuthResponse.data.AccessToken}`,
+                            'Content-Type': 'application/json'
+                        },
+                        params: {
+                            repo,
+                            ...(path && { path }),
+                            ...(sha && { sha })
+                        }
+                    });
+
+                    // Handle file content response
+                    if (response.data.content) {
+                        return {
+                            status: 200,
+                            message: `File content:\n${response.data.content}`
+                        };
+                    }
+
+                    // Handle tree response
+                    const items = response.data;
+                    const treeList = items.map((item: any) =>
+                        `${item.type === 'tree' ? '📁' : '📄'} ${item.path}`
+                    ).join('\n');
+
+                    return {
+                        status: 200,
+                        message: items.length > 0
+                            ? `Repository Tree:\n${treeList}`
+                            : 'No items found in repository tree.'
+                    };
+                } catch (error: any) {
+                    console.error('Failed to fetch repo tree:', error);
+
+                    if (error.response?.status === 401) {
+                        return {
+                            status: 401,
+                            message: 'Authentication failed. Please log in again.'
+                        };
+                    }
+
+                    if (error.response?.status === 400) {
+                        return {
+                            status: 400,
+                            message: error.response.data.message || 'Invalid request. Please check repository name and parameters.'
+                        };
+                    }
+
+                    return {
+                        status: error.response?.status || 500,
+                        message: error.response?.data?.message || 'Failed to retrieve repository tree. Please try again later.'
                     };
                 }
             }
