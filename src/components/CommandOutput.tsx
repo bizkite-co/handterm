@@ -41,7 +41,7 @@ export const CommandOutput: React.FC<CommandOutputProps> = ({
                 </span>
                 <span className="wpm-label">WPM:</span>
                 <span className="wpm">{(wpms.wpmAverage ?? 0).toFixed(0)}</span>
-                {command.command} {command.args.join(' ')}
+                {command.command} {command.args ? command.args.join(' ') : ''}
             </div>
             {renderResponse()}
             {wpms && wpms.charWpms && wpms.charWpms.length > 0 && (
