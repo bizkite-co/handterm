@@ -1,7 +1,7 @@
 // src/hooks/useCommand.ts
-import React, { useContext, useState, useCallback, ReactNode } from 'react';
+import React, { useContext, useState, useCallback, ReactNode, useEffect } from 'react';
 import { CommandContext } from '../contexts/CommandContext';
-import { parseCommand, parsedCommandToString } from '../utils/commandUtils';
+import { parseCommand, parsedCommandToString, loadCommandHistory, saveCommandHistory } from '../utils/commandUtils';
 import { LogKeys } from '../types/TerminalTypes';
 import { commandRegistry } from '../commands/commandRegistry';
 import { ActivityType, OutputElement, ParsedCommand, WPMs } from '../types/Types';
@@ -29,12 +29,28 @@ export const useCommand = () => {
         throw new Error('useCommand must be used within a CommandProvider');
     }
 
+    // Load command history from localStorage on mount
+    useEffect(() => {
+        const savedHistory = loadCommandHistory();
+        if (savedHistory && savedHistory.length > 0) {
+            setCommandHistory(savedHistory);
+        }
+    }, []);
+
     const resetOutput = useCallback(() => {
         setOutput([]);
     }, []);
 
     const addToCommandHistory = useCallback((command: string) => {
-        setCommandHistory(prev => [...prev, command].slice(-120)); // Keep last 120 commands
+        setCommandHistory(prev => {
+            // Don't add if it's identical to the previous command
+            if (prev.length > 0 && prev[prev.length - 1] === command) {
+                return prev;
+            }
+            const newHistory = [...prev, command].slice(-120); // Keep last 120 commands
+            saveCommandHistory(newHistory); // Save to localStorage whenever history changes
+            return newHistory;
+        });
     }, []);
 
     const getCommandResponseHistory = useCallback((): string[] => {

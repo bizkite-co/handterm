@@ -19,7 +19,7 @@ import { write } from 'fs';
 
 export const useTerminal = () => {
   const { instance, ref: xtermRef } = useXTerm({ options: XtermAdapterConfig });
-  const { handleCommand } = useCommand();
+  const { handleCommand, commandHistory, commandHistoryIndex, setCommandHistoryIndex } = useCommand();
   const wpmCalculator = useWPMCalculator();
   const commandLine = useComputed(() => commandLineSignal.value)
 
@@ -62,6 +62,50 @@ export const useTerminal = () => {
     return command.substring(promptEndIndex).trimStart();
   }, [instance]);
 
+  const clearCurrentLine = useCallback(() => {
+    if (!instance) return;
+    const currentCommand = getCurrentCommand();
+    // Move cursor to end of line
+    instance.write('\x1b[2K\r'); // Clear the current line
+    instance.write(PROMPT); // Rewrite prompt
+  }, [instance, getCurrentCommand]);
+
+  const navigateHistory = useCallback((direction: 'up' | 'down') => {
+    if (!instance || !commandHistory.length) return;
+
+    let newIndex = commandHistoryIndex;
+
+    if (direction === 'up') {
+      // If we're not already navigating history, save current command
+      if (newIndex === -1) {
+        const currentCommand = getCurrentCommand();
+        if (currentCommand) {
+          setCommandLine(currentCommand);
+        }
+      }
+      newIndex = newIndex === -1 ? commandHistory.length - 1 : Math.max(0, newIndex - 1);
+    } else {
+      newIndex = newIndex === -1 ? -1 : Math.min(commandHistory.length - 1, newIndex + 1);
+      if (newIndex === -1) {
+        // Restore the saved command when reaching the bottom
+        clearCurrentLine();
+        const savedCommand = commandLine.value;
+        if (savedCommand) {
+          instance.write(savedCommand);
+          setCommandLine(savedCommand);
+        }
+        setCommandHistoryIndex(newIndex);
+        return;
+      }
+    }
+
+    clearCurrentLine();
+    const historicalCommand = commandHistory[newIndex] || '';
+    instance.write(historicalCommand);
+    setCommandLine(historicalCommand);
+    setCommandHistoryIndex(newIndex);
+  }, [instance, commandHistory, commandHistoryIndex, getCurrentCommand, clearCurrentLine, setCommandHistoryIndex]);
+
   useEffect(() => {
     if (!instance) return;
     instance.loadAddon(fitAddon.current);
@@ -93,6 +137,14 @@ export const useTerminal = () => {
           if (cursorX > promptLength) {
             instance?.write(data);
           }
+          return true;
+
+        case '\x1b[A': // Up arrow
+          navigateHistory('up');
+          return true;
+
+        case '\x1b[B': // Down arrow
+          navigateHistory('down');
           return true;
 
         default:
@@ -131,6 +183,7 @@ export const useTerminal = () => {
         handleCommand(parsedCommand);
         wpmCalculator.clearKeystrokes();
       }
+      setCommandHistoryIndex(-1); // Reset history index after command execution
       resetPrompt();
     };
 
@@ -175,7 +228,7 @@ export const useTerminal = () => {
       window.removeEventListener('resize', resizeHandler);
       dataHandler.dispose();
     };
-  }, [instance, getCurrentCommand, resetPrompt, wpmCalculator, commandLine, setCommandLine]);
+  }, [instance, getCurrentCommand, resetPrompt, wpmCalculator, commandLine, setCommandLine, navigateHistory]);
 
   return {
     xtermRef,
