@@ -18,7 +18,7 @@ export function parsedCommandToString(cmd: ParsedCommand): string {
       if (typeof value === 'boolean') {
         return value ? `-${key}` : '';
       }
-      return `-${key}=${value}`;
+      return `-${key} ${value}`;
     })
     .filter(s => s)
     .join(' ');

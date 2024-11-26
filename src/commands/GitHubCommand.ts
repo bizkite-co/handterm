@@ -170,7 +170,7 @@ export const GitHubCommand: ICommand = {
                     // Handle tree response
                     const items = response.data;
                     const treeList = items.map((item: any) =>
-                        `${item.type === 'tree' ? '📁' : '📄'} ${item.path}`
+                        `${item.type === 'tree' ? '📁' : '📄'}${item.path}`
                     ).join('\n');
 
                     return {
