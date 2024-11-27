@@ -7,7 +7,6 @@ import NextCharsDisplay, { NextCharsDisplayHandle } from './NextCharsDisplay';
 import { TutorialManager } from './TutorialManager';
 import { Chord } from './Chord';
 import { Prompt } from './Prompt';
-import { TreeView } from './TreeView';
 import { useResizeCanvasAndFont } from '../hooks/useResizeCanvasAndFont';
 import { useTerminal } from '../hooks/useTerminal';
 import { useWPMCalculator } from '../hooks/useWPMCaculator';
@@ -16,7 +15,6 @@ import {
   setGamePhrase,
   isInGameModeSignal,
 } from 'src/signals/gameSignals';
-import { isTreeViewVisibleSignal } from 'src/signals/treeViewSignals';
 import { useComputed } from '@preact/signals-react';
 import MonacoEditor from './MonacoEditor';
 import WebCam from 'src/utils/WebCam';
@@ -83,8 +81,19 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
   const commandTime = useComputed(() => commandTimeSignal.value);
   const [tempUserName, setTempUserName] = useState('');
   const [tempPassword, setTempPassword] = useState('');
+  const [treeItems, setTreeItems] = useState<Array<{ path: string; type: string }>>([]);
 
   const { parseLocation, updateLocation } = useReactiveLocation();
+
+  useEffect(() => {
+    // Load tree items from localStorage when in tree view mode
+    if (parseLocation().activityKey === ActivityType.TREE) {
+      const storedItems = localStorage.getItem('github_tree_items');
+      if (storedItems) {
+        setTreeItems(JSON.parse(storedItems));
+      }
+    }
+  }, [parseLocation().activityKey]);
 
   const handleFileSelect = useCallback(async (path: string) => {
     try {
@@ -207,9 +216,8 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
         <TutorialManager />
       )}
 
-      <TreeView onFileSelect={handleFileSelect} />
-
-      {parseLocation().activityKey !== ActivityType.EDIT && (
+      {parseLocation().activityKey !== ActivityType.EDIT &&
+       parseLocation().activityKey !== ActivityType.TREE && (
         <>
           <Prompt
             username={userName || 'guest'}
@@ -224,6 +232,16 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
         <MonacoEditor
           initialValue={localStorage.getItem('edit-content') || ''}
           language="markdown"
+          onClose={handleEditorClose}
+        />
+      )}
+      {parseLocation().activityKey === ActivityType.TREE && (
+        <MonacoEditor
+          initialValue=""
+          language="plaintext"
+          isTreeView={true}
+          treeItems={treeItems}
+          onFileSelect={handleFileSelect}
           onClose={handleEditorClose}
         />
       )}

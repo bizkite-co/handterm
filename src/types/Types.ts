@@ -19,7 +19,8 @@ export const ActivityType = {
   NORMAL: 'NORMAL',
   TUTORIAL: 'TUTORIAL',
   GAME: 'GAME',
-  EDIT: 'EDIT'
+  EDIT: 'EDIT',
+  TREE: 'TREE'
 } as const;
 
 export type ActivityType = typeof ActivityType[keyof typeof ActivityType];
@@ -89,7 +90,7 @@ export type MyResponse<T> = {
   error: string[];
 };
 
-export const VALID_ACTIVITIES = ['normal', 'game', 'tutorial', 'edit'] as const;
+export const VALID_ACTIVITIES = ['normal', 'game', 'tutorial', 'edit', 'tree'] as const;
 export type Activity = typeof VALID_ACTIVITIES[number];
 
 export type ParsedLocation = {
@@ -137,7 +138,6 @@ export const TutorialPhrases: GamePhrase[] = [
     value: 'Do it again, but this time put a space in between the letters. Grasp the thumb and release to enter a space.',
     key: 'fdsa'
   },
-  // { value: 'The second most important key is the Backspace key. To use it, pull back the index finger. Practice typing fdsa and then deleting it. Then press enter to continue.', key: ['DELETE (Backspace)'], },
   {
     value: 'Type `jkl;`. Notice that it requires only a finger-grasp followed by a release.',
     key: 'jkl;', tutorialGroup: 'single-click'
@@ -170,7 +170,6 @@ export const Tutorials: Tutorial[] = [
   {
     prompt: 'Type `fdsa` & Enter. Notice that it requires only a finger-pinch and release for each character.', phrase: 'fdsa' },
   { prompt: 'Do it again, but this time put a space in between the letters. Grasp the thumb and release to enter a space.', phrase: 'fdsa' },
-  // { prompt: 'The second most important key is the Backspace key. To use it, pull back the index finger. Practice typing fdsa and then deleting it. Then press enter to continue.', phrase: ['DELETE (Backspace)']},
   { prompt: 'Type `jkl;`. Notice that it requires only a finger-grasp followed by a release.', phrase: 'jkl;', tutorialGroup: 'single-click' },
   { prompt: 'Press the thumb tip followed by a finger tip to type numbers 0-4', phrase: '01234' },
   { prompt: 'Press the thumb tip followed by a finger tip to type numbers 5-9', phrase: '56789', tutorialGroup: 'numbers' },

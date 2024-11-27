@@ -2,7 +2,8 @@ import { ICommand, ICommandContext, ICommandResponse } from '../contexts/Command
 import { ParsedCommand } from '../types/Types';
 import ENDPOINTS from '../shared/endpoints.json';
 import axios from 'axios';
-import { treeItemsSignal, isTreeViewVisibleSignal, selectedTreeItemSignal } from '../signals/treeViewSignals';
+import { useReactiveLocation } from 'src/hooks/useReactiveLocation';
+import { ActivityType } from 'src/types/Types';
 
 export const GitHubCommand: ICommand = {
     name: 'github',
@@ -160,21 +161,24 @@ export const GitHubCommand: ICommand = {
 
                     // Update tree view state
                     if (Array.isArray(response.data)) {
-                        // Reset selection
-                        selectedTreeItemSignal.value = 0;
+                        // Switch to tree view mode
+                        context.updateLocation({
+                            activityKey: ActivityType.TREE,
+                            contentKey: null,
+                            groupKey: null
+                        });
 
-                        // Update items
-                        treeItemsSignal.value = response.data.map(item => ({
-                            path: item.path,
-                            type: item.type
-                        }));
-
-                        // Show tree view
-                        isTreeViewVisibleSignal.value = true;
+                        // Store tree items in localStorage for the MonacoEditor to access
+                        localStorage.setItem('github_tree_items', JSON.stringify(
+                            response.data.map(item => ({
+                                path: item.path,
+                                type: item.type
+                            }))
+                        ));
 
                         return {
                             status: 200,
-                            message: 'Repository tree loaded. Use j/k to navigate, Enter to select a file, Esc to close, Space+e to reopen.'
+                            message: 'Repository tree loaded. Use j/k to navigate, Enter to select a file, e to close.'
                         };
                     }
 
