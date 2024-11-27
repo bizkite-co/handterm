@@ -11,7 +11,7 @@ interface TreeItem {
 
 interface MonacoEditorProps {
   initialValue: string;
-  language: 'javascript' | 'typescript' | 'markdown' | 'plaintext';
+  language?: string;
   onClose?: () => void;
   height?: string;
   toggleVideo?: () => boolean;
@@ -37,6 +37,50 @@ const handleEditSave = (value?: string): void => {
   localStorage.setItem('edit-content', JSON.stringify(value));
 }
 
+// Get language from file extension
+function getLanguageFromPath(path: string | null | undefined): string {
+  if (!path) return 'plaintext';
+  const ext = path.split('.').pop()?.toLowerCase();
+  switch (ext) {
+    case 'js':
+      return 'javascript';
+    case 'ts':
+    case 'tsx':
+      return 'typescript';
+    case 'jsx':
+      return 'javascript';
+    case 'json':
+      return 'json';
+    case 'md':
+      return 'markdown';
+    case 'html':
+      return 'html';
+    case 'css':
+      return 'css';
+    case 'scss':
+    case 'sass':
+      return 'scss';
+    case 'py':
+      return 'python';
+    case 'rb':
+      return 'ruby';
+    case 'go':
+      return 'go';
+    case 'rs':
+      return 'rust';
+    case 'php':
+      return 'php';
+    case 'sh':
+    case 'bash':
+      return 'shell';
+    case 'yml':
+    case 'yaml':
+      return 'yaml';
+    default:
+      return 'plaintext';
+  }
+}
+
 const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(
   ({ initialValue, language, onClose, height = '80vh', toggleVideo, isTreeView, treeItems = [], onFileSelect }, ref) => {
     const editorRef = useRef<any>(null);
@@ -44,6 +88,12 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(
     const statusNodeRef = useRef<HTMLDivElement>(null);
     const { parseLocation, updateLocation } = useReactiveLocation();
     const [expandedFolders] = useState<Set<string>>(new Set());
+    const [isEditorReady, setIsEditorReady] = useState(false);
+    const [disposables] = useState<any[]>([]);
+
+    // Get current file path from location
+    const currentLocation = parseLocation();
+    const currentFile = currentLocation.contentKey;
 
     // Debug logging for props and state
     useEffect(() => {
@@ -51,18 +101,33 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(
         console.log('MonacoEditor Tree View Props:', {
           isTreeView,
           treeItemsCount: treeItems.length,
-          expandedFoldersCount: expandedFolders.size
+          expandedFoldersCount: expandedFolders.size,
+          isEditorReady
         });
         console.log('Tree Items:', treeItems);
       }
-    }, [isTreeView, treeItems, expandedFolders]);
+    }, [isTreeView, treeItems, expandedFolders, isEditorReady]);
+
+    // Cleanup on unmount
+    useEffect(() => {
+      return () => {
+        // Dispose of any Monaco editor disposables
+        disposables.forEach(d => d?.dispose?.());
+        // Dispose of vim mode if active
+        if (window.MonacoVim) {
+          window.MonacoVim.VimMode.Vim.dispose();
+        }
+        // Clear editor reference
+        editorRef.current = null;
+        monacoRef.current = null;
+      };
+    }, [disposables]);
 
     const handleEditorClose = (): void => {
-      updateLocation({
-        activityKey: ActivityType.NORMAL,
-        contentKey: null,
-        groupKey: null
-      })
+      if (onClose) {
+        console.log('Closing editor');
+        onClose();
+      }
     }
 
     useImperativeHandle(ref, () => ({
@@ -78,12 +143,13 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(
       editorRef.current = editor;
       monacoRef.current = monaco;
 
+      // Make editor read-only in tree view mode
       if (isTreeView) {
         console.log('Setting up tree view mode');
         editor.updateOptions({ readOnly: true });
 
-        // Register tree view actions
-        editor.addAction({
+        // Add key bindings for tree navigation
+        const moveDown = editor.addAction({
           id: 'moveDown',
           label: 'Move Down',
           keybindings: [monaco.KeyCode.KeyJ],
@@ -95,8 +161,9 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(
             editor.revealLine(nextLine);
           }
         });
+        disposables.push(moveDown);
 
-        editor.addAction({
+        const moveUp = editor.addAction({
           id: 'moveUp',
           label: 'Move Up',
           keybindings: [monaco.KeyCode.KeyK],
@@ -108,8 +175,9 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(
             editor.revealLine(prevLine);
           }
         });
+        disposables.push(moveUp);
 
-        editor.addAction({
+        const selectItem = editor.addAction({
           id: 'selectItem',
           label: 'Select Item',
           keybindings: [monaco.KeyCode.Enter],
@@ -137,36 +205,33 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(
             }
           }
         });
+        disposables.push(selectItem);
 
-        editor.addAction({
+        const closeTree = editor.addAction({
           id: 'closeTree',
           label: 'Close Tree',
           keybindings: [monaco.KeyCode.KeyE],
-          run: () => {
-            console.log('Close triggered');
-            if (onClose) {
-              onClose();
-            }
-          }
+          run: handleEditorClose
         });
+        disposables.push(closeTree);
 
         // Handle Spacebar + e for toggling tree view
         let spacebarPressed = false;
-        editor.onKeyDown((e: any) => {
+        const keyDownDisposable = editor.onKeyDown((e: any) => {
           if (e.keyCode === monaco.KeyCode.Space) {
             spacebarPressed = true;
           } else if (spacebarPressed && e.keyCode === monaco.KeyCode.KeyE) {
-            if (onClose) {
-              onClose();
-            }
+            handleEditorClose();
           } else {
             spacebarPressed = false;
           }
         });
+        disposables.push(keyDownDisposable);
 
-        editor.onKeyUp(() => {
+        const keyUpDisposable = editor.onKeyUp(() => {
           spacebarPressed = false;
         });
+        disposables.push(keyUpDisposable);
 
         console.log('Tree view actions registered');
       } else {
@@ -189,16 +254,12 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(
             });
 
             Vim.defineEx('q', '', () => {
-              if (onClose) {
-                onClose();
-              }
+              handleEditorClose();
             });
 
             Vim.defineEx('wq', '', () => {
               handleEditSave(editor.getValue());
-              if (onClose) {
-                onClose();
-              }
+              handleEditorClose();
             });
 
             Vim.defineEx('vid', '', () => {
@@ -212,6 +273,7 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(
 
       setTimeout(() => {
         editor.focus();
+        setIsEditorReady(true);
         console.log('Editor ready');
       }, 100);
     }
@@ -228,12 +290,18 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(
       }
     }, [isTreeView, editorContent]);
 
+    // Determine language based on file extension or prop
+    const editorLanguage = isTreeView ? 'plaintext' : (language || getLanguageFromPath(currentFile));
+
+    // Use a unique key to force editor recreation when needed
+    const editorKey = `${editorLanguage}-${isTreeView}-${currentFile || 'default'}`;
+
     return (
       <div className="monaco-editor-container">
         <Editor
-          key={`${language}-${isTreeView}`}
+          key={editorKey}
           height={height}
-          defaultLanguage={isTreeView ? 'plaintext' : language}
+          defaultLanguage={editorLanguage}
           defaultValue={editorContent}
           onMount={handleEditorDidMount}
           onChange={isTreeView ? undefined : handleEditSave}

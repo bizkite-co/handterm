@@ -86,6 +86,7 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
   const [tempUserName, setTempUserName] = useState('');
   const [tempPassword, setTempPassword] = useState('');
   const [treeItems, setTreeItems] = useState<TreeItem[]>([]);
+  const [currentFile, setCurrentFile] = useState<string | null>(null);
 
   const { parseLocation, updateLocation } = useReactiveLocation();
   const currentActivity = parseLocation().activityKey;
@@ -114,6 +115,17 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
     }
   }, [currentActivity]);
 
+  // Reset terminal when returning to normal mode
+  useEffect(() => {
+    if (currentActivity === ActivityType.NORMAL) {
+      console.log('Resetting terminal in NORMAL mode');
+      if (xtermRef.current) {
+        xtermRef.current.focus();
+      }
+      resetPrompt();
+    }
+  }, [currentActivity, xtermRef, resetPrompt]);
+
   const handleFileSelect = useCallback(async (path: string) => {
     try {
       // Get the current repository from localStorage (set by GitHubCommand)
@@ -128,11 +140,14 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
       console.log('File content response:', response);
 
       if (response.status === 200 && response.data) {
-        // Content is already decoded by the lambda
+        // Store content and file path
         localStorage.setItem('edit-content', response.data.content);
+        setCurrentFile(path);
+
+        // Update location with file path
         updateLocation({
           activityKey: ActivityType.EDIT,
-          contentKey: null,
+          contentKey: `${currentRepo}/${path}`,
           groupKey: null
         });
       } else {
@@ -146,6 +161,24 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
   }, [props.auth, updateLocation]);
 
   const handleEditorClose = useCallback((): void => {
+    console.log('Closing editor, returning to NORMAL mode');
+    // Clear stored content and file path
+    localStorage.removeItem('edit-content');
+    setCurrentFile(null);
+    // Return to normal mode
+    updateLocation({
+      activityKey: ActivityType.NORMAL,
+      contentKey: null,
+      groupKey: null
+    });
+  }, [updateLocation]);
+
+  const handleTreeClose = useCallback((): void => {
+    console.log('Closing tree view, returning to NORMAL mode');
+    // Clear tree items
+    setTreeItems([]);
+    localStorage.removeItem('github_tree_items');
+    // Return to normal mode
     updateLocation({
       activityKey: ActivityType.NORMAL,
       contentKey: null,
@@ -251,7 +284,7 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
           isTreeView={true}
           treeItems={treeItems}
           onFileSelect={handleFileSelect}
-          onClose={handleEditorClose}
+          onClose={handleTreeClose}
         />
       )}
       {isShowVideoSignal.value && (
