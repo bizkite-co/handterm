@@ -1,9 +1,12 @@
 import { ICommand, ICommandContext, ICommandResponse } from '../contexts/CommandContext';
-import { ParsedCommand } from '../types/Types';
+import { ParsedCommand, ActivityType } from '../types/Types';
 import ENDPOINTS from '../shared/endpoints.json';
 import axios from 'axios';
-import { useReactiveLocation } from 'src/hooks/useReactiveLocation';
-import { ActivityType } from 'src/types/Types';
+
+interface TreeItem {
+  path: string;
+  type: string;
+}
 
 export const GitHubCommand: ICommand = {
     name: 'github',
@@ -144,6 +147,7 @@ export const GitHubCommand: ICommand = {
                 const sha = parsedCommand.args[2] || '';
 
                 try {
+                    console.log('Fetching tree for repo:', repoArg);
                     const response = await axios.get(`${ENDPOINTS.api.BaseUrl}${ENDPOINTS.api.GetRepoTree}`, {
                         headers: {
                             'Authorization': `Bearer ${myAuthResponse.data.AccessToken}`,
@@ -156,25 +160,31 @@ export const GitHubCommand: ICommand = {
                         }
                     });
 
+                    console.log('Tree response:', response.data);
+
                     // Store current repository for file fetching
                     localStorage.setItem('current_github_repo', repoArg);
 
                     // Update tree view state
                     if (Array.isArray(response.data)) {
+                        // Format tree items
+                        const treeItems: TreeItem[] = response.data.map(item => ({
+                            path: item.path,
+                            type: item.type
+                        }));
+
+                        console.log('Storing tree items:', treeItems);
+
+                        // Store tree items in localStorage
+                        localStorage.setItem('github_tree_items', JSON.stringify(treeItems));
+
                         // Switch to tree view mode
+                        console.log('Switching to TREE mode');
                         context.updateLocation({
                             activityKey: ActivityType.TREE,
                             contentKey: null,
                             groupKey: null
                         });
-
-                        // Store tree items in localStorage for the MonacoEditor to access
-                        localStorage.setItem('github_tree_items', JSON.stringify(
-                            response.data.map(item => ({
-                                path: item.path,
-                                type: item.type
-                            }))
-                        ));
 
                         return {
                             status: 200,

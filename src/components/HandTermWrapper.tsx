@@ -26,6 +26,11 @@ import ENDPOINTS from '../shared/endpoints.json';
 
 const logger = createLogger('HandTermWrapper', LogLevel.DEBUG);
 
+interface TreeItem {
+  path: string;
+  type: string;
+}
+
 export interface IHandTermWrapperProps {
   terminalWidth: number;
   auth: IAuthProps;
@@ -81,19 +86,34 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
   const commandTime = useComputed(() => commandTimeSignal.value);
   const [tempUserName, setTempUserName] = useState('');
   const [tempPassword, setTempPassword] = useState('');
-  const [treeItems, setTreeItems] = useState<Array<{ path: string; type: string }>>([]);
+  const [treeItems, setTreeItems] = useState<TreeItem[]>([]);
 
   const { parseLocation, updateLocation } = useReactiveLocation();
+  const currentActivity = parseLocation().activityKey;
 
+  // Load tree items when entering tree view mode
   useEffect(() => {
-    // Load tree items from localStorage when in tree view mode
-    if (parseLocation().activityKey === ActivityType.TREE) {
+    if (currentActivity === ActivityType.TREE) {
+      console.log('Loading tree items in TREE mode');
       const storedItems = localStorage.getItem('github_tree_items');
+      console.log('Stored items:', storedItems);
       if (storedItems) {
-        setTreeItems(JSON.parse(storedItems));
+        try {
+          const items = JSON.parse(storedItems);
+          console.log('Parsed items:', items);
+          if (Array.isArray(items) && items.length > 0) {
+            setTreeItems(items);
+          } else {
+            console.error('Tree items array is empty or invalid');
+          }
+        } catch (error) {
+          console.error('Error parsing tree items:', error);
+        }
+      } else {
+        console.error('No tree items found in localStorage');
       }
     }
-  }, [parseLocation().activityKey]);
+  }, [currentActivity]);
 
   const handleFileSelect = useCallback(async (path: string) => {
     try {
@@ -194,30 +214,32 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
 
   return (
     <>
-      {(parseLocation().activityKey === ActivityType.GAME) && (
-        <Game
-          ref={gameHandleRef}
-          canvasHeight={canvasHeight}
-          canvasWidth={props.terminalWidth}
-        />
+      {/* Game components */}
+      {currentActivity === ActivityType.GAME && (
+        <>
+          <Game
+            ref={gameHandleRef}
+            canvasHeight={canvasHeight}
+            canvasWidth={props.terminalWidth}
+          />
+          <NextCharsDisplay
+            ref={nextCharsDisplayRef}
+            isInPhraseMode={true}
+            onPhraseSuccess={handlePhraseSuccess}
+            onError={handlePhraseErrorState}
+          />
+        </>
       )}
-      {parseLocation().activityKey === ActivityType.GAME && (
-        <NextCharsDisplay
-          ref={nextCharsDisplayRef}
-          isInPhraseMode={true}
-          onPhraseSuccess={handlePhraseSuccess}
-          onError={handlePhraseErrorState}
-        />
-      )}
+
+      {/* Other components */}
       {lastTypedCharacter && (
         <Chord displayChar={lastTypedCharacter} />
       )}
-      {parseLocation().activityKey === ActivityType.TUTORIAL && (
+      {currentActivity === ActivityType.TUTORIAL && (
         <TutorialManager />
       )}
-
-      {parseLocation().activityKey !== ActivityType.EDIT &&
-       parseLocation().activityKey !== ActivityType.TREE && (
+      {/* Always show terminal unless in EDIT or TREE mode */}
+      {currentActivity !== ActivityType.EDIT && currentActivity !== ActivityType.TREE && (
         <>
           <Prompt
             username={userName || 'guest'}
@@ -228,14 +250,15 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
           <div ref={xtermRef} />
         </>
       )}
-      {parseLocation().activityKey === ActivityType.EDIT && (
+
+      {currentActivity === ActivityType.EDIT && (
         <MonacoEditor
           initialValue={localStorage.getItem('edit-content') || ''}
           language="markdown"
           onClose={handleEditorClose}
         />
       )}
-      {parseLocation().activityKey === ActivityType.TREE && (
+      {currentActivity === ActivityType.TREE && treeItems.length > 0 && (
         <MonacoEditor
           initialValue=""
           language="plaintext"

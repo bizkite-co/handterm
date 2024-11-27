@@ -1,8 +1,13 @@
 import { useRef, useEffect, useImperativeHandle, forwardRef, useState } from 'react';
-import Editor from "@monaco-editor/react";
+import Editor, { Monaco } from "@monaco-editor/react";
 import { useReactiveLocation } from 'src/hooks/useReactiveLocation';
 import { ActivityType } from 'src/types/Types';
-import { formatTreeContent } from '../utils/treeFormatter';
+import { formatTreeContent, getItemAtLine } from '../utils/treeFormatter';
+
+interface TreeItem {
+  path: string;
+  type: string;
+}
 
 interface MonacoEditorProps {
   initialValue: string;
@@ -11,7 +16,7 @@ interface MonacoEditorProps {
   height?: string;
   toggleVideo?: () => boolean;
   isTreeView?: boolean;
-  treeItems?: Array<{ path: string; type: string }>;
+  treeItems?: TreeItem[];
   onFileSelect?: (path: string) => void;
 }
 
@@ -33,11 +38,24 @@ const handleEditSave = (value?: string): void => {
 }
 
 const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(
-  ({ initialValue, language, onClose, height = '80vh', toggleVideo, isTreeView, treeItems, onFileSelect }, ref) => {
+  ({ initialValue, language, onClose, height = '80vh', toggleVideo, isTreeView, treeItems = [], onFileSelect }, ref) => {
     const editorRef = useRef<any>(null);
+    const monacoRef = useRef<Monaco | null>(null);
     const statusNodeRef = useRef<HTMLDivElement>(null);
     const { parseLocation, updateLocation } = useReactiveLocation();
-    const [selectedLine, setSelectedLine] = useState<number>(2); // Start after header
+    const [expandedFolders] = useState<Set<string>>(new Set());
+
+    // Debug logging for props and state
+    useEffect(() => {
+      if (isTreeView) {
+        console.log('MonacoEditor Tree View Props:', {
+          isTreeView,
+          treeItemsCount: treeItems.length,
+          expandedFoldersCount: expandedFolders.size
+        });
+        console.log('Tree Items:', treeItems);
+      }
+    }, [isTreeView, treeItems, expandedFolders]);
 
     const handleEditorClose = (): void => {
       updateLocation({
@@ -55,113 +73,160 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(
       }
     }));
 
-    useEffect(() => {
-      return () => {
-        if (window.MonacoVim) {
-          window.MonacoVim.VimMode.Vim.dispose();
-        }
-      };
-    }, []);
-
-    function handleEditorDidMount(editor: any, monaco: any) {
+    function handleEditorDidMount(editor: any, monaco: Monaco) {
+      console.log('Editor mounted, setting up...');
       editorRef.current = editor;
-      setTimeout(() => editor.focus(), 100);
+      monacoRef.current = monaco;
 
-      // Make editor read-only in tree view mode
       if (isTreeView) {
+        console.log('Setting up tree view mode');
         editor.updateOptions({ readOnly: true });
-      }
 
-      window.require.config({
-        paths: {
-          "monaco-vim": "https://unpkg.com/monaco-vim/dist/monaco-vim"
-        }
-      });
+        // Register tree view actions
+        editor.addAction({
+          id: 'moveDown',
+          label: 'Move Down',
+          keybindings: [monaco.KeyCode.KeyJ],
+          run: () => {
+            console.log('Navigate Down triggered');
+            const currentLine = editor.getPosition().lineNumber;
+            const nextLine = Math.min(currentLine + 1, editor.getModel().getLineCount());
+            editor.setPosition({ lineNumber: nextLine, column: 1 });
+            editor.revealLine(nextLine);
+          }
+        });
 
-      // @ts-ignore
-      window.require(["monaco-vim"], (MonacoVim: any) => {
-        if (statusNodeRef.current) {
-          const vimMode = MonacoVim.initVimMode(editor, statusNodeRef.current);
-          const Vim = MonacoVim.VimMode.Vim;
+        editor.addAction({
+          id: 'moveUp',
+          label: 'Move Up',
+          keybindings: [monaco.KeyCode.KeyK],
+          run: () => {
+            console.log('Navigate Up triggered');
+            const currentLine = editor.getPosition().lineNumber;
+            const prevLine = Math.max(currentLine - 1, 1);
+            editor.setPosition({ lineNumber: prevLine, column: 1 });
+            editor.revealLine(prevLine);
+          }
+        });
 
-          // Define tree-specific commands when in tree view mode
-          if (isTreeView && treeItems) {
-            const lines = editor.getModel().getLinesContent();
-            const fileLineNumbers = lines
-              .map((line: string, index: number) => line.includes('📄') ? index + 1 : -1)
-              .filter((num: number) => num !== -1);
+        editor.addAction({
+          id: 'selectItem',
+          label: 'Select Item',
+          keybindings: [monaco.KeyCode.Enter],
+          run: () => {
+            console.log('Select Item triggered');
+            const currentLine = editor.getPosition().lineNumber;
+            const item = getItemAtLine(treeItems, { expandedFolders }, currentLine);
+            console.log('Selected item:', item);
 
-            // Navigate down
-            vimMode.addKeyMap('j', 'normal', () => {
-              const currentLine = editor.getPosition().lineNumber;
-              const nextLine = Math.min(currentLine + 1, lines.length);
-              editor.setPosition({ lineNumber: nextLine, column: 1 });
-              editor.revealLine(nextLine);
-              return true;
-            });
-
-            // Navigate up
-            vimMode.addKeyMap('k', 'normal', () => {
-              const currentLine = editor.getPosition().lineNumber;
-              const prevLine = Math.max(currentLine - 1, 1);
-              editor.setPosition({ lineNumber: prevLine, column: 1 });
-              editor.revealLine(prevLine);
-              return true;
-            });
-
-            // Select file with Enter
-            vimMode.addKeyMap('<CR>', 'normal', () => {
-              const currentLine = editor.getPosition().lineNumber;
-              const lineContent = lines[currentLine - 1];
-              if (lineContent.includes('📄') && onFileSelect) {
-                const filePath = lineContent.match(/📄\s+(.+)$/)?.[1]?.trim();
-                if (filePath) {
-                  onFileSelect(filePath);
+            if (item) {
+              if (item.isDirectory) {
+                console.log('Toggling directory:', item.path);
+                if (expandedFolders.has(item.path)) {
+                  expandedFolders.delete(item.path);
+                } else {
+                  expandedFolders.add(item.path);
                 }
+                const newContent = formatTreeContent(treeItems, { expandedFolders });
+                editor.setValue(newContent);
+                editor.setPosition({ lineNumber: currentLine, column: 1 });
+              } else if (onFileSelect) {
+                console.log('Opening file:', item.path);
+                onFileSelect(item.path);
               }
-              return true;
+            }
+          }
+        });
+
+        editor.addAction({
+          id: 'closeTree',
+          label: 'Close Tree',
+          keybindings: [monaco.KeyCode.KeyE],
+          run: () => {
+            console.log('Close triggered');
+            if (onClose) {
+              onClose();
+            }
+          }
+        });
+
+        // Handle Spacebar + e for toggling tree view
+        let spacebarPressed = false;
+        editor.onKeyDown((e: any) => {
+          if (e.keyCode === monaco.KeyCode.Space) {
+            spacebarPressed = true;
+          } else if (spacebarPressed && e.keyCode === monaco.KeyCode.KeyE) {
+            if (onClose) {
+              onClose();
+            }
+          } else {
+            spacebarPressed = false;
+          }
+        });
+
+        editor.onKeyUp(() => {
+          spacebarPressed = false;
+        });
+
+        console.log('Tree view actions registered');
+      } else {
+        // Standard vim mode for non-tree views
+        window.require.config({
+          paths: {
+            "monaco-vim": "https://unpkg.com/monaco-vim/dist/monaco-vim"
+          }
+        });
+
+        // @ts-ignore
+        window.require(["monaco-vim"], (MonacoVim: any) => {
+          if (statusNodeRef.current) {
+            MonacoVim.initVimMode(editor, statusNodeRef.current);
+            const Vim = MonacoVim.VimMode.Vim;
+
+            // Standard vim commands
+            Vim.defineEx('w', '', () => {
+              handleEditSave(editor.getValue());
             });
 
-            // Toggle tree view with 'e'
-            vimMode.addKeyMap('e', 'normal', () => {
+            Vim.defineEx('q', '', () => {
               if (onClose) {
                 onClose();
               }
-              return true;
+            });
+
+            Vim.defineEx('wq', '', () => {
+              handleEditSave(editor.getValue());
+              if (onClose) {
+                onClose();
+              }
+            });
+
+            Vim.defineEx('vid', '', () => {
+              if (toggleVideo) {
+                toggleVideo();
+              }
             });
           }
+        });
+      }
 
-          // Standard vim commands
-          Vim.defineEx('w', '', () => {
-            handleEditSave(editor.getValue());
-          });
-
-          Vim.defineEx('q', '', () => {
-            if (onClose) {
-              onClose();
-            }
-          });
-
-          Vim.defineEx('wq', '', () => {
-            handleEditSave(editor.getValue());
-            if (onClose) {
-              onClose();
-            }
-          });
-
-          Vim.defineEx('vid', '', () => {
-            if (toggleVideo) {
-              toggleVideo();
-            }
-          });
-        }
-      });
+      setTimeout(() => {
+        editor.focus();
+        console.log('Editor ready');
+      }, 100);
     }
 
     // Format tree content if in tree view mode
-    const editorContent = isTreeView && treeItems
-      ? formatTreeContent(treeItems)
+    const editorContent = isTreeView && treeItems.length > 0
+      ? formatTreeContent(treeItems, { expandedFolders })
       : initialValue;
+
+    // Debug log the content being rendered
+    useEffect(() => {
+      if (isTreeView) {
+        console.log('Tree View Content:', editorContent);
+      }
+    }, [isTreeView, editorContent]);
 
     return (
       <div className="monaco-editor-container">
@@ -183,7 +248,14 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(
             renderWhitespace: 'none',
             minimap: { enabled: false },
             scrollBeyondLastLine: false,
-            wordWrap: 'on'
+            wordWrap: 'on',
+            contextmenu: false,
+            quickSuggestions: false,
+            parameterHints: { enabled: false },
+            suggestOnTriggerCharacters: false,
+            acceptSuggestionOnEnter: 'off',
+            tabCompletion: 'off',
+            wordBasedSuggestions: 'off'
           }}
         />
         <div ref={statusNodeRef} className="status-node"></div>
