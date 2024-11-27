@@ -21,8 +21,7 @@ import WebCam from 'src/utils/WebCam';
 import { useReactiveLocation } from 'src/hooks/useReactiveLocation';
 import { createLogger, LogLevel } from 'src/utils/Logger';
 import { commandTimeSignal } from 'src/signals/commandLineSignals';
-import axios from 'axios';
-import ENDPOINTS from '../shared/endpoints.json';
+import { getFileContent } from '../utils/apiClient';
 
 const logger = createLogger('HandTermWrapper', LogLevel.DEBUG);
 
@@ -124,36 +123,25 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
         return;
       }
 
-      // Get auth token
-      const authResponse = await props.auth.validateAndRefreshToken();
-      if (!authResponse || authResponse.status !== 200 || !authResponse.data) {
-        console.error('Authentication failed');
-        return;
-      }
+      console.log('Fetching file content:', { repo: currentRepo, path });
+      const response = await getFileContent(props.auth, currentRepo, path);
+      console.log('File content response:', response);
 
-      // Fetch file content
-      const response = await axios.get(`${ENDPOINTS.api.BaseUrl}/github/file`, {
-        headers: {
-          'Authorization': `Bearer ${authResponse.data.AccessToken}`,
-          'Content-Type': 'application/json'
-        },
-        params: {
-          repo: currentRepo,
-          path: path
-        }
-      });
-
-      if (response.data && response.data.content) {
-        // Store content and switch to edit mode
+      if (response.status === 200 && response.data) {
+        // Content is already decoded by the lambda
         localStorage.setItem('edit-content', response.data.content);
         updateLocation({
           activityKey: ActivityType.EDIT,
           contentKey: null,
           groupKey: null
         });
+      } else {
+        console.error('Failed to fetch file content:', response.error);
       }
     } catch (error) {
       console.error('Failed to fetch file content:', error);
+      // Stay in tree view mode on error
+      return;
     }
   }, [props.auth, updateLocation]);
 
@@ -214,30 +202,28 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
 
   return (
     <>
-      {/* Game components */}
-      {currentActivity === ActivityType.GAME && (
-        <>
-          <Game
-            ref={gameHandleRef}
-            canvasHeight={canvasHeight}
-            canvasWidth={props.terminalWidth}
-          />
-          <NextCharsDisplay
-            ref={nextCharsDisplayRef}
-            isInPhraseMode={true}
-            onPhraseSuccess={handlePhraseSuccess}
-            onError={handlePhraseErrorState}
-          />
-        </>
+      {(parseLocation().activityKey === ActivityType.GAME) && (
+        <Game
+          ref={gameHandleRef}
+          canvasHeight={canvasHeight}
+          canvasWidth={props.terminalWidth}
+        />
       )}
-
-      {/* Other components */}
+      {parseLocation().activityKey === ActivityType.GAME && (
+        <NextCharsDisplay
+          ref={nextCharsDisplayRef}
+          isInPhraseMode={true}
+          onPhraseSuccess={handlePhraseSuccess}
+          onError={handlePhraseErrorState}
+        />
+      )}
       {lastTypedCharacter && (
         <Chord displayChar={lastTypedCharacter} />
       )}
-      {currentActivity === ActivityType.TUTORIAL && (
+      {parseLocation().activityKey === ActivityType.TUTORIAL && (
         <TutorialManager />
       )}
+
       {/* Always show terminal unless in EDIT or TREE mode */}
       {currentActivity !== ActivityType.EDIT && currentActivity !== ActivityType.TREE && (
         <>

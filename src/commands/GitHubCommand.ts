@@ -1,12 +1,7 @@
 import { ICommand, ICommandContext, ICommandResponse } from '../contexts/CommandContext';
 import { ParsedCommand, ActivityType } from '../types/Types';
 import ENDPOINTS from '../shared/endpoints.json';
-import axios from 'axios';
-
-interface TreeItem {
-  path: string;
-  type: string;
-}
+import { getRepoTree, listRecentRepos } from '../utils/apiClient';
 
 export const GitHubCommand: ICommand = {
     name: 'github',
@@ -35,19 +30,18 @@ export const GitHubCommand: ICommand = {
             };
         }
 
-        // Validate authentication and get auth info using the centralized auth check
-        const myAuthResponse = await context.auth.validateAndRefreshToken();
-        if (!myAuthResponse || myAuthResponse.status !== 200 || !myAuthResponse.data) {
-            return {
-                status: 401,
-                message: 'You must be logged in to use GitHub integration.'
-            };
-        }
-
         try {
             if ('l' in parsedCommand.switches) {
                 // Get the IdToken which contains user identity information
-                const idToken = myAuthResponse.data.IdToken;
+                const authResponse = await context.auth.validateAndRefreshToken();
+                if (!authResponse || authResponse.status !== 200 || !authResponse.data) {
+                    return {
+                        status: 401,
+                        message: 'Unable to authenticate with GitHub. Please try logging in again.'
+                    };
+                }
+
+                const idToken = authResponse.data.IdToken;
                 if (!idToken) {
                     return {
                         status: 401,
@@ -85,53 +79,25 @@ export const GitHubCommand: ICommand = {
             }
 
             if ('r' in parsedCommand.switches) {
-                try {
-                    const response = await axios.get(`${ENDPOINTS.api.BaseUrl}${ENDPOINTS.api.ListRecentRepos}`, {
-                        headers: {
-                            'Authorization': `Bearer ${myAuthResponse.data.AccessToken}`,
-                            'Content-Type': 'application/json'
-                        }
-                    });
+                const response = await listRecentRepos(context.auth);
 
-                    const repos = response.data || [];
-                    const repoList = repos.map((repo: any) =>
+                if (response.status === 200 && response.data) {
+                    const repoList = response.data.map(repo =>
                         `${repo.name}: ${repo.description || 'No description'}`
                     ).join('<br />');
 
                     return {
                         status: 200,
-                        message: repos.length > 0
+                        message: response.data.length > 0
                             ? `Recent Repositories:<br />${repoList}`
                             : 'No recent repositories found.'
                     };
-                } catch (error: any) {
-                    console.error('Failed to fetch repositories:', error);
-
-                    if (error.response?.data?.message?.includes('installation required')) {
-                        const installUrl = error.response.data.message.match(/https:\/\/github\.com\/apps\/[^\/]+\/installations\/new/)?.[0];
-                        if (installUrl) {
-                            window.open(installUrl, '_blank');
-                            return {
-                                status: 400,
-                                message: `The HandTerm GitHub App needs to be installed to access repositories.<br/><br/>
-                                A new tab has opened where you can install the app.<br/><br/>
-                                After installing, try the 'github -r' command again.`
-                            };
-                        }
-                    }
-
-                    if (error.response?.status === 401) {
-                        return {
-                            status: 401,
-                            message: 'Authentication failed. Please log in again.'
-                        };
-                    }
-
-                    return {
-                        status: error.response?.status || 500,
-                        message: error.response?.data?.message || 'Failed to retrieve repositories. Please try again later.'
-                    };
                 }
+
+                return {
+                    status: response.status,
+                    message: response.error || 'Failed to retrieve repositories.'
+                };
             }
 
             if ('t' in parsedCommand.switches) {
@@ -146,78 +112,35 @@ export const GitHubCommand: ICommand = {
                 const path = parsedCommand.args[1] || '';
                 const sha = parsedCommand.args[2] || '';
 
-                try {
-                    console.log('Fetching tree for repo:', repoArg);
-                    const response = await axios.get(`${ENDPOINTS.api.BaseUrl}${ENDPOINTS.api.GetRepoTree}`, {
-                        headers: {
-                            'Authorization': `Bearer ${myAuthResponse.data.AccessToken}`,
-                            'Content-Type': 'application/json'
-                        },
-                        params: {
-                            repo: repoArg,
-                            ...(path && { path }),
-                            ...(sha && { sha })
-                        }
-                    });
+                console.log('Fetching tree for repo:', repoArg);
+                const response = await getRepoTree(context.auth, repoArg, path, sha);
+                console.log('Tree response:', response);
 
-                    console.log('Tree response:', response.data);
-
+                if (response.status === 200 && response.data) {
                     // Store current repository for file fetching
                     localStorage.setItem('current_github_repo', repoArg);
 
-                    // Update tree view state
-                    if (Array.isArray(response.data)) {
-                        // Format tree items
-                        const treeItems: TreeItem[] = response.data.map(item => ({
-                            path: item.path,
-                            type: item.type
-                        }));
+                    // Store tree items in localStorage
+                    localStorage.setItem('github_tree_items', JSON.stringify(response.data));
 
-                        console.log('Storing tree items:', treeItems);
-
-                        // Store tree items in localStorage
-                        localStorage.setItem('github_tree_items', JSON.stringify(treeItems));
-
-                        // Switch to tree view mode
-                        console.log('Switching to TREE mode');
-                        context.updateLocation({
-                            activityKey: ActivityType.TREE,
-                            contentKey: null,
-                            groupKey: null
-                        });
-
-                        return {
-                            status: 200,
-                            message: 'Repository tree loaded. Use j/k to navigate, Enter to select a file, e to close.'
-                        };
-                    }
+                    // Switch to tree view mode
+                    console.log('Switching to TREE mode');
+                    context.updateLocation({
+                        activityKey: ActivityType.TREE,
+                        contentKey: null,
+                        groupKey: null
+                    });
 
                     return {
                         status: 200,
-                        message: 'No items found in repository tree.'
-                    };
-                } catch (error: any) {
-                    console.error('Failed to fetch repo tree:', error);
-
-                    if (error.response?.status === 401) {
-                        return {
-                            status: 401,
-                            message: 'Authentication failed. Please log in again.'
-                        };
-                    }
-
-                    if (error.response?.status === 400) {
-                        return {
-                            status: 400,
-                            message: error.response.data.message || 'Invalid request. Please check repository name and parameters.'
-                        };
-                    }
-
-                    return {
-                        status: error.response?.status || 500,
-                        message: error.response?.data?.message || 'Failed to retrieve repository tree. Please try again later.'
+                        message: 'Repository tree loaded. Use j/k to navigate, Enter to select a file, e to close.'
                     };
                 }
+
+                return {
+                    status: response.status,
+                    message: response.error || 'Failed to retrieve repository tree.'
+                };
             }
 
             return {
