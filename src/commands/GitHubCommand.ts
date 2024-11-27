@@ -2,6 +2,7 @@ import { ICommand, ICommandContext, ICommandResponse } from '../contexts/Command
 import { ParsedCommand } from '../types/Types';
 import ENDPOINTS from '../shared/endpoints.json';
 import axios from 'axios';
+import { treeItemsSignal, isTreeViewVisibleSignal, selectedTreeItemSignal } from '../signals/treeViewSignals';
 
 export const GitHubCommand: ICommand = {
     name: 'github',
@@ -53,8 +54,8 @@ export const GitHubCommand: ICommand = {
                 // Create a state parameter with timestamp and user context to prevent CSRF
                 const state = btoa(JSON.stringify({
                     timestamp: Date.now(),
-                    refererUrl: encodeURIComponent(window.location.origin), // URL encode the referer
-                    cognitoUserId: idToken // Match the property name expected by backend
+                    refererUrl: encodeURIComponent(window.location.origin),
+                    cognitoUserId: idToken
                 }));
 
                 // Store state in sessionStorage for verification when GitHub redirects back
@@ -73,7 +74,6 @@ export const GitHubCommand: ICommand = {
             }
 
             if ('u' in parsedCommand.switches) {
-                // TODO: Implement unlinking GitHub account
                 return {
                     status: 501,
                     message: 'Unlinking GitHub account is not yet implemented.'
@@ -82,7 +82,6 @@ export const GitHubCommand: ICommand = {
 
             if ('r' in parsedCommand.switches) {
                 try {
-                    // Make the API request using the access token
                     const response = await axios.get(`${ENDPOINTS.api.BaseUrl}${ENDPOINTS.api.ListRecentRepos}`, {
                         headers: {
                             'Authorization': `Bearer ${myAuthResponse.data.AccessToken}`,
@@ -104,11 +103,9 @@ export const GitHubCommand: ICommand = {
                 } catch (error: any) {
                     console.error('Failed to fetch repositories:', error);
 
-                    // Check if this is a GitHub App installation required error
                     if (error.response?.data?.message?.includes('installation required')) {
                         const installUrl = error.response.data.message.match(/https:\/\/github\.com\/apps\/[^\/]+\/installations\/new/)?.[0];
                         if (installUrl) {
-                            // Open the installation URL in a new tab
                             window.open(installUrl, '_blank');
                             return {
                                 status: 400,
@@ -134,15 +131,14 @@ export const GitHubCommand: ICommand = {
             }
 
             if ('t' in parsedCommand.switches) {
-                // Get repo tree requires at least the repo parameter
-                if (!parsedCommand.switches.t) {
+                const repoArg = parsedCommand.switches.t === true ? parsedCommand.args[0] : parsedCommand.switches.t;
+                if (!repoArg) {
                     return {
                         status: 400,
                         message: 'Repository parameter required. Usage: github -t owner/repo [path] [sha]'
                     };
                 }
 
-                const repo = parsedCommand.switches.t;
                 const path = parsedCommand.args[1] || '';
                 const sha = parsedCommand.args[2] || '';
 
@@ -153,31 +149,38 @@ export const GitHubCommand: ICommand = {
                             'Content-Type': 'application/json'
                         },
                         params: {
-                            repo,
+                            repo: repoArg,
                             ...(path && { path }),
                             ...(sha && { sha })
                         }
                     });
 
-                    // Handle file content response
-                    if (response.data.content) {
+                    // Store current repository for file fetching
+                    localStorage.setItem('current_github_repo', repoArg);
+
+                    // Update tree view state
+                    if (Array.isArray(response.data)) {
+                        // Reset selection
+                        selectedTreeItemSignal.value = 0;
+
+                        // Update items
+                        treeItemsSignal.value = response.data.map(item => ({
+                            path: item.path,
+                            type: item.type
+                        }));
+
+                        // Show tree view
+                        isTreeViewVisibleSignal.value = true;
+
                         return {
                             status: 200,
-                            message: `File content:\n${response.data.content}`
+                            message: 'Repository tree loaded. Use j/k to navigate, Enter to select a file, Esc to close, Space+e to reopen.'
                         };
                     }
 
-                    // Handle tree response
-                    const items = response.data;
-                    const treeList = items.map((item: any) =>
-                        `${item.type === 'tree' ? '📁' : '📄'}${item.path}`
-                    ).join('\n');
-
                     return {
                         status: 200,
-                        message: items.length > 0
-                            ? `Repository Tree:\n${treeList}`
-                            : 'No items found in repository tree.'
+                        message: 'No items found in repository tree.'
                     };
                 } catch (error: any) {
                     console.error('Failed to fetch repo tree:', error);
