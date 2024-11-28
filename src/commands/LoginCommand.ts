@@ -7,7 +7,7 @@ import { isInLoginProcessSignal, tempUserNameSignal, setTempUserName, setIsInLog
 export const LoginCommand: ICommand = {
     name: 'login',
     description: 'Log in to the system',
-    execute: (context: ICommandContext, parsedCommand: ParsedCommand): ICommandResponse => {
+    execute: async (context: ICommandContext, parsedCommand: ParsedCommand): Promise<ICommandResponse> => {
         const { auth } = context;
 
         if (parsedCommand.args.length === 1) {
@@ -18,38 +18,26 @@ export const LoginCommand: ICommand = {
         } else if (parsedCommand.args.length === 2 && isInLoginProcessSignal.value) {
             // Complete login process
             const tempUsername = parsedCommand.args[0];
-            const password = parsedCommand.args[1]; // The entire command is the password in this case
-            
-            auth.login(tempUsername, password)
-                .then(result => {
-                    setIsInLoginProcess(false);
-                    if (result.status === 200) {
-                        context.appendToOutput({
-                            command: 'login',
-                            response: 'Login successful!',
-                            status: 200,
-                            commandTime: new Date()
-                        });
-                    } else {
-                        context.appendToOutput({
-                            command: 'login',
-                            response: `Login failed: ${result.message}`,
-                            status: result.status,
-                            commandTime: new Date()
-                        });
-                    }
-                })
-                .catch(error => {
-                    setIsInLoginProcess(false);
-                    context.appendToOutput({
-                        command: 'login',
-                        response: `Login error: ${error.message}`,
-                        status: 500,
-                        commandTime: new Date()
-                    });
-                });
+            const password = parsedCommand.args[1];
 
-            return { status: 202, message: 'Processing login...' };
+            try {
+                const result = await auth.login(tempUsername, password);
+                    setIsInLoginProcess(false);
+
+                return {
+                            status: result.status,
+                    message: result.status === 200 ? 'Login successful!' : `Login failed: ${result.message}`,
+                    sensitive: true // Mark as sensitive to mask password
+                };
+            } catch (error: any) {
+                    setIsInLoginProcess(false);
+                const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+                return {
+                        status: 500,
+                    message: `Login error: ${errorMessage}`,
+                    sensitive: true // Mark as sensitive to mask password
+                };
+            }
         } else {
             return { status: 400, message: 'Usage: login <username>' };
         }

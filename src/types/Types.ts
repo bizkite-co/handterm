@@ -75,12 +75,14 @@ export type WPMs = Readonly<{
 }>
 
 export interface OutputElement {
-  command: ParsedCommand;
-  response: ReactNode;
+  command?: ParsedCommand;
+  response?: ReactNode;
   status: number;
   wpmAverage?: number;
   characterAverages?: ReadonlyArray<WPM>;
   commandTime: Date;
+  component?: ReactNode; // New field for React components
+  sensitive?: boolean; // Flag to indicate if the command contains sensitive data
 }
 
 export type MyResponse<T> = {

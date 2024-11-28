@@ -57,6 +57,16 @@ export const setActivity = (activity: ActivityType) => {
 
 export const appendToOutput = (element: OutputElement) => {
     updateOutput(prevOutput => {
+        // If the command is sensitive, mask the args except the first one (username)
+        if (element.sensitive && element.command) {
+            const maskedCommand = {
+                ...element.command,
+                args: element.command.args.map((arg, index) =>
+                    index === 0 ? arg : '*'.repeat(arg.length)
+                )
+            };
+            element = { ...element, command: maskedCommand };
+        }
         const newOutput = [...prevOutput, element].slice(-3);
         return newOutput;
     });

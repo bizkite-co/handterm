@@ -8,6 +8,7 @@ export interface ICommandResponse {
   status: number;
   message: string;
   body?: string | null;
+  sensitive?: boolean; // Flag to indicate if the command response contains sensitive data
 }
 
 export interface ICommand {
@@ -34,7 +35,6 @@ export interface ICommandContext {
 export const CommandContext = createContext<ICommandContext | null>(null);
 
 export const useCommandContext = () => {
-  
   const context = useContext(CommandContext);
   if (!context) {
     throw new Error('useCommandContext must be used within a CommandProvider');
