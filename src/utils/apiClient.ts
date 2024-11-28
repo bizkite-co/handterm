@@ -29,6 +29,16 @@ export interface RepoResponse {
     default_branch: string;
 }
 
+export interface SaveRepoFileResponse {
+    commit: {
+        sha: string;
+        url: string;
+    };
+    content: {
+        sha: string;
+    };
+}
+
 // Create axios instance with base configuration
 const api = axios.create({
     baseURL: ENDPOINTS.api.BaseUrl,
@@ -42,7 +52,8 @@ export async function makeAuthenticatedRequest<T>(
     auth: IAuthProps,
     endpoint: string,
     params?: Record<string, string>,
-    method: 'GET' | 'POST' = 'GET'
+    method: 'GET' | 'POST' = 'GET',
+    data?: any
 ): Promise<APIResponse<T>> {
     try {
         const authResponse = await auth.validateAndRefreshToken();
@@ -68,7 +79,8 @@ export async function makeAuthenticatedRequest<T>(
             headers: {
                 'Authorization': `Bearer ${accessToken}`
             },
-            params
+            params,
+            data
         });
 
         return {
@@ -104,6 +116,16 @@ export async function getFileContent(auth: IAuthProps, repo: string, path: strin
         repo,
         path
     });
+}
+
+export async function saveRepoFile(auth: IAuthProps, repo: string, path: string, content: string, message: string) {
+    return makeAuthenticatedRequest<SaveRepoFileResponse>(
+        auth,
+        ENDPOINTS.api.SaveRepoFile,
+        { repo, path, message },
+        'POST',
+        content
+    );
 }
 
 export async function listRecentRepos(auth: IAuthProps) {

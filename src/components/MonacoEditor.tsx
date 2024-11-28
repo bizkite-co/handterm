@@ -3,6 +3,8 @@ import Editor, { Monaco } from "@monaco-editor/react";
 import { useReactiveLocation } from 'src/hooks/useReactiveLocation';
 import { ActivityType } from 'src/types/Types';
 import { formatTreeContent, getItemAtLine } from '../utils/treeFormatter';
+import { saveRepoFile } from '../utils/apiClient';
+import { useAuth } from '../hooks/useAuth';
 
 interface TreeItem {
   path: string;
@@ -33,54 +35,6 @@ export interface MonacoEditorHandle {
   focus: () => void;
 }
 
-const handleEditSave = (value?: string): void => {
-  localStorage.setItem('edit-content', JSON.stringify(value));
-}
-
-// Get language from file extension
-function getLanguageFromPath(path: string | null | undefined): string {
-  if (!path) return 'plaintext';
-  const ext = path.split('.').pop()?.toLowerCase();
-  switch (ext) {
-    case 'js':
-      return 'javascript';
-    case 'ts':
-    case 'tsx':
-      return 'typescript';
-    case 'jsx':
-      return 'javascript';
-    case 'json':
-      return 'json';
-    case 'md':
-      return 'markdown';
-    case 'html':
-      return 'html';
-    case 'css':
-      return 'css';
-    case 'scss':
-    case 'sass':
-      return 'scss';
-    case 'py':
-      return 'python';
-    case 'rb':
-      return 'ruby';
-    case 'go':
-      return 'go';
-    case 'rs':
-      return 'rust';
-    case 'php':
-      return 'php';
-    case 'sh':
-    case 'bash':
-      return 'shell';
-    case 'yml':
-    case 'yaml':
-      return 'yaml';
-    default:
-      return 'plaintext';
-  }
-}
-
 const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(
   ({ initialValue, language, onClose, height = '80vh', toggleVideo, isTreeView, treeItems = [], onFileSelect }, ref) => {
     const editorRef = useRef<any>(null);
@@ -90,10 +44,45 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(
     const [expandedFolders] = useState<Set<string>>(new Set());
     const [isEditorReady, setIsEditorReady] = useState(false);
     const [disposables] = useState<any[]>([]);
+    const auth = useAuth();
 
     // Get current file path from location
     const currentLocation = parseLocation();
     const currentFile = currentLocation.contentKey;
+
+    // Handle local auto-save
+    const handleLocalSave = (value?: string) => {
+      if (value !== undefined) {
+        localStorage.setItem('edit-content', JSON.stringify(value));
+      }
+    }
+
+    // Handle GitHub save (only triggered by vim commands)
+    const handleGitHubSave = async (value?: string, editor?: any): Promise<void> => {
+      const currentRepo = localStorage.getItem('current_github_repo');
+      const currentPath = localStorage.getItem('current_github_path');
+
+      if (currentRepo && currentPath && value !== undefined && editor) {
+        try {
+          const response = await saveRepoFile(
+            auth,
+            currentRepo,
+            currentPath,
+            value,
+            `Update ${currentPath}`
+          );
+
+          if (response.status === 200) {
+            console.log('File saved to GitHub successfully');
+          } else {
+            console.error('Failed to save file to GitHub:', response.error);
+            throw new Error(response.error);
+          }
+        } catch (error) {
+          console.error('Error saving to GitHub:', error);
+        }
+      }
+    }
 
     // Debug logging for props and state
     useEffect(() => {
@@ -200,6 +189,8 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(
                 editor.setPosition({ lineNumber: currentLine, column: 1 });
               } else if (onFileSelect) {
                 console.log('Opening file:', item.path);
+                // Store the path for GitHub saving
+                localStorage.setItem('current_github_path', item.path);
                 onFileSelect(item.path);
               }
             }
@@ -250,7 +241,9 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(
 
             // Standard vim commands
             Vim.defineEx('w', '', () => {
-              handleEditSave(editor.getValue());
+              const value = editor.getValue();
+              handleLocalSave(value);
+              handleGitHubSave(value, editor);
             });
 
             Vim.defineEx('q', '', () => {
@@ -258,8 +251,11 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(
             });
 
             Vim.defineEx('wq', '', () => {
-              handleEditSave(editor.getValue());
-              handleEditorClose();
+              const value = editor.getValue();
+              handleLocalSave(value);
+              handleGitHubSave(value, editor).then(() => {
+                handleEditorClose();
+              });
             });
 
             Vim.defineEx('vid', '', () => {
@@ -304,7 +300,7 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(
           defaultLanguage={editorLanguage}
           defaultValue={editorContent}
           onMount={handleEditorDidMount}
-          onChange={isTreeView ? undefined : handleEditSave}
+          onChange={(value) => !isTreeView && handleLocalSave(value)}
           theme="vs-dark"
           options={{
             lineNumbers: isTreeView ? 'off' : 'on',
@@ -331,5 +327,49 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(
     );
   }
 );
+
+// Get language from file extension
+function getLanguageFromPath(path: string | null | undefined): string {
+  if (!path) return 'plaintext';
+  const ext = path.split('.').pop()?.toLowerCase();
+  switch (ext) {
+    case 'js':
+      return 'javascript';
+    case 'ts':
+    case 'tsx':
+      return 'typescript';
+    case 'jsx':
+      return 'javascript';
+    case 'json':
+      return 'json';
+    case 'md':
+      return 'markdown';
+    case 'html':
+      return 'html';
+    case 'css':
+      return 'css';
+    case 'scss':
+    case 'sass':
+      return 'scss';
+    case 'py':
+      return 'python';
+    case 'rb':
+      return 'ruby';
+    case 'go':
+      return 'go';
+    case 'rs':
+      return 'rust';
+    case 'php':
+      return 'php';
+    case 'sh':
+    case 'bash':
+      return 'shell';
+    case 'yml':
+    case 'yaml':
+      return 'yaml';
+    default:
+      return 'plaintext';
+  }
+}
 
 export default MonacoEditor;
