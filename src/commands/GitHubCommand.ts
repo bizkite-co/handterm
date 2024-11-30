@@ -39,42 +39,53 @@ export const GitHubCommand: ICommand = {
 
         try {
             if ('l' in parsedCommand.switches) {
-                // Get the IdToken which contains user identity information
-                const authResponse = await context.auth.validateAndRefreshToken();
-                if (!authResponse || authResponse.status !== 200 || !authResponse.data) {
+                // Get device code from GitHub
+                const deviceCodeResponse = await getGitHubDeviceCode(context.auth);
+                if (deviceCodeResponse.status !== 200 || !deviceCodeResponse.data) {
                     return {
-                        status: 401,
-                        message: 'Unable to authenticate with GitHub. Please try logging in again.'
+                        status: deviceCodeResponse.status,
+                        message: deviceCodeResponse.error || 'Failed to get device code'
                     };
                 }
 
-                const idToken = authResponse.data.IdToken;
-                if (!idToken) {
+                const { verification_uri, user_code, device_code, interval } = deviceCodeResponse.data;
+
+                // Copy code to clipboard
+                await navigator.clipboard.writeText(user_code);
+
+                // Open browser to verification URL
+                window.open(verification_uri, '_blank');
+
+                // Show instructions
+                console.log(`Opening browser for GitHub authentication...`);
+                console.log(`Device code copied to clipboard!`);
+                console.log(`Waiting for authentication...`);
+
+                // Poll for completion
+                const startTime = Date.now();
+                while (Date.now() - startTime < MAX_POLL_TIME) {
+                    const pollResponse = await pollGitHubDeviceAuth(context.auth, device_code);
+
+                    if (pollResponse.status === 200 && pollResponse.data?.status === 'complete') {
                         return {
-                        status: 401,
-                        message: 'Unable to authenticate with GitHub. Please try logging in again.'
-                    };
+                            status: 200,
+                            message: 'Successfully linked GitHub account!'
+                        };
+                    }
+
+                    if (pollResponse.status !== 202) {
+                        return {
+                            status: pollResponse.status,
+                            message: pollResponse.error || 'Failed to check authorization status'
+                        };
+                    }
+
+                    await sleep(interval * 1000 || POLL_INTERVAL);
                 }
-
-                // Create a state parameter with timestamp and user context to prevent CSRF
-                const state = btoa(JSON.stringify({
-                    timestamp: Date.now(),
-                    refererUrl: encodeURIComponent(window.location.origin),
-                    cognitoUserId: idToken
-                }));
-
-                // Store state in sessionStorage for verification when GitHub redirects back
-                sessionStorage.setItem('github_auth_state', state);
-
-                // Construct GitHub auth URL
-                const githubAuthUrl = `${ENDPOINTS.api.BaseUrl}${ENDPOINTS.api.GitHubAuth}?state=${encodeURIComponent(state)}`;
-
-                // Redirect to GitHub auth
-                window.location.href = githubAuthUrl;
 
                 return {
-                    status: 202,
-                    message: 'Redirecting to GitHub authorization...',
+                    status: 408,
+                    message: 'Authentication timed out. Please try again.'
                 };
             }
 
