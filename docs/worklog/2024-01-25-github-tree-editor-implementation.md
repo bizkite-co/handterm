@@ -22,4 +22,9 @@ Added the ability to save files back to GitHub when editing files from the GitHu
    - Editor checks if file is from GitHub before saving
    - Uses existing auth system for GitHub API calls
 
+4. Fixed GitHub permissions:
+   - Updated GitHub auth redirect to request 'repo' scope
+   - Added proper error handling for permission issues
+   - Improved error messages to guide users to re-authenticate
+
 This enables a seamless editing experience where files opened from the GitHub tree view can be saved back to their source repository, while maintaining proper save behavior (auto-save locally, explicit save to GitHub).

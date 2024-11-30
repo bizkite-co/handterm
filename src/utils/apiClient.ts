@@ -39,6 +39,24 @@ export interface SaveRepoFileResponse {
     };
 }
 
+export interface DeviceCodeResponse {
+    device_code: string;
+    user_code: string;
+    verification_uri: string;
+    expires_in: number;
+    interval: number;
+}
+
+export interface DevicePollResponse {
+    status: 'pending' | 'complete' | 'error';
+    access_token?: string;
+    token_type?: string;
+    scope?: string;
+    message?: string;
+    error?: string;
+    error_description?: string;
+}
+
 // Create axios instance with base configuration
 const api = axios.create({
     baseURL: ENDPOINTS.api.BaseUrl,
@@ -130,4 +148,32 @@ export async function saveRepoFile(auth: IAuthProps, repo: string, path: string,
 
 export async function listRecentRepos(auth: IAuthProps) {
     return makeAuthenticatedRequest<RepoResponse[]>(auth, ENDPOINTS.api.ListRecentRepos);
+}
+
+export async function unlinkGitHub(auth: IAuthProps) {
+    return makeAuthenticatedRequest<{ message: string }>(
+        auth,
+        ENDPOINTS.api.UnlinkGitHub,
+        undefined,
+        'POST'
+    );
+}
+
+export async function getGitHubDeviceCode(auth: IAuthProps): Promise<APIResponse<DeviceCodeResponse>> {
+    return makeAuthenticatedRequest<DeviceCodeResponse>(
+        auth,
+        ENDPOINTS.api.GitHubDeviceCode,
+        undefined,
+        'POST'
+    );
+}
+
+export async function pollGitHubDeviceAuth(auth: IAuthProps, deviceCode: string): Promise<APIResponse<DevicePollResponse>> {
+    return makeAuthenticatedRequest<DevicePollResponse>(
+        auth,
+        ENDPOINTS.api.GitHubDevicePoll,
+        undefined,
+        'POST',
+        { device_code: deviceCode }
+    );
 }

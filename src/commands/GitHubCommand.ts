@@ -1,7 +1,14 @@
 import { ICommand, ICommandContext, ICommandResponse } from '../contexts/CommandContext';
 import { ParsedCommand, ActivityType } from '../types/Types';
 import ENDPOINTS from '../shared/endpoints.json';
-import { getRepoTree, listRecentRepos } from '../utils/apiClient';
+import { getRepoTree, listRecentRepos, unlinkGitHub, getGitHubDeviceCode, pollGitHubDeviceAuth } from '../utils/apiClient';
+
+const POLL_INTERVAL = 5000; // 5 seconds
+const MAX_POLL_TIME = 300000; // 5 minutes
+
+async function sleep(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 export const GitHubCommand: ICommand = {
     name: 'github',
@@ -43,7 +50,7 @@ export const GitHubCommand: ICommand = {
 
                 const idToken = authResponse.data.IdToken;
                 if (!idToken) {
-                    return {
+                        return {
                         status: 401,
                         message: 'Unable to authenticate with GitHub. Please try logging in again.'
                     };
@@ -72,9 +79,23 @@ export const GitHubCommand: ICommand = {
             }
 
             if ('u' in parsedCommand.switches) {
+                const response = await unlinkGitHub(context.auth);
+                if (response.status === 200) {
+                    // Clear GitHub-related items from localStorage
+                    localStorage.removeItem('githubUsername');
+                    localStorage.removeItem('current_github_repo');
+                    localStorage.removeItem('github_tree_items');
+                    sessionStorage.removeItem('github_auth_state');
+
+                    return {
+                        status: 200,
+                        message: 'GitHub account unlinked. Use "github -l" to link again with new permissions.'
+                    };
+                }
+
                 return {
-                    status: 501,
-                    message: 'Unlinking GitHub account is not yet implemented.'
+                    status: response.status,
+                    message: response.error || 'Failed to unlink GitHub account.'
                 };
             }
 
