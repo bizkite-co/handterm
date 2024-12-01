@@ -58,7 +58,7 @@ export const GitHubCommand: ICommand = {
 
                 // Show instructions
                 console.log(`Opening browser for GitHub authentication...`);
-                console.log(`Device code copied to clipboard!`);
+                console.log(`Device code copied to clipboard!`, user_code);
                 console.log(`Waiting for authentication...`);
 
                 // Poll for completion
