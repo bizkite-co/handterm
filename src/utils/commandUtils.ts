@@ -12,6 +12,7 @@ export const saveCommandHistory = (commandHistory: any) => {
   localStorage.setItem(LogKeys.CommandHistory, JSON.stringify(commandHistory));
 }
 export function parsedCommandToString(cmd: ParsedCommand): string {
+  if(!cmd) return '';
   const argsStr = cmd.args ? cmd.args.join(' ') : '';
   const switchesStr = !cmd.switches ? '' : Object.entries(cmd.switches)
     .map(([key, value]) => {

@@ -52,7 +52,6 @@ export interface IHandTermWrapperMethods {
   saveCommandResponseHistory: (command: string, response: string, status: number) => string;
   focusTerminal: () => void;
   handleCharacter: (character: string) => void;
-  toggleVideo: () => boolean;
   refreshComponent: () => void;
   setHeroSummersaultAction: () => void;
   setEditMode: (isEditMode: boolean) => void;
@@ -226,7 +225,6 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
       }
     },
     handleCharacter: () => {},
-    toggleVideo: () => false,
     refreshComponent: () => {},
     setHeroSummersaultAction: () => {},
     setEditMode: () => {},

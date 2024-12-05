@@ -1,24 +1,11 @@
 // src/commands/commandRegistry.ts
 
 import { ICommand } from '../contexts/CommandContext';
-import { clearCommand } from './clearCommand';
-import { ListPhrasesCommand } from './ListPhrasesCommand';
-import { wrtCommand } from './wrtCommand';
-import EditCommand from './editCommand'
-import { LoginCommand } from './LoginCommand';
 
 export type ICommandRegistryItems = Record<string, ICommand>;
 
-
-
 class CommandRegistry {
-    private commands: ICommandRegistryItems = {
-        'clear': clearCommand,
-        'ls': ListPhrasesCommand,
-        'wrt': wrtCommand,
-        'edit': EditCommand,
-        'login': LoginCommand, 
-    };
+    private commands: ICommandRegistryItems = {};
 
     register(command: ICommand) {
         this.commands[command.name] = command;

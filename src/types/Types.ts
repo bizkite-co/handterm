@@ -75,7 +75,7 @@ export type WPMs = Readonly<{
 }>
 
 export interface OutputElement {
-  command?: ParsedCommand;
+  command: ParsedCommand;
   response?: ReactNode;
   status: number;
   wpmAverage?: number;

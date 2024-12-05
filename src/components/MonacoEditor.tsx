@@ -5,6 +5,7 @@ import { ActivityType } from 'src/types/Types';
 import { formatTreeContent, getItemAtLine } from '../utils/treeFormatter';
 import { saveRepoFile } from '../utils/apiClient';
 import { useAuth } from '../hooks/useAuth';
+import { toggleVideo } from 'src/signals/appSignals';
 
 interface TreeItem {
   path: string;
@@ -16,7 +17,6 @@ interface MonacoEditorProps {
   language?: string;
   onClose?: () => void;
   height?: string;
-  toggleVideo?: () => boolean;
   isTreeView?: boolean;
   treeItems?: TreeItem[];
   onFileSelect?: (path: string) => void;
@@ -36,7 +36,7 @@ export interface MonacoEditorHandle {
 }
 
 const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(
-  ({ initialValue, language, onClose, height = '80vh', toggleVideo, isTreeView, treeItems = [], onFileSelect }, ref) => {
+  ({ initialValue, language, onClose, height = '80vh', isTreeView, treeItems = [], onFileSelect }, ref) => {
     const editorRef = useRef<any>(null);
     const monacoRef = useRef<Monaco | null>(null);
     const statusNodeRef = useRef<HTMLDivElement>(null);
@@ -259,9 +259,7 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(
             });
 
             Vim.defineEx('vid', '', () => {
-              if (toggleVideo) {
-                toggleVideo();
-              }
+              toggleVideo();
             });
           }
         });

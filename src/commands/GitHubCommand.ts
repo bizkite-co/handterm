@@ -1,6 +1,5 @@
 import { ICommand, ICommandContext, ICommandResponse } from '../contexts/CommandContext';
 import { ParsedCommand, ActivityType } from '../types/Types';
-import ENDPOINTS from '../shared/endpoints.json';
 import { getRepoTree, listRecentRepos, unlinkGitHub, getGitHubDeviceCode, pollGitHubDeviceAuth } from '../utils/apiClient';
 
 const POLL_INTERVAL = 5000; // 5 seconds

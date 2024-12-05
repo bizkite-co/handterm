@@ -7,7 +7,10 @@ import { setBypassTutorial, bypassTutorialSignal } from '../signals/appSignals';
 export const BypassCommand: ICommand = {
   name: 'bypass',
   description: 'Toggle tutorial bypass mode for testing',
-  execute: (context: ICommandContext, parsedCommand: ParsedCommand): ICommandResponse => {
+  execute: async (
+    context: ICommandContext,
+    parsedCommand: ParsedCommand
+  ): Promise<ICommandResponse> => {
     const newBypassState = !bypassTutorialSignal.value;
     setBypassTutorial(newBypassState);
     return {

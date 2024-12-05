@@ -22,6 +22,11 @@ export const setTempEmail = (value: string) => {
     tempEmailSignal.value = value;
 }
 
+export const toggleVideo = () => {
+  isShowVideoSignal.value = !isShowVideoSignal.value;
+  return isShowVideoSignal.value;
+}
+
 export const setIsInLoginProcess = (value: boolean) => {
     isInLoginProcessSignal.value = value;
 };
@@ -38,7 +43,10 @@ export const setBypassTutorial = (value: boolean) => {
   bypassTutorialSignal.value = value;
 };
 
-const { signal: outputElementsSignal, update: updateOutput } = createPersistentSignal({
+const {
+    signal: outputElementsSignal,
+    update: updateOutput
+} = createPersistentSignal({
     key: currentOutputKey,
     signal: signal<OutputElement[]>([]),
     serialize: (value) => JSON.stringify(value),
