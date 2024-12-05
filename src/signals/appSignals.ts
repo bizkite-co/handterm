@@ -8,7 +8,6 @@ export const activitySignal = signal<ActivityType>(ActivityType.NORMAL);
 export const notificationSignal = signal<string | null>(null)
 export const isEditModeSignal = signal<boolean>(false);
 export const isShowVideoSignal = signal<boolean>(false);
-export const bypassTutorialSignal = signal<boolean>(false);
 export const isInLoginProcessSignal = signal<boolean>(false);
 export const isInSignUpProcessSignal = signal<boolean>(false);
 export const tempUserNameSignal = signal<string>('');
@@ -39,9 +38,16 @@ export const setTempPassword = (value: string) => {
     tempPasswordSignal.value = value;
 };
 
-export const setBypassTutorial = (value: boolean) => {
-  bypassTutorialSignal.value = value;
-};
+// Create a persistent signal for bypassTutorial
+export const {
+    signal: bypassTutorialSignal,
+    update: setBypassTutorial
+} = createPersistentSignal({
+    key: 'bypassTutorialKey', // Unique key for localStorage
+    signal: signal<boolean>(false),
+    serialize: (value) => JSON.stringify(value),
+    deserialize: (value) => JSON.parse(value)
+});
 
 const {
     signal: outputElementsSignal,

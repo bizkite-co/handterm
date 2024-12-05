@@ -45,7 +45,9 @@ module.exports = {
   ],
 
   // Setup files
-  setupFilesAfterEnv: ['<rootDir>/jest-setup.ts'],
+  setupFilesAfterEnv: [
+    '<rootDir>/jest-setup.ts'
+  ],
 
   // Module file extensions
   moduleFileExtensions: [
@@ -59,8 +61,8 @@ module.exports = {
   },
 
   // Module resolution settings
-  moduleDirectories: ['node_modules', '.'],
-  roots: ['<rootDir>'],
+  moduleDirectories: ['node_modules', '.', '<rootDir>/src'],
+  roots: ['<rootDir>', '<rootDir>/src'],
 
   // Enable ESM support
   extensionsToTreatAsEsm: ['.ts', '.tsx'],
@@ -69,7 +71,16 @@ module.exports = {
   globals: {
     'ts-jest': {
       useESM: true,
-      isolatedModules: true
+      isolatedModules: true,
+      tsconfig: {
+        baseUrl: '.',
+        paths: {
+          'src/*': ['src/*']
+        }
+      }
     }
-  }
+  },
+
+  // Verbose logging for debugging
+  verbose: true
 };

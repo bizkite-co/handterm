@@ -5,9 +5,7 @@ import { useComputed } from '@preact/signals-react';
 import {
     completedTutorialsSignal,
     getNextTutorial,
-    tutorialSignal,
 } from 'src/signals/tutorialSignals';
-import { useLocation } from 'react-router-dom';
 import { useReactiveLocation } from './useReactiveLocation';
 
 export const useTutorial = () => {

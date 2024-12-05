@@ -6,6 +6,21 @@ import {
   jest
 } from '@jest/globals';
 
+// Ensure expect is extended
+if (expect && typeof expect.extend === 'function') {
+  expect.extend({
+    toBeWithinRange(received, floor, ceiling) {
+      const pass = received >= floor && received <= ceiling;
+      return {
+        pass,
+        message: pass
+          ? () => `expected ${received} not to be within range ${floor} - ${ceiling}`
+          : () => `expected ${received} to be within range ${floor} - ${ceiling}`
+      };
+    }
+  });
+}
+
 import React from 'react';
 import { renderHook } from '@testing-library/react';
 import { act } from 'react';

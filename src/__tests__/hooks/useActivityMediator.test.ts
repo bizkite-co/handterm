@@ -5,6 +5,27 @@ import {
   jest,
   beforeEach
 } from '@jest/globals';
+
+// Explicitly define custom matcher
+const toBeWithinRange = function(received, floor, ceiling) {
+  const pass = received >= floor && received <= ceiling;
+  return {
+    pass,
+    message: pass
+      ? () => `expected ${received} not to be within range ${floor} - ${ceiling}`
+      : () => `expected ${received} to be within range ${floor} - ${ceiling}`
+  };
+};
+
+// Ensure expect is extended
+if (expect && typeof expect.extend === 'function') {
+  try {
+    expect.extend({ toBeWithinRange });
+  } catch (error) {
+    console.warn('Failed to extend expect:', error);
+  }
+}
+
 import { renderHook } from '@testing-library/react';
 import { useActivityMediator } from '../../hooks/useActivityMediator';
 import { ActivityType } from '../../types/Types';

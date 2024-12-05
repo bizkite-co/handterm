@@ -1,4 +1,6 @@
 import '@testing-library/jest-dom';
+
+// Explicitly import Jest's expect
 import { expect } from '@jest/globals';
 
 // Custom matcher type definition
@@ -19,6 +21,44 @@ const toBeWithinRange: CustomMatcher = (received, floor, ceiling) => {
 };
 
 // Extend Jest's expect
-expect.extend({ toBeWithinRange });
+declare global {
+  namespace jest {
+    interface Matchers<R> {
+      toBeWithinRange(floor: number, ceiling: number): R;
+    }
+  }
+}
+
+// Ensure expect is available and extended
+function setupExpectExtensions() {
+  // Try multiple ways to access and extend expect
+  const expectVariants = [
+    expect,
+    (global as any).expect,
+    (globalThis as any).expect,
+    (window as any).expect
+  ];
+
+  for (const currentExpect of expectVariants) {
+    if (currentExpect && typeof currentExpect.extend === 'function') {
+      try {
+        currentExpect.extend({
+          toBeWithinRange
+        });
+        console.log('Successfully extended expect');
+        break;
+      } catch (error) {
+        console.warn('Failed to extend expect:', error);
+      }
+    }
+  }
+}
+
+// Call setup immediately
+setupExpectExtensions();
+
+// Ensure global availability
+(global as any).expect = expect;
+(globalThis as any).expect = expect;
 
 export {};

@@ -94,7 +94,7 @@ export default function App() {
               && <Output />
             }
             {isBypassActive.value && (
-              <div style={{ position: 'fixed', top: 0, right: 0, background: 'yellow', padding: '5px' }}>
+              <div style={{ position: 'fixed', top: 0, right: 0, color: 'black', background: '#222', padding: '5px' }}>
                 Bypass Mode Active
               </div>
             )}
