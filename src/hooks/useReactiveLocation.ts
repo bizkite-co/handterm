@@ -1,10 +1,8 @@
 import { useSignal, useComputed } from '@preact/signals-react';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
-import { useEffect, useCallback, useMemo, useRef } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
 import { ParsedLocation, ActivityType } from 'src/types/Types';
-import { createLogger, LogLevel } from 'src/utils/Logger';
-
-// const logger = createLogger('useReactiveLocation', LogLevel.DEBUG);
+import { parseLocation, navigate } from 'src/utils/navigationUtils';
 
 export function useReactiveLocation() {
   const navigate = useNavigate();
@@ -26,21 +24,6 @@ export function useReactiveLocation() {
       searchSignal.value = location.search;
     }
   }, [location]);
-
-  const parseActivityType = useCallback((activityString: string): ActivityType => {
-    const normalizedActivity = activityString.toUpperCase();
-    return ActivityType[normalizedActivity as keyof typeof ActivityType] || ActivityType.NORMAL;
-  }, []);
-
-  const parseLocation = (): ParsedLocation => {
-    const [, activityKey, phraseKey] = window.location.pathname.split('/');
-    const parsedActivity: ActivityType = parseActivityType(activityKey || '');
-    return {
-      activityKey: parsedActivity,
-      contentKey: decodeURIComponent(phraseKey) || undefined,
-      groupKey: decodeURIComponent(searchParams.get('group') ?? '') || undefined
-    };
-  }
 
   const updateLocation = useCallback((options: ParsedLocation) => {
     const currentLocation = parseLocation();
@@ -65,7 +48,7 @@ export function useReactiveLocation() {
   }, [navigate]);
 
   return {
-    parseLocation,
+    parseLocation: () => parseLocation(),
     updateLocation,
     pathname: pathSignal,
     search: searchSignal,

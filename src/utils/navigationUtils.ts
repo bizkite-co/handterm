@@ -1,6 +1,39 @@
 // src/utils/navigationUtils.ts
 import { ParsedLocation, ActivityType } from 'src/types/Types';
 
+// Parse location from either pathname or ?p= parameter
+export function parseLocation(location: string = window.location.toString()): ParsedLocation {
+  // First, check for ?p= parameter
+  const urlParams = new URL(location);
+  const pParam = urlParams.searchParams.get('p');
+
+  if (pParam) {
+    // Remove leading slash if present
+    const cleanPath = pParam.startsWith('/') ? pParam.slice(1) : pParam;
+    const [activityKey, phraseKey] = cleanPath.split('/');
+
+    return {
+      activityKey: parseActivityType(activityKey),
+      contentKey: decodeURIComponent(phraseKey || ''),
+      groupKey: urlParams.searchParams.get('group') || undefined
+    };
+  }
+
+  // Fallback to pathname parsing
+  const [, activityKey, phraseKey] = window.location.pathname.split('/');
+  return {
+    activityKey: parseActivityType(activityKey),
+    contentKey: decodeURIComponent(phraseKey || ''),
+    groupKey: urlParams.searchParams.get('group') || undefined
+  };
+}
+
+// Helper function to parse activity type
+export function parseActivityType(activityString: string): ActivityType {
+  const normalizedActivity = (activityString || '').toUpperCase();
+  return ActivityType[normalizedActivity as keyof typeof ActivityType] || ActivityType.NORMAL;
+}
+
 // Global navigation function that can be used outside of React components
 export function navigate(options: ParsedLocation) {
   const newActivity = options.activityKey || ActivityType.NORMAL;
