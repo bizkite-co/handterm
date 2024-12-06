@@ -14,7 +14,7 @@ export const Output: React.FC = () => {
   });
 
   return (
-    <div className="output-container">
+    <div id="output-container">
       {outputElements.map((outputElement: OutputElement, index: number) => (
         <CommandOutput
           key={index}

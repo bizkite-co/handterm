@@ -11,7 +11,10 @@ export const HelpCommand: ICommand = {
     context: ICommandContext,
     parsedCommand: ParsedCommand,
   ): Promise<ICommandResponse> => {
-    if (parsedCommand.command === 'help' || parsedCommand.command === '411') {
+    if (
+      parsedCommand.command === 'help'
+      || parsedCommand.command === '411'
+    ) {
       const commandChords = [
         'DELETE (Backspace)',
         'Return (ENTER)',

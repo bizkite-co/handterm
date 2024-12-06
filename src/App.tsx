@@ -84,9 +84,9 @@ export default function App() {
 
   return (
     <ActivityMediatorProvider>
-    <div ref={containerRef}>
-      <AppProvider>
-        <CommandProvider
+      <div className='app' ref={containerRef}>
+        <AppProvider>
+          <CommandProvider
             auth={auth}
             handTermRef={handexTermWrapperRef}
           >
@@ -104,9 +104,9 @@ export default function App() {
               terminalWidth={containerWidth}
               onOutputUpdate={handleOutputUpdate}
             />
-        </CommandProvider>
-      </AppProvider>
-    </div>
+          </CommandProvider>
+        </AppProvider>
+      </div>
     </ActivityMediatorProvider>
   );
 };

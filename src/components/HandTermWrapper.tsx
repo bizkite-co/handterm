@@ -217,22 +217,22 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
   // Initialize component methods
   useImperativeHandle(forwardedRef, () => ({
     writeOutput: writeToTerminal,
-    prompt: () => {},
+    prompt: () => { },
     saveCommandResponseHistory: () => '',
     focusTerminal: () => {
       if (xtermRef.current) {
         xtermRef.current.focus();
       }
     },
-    handleCharacter: () => {},
-    refreshComponent: () => {},
-    setHeroSummersaultAction: () => {},
-    setEditMode: () => {},
-    handleEditSave: () => {},
+    handleCharacter: () => { },
+    refreshComponent: () => { },
+    setHeroSummersaultAction: () => { },
+    setEditMode: () => { },
+    handleEditSave: () => { },
   }), [writeToTerminal, xtermRef]);
 
   return (
-    <>
+    <div id='handterm-wrapper'>
       {(parseLocation().activityKey === ActivityType.GAME) && (
         <Game
           ref={gameHandleRef}
@@ -257,15 +257,18 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
 
       {/* Always show terminal unless in EDIT or TREE mode */}
       {currentActivity !== ActivityType.EDIT && currentActivity !== ActivityType.TREE && (
-        <>
+        <div id="prompt-and-terminal">
           <Prompt
             username={userName || 'guest'}
             domain={domain || 'handterm.com'}
             githubUsername={githubUsername}
             timestamp={getTimestamp(commandTime.value)}
           />
-          <div ref={xtermRef} />
-        </>
+          <div
+            ref={xtermRef}
+            id="xtermRef"
+          />
+        </div>
       )}
 
       {currentActivity === ActivityType.EDIT && (
@@ -290,6 +293,6 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
           setOn={isShowVideoSignal.value}
         />
       )}
-    </>
+    </div>
   );
 });

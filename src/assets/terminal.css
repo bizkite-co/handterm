@@ -8,12 +8,9 @@
 html {
     height: 100%;
     width: 100%;
-    background-color: #000;
-    z-index: -2;
 }
 
 body {
-    /* background-color: #0006; */
     display: flex;
     flex-direction: column;
     height: 100%;
@@ -22,7 +19,7 @@ body {
     font-family: var(--terminal-font-family);
 }
 
-.terminal-container {
+#app {
     flex-direction: column;
     justify-content: flex-end;
     /* Aligns children (HandexTerm) to the bottom */
@@ -224,11 +221,11 @@ pre#prompt {
     left: -9999px;
 }
 
-#terminal-output {
+#output-container {
     /* Output area styles */
-    padding: 15px 0 0 0;
-    z-index: 10000;
-    background-color: #0009;
+    padding: 1opx 0 0 0;
+    z-index: 100;
+    background-color: #0000;
     font-size: var(--terminal-font-size);
 }
 
