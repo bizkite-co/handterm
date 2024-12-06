@@ -39,39 +39,18 @@ export function useActivityMediator(): IActivityMediatorReturn {
     getIncompleteTutorialsInGroup,
     canUnlockTutorial
   } = useTutorial();
+  const activity = useComputed(() => activitySignal.value).value;
   const { updateLocation, parseLocation } = useReactiveLocation();
+  const [, setActivityGroupKey] = useState<string>('');
+  const bypassTutorial = useComputed(() => bypassTutorialSignal.value);
 
-  // Memoize computed values to prevent unnecessary re-renders
-  const bypassTutorial = useMemo(() => bypassTutorialSignal.value, [bypassTutorialSignal.value]);
-  const activity = useMemo(() => activitySignal.value, [activitySignal.value]);
-
-  // Single effect to handle initial activity setup and bypass
   useEffect(() => {
-    // Determine initial activity only once
-    const determineInitialActivity = () => {
-      // Prioritize bypass
-      if (bypassTutorial) {
-        activitySignal.value = ActivityType.NORMAL;
-        updateLocation({
-          activityKey: ActivityType.NORMAL,
-          contentKey: null,
-          groupKey: null
-        });
-        return;
-      }
-
-      // Default activity determination logic
-      const resultActivity = decideActivityChange(null);
-      if (resultActivity === ActivityType.TUTORIAL) {
-        checkTutorialProgress(null);
-      }
-    };
-
-    determineInitialActivity();
-  }, []); // Empty dependency array ensures this runs only once on mount
+    const _activityGroup = parseLocation().groupKey || '';
+    if (_activityGroup) setActivityGroupKey(_activityGroup);
+  }, [window.location.pathname])
 
   const decideActivityChange = useCallback((commandActivity: ActivityType | null = null): ActivityType => {
-    if (bypassTutorial) {
+    if (bypassTutorial.value) {
       return ActivityType.NORMAL;
     }
     if (tutorialSignal.value && !tutorialSignal.value?.tutorialGroup && activity !== ActivityType.GAME) {
@@ -124,6 +103,13 @@ export function useActivityMediator(): IActivityMediatorReturn {
 
     return result;
   }, [decideActivityChange, window.location.pathname]);
+
+  useEffect(() => {
+    const resultActivity = decideActivityChange(null);
+    if (resultActivity === ActivityType.TUTORIAL) {
+      checkTutorialProgress(null);
+    }
+  }, []);
 
   const checkTutorialProgress = (
     command: string | null,

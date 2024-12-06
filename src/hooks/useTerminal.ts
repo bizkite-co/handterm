@@ -46,16 +46,10 @@ export const useTerminal = () => {
 
   const resetPrompt = useCallback(() => {
     if (!instance) return;
-
-    // Only reset and write prompt if not in a specific process
-    if (!isInLoginProcessSignal.value &&
-        !isInSignUpProcessSignal.value &&
-        activitySignal.value === ActivityType.NORMAL) {
       instance.reset();
       setCommandLine('');
       instance.write(PROMPT);
       instance.scrollToBottom();
-    }
   }, [instance]);
 
   const {
