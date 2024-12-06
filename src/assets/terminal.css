@@ -83,14 +83,16 @@ body {
     line-height: 0.6em;
     vertical-align: text-top;
 }
-
+.log-line span {
+    background-color: #0007;
+}
 .log-time {
     color: grey;
     font-weight: 100;
 }
 
 .log-hour {
-    color: cyan;
+    color: #00ffff;
     font-weight: 100;
 }
 
@@ -106,6 +108,11 @@ body {
 
 .log-prefix {
     color: gray;
+}
+#output-container .response {
+    display: inline-block;
+    background-color: #0007;
+    padding-right: 10px;
 }
 
 .terminal-nav {
@@ -231,17 +238,17 @@ pre#prompt {
 
 .xterm-rows :first-child,
 .xterm-rows :nth-child(2) {
-    background-color: #0009;
+    background-color: #0007;
 }
 
 #terminal-game {
-    background-color: #0009;
+    background-color: #0007;
 }
 
 #next-chars {
-    background-color: #0009;
+    background-color: #0007;
     pre#next-chars {
-        background-color: #0009;
+        background-color: #0007;
     }
 }
 
@@ -409,7 +416,7 @@ pre#prompt {
 }
 
 div.cm-content {
-  background-color: #0009;
+  background-color: #0007;
 }
 
 /* Monaco editor styling */
@@ -448,7 +455,7 @@ div.view-line {
 }
 
 div.view-line > span {
-  background: #0009;
+  background: #0007;
   display: inline-block;
 }
 
