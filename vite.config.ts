@@ -21,7 +21,7 @@ export default defineConfig({
       },
     },
   ],
-  base: '/',
+  base: '/', // Explicitly set to root for custom domain
   publicDir: 'public',
   build: {
     outDir: 'dist',
