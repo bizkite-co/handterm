@@ -3,8 +3,9 @@
 import { ICommand, ICommandContext, ICommandResponse } from '../contexts/CommandContext';
 import { ParsedCommand } from '../types/Types';
 import { setBypassTutorial, bypassTutorialSignal } from '../signals/appSignals';
-import { useReactiveLocation } from '../hooks/useReactiveLocation';
+import { activitySignal } from 'src/signals/appSignals';
 import { ActivityType } from '../types/Types';
+import { navigate } from '../utils/navigationUtils'; // We'll create this utility
 
 export const BypassCommand: ICommand = {
   name: 'bypass',
@@ -18,11 +19,11 @@ export const BypassCommand: ICommand = {
 
     if(newBypassState){
       // Set activity route to normal
-      const { updateLocation } = useReactiveLocation();
-      updateLocation({
+      activitySignal.value = ActivityType.NORMAL;
+      navigate({
         activityKey: ActivityType.NORMAL,
-        contentKey: null,  // Clear any specific content
-        groupKey: null     // Clear any group context
+        contentKey: null,
+        groupKey: null
       });
     }
 

@@ -8,7 +8,20 @@ import { useWPMCalculator } from './useWPMCaculator';
 import { addKeystroke, commandLineSignal, setCommand } from 'src/signals/commandLineSignals';
 import { useComputed } from '@preact/signals-react';
 import { setCommandLine } from 'src/signals/commandLineSignals';
-import { isInLoginProcessSignal, isInSignUpProcessSignal, setActivity, setIsInLoginProcess, setIsInSignUpProcess, setTempEmail, setTempPassword, setTempUserName, tempEmailSignal, tempPasswordSignal, tempUserNameSignal } from 'src/signals/appSignals';
+import {
+  isInLoginProcessSignal,
+  isInSignUpProcessSignal,
+  setActivity,
+  setIsInLoginProcess,
+  setIsInSignUpProcess,
+  setTempEmail,
+  setTempPassword,
+  setTempUserName,
+  tempEmailSignal,
+  tempPasswordSignal,
+  tempUserNameSignal,
+  activitySignal
+} from 'src/signals/appSignals';
 import { ActivityType, ParsedCommand } from 'src/types/Types';
 import { IUseCharacterHandlerProps, useCharacterHandler } from './useCharacterHandler';
 import { isLoggedInSignal, setIsLoggedIn, userNameSignal, setUserName } from '../signals/appSignals';
@@ -33,10 +46,16 @@ export const useTerminal = () => {
 
   const resetPrompt = useCallback(() => {
     if (!instance) return;
-    instance.reset();
-    setCommandLine('');
-    instance.write(PROMPT);
-    instance.scrollToBottom();
+
+    // Only reset and write prompt if not in a specific process
+    if (!isInLoginProcessSignal.value &&
+        !isInSignUpProcessSignal.value &&
+        activitySignal.value === ActivityType.NORMAL) {
+      instance.reset();
+      setCommandLine('');
+      instance.write(PROMPT);
+      instance.scrollToBottom();
+    }
   }, [instance]);
 
   const {
