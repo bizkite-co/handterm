@@ -1,16 +1,15 @@
 import { TerminalCssClasses } from "../types/TerminalTypes";
 
 import React, { useState, useEffect, useRef, useImperativeHandle } from 'react';
-import Timer from './Timer'; // Import the React component
+import Timer, { TimerHandle } from './Timer'; // Import the React component
 import ErrorDisplay from "./ErrorDisplay";
 import { Phrase } from "../utils/Phrase";
 import { commandLineSignal } from "src/signals/commandLineSignals";
 import { useComputed, useSignalEffect } from "@preact/signals-react";
 import { gamePhraseSignal, setCompletedGamePhrase } from "src/signals/gameSignals";
 import { GamePhrase } from "src/types/Types";
-import { useLocation } from "react-router-dom";
-import GamePhrases from "src/utils/GamePhrases";
 import { useReactiveLocation } from "src/hooks/useReactiveLocation";
+import * as GamePhrases from "src/utils/GamePhrases";
 
 export interface INextCharsDisplayProps {
     isInPhraseMode: boolean;
@@ -41,14 +40,14 @@ const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, INextCharsDisp
 
     const nextCharsRef = useRef<HTMLPreElement>(null);
     const nextCharsRateRef = useRef<HTMLDivElement>(null);
-    const timerRef = useRef<any>(null);
+    const timerRef = useRef<TimerHandle>(null);
     const wpmRef = useRef<HTMLSpanElement>(null);
     const commandLine = useComputed(() => commandLineSignal.value);
     const { parseLocation } = useReactiveLocation();
 
     useEffect(() => {
         if (!parseLocation().activityKey || !parseLocation().contentKey) return;
-        const foundPhrase = GamePhrases.getGamePhraseByKey(parseLocation().contentKey ?? '');
+        const foundPhrase = GamePhrases.default.getGamePhraseByKey(parseLocation().contentKey ?? '');
         if (!foundPhrase) return;
         setGamePhrase(foundPhrase);
         setPhrase(new Phrase(foundPhrase.value.split('')));
@@ -72,7 +71,7 @@ const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, INextCharsDisp
             return null;
         }
 
-        const nextChordHTML = phrase.chordsHTML[nextIndex] as HTMLElement;
+        const nextChordHTML = phrase.chordsHTML[nextIndex] as HTMLElement | undefined;
 
         if (nextChordHTML) {
             nextChordHTML.classList.remove("error");
@@ -127,7 +126,6 @@ const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, INextCharsDisp
         }
         return result;
     };
-
 
     const showError = (char: string, charIndex: number) => {
         setMismatchedChar(char);

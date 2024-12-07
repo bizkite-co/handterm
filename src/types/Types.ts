@@ -170,7 +170,8 @@ export const Tutorials: Tutorial[] = [
     display: 'Return (ENTER)', phrase: '\r'
   },
   {
-    prompt: 'Type `fdsa` & Enter. Notice that it requires only a finger-pinch and release for each character.', phrase: 'fdsa' },
+    prompt: 'Type `fdsa` & Enter. Notice that it requires only a finger-pinch and release for each character.', phrase: 'fdsa'
+  },
   { prompt: 'Do it again, but this time put a space in between the letters. Grasp the thumb and release to enter a space.', phrase: 'fdsa' },
   { prompt: 'Type `jkl;`. Notice that it requires only a finger-grasp followed by a release.', phrase: 'jkl;', tutorialGroup: 'single-click' },
   { prompt: 'Press the thumb tip followed by a finger tip to type numbers 0-4', phrase: '01234' },

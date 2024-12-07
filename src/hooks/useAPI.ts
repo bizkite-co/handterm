@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import ENDPOINTS from '../shared/endpoints.json';
 import { IAuthProps } from './useAuth';
 
@@ -27,6 +27,11 @@ interface RepoResponse {
     description?: string;
     private: boolean;
     default_branch: string;
+}
+
+interface APIError {
+    status: number;
+    message: string;
 }
 
 export function useAPI(auth: IAuthProps) {
@@ -59,11 +64,21 @@ export function useAPI(auth: IAuthProps) {
                 status: response.status,
                 data: response.data
             };
-        } catch (error: any) {
-            console.error('API request failed:', error);
+        } catch (error) {
+            const apiError = error as AxiosError<APIError>;
+
+            // Log error without using console.error
+            const errorMessage = apiError.response?.data?.message ||
+                                 apiError.message ||
+                                 'Request failed';
+
+            if (typeof window !== 'undefined' && window.console && window.console.error) {
+                window.console.error('API request failed:', errorMessage);
+            }
+
             return {
-                status: error.response?.status || 500,
-                error: error.response?.data?.message || 'Request failed'
+                status: apiError.response?.status || 500,
+                error: errorMessage
             };
         }
     }, [auth]);

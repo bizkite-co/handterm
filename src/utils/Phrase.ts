@@ -65,14 +65,11 @@ export class Phrase {
                 });
         // Load the clone in Chord order into the wholePhraseChords div.
         if (foundChords.length > 0) {
-            // const inChord = foundChords[0].cloneNode(true) as HTMLDivElement;
             const foundChord = foundChords[0];
             inChord = this.createChordHTML(foundChord);
             inChord.setAttribute("name", foundChord.key.replace('(', '').replace(')', '').replace(' ', '-'));
         }
-        else {
-            console.error("Missing chord:", chordChar?.charCodeAt(0));
-        }
+        // Removed console.error statement
         return inChord;
     }
 }

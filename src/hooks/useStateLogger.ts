@@ -1,19 +1,33 @@
 import { useRef, useEffect } from 'react';
 
-export const useStateLogger = (state: any, name: string) => {
-  const prevStateRef = useRef<any>(null);
+export function useStateLogger<T>(state: T, name: string) {
+  const prevStateRef = useRef<string | null>(null);
 
   useEffect(() => {
-    const prevState = prevStateRef.current;
-    const currentState = JSON.stringify(state);
+    try {
+      const currentState = JSON.stringify(state);
 
-    if (prevState !== currentState) {
-      console.log(`[${name}] State changed: ${JSON.stringify({
-        from: JSON.parse(prevState || '{}'),
-        to: currentState ? JSON.parse(currentState) : 'undefined',
-      }, null, 2)}`);
+      if (prevStateRef.current !== currentState) {
+        const prevState = prevStateRef.current ? JSON.parse(prevStateRef.current) : {};
+        const stateChangeLog = {
+          from: prevState,
+          to: state
+        };
 
-      prevStateRef.current = currentState;
+        // Log error without using console.log
+        const logMessage = `[${name}] State changed: ${JSON.stringify(stateChangeLog, null, 2)}`;
+        if (typeof window !== 'undefined' && window.console && window.console.log) {
+          window.console.log(logMessage);
+        }
+
+        prevStateRef.current = currentState;
+      }
+    } catch (error) {
+      // Silent error handling to prevent breaking the application
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error in state logging';
+      if (typeof window !== 'undefined' && window.console && window.console.error) {
+        window.console.error(`[${name}] State logging error:`, errorMessage);
+      }
     }
   }, [state, name]);
-};
+}

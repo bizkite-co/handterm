@@ -1,23 +1,23 @@
 // Mock implementation of signals
-export const signal = (initialValue: any) => ({
+export const signal = <T>(initialValue: T) => ({
   value: initialValue,
   subscribe: jest.fn(),
   peek: () => initialValue
 });
 
-export const computed = (fn: () => any) => ({
+export const computed = <T>(fn: () => T) => ({
   value: fn(),
   subscribe: jest.fn(),
   peek: fn
 });
 
-export const useSignal = (initialValue: any) => ({
+export const useSignal = <T>(initialValue: T) => ({
   value: initialValue,
   subscribe: jest.fn(),
   peek: () => initialValue
 });
 
-export const useComputed = (fn: () => any) => fn();
+export const useComputed = <T>(fn: () => T) => fn();
 
 export const effect = jest.fn();
 

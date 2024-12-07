@@ -1,51 +1,82 @@
-// utils/Logger.ts
-export enum LogLevel {
-  DEBUG,
-  INFO,
-  WARN,
-  ERROR
+enum LogLevel {
+  DEBUG = 0,
+  INFO = 1,
+  WARN = 2,
+  ERROR = 3,
+  SILENT = 4
 }
 
-export class Logger {
-  private moduleName: string;
-  private logLevel: LogLevel;
+interface LoggerConfig {
+  level?: LogLevel;
+  prefix?: string;
+  logToConsole?: boolean;
+  logToFile?: boolean;
+}
 
-  constructor(moduleName: string, logLevel: LogLevel = LogLevel.INFO) {
-    this.moduleName = moduleName;
-    this.logLevel = logLevel;
+class Logger {
+  private config: LoggerConfig;
+
+  constructor(config: Partial<LoggerConfig> = {}) {
+    this.config = {
+      level: config.level ?? LogLevel.INFO,
+      prefix: config.prefix ?? 'HandTerm',
+      logToConsole: config.logToConsole ?? true,
+      logToFile: config.logToFile ?? false
+    };
   }
 
-  private log(level: LogLevel, message: string, ...args: any[]) {
-    if (level >= this.logLevel) {
-      const stack = new Error().stack;
+  private log(level: LogLevel, message: string, ...args: any[]): void {
+    if (this.config.level !== undefined && level < this.config.level) return;
 
-      const caller = stack?.split('\n')
-        .slice(2,6)
-        .join('\n')
-        .replaceAll(window.location.origin, '')
-        .replaceAll(/\?t\=\d*/g,'')
-        .trim(); // Note the index change due to being inside a method
-      console.log(`[${this.moduleName}] [${LogLevel[level]}] ${message}`, ...args, `\nCalled from: ${caller}`);
+    const timestamp = new Date().toISOString();
+    const formattedMessage = `[${timestamp}] [${this.config.prefix}] [${LogLevel[level]}] ${message}`;
+
+    if (this.config.logToConsole) {
+      switch (level) {
+        case LogLevel.DEBUG:
+          console.log(formattedMessage, ...args);
+          break;
+        case LogLevel.INFO:
+          console.info(formattedMessage, ...args);
+          break;
+        case LogLevel.WARN:
+          console.warn(formattedMessage, ...args);
+          break;
+        case LogLevel.ERROR:
+          console.error(formattedMessage, ...args);
+          break;
+      }
+    }
+
+    if (this.config.logToFile) {
+      this.writeToLogFile(formattedMessage, ...args);
     }
   }
 
-  debug(message: string, ...args: any[]) {
+  private writeToLogFile(message: string, ...args: any[]): void {
+    // Implement file logging logic if needed
+    // This could write to a log file in the application's data directory
+  }
+
+  public debug(message: string, ...args: any[]): void {
     this.log(LogLevel.DEBUG, message, ...args);
   }
 
-  info(message: string, ...args: any[]) {
+  public info(message: string, ...args: any[]): void {
     this.log(LogLevel.INFO, message, ...args);
   }
 
-  warn(message: string, ...args: any[]) {
+  public warn(message: string, ...args: any[]): void {
     this.log(LogLevel.WARN, message, ...args);
   }
 
-  error(message: string, ...args: any[]) {
+  public error(message: string, ...args: any[]): void {
     this.log(LogLevel.ERROR, message, ...args);
   }
 }
 
-export function createLogger(moduleName: string, logLevel?: LogLevel) {
-  return new Logger(moduleName, logLevel);
+function createLogger(config?: Partial<LoggerConfig>): Logger {
+  return new Logger(config);
 }
+
+export { Logger, LogLevel, createLogger };

@@ -1,14 +1,11 @@
-// Import jest-dom first
-import '@testing-library/jest-dom';
+// Import Vitest's expect
+import { expect } from 'vitest';
 
-// Import Jest's expect
-import { expect } from '@jest/globals';
-
-// Import jest-dom matchers
+// Import testing-library matchers
 import * as matchers from '@testing-library/jest-dom/matchers';
 
-// Extend Jest with testing library matchers
-expect.extend(matchers as any);
+// Extend Vitest with testing library matchers
+expect.extend(matchers);
 
 // Optional: Add a global console error handler to catch and log errors
 const originalConsoleError = console.error;

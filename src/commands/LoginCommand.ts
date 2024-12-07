@@ -4,6 +4,11 @@ import { ICommand, ICommandContext, ICommandResponse } from '../contexts/Command
 import { ParsedCommand } from '../types/Types';
 import { isInLoginProcessSignal, tempUserNameSignal, setTempUserName, setIsInLoginProcess } from 'src/signals/appSignals';
 
+interface LoginErrorResponse {
+    status: number;
+    message: string;
+}
+
 export const LoginCommand: ICommand = {
     name: 'login',
     description: 'Log in to the system',
@@ -22,19 +27,25 @@ export const LoginCommand: ICommand = {
 
             try {
                 const result = await auth.login(tempUsername, password);
-                    setIsInLoginProcess(false);
+                setIsInLoginProcess(false);
 
                 return {
-                            status: result.status,
+                    status: result.status,
                     message: result.status === 200 ? 'Login successful!' : `Login failed: ${result.message}`,
                     sensitive: true // Mark as sensitive to mask password
                 };
-            } catch (error: any) {
-                    setIsInLoginProcess(false);
-                const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+            } catch (error) {
+                setIsInLoginProcess(false);
+
+                // Type narrowing for error
+                const errorResponse: LoginErrorResponse =
+                    error instanceof Error
+                    ? { status: 500, message: error.message }
+                    : { status: 500, message: 'An unknown error occurred' };
+
                 return {
-                        status: 500,
-                    message: `Login error: ${errorMessage}`,
+                    status: errorResponse.status,
+                    message: `Login error: ${errorResponse.message}`,
                     sensitive: true // Mark as sensitive to mask password
                 };
             }

@@ -1,6 +1,6 @@
 // src/hooks/useWPMCalculator.ts
 
-import { useCallback, useMemo } from 'react';
+import { useCallback } from 'react';
 import { WPM, WPMs } from '../types/Types';
 import { keystrokesSignal, addKeystroke, clearKeystrokes } from 'src/signals/commandLineSignals';
 import { useComputed } from '@preact/signals-react';

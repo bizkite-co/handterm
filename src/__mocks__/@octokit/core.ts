@@ -1,5 +1,5 @@
 export class Octokit {
-  constructor(options?: { auth?: string }) {
+  constructor(_options?: { auth?: string }) {
     return {
       request: jest.fn(),
       graphql: jest.fn(),
@@ -23,17 +23,17 @@ export interface RequestParameters {
   method?: string;
   url?: string;
   headers?: Record<string, string>;
-  body?: any;
+  body?: Record<string, unknown>;
 }
 
-export interface GraphQLResponse<T = any> {
+export interface GraphQLResponse<T = Record<string, unknown>> {
   data: T;
 }
 
 export interface RequestError extends Error {
   status: number;
   response: {
-    data: any;
+    data: Record<string, unknown>;
     status: number;
     headers: Record<string, string>;
   };

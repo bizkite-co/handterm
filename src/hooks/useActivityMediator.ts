@@ -1,5 +1,5 @@
-import { useState, useCallback, useEffect, useMemo } from 'react';
-import { ActivityType, Tutorial, ParsedCommand, GamePhrase } from '../types/Types';
+import { useState, useCallback, useEffect } from 'react';
+import { ActivityType, ParsedCommand, GamePhrase } from '../types/Types';
 import { ActionType } from '../game/types/ActionTypes';
 import GamePhrases from '../utils/GamePhrases';
 import { useTutorial } from './useTutorials';
@@ -8,7 +8,6 @@ import {
   tutorialSignal, getNextTutorial, setCompletedTutorial
 } from 'src/signals/tutorialSignals';
 import {
-  gamePhraseSignal,
   getIncompletePhrasesByTutorialGroup, initializeGame,
   isInGameModeSignal, setCompletedGamePhrase,
   getNextGamePhrase,

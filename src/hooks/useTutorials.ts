@@ -9,7 +9,7 @@ import {
 import { useReactiveLocation } from './useReactiveLocation';
 
 export const useTutorial = () => {
-    const [currentTutorial, setCurrentTutorial] = useState<Tutorial | null>(null);
+    const [, setCurrentTutorial] = useState<Tutorial | null>(null);
     const completedTutorials = useComputed(() => completedTutorialsSignal.value);
 
     const { parseLocation } = useReactiveLocation();

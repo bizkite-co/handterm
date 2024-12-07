@@ -1,30 +1,42 @@
+import { createLogger, LogLevel } from './utils/Logger';
 
-// Open (or create) the database
-var openDb = indexedDB.open('Terminal', 1);
+const logger = createLogger({
+  prefix: 'TerminalData',
+  level: LogLevel.DEBUG
+});
 
-// Create the schema
-openDb.onupgradeneeded = function() {
+function openDatabase() {
+  const request = indexedDB.open('HandTermDatabase', 1);
 
-};
+  request.onupgradeneeded = function(_event: IDBVersionChangeEvent) {
+    const db = request.result;
+    if (!db.objectStoreNames.contains('terminalData')) {
+      db.createObjectStore('terminalData', { keyPath: 'id' });
+    }
+  };
 
-openDb.onsuccess = function() {
-    // Start a new transaction
-    const db = openDb.result;
-    const tx = db.transaction('WpmStore', 'readwrite');
-    const store = tx.objectStore('WpmStore');
-    const index = store.index('CharacterIndex');
+  request.onsuccess = function(_event: Event) {
+    const db = request.result;
+    const transaction = db.transaction(['terminalData'], 'readwrite');
+    const store = transaction.objectStore('terminalData');
 
-    // Add some data
-    store.put({id: 1, character: 'a', wpm: 0.5, timestamp: new Date('1900-01-01')});
-    store.add({id: 4,character: 'c', wpm: 0.5, timestamp: new Date()});
-
-    // Query the data
-    var getA = index.get(['a']);
-    getA.onsuccess = function() {
+    const result = store.get('someKey');
+    result.onsuccess = function() {
+      logger.debug('Retrieved data:', result.result);
     };
+  };
 
-    // Close the db when the transaction is done
-    tx.oncomplete = function() {
-        db.close();
-    };
-};
+  const openDb = request;
+  openDb.onerror = function(event: Event) {
+    const target = event.target as IDBOpenDBRequest | null;
+    if (target && 'error' in target) {
+      logger.error('IndexedDB error:', (target as IDBOpenDBRequest).error);
+    } else {
+      logger.error('Unknown IndexedDB error occurred');
+    }
+  };
+
+  return openDb;
+}
+
+export { openDatabase };

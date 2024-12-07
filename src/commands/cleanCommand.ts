@@ -18,7 +18,7 @@ export const cleanCommand: ICommand = {
             return { status: 404, message: 'No command context available.' };
         }
         // Logic to clean the command history from localStorage
-        let commandHistory = JSON.parse(localStorage.getItem(LogKeys.CommandHistory) || '[]')
+        const commandHistory = JSON.parse(localStorage.getItem(LogKeys.CommandHistory) || '[]')
             .filter((ch: string) => { return ch !== 'Return (ENTER)'; })
         let prevCommand = ''
         for (let i = commandHistory.length - 1; i >= 0; i--) {

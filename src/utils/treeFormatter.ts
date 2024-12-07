@@ -88,12 +88,12 @@ export function getItemAtLine(
     const lines = content.split('\n');
     const line = lines[lineNumber - 1];
 
-    if (!line || !line.match(/[▼▶]?\s*[📁📄]/)) {
+    if (!line || !line.match(/[▼▶]?\s*[📁📄]/u)) {
         return null;
     }
 
     // Extract path from the line
-    const match = line.match(/[▼▶]?\s*[^\s]+\s+(.+?)\/?\s*$/);
+    const match = line.match(/[▼▶]?\s*[^\s]+\s+(.+?)\/?\s*$/u);
     if (!match) return null;
 
     const name = match[1];
@@ -106,7 +106,7 @@ export function getItemAtLine(
 
     for (let i = lineNumber - 2; i >= 0 && currentDepth < depth; i--) {
         const prevLine = lines[i];
-        const prevMatch = prevLine.match(/[▼▶]?\s*[^\s]+\s+(.+?)\/\s*$/);
+        const prevMatch = prevLine.match(/[▼▶]?\s*[^\s]+\s+(.+?)\/\s*$/u);
         if (prevMatch) {
             const prevIndent = prevLine.match(/^\s*/)?.[0].length || 0;
             const prevDepth = Math.floor(prevIndent / 2);

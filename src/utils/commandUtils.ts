@@ -6,11 +6,13 @@ export const commandTextToHTML = (text: string): string => {
 };
 
 export const loadCommandHistory = () => {
-  return JSON.parse(localStorage.getItem(LogKeys.CommandHistory) || '[]');
+  return JSON.parse(localStorage.getItem(LogKeys.CommandHistory) || '[]') as ParsedCommand[];
 }
-export const saveCommandHistory = (commandHistory: any) => {
+
+export const saveCommandHistory = (commandHistory: ParsedCommand[]) => {
   localStorage.setItem(LogKeys.CommandHistory, JSON.stringify(commandHistory));
 }
+
 export function parsedCommandToString(cmd: ParsedCommand): string {
   if(!cmd) return '';
   const argsStr = cmd.args ? cmd.args.join(' ') : '';

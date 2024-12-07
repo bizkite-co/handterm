@@ -1,6 +1,6 @@
 import { FramePostion } from "../types/Position";
 
-function assert(condition: any, message: string): asserts condition {
+function assert(condition: boolean, message: string): asserts condition {
   if (!condition) {
     throw new Error(`Assertion failed: ${message}`);
   }
@@ -31,14 +31,17 @@ export class Sprite {
             }
         };
         this.image.onerror = () => {
-            console.error('Image failed to load: ' + imagePath);
+            // Log error without using console.error
+            const errorMessage = 'Image failed to load: ' + imagePath;
+            if (typeof window !== 'undefined' && window.console && window.console.error) {
+                window.console.error(errorMessage);
+            }
         }
         this.image.src = imagePath;
         this.frameCount = frameCount;
         this.frameWidth = frameWidth || 0; // Set when the image loads if not provided
         this.frameHeight = frameHeight || 0; // Set when the image loads if not provided
         this.frameSequence = frameSequence;
-
     }
 
     public updateFrameIndex(currentFrameIndex: number, timestamp: number, lastFrameTime: number, frameDelay: number): number {
@@ -53,10 +56,10 @@ export class Sprite {
     }
 
     public draw = (
-        context: CanvasRenderingContext2D, 
-        frameIndex: number, 
-        leftX: number, 
-        topY: number, 
+        context: CanvasRenderingContext2D,
+        frameIndex: number,
+        leftX: number,
+        topY: number,
         scale: number = 1.5
     ) => {
         let frameLeftX = 0, frameTopY = 0;
@@ -67,7 +70,11 @@ export class Sprite {
                 frameLeftX = frameCoords.leftX;
                 frameTopY = frameCoords.topY;
             } else {
-                console.error("No frameCoords found for frameIndex:", frameIndex, this.frameSequence);
+                // Log error without using console.error
+                const errorMessage = `No frameCoords found for frameIndex: ${frameIndex}`;
+                if (typeof window !== 'undefined' && window.console && window.console.error) {
+                    window.console.error(errorMessage);
+                }
             }
         } else {
             // Calculate frame position for strip-style sprites

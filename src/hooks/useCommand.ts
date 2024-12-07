@@ -63,7 +63,7 @@ export const useCommand = () => {
             }
         }
         keys.sort();
-        for (let key of keys) {
+        for (const key of keys) {
             const historyJSON = localStorage.getItem(key);
             if (historyJSON) {
                 history.push(historyJSON);

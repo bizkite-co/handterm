@@ -1,7 +1,15 @@
-import React, { useState, useEffect, useImperativeHandle, forwardRef} from 'react';
+import React, { useState, useEffect, useImperativeHandle, forwardRef, ForwardRefRenderFunction } from 'react';
 
+export interface TimerProps {}
 
-const Timer = forwardRef((_props: any, ref: any) => {
+export interface TimerHandle {
+  start: () => void;
+  stop: () => void;
+  reset: () => number;
+  success: () => void;
+}
+
+const Timer: ForwardRefRenderFunction<TimerHandle, TimerProps> = (_props, ref) => {
   const [centiSecond, setCentiSecond] = useState(0);
   const [isActive, setIsActive] = useState(false);
   const [svgStatus, setSvgStatus] = useState<'start' | 'stop' | 'pause'>('start');
@@ -16,7 +24,7 @@ const Timer = forwardRef((_props: any, ref: any) => {
       }, 10);
     } else if (!isActive && centiSecond !== 0) {
       setSvgStatus('start');
-      clearInterval(intervalId!);
+      if (intervalId) clearInterval(intervalId);
     }
 
     return () => {
@@ -40,7 +48,6 @@ const Timer = forwardRef((_props: any, ref: any) => {
   };
 
   const success = () => {
-    console.info("Timer Success");
     setCentiSecond(0);
     setIsActive(false);
   };
@@ -71,9 +78,8 @@ const Timer = forwardRef((_props: any, ref: any) => {
       <svg width="15" height="20" style={{ float: 'left' }}>
         {renderSvg()}
       </svg>
-      {/* Add buttons or interactions to control the timer */}
     </React.Fragment>
   );
-});
+};
 
-export default Timer;
+export default forwardRef(Timer);

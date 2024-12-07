@@ -20,7 +20,7 @@ export default class GamePhrases {
     }
 
     public checkGamePhrases = (): MyResponse<any> => {
-        let response: MyResponse<any> = {
+        const response: MyResponse<any> = {
             status: 200,
             message: '',
             data: '',

@@ -1,6 +1,7 @@
 import axios from 'axios';
 import ENDPOINTS from '../shared/endpoints.json';
 import { IAuthProps } from '../hooks/useAuth';
+import { Logger } from './Logger';
 
 export interface APIResponse<T> {
     status: number;
@@ -71,7 +72,7 @@ export async function makeAuthenticatedRequest<T>(
     endpoint: string,
     params?: Record<string, string>,
     method: 'GET' | 'POST' = 'GET',
-    data?: any
+    data?: unknown
 ): Promise<APIResponse<T>> {
     try {
         const authResponse = await auth.validateAndRefreshToken();
@@ -105,18 +106,25 @@ export async function makeAuthenticatedRequest<T>(
             status: response.status,
             data: response.data
         };
-    } catch (error: any) {
-        console.error('API request failed:', error);
-        if (error.response) {
+    } catch (error: unknown) {
+        Logger.error('API request failed:', error);
+
+        if (axios.isAxiosError(error) && error.response) {
             return {
                 status: error.response.status,
                 error: error.response.data?.message || 'Request failed with status ' + error.response.status
             };
+        } else if (error instanceof Error) {
+            return {
+                status: 500,
+                error: error.message || 'Request failed'
+            };
+        } else {
+            return {
+                status: 500,
+                error: 'An unknown error occurred'
+            };
         }
-        return {
-            status: 500,
-            error: error.message || 'Request failed'
-        };
     }
 }
 
@@ -136,7 +144,13 @@ export async function getFileContent(auth: IAuthProps, repo: string, path: strin
     });
 }
 
-export async function saveRepoFile(auth: IAuthProps, repo: string, path: string, content: string, message: string) {
+export async function saveRepoFile(
+    auth: IAuthProps,
+    repo: string,
+    path: string,
+    content: string,
+    message: string
+) {
     return makeAuthenticatedRequest<SaveRepoFileResponse>(
         auth,
         ENDPOINTS.api.SaveRepoFile,
@@ -159,7 +173,9 @@ export async function unlinkGitHub(auth: IAuthProps) {
     );
 }
 
-export async function getGitHubDeviceCode(auth: IAuthProps): Promise<APIResponse<DeviceCodeResponse>> {
+export async function getGitHubDeviceCode(
+    auth: IAuthProps
+): Promise<APIResponse<DeviceCodeResponse>> {
     return makeAuthenticatedRequest<DeviceCodeResponse>(
         auth,
         ENDPOINTS.api.GitHubDeviceCode,
@@ -168,7 +184,10 @@ export async function getGitHubDeviceCode(auth: IAuthProps): Promise<APIResponse
     );
 }
 
-export async function pollGitHubDeviceAuth(auth: IAuthProps, deviceCode: string): Promise<APIResponse<DevicePollResponse>> {
+export async function pollGitHubDeviceAuth(
+    auth: IAuthProps,
+    deviceCode: string
+): Promise<APIResponse<DevicePollResponse>> {
     return makeAuthenticatedRequest<DevicePollResponse>(
         auth,
         ENDPOINTS.api.GitHubDevicePoll,

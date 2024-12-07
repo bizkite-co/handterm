@@ -7,13 +7,11 @@ import NextCharsDisplay, { NextCharsDisplayHandle } from './NextCharsDisplay';
 import { TutorialManager } from './TutorialManager';
 import { Chord } from './Chord';
 import { Prompt } from './Prompt';
-import { useResizeCanvasAndFont } from '../hooks/useResizeCanvasAndFont';
 import { useTerminal } from '../hooks/useTerminal';
 import { useWPMCalculator } from '../hooks/useWPMCaculator';
-import { activitySignal, isEditModeSignal, isShowVideoSignal } from 'src/signals/appSignals';
+import { activitySignal, isShowVideoSignal } from 'src/signals/appSignals';
 import {
   setGamePhrase,
-  isInGameModeSignal,
 } from 'src/signals/gameSignals';
 import { useComputed } from '@preact/signals-react';
 import MonacoEditor from './MonacoEditor';
@@ -23,11 +21,14 @@ import { createLogger, LogLevel } from 'src/utils/Logger';
 import { commandTimeSignal } from 'src/signals/commandLineSignals';
 import { getFileContent } from '../utils/apiClient';
 
-const logger = createLogger('HandTermWrapper', LogLevel.DEBUG);
+const logger = createLogger({
+  prefix: 'HandTermWrapper',
+  level: LogLevel.DEBUG
+});
 
 interface TreeItem {
   path: string;
-  type: string;
+  type: 'file' | 'directory';
 }
 
 export interface IHandTermWrapperProps {
@@ -73,19 +74,13 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
   const [domain] = useState<string>('handterm.com');
   const initialCanvasHeight = localStorage.getItem('canvasHeight') || '100';
   const [canvasHeight] = useState(parseInt(initialCanvasHeight));
-  const [lastTypedCharacter, setLastTypedCharacter] = useState<string | null>(null);
+  const [lastTypedCharacter] = useState<string | null>(null);
   const [, setErrorCharIndex] = useState<number | undefined>(undefined);
-  const [, setTerminalSize] = useState<{ width: number; height: number } | undefined>();
-  const [githubAuthHandled, setGithubAuthHandled] = useState<boolean>(false);
-  const [githubUsername, setGithubUsername] = useState<string | null>(null);
-  const [userName, setUserName] = useState<string | null>(null);
-  const activity = useComputed(() => activitySignal.value);
-  const isGameInitialized = useComputed(() => isInGameModeSignal.value);
+  const [githubUsername] = useState<string | null>(null);
+  const [userName] = useState<string | null>(null);
   const commandTime = useComputed(() => commandTimeSignal.value);
-  const [tempUserName, setTempUserName] = useState('');
-  const [tempPassword, setTempPassword] = useState('');
   const [treeItems, setTreeItems] = useState<TreeItem[]>([]);
-  const [currentFile, setCurrentFile] = useState<string | null>(null);
+  const [, setCurrentFile] = useState<string | null>(null);
 
   const { parseLocation, updateLocation } = useReactiveLocation();
   const currentActivity = parseLocation().activityKey;
@@ -93,23 +88,23 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
   // Load tree items when entering tree view mode
   useEffect(() => {
     if (currentActivity === ActivityType.TREE) {
-      console.log('Loading tree items in TREE mode');
+      logger.info('Loading tree items in TREE mode');
       const storedItems = localStorage.getItem('github_tree_items');
-      console.log('Stored items:', storedItems);
+      logger.debug('Stored items:', storedItems);
       if (storedItems) {
         try {
           const items = JSON.parse(storedItems);
-          console.log('Parsed items:', items);
+          logger.debug('Parsed items:', items);
           if (Array.isArray(items) && items.length > 0) {
             setTreeItems(items);
           } else {
-            console.error('Tree items array is empty or invalid');
+            logger.error('Tree items array is empty or invalid');
           }
         } catch (error) {
-          console.error('Error parsing tree items:', error);
+          logger.error('Error parsing tree items:', error);
         }
       } else {
-        console.error('No tree items found in localStorage');
+        logger.error('No tree items found in localStorage');
       }
     }
   }, [currentActivity]);
@@ -117,7 +112,7 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
   // Reset terminal when returning to normal mode
   useEffect(() => {
     if (currentActivity === ActivityType.NORMAL) {
-      console.log('Resetting terminal in NORMAL mode');
+      logger.info('Resetting terminal in NORMAL mode');
       if (xtermRef.current) {
         xtermRef.current.focus();
       }
@@ -130,13 +125,13 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
       // Get the current repository from localStorage (set by GitHubCommand)
       const currentRepo = localStorage.getItem('current_github_repo');
       if (!currentRepo) {
-        console.error('No repository selected');
+        logger.error('No repository selected');
         return;
       }
 
-      console.log('Fetching file content:', { repo: currentRepo, path });
+      logger.info('Fetching file content:', { repo: currentRepo, path });
       const response = await getFileContent(props.auth, currentRepo, path);
-      console.log('File content response:', response);
+      logger.debug('File content response:', response);
 
       if (response.status === 200 && response.data) {
         // Store content and file path
@@ -150,17 +145,17 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
           groupKey: null
         });
       } else {
-        console.error('Failed to fetch file content:', response.error);
+        logger.error('Failed to fetch file content:', response.error);
       }
     } catch (error) {
-      console.error('Failed to fetch file content:', error);
+      logger.error('Failed to fetch file content:', error);
       // Stay in tree view mode on error
       return;
     }
   }, [props.auth, updateLocation]);
 
   const handleEditorClose = useCallback((): void => {
-    console.log('Closing editor, returning to NORMAL mode');
+    logger.info('Closing editor, returning to NORMAL mode');
     // Clear stored content and file path
     localStorage.removeItem('edit-content');
     setCurrentFile(null);
@@ -173,7 +168,7 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
   }, [updateLocation]);
 
   const handleTreeClose = useCallback((): void => {
-    console.log('Closing tree view, returning to NORMAL mode');
+    logger.info('Closing tree view, returning to NORMAL mode');
     // Clear tree items
     setTreeItems([]);
     localStorage.removeItem('github_tree_items');
@@ -187,7 +182,7 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
 
   const handlePhraseSuccess = useCallback((phrase: GamePhrase | null) => {
     if (!phrase) return;
-    console.log(`handlePhraseSuccess called with phrase:`, phrase.key, "Activity:", ActivityType[activitySignal.value]);
+    logger.debug(`handlePhraseSuccess called with phrase:`, phrase.key, "Activity:", ActivityType[activitySignal.value]);
     const wpms = wpmCalculator.getWPMs();
     const wpmAverage = wpms.wpmAverage;
 

@@ -1,11 +1,11 @@
 // hooks/useTerminal.ts
-import { useCallback, useState, useEffect, useRef, MutableRefObject } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { useXTerm } from 'react-xtermjs';
 import { FitAddon } from '@xterm/addon-fit';
 import { XtermAdapterConfig } from '../components/XtermAdapterConfig';
 import { useCommand } from './useCommand';
 import { useWPMCalculator } from './useWPMCaculator';
-import { addKeystroke, commandLineSignal, setCommand } from 'src/signals/commandLineSignals';
+import { addKeystroke, commandLineSignal } from 'src/signals/commandLineSignals';
 import { useComputed } from '@preact/signals-react';
 import { setCommandLine } from 'src/signals/commandLineSignals';
 import {
@@ -19,22 +19,17 @@ import {
   setTempUserName,
   tempEmailSignal,
   tempPasswordSignal,
-  tempUserNameSignal,
-  activitySignal
+  tempUserNameSignal
 } from 'src/signals/appSignals';
-import { ActivityType, ParsedCommand } from 'src/types/Types';
+import { ActivityType } from 'src/types/Types';
 import { IUseCharacterHandlerProps, useCharacterHandler } from './useCharacterHandler';
-import { isLoggedInSignal, setIsLoggedIn, userNameSignal, setUserName } from '../signals/appSignals';
-import { useAuth } from 'src/hooks/useAuth';
 import { parseCommand } from 'src/utils/commandUtils';
-import { write } from 'fs';
-
 
 export const useTerminal = () => {
   const { instance, ref: xtermRef } = useXTerm({ options: XtermAdapterConfig });
   const { handleCommand, commandHistory, commandHistoryIndex, setCommandHistoryIndex } = useCommand();
   const wpmCalculator = useWPMCalculator();
-  const commandLine = useComputed(() => commandLineSignal.value)
+  const commandLine = useComputed(() => commandLineSignal.value);
 
   const fitAddon = useRef(new FitAddon());
   const PROMPT = '> ';
@@ -46,20 +41,21 @@ export const useTerminal = () => {
 
   const resetPrompt = useCallback(() => {
     if (!instance) return;
-      instance.reset();
-      setCommandLine('');
-      instance.write(PROMPT);
-      instance.scrollToBottom();
+    instance.reset();
+    setCommandLine('');
+    instance.write(PROMPT);
+    instance.scrollToBottom();
   }, [instance]);
 
   const {
     handleCharacter,
   } = useCharacterHandler({
-    setLastTypedCharacter: (value:string|null)=>{}, // Implement if needed
+    setCommandLine,
+    setLastTypedCharacter: () => {}, // Implement if needed
     isInSvgMode: false, // Set appropriately
+    isInLoginProcess: isInLoginProcessSignal.value,
     writeOutputInternal: writeToTerminal,
   } as IUseCharacterHandlerProps);
-
 
   const getCurrentCommand = useCallback(() => {
     if (!instance) return '';
@@ -73,15 +69,14 @@ export const useTerminal = () => {
     }
     const promptEndIndex = command.indexOf(PROMPT) + promptLength;
     return command.substring(promptEndIndex).trimStart();
-  }, [instance]);
+  }, [instance, promptLength]);
 
   const clearCurrentLine = useCallback(() => {
     if (!instance) return;
-    const currentCommand = getCurrentCommand();
     // Move cursor to end of line
     instance.write('\x1b[2K\r'); // Clear the current line
     instance.write(PROMPT); // Rewrite prompt
-  }, [instance, getCurrentCommand]);
+  }, [instance]);
 
   const navigateHistory = useCallback((direction: 'up' | 'down') => {
     if (!instance || !commandHistory.length) return;
@@ -117,14 +112,22 @@ export const useTerminal = () => {
     instance.write(historicalCommand);
     setCommandLine(historicalCommand);
     setCommandHistoryIndex(newIndex);
-  }, [instance, commandHistory, commandHistoryIndex, getCurrentCommand, clearCurrentLine, setCommandHistoryIndex]);
+  }, [
+    instance,
+    commandHistory,
+    commandHistoryIndex,
+    getCurrentCommand,
+    clearCurrentLine,
+    setCommandHistoryIndex,
+    commandLine
+  ]);
 
   useEffect(() => {
     if (!instance) return;
     instance.loadAddon(fitAddon.current);
     fitAddon.current.fit();
     resetPrompt();
-  }, [instance])
+  }, [instance, resetPrompt]);
 
   useEffect(() => {
     if (!instance) return;
@@ -232,7 +235,10 @@ export const useTerminal = () => {
       }
     };
 
-    const resizeHandler = () => { fitAddon.current.fit(); instance.scrollToBottom(); };
+    const resizeHandler = () => {
+      fitAddon.current.fit();
+      instance.scrollToBottom();
+    };
     window.addEventListener('resize', resizeHandler);
 
     const dataHandler = instance.onData(handleData);
@@ -241,7 +247,16 @@ export const useTerminal = () => {
       window.removeEventListener('resize', resizeHandler);
       dataHandler.dispose();
     };
-  }, [instance, getCurrentCommand, resetPrompt, wpmCalculator, commandLine, setCommandLine, navigateHistory]);
+  }, [
+    instance,
+    getCurrentCommand,
+    resetPrompt,
+    wpmCalculator,
+    commandLine,
+    navigateHistory,
+    promptLength,
+    handleCharacter
+  ]);
 
   return {
     xtermRef,
