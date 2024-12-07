@@ -14,8 +14,7 @@
     "jsx": "react-jsx",
     "jsxImportSource": "react",
     "types": [
-      "node", 
-      "testing-library__jest-dom"
+      "node"
     ],
     "module": "ESNext",
     "skipLibCheck": true,
@@ -53,9 +52,7 @@
   "include": [
     "./src/**/*",
     "./src/types/*.d.ts",
-    "jest.setup.js",
-    "jest.config.ts",
-    "jest.setup.ts",
+    "vitest-setup.ts"
   ],
   "exclude": [
     "**/*.test.ts",
