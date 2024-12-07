@@ -9,10 +9,10 @@ openDb.onupgradeneeded = function() {
 
 openDb.onsuccess = function() {
     // Start a new transaction
-    var db = openDb.result;
-    var tx = db.transaction('WpmStore', 'readwrite');
-    var store = tx.objectStore('WpmStore');
-    var index = store.index('CharacterIndex');
+    const db = openDb.result;
+    const tx = db.transaction('WpmStore', 'readwrite');
+    const store = tx.objectStore('WpmStore');
+    const index = store.index('CharacterIndex');
 
     // Add some data
     store.put({id: 1, character: 'a', wpm: 0.5, timestamp: new Date('1900-01-01')});

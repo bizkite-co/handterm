@@ -44,3 +44,6 @@ export const setupCanvasMock = () => {
     }
   };
 };
+
+// Export the type for CanvasMock
+export type CanvasMock = ReturnType<typeof setupCanvasMock>;

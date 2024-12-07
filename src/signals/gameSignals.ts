@@ -44,7 +44,7 @@ export const setCompletedGamePhrase = (gamePhraseId:string) => {
 export const getIncompletePhrasesByTutorialGroup = (tutorialGroup: string):GamePhrase[] => {
   const phrasesInGroup = Phrases.filter(p => p.tutorialGroup === tutorialGroup);
   const incompletePhrasesInGroup = phrasesInGroup
-    .filter(pig => !Array.from(completedGamePhrasesSignal.value).includes(pig.key) ) 
+    .filter(pig => !Array.from(completedGamePhrasesSignal.value).includes(pig.key) )
   return incompletePhrasesInGroup;
 }
 
@@ -62,7 +62,7 @@ export const initializeGame = (tutorialGroup?: string) => {
     if (tutorialGroupGamePhrase.length > 0) {
       gamePhraseSignal.value = tutorialGroupGamePhrase[0];
     }
-  };
+  }
 };
 
 export const setGamePhrase = (phrase: GamePhrase | null) => {

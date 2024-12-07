@@ -9,10 +9,10 @@ This E2E testing approach focuses on describing test scenarios in a human-readab
 ```
 Scenario: User logs in and starts a typing game
 Given the user is on the home page
-When the user clicks "Login"
-And enters valid GitHub credentials
-Then the user should be redirected to the game dashboard
-And the typing game should be available
+When the user types "Login <username>"
+And enters valid Handterm credentials
+Then the user should be redirected to the TUI
+And the tutorial should be available
 ```
 
 ### Implementation Strategy

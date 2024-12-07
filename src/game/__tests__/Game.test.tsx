@@ -3,6 +3,7 @@ import React from 'react';
 import { render } from '@testing-library/react';
 import Game from '../Game';
 import { setupCanvasMock } from '../../test-utils/canvasMock';
+import { CanvasMock } from '../../test-utils/canvasMock';
 
 // Mock dependencies
 vi.mock('src/hooks/useReactiveLocation', () => ({
@@ -21,11 +22,13 @@ vi.mock('src/signals/gameSignals', () => ({
 }));
 
 describe('Game Component', () => {
-  let canvasMock;
+  // Explicitly type canvasMock and use type assertion
+  let canvasMock: CanvasMock;
 
   beforeEach(() => {
     // Setup canvas mock before each test using the centralized utility
-    canvasMock = setupCanvasMock();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    canvasMock = setupCanvasMock() as any;
   });
 
   afterEach(() => {
@@ -43,7 +46,8 @@ describe('Game Component', () => {
     const { container } = render(<Game {...defaultProps} />);
 
     expect(container).toBeTruthy();
-    expect(canvasMock.mockGetContext).toHaveBeenCalledWith('2d');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    expect((canvasMock as any).mockGetContext).toHaveBeenCalledWith('2d');
   });
 
   it('initializes canvas with correct dimensions', () => {

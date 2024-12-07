@@ -1,46 +1,34 @@
 module.exports = {
   root: true,
-  env: { browser: true, es2020: true },
   extends: [
     'eslint:recommended',
     'plugin:@typescript-eslint/recommended',
     'plugin:react-hooks/recommended',
   ],
-  ignorePatterns: ['dist', '.eslintrc.cjs'],
   parser: '@typescript-eslint/parser',
-  plugins: ['react-refresh'],
+  plugins: ['@typescript-eslint'],
   rules: {
-    'react-refresh/only-export-components': [
-      'warn',
-      { allowConstantExport: true },
-    ],
+    '@typescript-eslint/no-explicit-any': 'error', // Changed from 'warn' to 'error'
+    '@typescript-eslint/explicit-function-return-type': 'off',
     '@typescript-eslint/no-unused-vars': ['warn', {
-      'vars': 'all',
-      'varsIgnorePattern': '^_',
-      'argsIgnorePattern': '^_',
-      'destructuredArrayIgnorePattern': '^_',
-      'ignoreRestSiblings': false
+      argsIgnorePattern: '^_',
+      varsIgnorePattern: '^_'
     }],
-    'no-incomplete-useState-destructuring': {
-      create: function (context) {
-        return {
-          VariableDeclarator(node) {
-            if (
-              node.init &&
-              node.init.type === 'CallExpression' &&
-              node.init.callee.name === 'useState' &&
-              node.id.type === 'ArrayPattern' &&
-              node.id.elements.length === 2 &&
-              !node.id.elements[0]
-            ) {
-              context.report({
-                node,
-                message: 'Incomplete destructuring of useState. Did you forget to include the state variable?',
-              });
-            }
-          },
-        };
-      },
-    },
+    'no-console': 'warn',
+    'react-hooks/exhaustive-deps': 'warn',
+    'no-incomplete-useState-destructuring': 'off',
+    'no-misleading-character-class': 'error',
+    '@typescript-eslint/ban-ts-comment': 'warn', // Allow @ts-ignore with a warning
+    'prefer-const': 'warn'
   },
-}
+  overrides: [
+    {
+      // More lenient rules for utility files and test files
+      files: ['**/utils/**/*.ts', '**/__tests__/**/*.ts', '**/__tests__/**/*.tsx'],
+      rules: {
+        '@typescript-eslint/no-explicit-any': 'warn',
+        '@typescript-eslint/no-unused-vars': 'off'
+      }
+    }
+  ]
+};

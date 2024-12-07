@@ -20,7 +20,7 @@
     "skipLibCheck": true,
     "outDir": "./dist",
     /* Bundler mode */
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
@@ -47,19 +47,17 @@
     "allowSyntheticDefaultImports": true
   },
   "typeRoots": [
-    "./node_modules/@types"
+    "./node_modules/@types",
+    "./src/types"
   ],
   "include": [
     "./src/**/*",
-    "./src/types/*.d.ts",
+    "./src/types/**/*.d.ts",
+    "./src/types/**/*.ts",
     "vitest-setup.ts"
   ],
   "exclude": [
-    "**/*.test.ts",
-    "**/*.test.tsx",
-    "**/*.spec.ts",
-    "**/*.spec.tsx",
-    "node_modules/@testing-library",
+    "node_modules",
     ".vscode"
   ],
   "references": [

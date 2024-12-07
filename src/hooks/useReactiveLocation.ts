@@ -2,7 +2,7 @@ import { useSignal, useComputed } from '@preact/signals-react';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useEffect, useCallback, useRef } from 'react';
 import { ParsedLocation, ActivityType } from 'src/types/Types';
-import { parseLocation, navigate } from 'src/utils/navigationUtils';
+import { parseLocation } from 'src/utils/navigationUtils';
 
 export function useReactiveLocation() {
   const navigate = useNavigate();
