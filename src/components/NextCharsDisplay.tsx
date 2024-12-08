@@ -1,12 +1,12 @@
 import { TerminalCssClasses } from "../types/TerminalTypes";
 
-import React, { useState, useRef, useImperativeHandle, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useImperativeHandle, useCallback, useEffect } from 'react';
 import Timer, { TimerHandle } from './Timer';
 import ErrorDisplay from "./ErrorDisplay";
 import { Phrase } from "../utils/Phrase";
 import { commandLineSignal } from "src/signals/commandLineSignals";
 import { useComputed, useSignalEffect } from "@preact/signals-react";
-import { gamePhraseSignal, setCompletedGamePhrase } from "src/signals/gameSignals";
+import { setCompletedGamePhrase } from "src/signals/gameSignals";
 import { GamePhrase } from "src/types/Types";
 import { useReactiveLocation } from "src/hooks/useReactiveLocation";
 import * as GamePhrases from "src/utils/GamePhrases";
@@ -147,15 +147,15 @@ const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, INextCharsDisp
         const nextCharactersString = getNextCharacters(stringBeingTested);
         setNextChars(nextCharactersString);
     }, [
-        startOrContinueTimer,
-        getFirstNonMatchingChar,
-        _phrase.value,
-        _phrase.chordsHTML,
-        cancelTimer,
-        hideError,
-        showError,
-        stopTimer,
-        handleSuccess,
+        startOrContinueTimer, 
+        getFirstNonMatchingChar, 
+        _phrase.value, 
+        _phrase.chordsHTML, 
+        cancelTimer, 
+        hideError, 
+        showError, 
+        stopTimer, 
+        handleSuccess, 
         getNextCharacters
     ]);
 

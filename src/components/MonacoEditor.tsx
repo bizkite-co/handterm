@@ -24,24 +24,23 @@ interface MonacoEditorProps {
   onFileSelect?: (file: string) => void;
 }
 
-const _getItemAtLine = (
-  _items: TreeItem[],
-  _context: { expandedFolders: Set<string> },
-  _lineNumber: number
-) => {
-  // Implement item retrieval logic
-  return { path: '', isDirectory: false };
-};
-
 const MonacoEditor = forwardRef<editor.IStandaloneCodeEditor, MonacoEditorProps>(
-  ({ initialValue, language, onClose, height = '80vh', isTreeView, treeItems = [], onFileSelect }, ref) => {
+  ({
+    initialValue: _initialValue,
+    language: _language,
+    onClose,
+    height = '80vh',
+    isTreeView,
+    treeItems = [],
+    onFileSelect
+  }, ref) => {
     const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
-    const monacoRef = useRef<Monaco | null>(null);
+    const _monacoRef = useRef<Monaco | null>(null);
     const [_isEditorReady, setIsEditorReady] = useState(false);
     const [_expandedFolders] = useState<Set<string>>(new Set());
     const auth = useAuth();
 
-    const handleGitHubSave = useCallback(async (_value?: string): Promise<void> => {
+    const _handleGitHubSave = useCallback(async (_value?: string): Promise<void> => {
       try {
         const currentRepo = localStorage.getItem('current_github_repo');
         const currentFile = localStorage.getItem('current_github_file');
@@ -65,41 +64,25 @@ const MonacoEditor = forwardRef<editor.IStandaloneCodeEditor, MonacoEditorProps>
       }
     }, [auth]);
 
-    useImperativeHandle(ref, () => {
-      if (!editorRef.current) {
-        throw new Error('Editor ref is not available');
-      }
-      return editorRef.current;
-    }, [editorRef]);
-
-    const handleEditorDidMount = useCallback((editor: editor.IStandaloneCodeEditor, _monaco: Monaco) => {
+    const _handleEditorDidMount = useCallback((editor: editor.IStandaloneCodeEditor, _monaco: Monaco) => {
       logger.info('Editor mounted, setting up...');
       editorRef.current = editor;
 
       if (isTreeView) {
         logger.info('Setting up tree view mode');
         editor.updateOptions({ readOnly: true });
-
-        const _treeViewActions = {
-          id: 'tree-view-actions',
-          label: 'Tree View Actions',
-          contextMenuGroupId: 'navigation',
-          run: () => {
-            const currentLine = editor.getPosition()?.lineNumber;
-            if (!currentLine) return;
-
-            logger.debug('Navigate Down triggered');
-            // Implement navigation logic
-          }
-        };
-
-        // Register tree view actions
-        logger.info('Tree view actions registered');
       } else {
         setIsEditorReady(true);
         logger.info('Editor ready');
       }
     }, [isTreeView]);
+
+    useImperativeHandle(ref, () => {
+      if (!editorRef.current) {
+        throw new Error('Editor ref is not available');
+      }
+      return editorRef.current;
+    }, [editorRef]);
 
     const handleFileSelection = useCallback((item: TreeItem) => {
       if (item.type === 'directory') {
@@ -113,7 +96,6 @@ const MonacoEditor = forwardRef<editor.IStandaloneCodeEditor, MonacoEditorProps>
 
     return (
       <div style={{ height, width: '100%' }}>
-        {/* Monaco Editor component would be rendered here */}
         {isTreeView && treeItems.length > 0 && (
           <div>
             {treeItems.map((item, index) => (

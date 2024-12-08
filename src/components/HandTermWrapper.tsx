@@ -85,7 +85,7 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
   const { parseLocation, updateLocation } = useReactiveLocation();
   const currentActivity = parseLocation().activityKey;
 
-  // Declare handlePhraseComplete first
+  // Declare handlePhraseComplete with all its dependencies
   const handlePhraseComplete = useCallback(() => {
     localStorage.setItem('currentCommand', '');
     setGamePhrase(null);
@@ -94,7 +94,7 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
     }
     gameHandleRef.current?.completeGame();
     resetPrompt();
-  }, [resetPrompt]);
+  }, [nextCharsDisplayRef, gameHandleRef, resetPrompt]);
 
   // Then use it in handlePhraseSuccess
   const handlePhraseSuccess = useCallback((phrase: GamePhrase | null) => {
@@ -110,7 +110,7 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
     gameHandleRef.current?.completeGame();
     gameHandleRef.current?.levelUp();
     handlePhraseComplete();
-  }, [wpmCalculator, activityMediator, handlePhraseComplete]);
+  }, [wpmCalculator, activityMediator, handlePhraseComplete, gameHandleRef, targetWPM]);
 
   // Load tree items when entering tree view mode
   useEffect(() => {
@@ -293,3 +293,5 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
     </div>
   );
 });
+
+export default HandTermWrapper;
