@@ -1,6 +1,6 @@
 import { useSignal, useComputed } from '@preact/signals-react';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useMemo } from 'react';
 import { ParsedLocation, ActivityType } from 'src/types/Types';
 import { parseLocation } from 'src/utils/navigationUtils';
 
@@ -13,18 +13,32 @@ export function useReactiveLocation() {
   const searchSignal = useSignal(location.search);
   const isInitialized = useSignal(false);
 
+  // Debounce mechanism to prevent rapid navigation
+  const lastNavigationTime = useSignal(0);
+  const NAVIGATION_THROTTLE_DELAY = 100; // ms
+
   useEffect(() => {
     if (!isInitialized.value) {
       pathSignal.value = location.pathname;
       searchSignal.value = location.search;
       isInitialized.value = true;
     } else {
-      pathSignal.value = location.pathname;
-      searchSignal.value = location.search;
+      // Only update if the location has actually changed
+      if (pathSignal.value !== location.pathname || searchSignal.value !== location.search) {
+        pathSignal.value = location.pathname;
+        searchSignal.value = location.search;
+      }
     }
   }, [location, pathSignal, searchSignal, isInitialized]);
 
   const updateLocation = useCallback((options: ParsedLocation) => {
+    const currentTime = Date.now();
+
+    // Throttle navigation to prevent rapid calls
+    if (currentTime - lastNavigationTime.value < NAVIGATION_THROTTLE_DELAY) {
+      return;
+    }
+
     const currentLocation = parseLocation();
 
     const newActivity = options.activityKey === undefined ? currentLocation.activityKey :
@@ -40,11 +54,21 @@ export function useReactiveLocation() {
     const queryString = newGroupKey ? `?group=${encodeURIComponent(newGroupKey)}` : '';
 
     const activityPath = newActivity === ActivityType.NORMAL ? '' : ActivityType[newActivity].toLowerCase();
-    const path = `/${activityPath}${encodedPhraseKey ? `/${encodedPhraseKey}` : ''}${queryString}`;
+    const newPath = `/${activityPath}${encodedPhraseKey ? `/${encodedPhraseKey}` : ''}${queryString}`;
 
-    pathSignal.value = path
-    navigate(path);
-  }, [navigate, pathSignal]);
+    // Only navigate if the new path is different from the current path
+    if (newPath !== pathSignal.value) {
+      pathSignal.value = newPath;
+
+      // Update last navigation time
+      lastNavigationTime.value = currentTime;
+
+      navigate(newPath, {
+        // Add replace option to reduce navigation stack entries
+        replace: true
+      });
+    }
+  }, [navigate, pathSignal, lastNavigationTime]);
 
   return {
     parseLocation: () => parseLocation(),

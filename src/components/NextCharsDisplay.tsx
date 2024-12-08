@@ -1,6 +1,6 @@
 import { TerminalCssClasses } from "../types/TerminalTypes";
 
-import React, { useState, useRef, useImperativeHandle, useCallback, useEffect } from 'react';
+import React, { useState, useRef, useImperativeHandle, useCallback, useEffect, useMemo } from 'react';
 import Timer, { TimerHandle } from './Timer';
 import ErrorDisplay from "./ErrorDisplay";
 import { Phrase } from "../utils/Phrase";
@@ -39,6 +39,9 @@ const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, INextCharsDisp
     const wpmRef = useRef<HTMLSpanElement>(null);
     const commandLine = useComputed(() => commandLineSignal.value);
     const { parseLocation } = useReactiveLocation();
+
+    // Memoize location parsing to prevent unnecessary re-renders
+    const currentLocation = useMemo(() => parseLocation(), []);
 
     const getFirstNonMatchingChar = useCallback((stringBeingTested: string): number => {
         if (!_phrase.value) return 0;
@@ -147,15 +150,15 @@ const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, INextCharsDisp
         const nextCharactersString = getNextCharacters(stringBeingTested);
         setNextChars(nextCharactersString);
     }, [
-        startOrContinueTimer, 
-        getFirstNonMatchingChar, 
-        _phrase.value, 
-        _phrase.chordsHTML, 
-        cancelTimer, 
-        hideError, 
-        showError, 
-        stopTimer, 
-        handleSuccess, 
+        startOrContinueTimer,
+        getFirstNonMatchingChar,
+        _phrase.value,
+        _phrase.chordsHTML,
+        cancelTimer,
+        hideError,
+        showError,
+        stopTimer,
+        handleSuccess,
         getNextCharacters
     ]);
 
@@ -164,22 +167,30 @@ const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, INextCharsDisp
         cancelTimer
     }), [resetTimer, cancelTimer]);
 
+    // Optimize useEffect to only run when content key changes
     useEffect(() => {
-        if (!parseLocation().activityKey || !parseLocation().contentKey) return;
-        const foundPhrase = GamePhrases.default.getGamePhraseByKey(parseLocation().contentKey ?? '');
+        const { activityKey, contentKey } = currentLocation;
+        if (!activityKey || !contentKey) return;
+
+        const foundPhrase = GamePhrases.default.getGamePhraseByKey(contentKey);
         if (!foundPhrase) return;
-        setGamePhrase(foundPhrase);
+
+        // Prevent unnecessary state updates
+        setGamePhrase(prevPhrase =>
+            prevPhrase?.key === foundPhrase.key ? prevPhrase : foundPhrase
+        );
         setPhrase(new Phrase(foundPhrase.value.split('')));
         setNextChars(foundPhrase.value);
-    }, [parseLocation]);
+    }, [currentLocation.contentKey]);
 
+    // Optimize signal effect to prevent unnecessary re-renders
     useSignalEffect(() => {
-        // every time the command line changes.
-        handleCommandLineChange(commandLine.value);
+        const commandLineValue = commandLine.value;
+        handleCommandLineChange(commandLineValue);
     });
 
     return (
-        (parseLocation().contentKey &&
+        (currentLocation.contentKey &&
             <div
                 id={TerminalCssClasses.NextChars}
                 hidden={!isInPhraseMode}
