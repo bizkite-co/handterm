@@ -1,4 +1,4 @@
-import React, { useState, useRef, useImperativeHandle, forwardRef, useCallback, useEffect } from 'react';
+import React, { useState, useRef, useImperativeHandle, forwardRef, useCallback } from 'react';
 import { Monaco } from '@monaco-editor/react';
 import { editor } from 'monaco-editor';
 import { useAuth } from '../hooks/useAuth';
@@ -24,10 +24,10 @@ interface MonacoEditorProps {
   onFileSelect?: (file: string) => void;
 }
 
-const getItemAtLine = (
-  items: TreeItem[],
-  context: { expandedFolders: Set<string> },
-  lineNumber: number
+const _getItemAtLine = (
+  _items: TreeItem[],
+  _context: { expandedFolders: Set<string> },
+  _lineNumber: number
 ) => {
   // Implement item retrieval logic
   return { path: '', isDirectory: false };
@@ -37,11 +37,11 @@ const MonacoEditor = forwardRef<editor.IStandaloneCodeEditor, MonacoEditorProps>
   ({ initialValue, language, onClose, height = '80vh', isTreeView, treeItems = [], onFileSelect }, ref) => {
     const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
     const monacoRef = useRef<Monaco | null>(null);
-    const [isEditorReady, setIsEditorReady] = useState(false);
-    const [expandedFolders] = useState<Set<string>>(new Set());
+    const [_isEditorReady, setIsEditorReady] = useState(false);
+    const [_expandedFolders] = useState<Set<string>>(new Set());
     const auth = useAuth();
 
-    const handleGitHubSave = useCallback(async (value?: string): Promise<void> => {
+    const handleGitHubSave = useCallback(async (_value?: string): Promise<void> => {
       try {
         const currentRepo = localStorage.getItem('current_github_repo');
         const currentFile = localStorage.getItem('current_github_file');
@@ -72,7 +72,7 @@ const MonacoEditor = forwardRef<editor.IStandaloneCodeEditor, MonacoEditorProps>
       return editorRef.current;
     }, [editorRef]);
 
-    const handleEditorDidMount = useCallback((editor: editor.IStandaloneCodeEditor, monaco: Monaco) => {
+    const handleEditorDidMount = useCallback((editor: editor.IStandaloneCodeEditor, _monaco: Monaco) => {
       logger.info('Editor mounted, setting up...');
       editorRef.current = editor;
 
@@ -80,7 +80,7 @@ const MonacoEditor = forwardRef<editor.IStandaloneCodeEditor, MonacoEditorProps>
         logger.info('Setting up tree view mode');
         editor.updateOptions({ readOnly: true });
 
-        const treeViewActions = {
+        const _treeViewActions = {
           id: 'tree-view-actions',
           label: 'Tree View Actions',
           contextMenuGroupId: 'navigation',

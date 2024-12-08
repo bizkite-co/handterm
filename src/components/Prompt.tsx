@@ -1,6 +1,6 @@
 import React from 'react';
 import { TerminalCssClasses } from "../types/TerminalTypes"
-import { useComputed, useSignalEffect } from '@preact/signals-react';
+import { useComputed } from '@preact/signals-react';
 import { promptInfoSignal } from 'src/signals/commandLineSignals';
 
 interface PromptProps {
@@ -28,4 +28,3 @@ export const Prompt: React.FC<PromptProps> = ({ domain, username, timestamp, git
         </pre>
     )
 }
-

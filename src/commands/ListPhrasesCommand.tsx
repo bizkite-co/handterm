@@ -1,6 +1,5 @@
-import GamePhrases from '../utils/GamePhrases';
-import { ICommand, ICommandContext } from '../contexts/CommandContext';
-import { IHandTermWrapperMethods } from '../components/HandTermWrapper';
+import { ICommand, ICommandContext, ICommandResponse } from '../contexts/CommandContext';
+import { Phrases, GamePhrase, ParsedCommand } from '../types/Types';
 
 export const ListPhrasesCommand: ICommand = {
   name: 'ls',
@@ -10,23 +9,21 @@ export const ListPhrasesCommand: ICommand = {
     'random': 'List a random phrase',
     'easy': 'List only easy phrases',
   },
-  execute: (
-    _commandName: string, 
+  execute: async (
     context: ICommandContext,
-    _args?: string[], 
-    _switches?: Record<string, boolean | string>,
-  ) => {
+    _parsedCommand: ParsedCommand
+  ): Promise<ICommandResponse> => {
     if (!context) {
-      return { status: 404, message: 'No command context available.'};
+      return { status: 404, message: 'No command context available.' };
     }
-    // Logic to clear the command history from localStorage
-    // Logic to clear the command history from context (state)
-    const phrases = GamePhrases
-      .phrases
-      .map(x => x.key)
+
+    const phrases: string = Phrases
+      .map((phrase: GamePhrase) => phrase.key)
       .join('\n');
 
-      context.saveCommandResponseHistory(_commandName, phrases, 200);
-    return { status: 200, message: phrases};
+    return {
+      status: 200,
+      message: phrases
+    };
   }
 };

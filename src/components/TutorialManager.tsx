@@ -1,11 +1,8 @@
-// TutorialManager.tsx                                                                         
+// TutorialManager.tsx
 import React, { memo } from 'react';
-import { Tutorial, Tutorials } from '../types/Types';
+import { Tutorials } from '../types/Types';
 import { Chord } from './Chord';
-import { getNextTutorial } from 'src/signals/tutorialSignals';
 import { useReactiveLocation } from 'src/hooks/useReactiveLocation';
-import { useTutorial } from 'src/hooks/useTutorials';
-
 
 export const TutorialManager: React.FC = memo(() => {
     const {parseLocation} = useReactiveLocation();

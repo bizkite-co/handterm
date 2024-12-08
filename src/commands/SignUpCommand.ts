@@ -1,6 +1,6 @@
 // src/commands/SignUpCommand.ts
 import { ICommand, ICommandContext, ICommandResponse } from '../contexts/CommandContext';
-import { ParsedCommand, MyResponse } from '../types/Types';
+import { ParsedCommand } from '../types/Types';
 import { tempUserNameSignal, setTempEmail, tempEmailSignal, setTempUserName, tempPasswordSignal, isInSignUpProcessSignal, setIsInSignUpProcess } from 'src/signals/appSignals';
 
 export const SignUpCommand: ICommand = {
@@ -8,17 +8,17 @@ export const SignUpCommand: ICommand = {
     description: 'Create a new account',
     execute: async (
         context: ICommandContext, 
-        parsedCommand: ParsedCommand
+        _parsedCommand: ParsedCommand
     ): Promise<ICommandResponse> => {
         const { auth } = context;
 
-        if (parsedCommand.args.length === 2) {
+        if (_parsedCommand.args.length === 2) {
             // Start signup process
             setIsInSignUpProcess(true);
-            setTempUserName(parsedCommand.args[0]);
-            setTempEmail(parsedCommand.args[1])
+            setTempUserName(_parsedCommand.args[0]);
+            setTempEmail(_parsedCommand.args[1])
             return { status: 200, message: 'Enter password:' };
-        } else if (parsedCommand.args.length === 3 && isInSignUpProcessSignal.value) {
+        } else if (_parsedCommand.args.length === 3 && isInSignUpProcessSignal.value) {
             // Complete signup process
             const username = tempUserNameSignal.value;
             const password = tempPasswordSignal.value;

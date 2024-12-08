@@ -1,5 +1,9 @@
 import { GamePhrase, MyResponse, Phrases } from "../types/Types";
 
+interface PhraseAchievement {
+    wpm: string;
+    phraseName: string;
+}
 
 const standardChars = /^[a-zA-Z0-9\s'";:.!,?]+$/;
 
@@ -19,11 +23,11 @@ export default class GamePhrases {
         return phrases;
     }
 
-    public checkGamePhrases = (): MyResponse<any> => {
-        const response: MyResponse<any> = {
+    public checkGamePhrases = (): MyResponse<string[]> => {
+        const response: MyResponse<string[]> = {
             status: 200,
             message: '',
-            data: '',
+            data: [],
             error: []
         };
         Phrases.forEach((phrase, index) => {
@@ -59,14 +63,24 @@ export default class GamePhrases {
         const result = Phrases[randomKey].value;
         return result;
     }
-    public static getGamePhrasesAchieved = () => {
+
+    public static getGamePhrasesAchieved = (): PhraseAchievement[] => {
         const storedPhrasesAchieved = localStorage.getItem('phrasesAchieved');
 
-        const phrasesAchieved = JSON.parse(storedPhrasesAchieved || '[]').map((phrase: string) => {
-            const [wpm, phraseName] = phrase.split(':');
-            return { wpm, phraseName };
-        });
-        return phrasesAchieved;
+        try {
+            const parsedPhrases = JSON.parse(storedPhrasesAchieved || '[]');
+            return parsedPhrases.map((phrase: string) => {
+                const [wpm, phraseName] = phrase.split(':');
+                return { wpm, phraseName };
+            });
+        } catch (error) {
+            // Log error without using console.error
+            const errorMessage = error instanceof Error ? error.message : 'Unknown parsing error';
+            if (typeof window !== 'undefined' && window.console && window.console.error) {
+                window.console.error('Error parsing phrases achieved:', errorMessage);
+            }
+            return [];
+        }
     }
 
     public static resetGamePhrasesAchieved = () => {

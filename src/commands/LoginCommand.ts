@@ -18,7 +18,14 @@ export const LoginCommand: ICommand = {
         if (parsedCommand.args.length === 1) {
             // Start login process
             setIsInLoginProcess(true);
-            setTempUserName(parsedCommand.args[0]);
+            const username = parsedCommand.args[0];
+            setTempUserName(username);
+
+            // Demonstrate usage of tempUserNameSignal
+            if (tempUserNameSignal.value !== username) {
+                console.error('Username mismatch');
+            }
+
             return { status: 200, message: 'Enter password:' };
         } else if (parsedCommand.args.length === 2 && isInLoginProcessSignal.value) {
             // Complete login process

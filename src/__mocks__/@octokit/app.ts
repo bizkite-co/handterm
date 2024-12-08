@@ -1,5 +1,5 @@
 export class App {
-  constructor(options: { appId: string; privateKey: string }) {
+  constructor(_options: { appId: string; privateKey: string }) {
     return {
       getInstallationOctokit: jest.fn().mockResolvedValue({
         auth: jest.fn().mockResolvedValue({

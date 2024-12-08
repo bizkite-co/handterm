@@ -1,8 +1,6 @@
 // src/contexts/ActivityMediatorContext.tsx
-import React, { createContext, useContext, useState, useCallback } from 'react';
-import { ActivityType, ParsedCommand } from '../types/Types';
-import { reset } from 'canvas-confetti';
-import { useActivityMediator } from 'src/hooks/useActivityMediator';
+import React, { createContext, useContext, useState } from 'react';
+import { ActivityType } from '../types/Types';
 
 export interface IActivityMediatorContext {
     currentActivity: ActivityType;

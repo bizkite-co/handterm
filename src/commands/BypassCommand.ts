@@ -5,14 +5,14 @@ import { ParsedCommand } from '../types/Types';
 import { setBypassTutorial, bypassTutorialSignal } from '../signals/appSignals';
 import { activitySignal } from 'src/signals/appSignals';
 import { ActivityType } from '../types/Types';
-import { navigate } from '../utils/navigationUtils'; // We'll create this utility
+import { navigate } from '../utils/navigationUtils';
 
 export const BypassCommand: ICommand = {
   name: 'bypass',
   description: 'Toggle tutorial bypass mode for testing',
   execute: async (
-    context: ICommandContext,
-    parsedCommand: ParsedCommand
+    _context: ICommandContext,
+    _parsedCommand: ParsedCommand
   ): Promise<ICommandResponse> => {
     const newBypassState = !bypassTutorialSignal.value;
     setBypassTutorial(newBypassState);

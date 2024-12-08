@@ -1,8 +1,19 @@
 import { vi } from 'vitest';
 
+// Define an interface for the mock canvas context methods
+interface MockCanvasContext {
+  fillRect: ReturnType<typeof vi.fn>;
+  clearRect: ReturnType<typeof vi.fn>;
+  drawImage: ReturnType<typeof vi.fn>;
+  beginPath: ReturnType<typeof vi.fn>;
+  closePath: ReturnType<typeof vi.fn>;
+  stroke: ReturnType<typeof vi.fn>;
+  fill: ReturnType<typeof vi.fn>;
+}
+
 // Create a reusable canvas context mock
-export const createMockCanvasContext = () => {
-  const mockContext = {
+export const createMockCanvasContext = (): MockCanvasContext => {
+  const mockContext: MockCanvasContext = {
     fillRect: vi.fn(),
     clearRect: vi.fn(),
     drawImage: vi.fn(),
@@ -10,7 +21,6 @@ export const createMockCanvasContext = () => {
     closePath: vi.fn(),
     stroke: vi.fn(),
     fill: vi.fn(),
-    // Add more methods as needed for comprehensive mocking
   };
 
   return mockContext;
@@ -39,7 +49,8 @@ export const setupCanvasMock = () => {
         });
       } else {
         // If no original method existed, remove the property
-        delete (HTMLCanvasElement.prototype as any).getContext;
+        const canvasProto = HTMLCanvasElement.prototype as { getContext?: unknown };
+        delete canvasProto.getContext;
       }
     }
   };

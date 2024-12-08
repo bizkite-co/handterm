@@ -1,6 +1,4 @@
-// App.tsx
-import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { QueryProvider } from './providers/QueryProvider';
+import React, { useEffect, useRef, useCallback } from 'react';
 import { ActivityType, OutputElement } from './types/Types';
 import { HandTermWrapper, IHandTermWrapperMethods } from './components/HandTermWrapper';
 import { TerminalCssClasses } from './types/TerminalTypes';
@@ -15,16 +13,16 @@ import { useComputed } from '@preact/signals-react';
 
 export default function App() {
   const containerRef = React.createRef<HTMLDivElement>();
-  const [containerWidth, setContainerWidth] = React.useState<number>(0);
+  const [_containerWidth, setContainerWidth] = React.useState<number>(0);
 
   const auth = useAuth();
   const handexTermWrapperRef = useRef<IHandTermWrapperMethods>(null);
   const { parseLocation } = useReactiveLocation();
   const isBypassActive = useComputed(() => bypassTutorialSignal.value);
 
-  const getContainerWidth = () => {
+  const getContainerWidth = useCallback(() => {
     return containerRef.current?.clientWidth ?? 0
-  }
+  }, [containerRef]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -34,21 +32,11 @@ export default function App() {
 
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  }, [getContainerWidth]);
 
-  const handleOutputUpdate = useCallback((newOutput: OutputElement) => {
-    // setOutputElements((prevOutputs: OutputElement[]) => [...prevOutputs, newOutput]);
-  }, []);
-
-  const handleTouchStart = useCallback(() => {
-    // Implement your touch start logic here
-    console.log("handling touch start");
-  }, []);
-
-  const handleTouchEnd = useCallback(() => {
-    // Implement your touch end logic here
-    console.log("Handling touch end");
-  }, []);
+  const handleOutputUpdate = (_newOutput: OutputElement) => {
+    // Placeholder for future implementation
+  };
 
   useEffect(() => {
     const w = getContainerWidth();
@@ -80,7 +68,7 @@ export default function App() {
       document.body.removeEventListener('click', handleClickOutsideTerminal);
       document.body.removeEventListener('touchstart', handleClickOutsideTerminal);
     };
-  }, []);
+  }, [getContainerWidth, handexTermWrapperRef]);
 
   return (
     <ActivityMediatorProvider>
@@ -101,7 +89,7 @@ export default function App() {
             <HandTermWrapper
               ref={handexTermWrapperRef}
               auth={auth}
-              terminalWidth={containerWidth}
+              terminalWidth={_containerWidth}
               onOutputUpdate={handleOutputUpdate}
             />
           </CommandProvider>

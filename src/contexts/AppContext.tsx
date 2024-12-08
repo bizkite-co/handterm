@@ -1,6 +1,6 @@
 // src/contexts/AppContext.tsx
-import React, { createContext, useContext, useState, useCallback, ReactElement } from 'react';
-import { ActivityType, OutputElement, ParsedCommand } from '../types/Types';
+import React, { createContext, useContext, useState } from 'react';
+import { ActivityType, OutputElement } from '../types/Types';
 import { useActivityMediatorContext } from './ActivityMediatorContext';
 
 interface AppContextType {

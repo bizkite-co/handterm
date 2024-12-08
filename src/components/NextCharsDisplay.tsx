@@ -1,7 +1,7 @@
 import { TerminalCssClasses } from "../types/TerminalTypes";
 
-import React, { useState, useEffect, useRef, useImperativeHandle } from 'react';
-import Timer, { TimerHandle } from './Timer'; // Import the React component
+import React, { useState, useRef, useImperativeHandle } from 'react';
+import Timer, { TimerHandle } from './Timer';
 import ErrorDisplay from "./ErrorDisplay";
 import { Phrase } from "../utils/Phrase";
 import { commandLineSignal } from "src/signals/commandLineSignals";
@@ -32,11 +32,11 @@ const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, INextCharsDisp
         cancelTimer
     }));
 
-    const [mismatchedChar, setMismatchedChar] = useState<string | null>(null);
-    const [mismatchedIsVisible, setMismatchedIsVisible] = useState(false);
-    const [nextChars, setNextChars] = useState<string>('');
-    const [phrase, setPhrase] = useState<Phrase>(new Phrase(['']));
-    const [gamePhrase, setGamePhrase] = useState<GamePhrase | null>(null);
+    const [_mismatchedChar, setMismatchedChar] = useState<string | null>(null);
+    const [_mismatchedIsVisible, setMismatchedIsVisible] = useState(false);
+    const [_nextChars, setNextChars] = useState<string>('');
+    const [_phrase, setPhrase] = useState<Phrase>(new Phrase(['']));
+    const [_gamePhrase, setGamePhrase] = useState<GamePhrase | null>(null);
 
     const nextCharsRef = useRef<HTMLPreElement>(null);
     const nextCharsRateRef = useRef<HTMLDivElement>(null);
@@ -45,7 +45,7 @@ const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, INextCharsDisp
     const commandLine = useComputed(() => commandLineSignal.value);
     const { parseLocation } = useReactiveLocation();
 
-    useEffect(() => {
+    React.useEffect(() => {
         if (!parseLocation().activityKey || !parseLocation().contentKey) return;
         const foundPhrase = GamePhrases.default.getGamePhraseByKey(parseLocation().contentKey ?? '');
         if (!foundPhrase) return;
@@ -67,11 +67,11 @@ const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, INextCharsDisp
             return null;
         }
 
-        if (nextIndex > phrase.value.length) {
+        if (nextIndex > _phrase.value.length) {
             return null;
         }
 
-        const nextChordHTML = phrase.chordsHTML[nextIndex] as HTMLElement | undefined;
+        const nextChordHTML = _phrase.chordsHTML[nextIndex] as HTMLElement | undefined;
 
         if (nextChordHTML) {
             nextChordHTML.classList.remove("error");
@@ -82,17 +82,17 @@ const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, INextCharsDisp
             return;
         }
 
-        if (stringBeingTested === phrase.value.join('').trim().substring(0, stringBeingTested.length)) {
+        if (stringBeingTested === _phrase.value.join('').trim().substring(0, stringBeingTested.length)) {
             hideError();
         } else {
             const firstNonMatchingChar = getFirstNonMatchingChar(stringBeingTested);
-            const mismatchedChar = phrase.value[firstNonMatchingChar];
+            const mismatchedChar = _phrase.value[firstNonMatchingChar];
             setMismatchedIsVisible(true);
             setMismatchedChar(mismatchedChar);
             showError(mismatchedChar, firstNonMatchingChar);
         }
 
-        if (stringBeingTested.trim() === phrase.value.join('').trim()) {
+        if (stringBeingTested.trim() === _phrase.value.join('').trim()) {
             stopTimer();
             handleSuccess();
             return;
@@ -105,13 +105,13 @@ const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, INextCharsDisp
 
     const getNextCharacters = (stringBeingTested: string): string => {
         const nextIndex = getFirstNonMatchingChar(stringBeingTested);
-        const result = phrase.value.join('').substring(nextIndex);
+        const result = _phrase.value.join('').substring(nextIndex);
         return result;
     };
 
     const getFirstNonMatchingChar = (stringBeingTested: string): number => {
-        if (!phrase.value) return 0;
-        const sourcePhrase = phrase.value;
+        if (!_phrase.value) return 0;
+        const sourcePhrase = _phrase.value;
         const sourcePhraseString = sourcePhrase.join('');
         if (stringBeingTested === sourcePhraseString) return sourcePhraseString.length;
         if (!stringBeingTested || stringBeingTested.length === 0) {
@@ -143,8 +143,8 @@ const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, INextCharsDisp
         setMismatchedChar('');
         setMismatchedIsVisible(false);
         setNextChars('');
-        if (gamePhrase && gamePhrase.key) setCompletedGamePhrase(gamePhrase.key)
-        onPhraseSuccess(gamePhrase);
+        if (_gamePhrase && _gamePhrase.key) setCompletedGamePhrase(_gamePhrase.key)
+        onPhraseSuccess(_gamePhrase);
     };
 
     const stopTimer = () => {
@@ -169,7 +169,7 @@ const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, INextCharsDisp
         if (timerRef.current) {
             timerRef.current.reset();
         }
-        if (nextCharsRef.current) nextCharsRef.current.innerText = phrase.value.join('');
+        if (nextCharsRef.current) nextCharsRef.current.innerText = _phrase.value.join('');
     };
 
     return (
@@ -178,17 +178,17 @@ const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, INextCharsDisp
                 id={TerminalCssClasses.NextChars}
                 hidden={!isInPhraseMode}
             >
-                {mismatchedChar && mismatchedIsVisible && (
+                {_mismatchedChar && _mismatchedIsVisible && (
                     <ErrorDisplay
-                        isVisible={mismatchedIsVisible}
-                        mismatchedChar={mismatchedChar ?? ''}
+                        isVisible={_mismatchedIsVisible}
+                        mismatchedChar={_mismatchedChar ?? ''}
                     />
                 )}
                 <Timer ref={timerRef} />
                 <div id={TerminalCssClasses.NextCharsRate} ref={nextCharsRateRef}></div>
                 <span id={TerminalCssClasses.WPM} ref={wpmRef}></span>
                 <pre id={TerminalCssClasses.NextChars} ref={nextCharsRef}>
-                    {nextChars}
+                    {_nextChars}
                 </pre>
             </div>
         )

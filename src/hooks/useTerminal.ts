@@ -1,5 +1,5 @@
 // hooks/useTerminal.ts
-import { useCallback, useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import { useXTerm } from 'react-xtermjs';
 import { FitAddon } from '@xterm/addon-fit';
 import { XtermAdapterConfig } from '../components/XtermAdapterConfig';
@@ -22,7 +22,7 @@ import {
   tempUserNameSignal
 } from 'src/signals/appSignals';
 import { ActivityType } from 'src/types/Types';
-import { IUseCharacterHandlerProps, useCharacterHandler } from './useCharacterHandler';
+import { useCharacterHandler } from './useCharacterHandler';
 import { parseCommand } from 'src/utils/commandUtils';
 
 export const useTerminal = () => {
@@ -30,6 +30,8 @@ export const useTerminal = () => {
   const { handleCommand, commandHistory, commandHistoryIndex, setCommandHistoryIndex } = useCommand();
   const wpmCalculator = useWPMCalculator();
   const commandLine = useComputed(() => commandLineSignal.value);
+
+  const [_commandLineState, _setCommandLineState] = React.useState('');
 
   const fitAddon = useRef(new FitAddon());
   const PROMPT = '> ';
@@ -43,19 +45,25 @@ export const useTerminal = () => {
     if (!instance) return;
     instance.reset();
     setCommandLine('');
+    _setCommandLineState('');
     instance.write(PROMPT);
     instance.scrollToBottom();
   }, [instance]);
 
+  const lastTypedCharacterRef = useRef<string | null>(null);
+  const setLastTypedCharacter = (value: string | null) => {
+    lastTypedCharacterRef.current = value;
+  };
+
   const {
     handleCharacter,
   } = useCharacterHandler({
-    setCommandLine,
-    setLastTypedCharacter: () => {}, // Implement if needed
+    _setCommandLine: _setCommandLineState,
+    setLastTypedCharacter,
     isInSvgMode: false, // Set appropriately
     isInLoginProcess: isInLoginProcessSignal.value,
     writeOutputInternal: writeToTerminal,
-  } as IUseCharacterHandlerProps);
+  });
 
   const getCurrentCommand = useCallback(() => {
     if (!instance) return '';
@@ -89,6 +97,7 @@ export const useTerminal = () => {
         const currentCommand = getCurrentCommand();
         if (currentCommand) {
           setCommandLine(currentCommand);
+          _setCommandLineState(currentCommand);
         }
       }
       newIndex = newIndex === -1 ? commandHistory.length - 1 : Math.max(0, newIndex - 1);
@@ -101,6 +110,7 @@ export const useTerminal = () => {
         if (savedCommand) {
           instance.write(savedCommand);
           setCommandLine(savedCommand);
+          _setCommandLineState(savedCommand);
         }
         setCommandHistoryIndex(newIndex);
         return;
@@ -111,6 +121,7 @@ export const useTerminal = () => {
     const historicalCommand = commandHistory[newIndex] || '';
     instance.write(historicalCommand);
     setCommandLine(historicalCommand);
+    _setCommandLineState(historicalCommand);
     setCommandHistoryIndex(newIndex);
   }, [
     instance,
@@ -119,7 +130,8 @@ export const useTerminal = () => {
     getCurrentCommand,
     clearCurrentLine,
     setCommandHistoryIndex,
-    commandLine
+    commandLine,
+    _setCommandLineState
   ]);
 
   useEffect(() => {
@@ -136,6 +148,7 @@ export const useTerminal = () => {
       switch (data) {
         case '\x03': // Ctrl+C
           setCommandLine('');
+          _setCommandLineState('');
           setActivity(ActivityType.NORMAL);
           instance?.write('^C');
           resetPrompt();
@@ -196,6 +209,7 @@ export const useTerminal = () => {
         const parsedCommand = parseCommand(currentCommand === '' ? '\r' : currentCommand);
         instance?.write('\r\n');
         setCommandLine('');
+        _setCommandLineState('');
         handleCommand(parsedCommand);
         wpmCalculator.clearKeystrokes();
       }
@@ -211,7 +225,9 @@ export const useTerminal = () => {
         }
       } else if (cursorX > promptLength) {
         instance?.write('\b \b');
-        setCommandLine(commandLine.value.slice(0, -1));
+        const newCommandLine = _commandLineState.slice(0, -1);
+        setCommandLine(newCommandLine);
+        _setCommandLineState(newCommandLine);
       }
     };
 
@@ -228,9 +244,10 @@ export const useTerminal = () => {
         tempPasswordSignal.value += data;
         handleCharacter(data); // This will handle masking
       } else {
-        const newCommandLine = commandLine.value + data;
+        const newCommandLine = _commandLineState + data;
         instance.write(data);
         setCommandLine(newCommandLine);
+        _setCommandLineState(newCommandLine);
         addKeystroke(data);
       }
     };
@@ -255,7 +272,10 @@ export const useTerminal = () => {
     commandLine,
     navigateHistory,
     promptLength,
-    handleCharacter
+    handleCharacter,
+    _commandLineState,
+    handleCommand,
+    setCommandHistoryIndex
   ]);
 
   return {

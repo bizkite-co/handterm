@@ -25,27 +25,14 @@ class Logger {
     };
   }
 
-  private log(level: LogLevel, message: string, ...args: any[]): void {
+  private log<T extends unknown[]>(level: LogLevel, message: string, ...args: T): void {
     if (this.config.level !== undefined && level < this.config.level) return;
 
     const timestamp = new Date().toISOString();
     const formattedMessage = `[${timestamp}] [${this.config.prefix}] [${LogLevel[level]}] ${message}`;
 
     if (this.config.logToConsole) {
-      switch (level) {
-        case LogLevel.DEBUG:
-          console.log(formattedMessage, ...args);
-          break;
-        case LogLevel.INFO:
-          console.info(formattedMessage, ...args);
-          break;
-        case LogLevel.WARN:
-          console.warn(formattedMessage, ...args);
-          break;
-        case LogLevel.ERROR:
-          console.error(formattedMessage, ...args);
-          break;
-      }
+      this.safeConsoleLog(level, formattedMessage, ...args);
     }
 
     if (this.config.logToFile) {
@@ -53,24 +40,44 @@ class Logger {
     }
   }
 
-  private writeToLogFile(message: string, ...args: any[]): void {
-    // Implement file logging logic if needed
-    // This could write to a log file in the application's data directory
+  private safeConsoleLog<T extends unknown[]>(level: LogLevel, formattedMessage: string, ...args: T): void {
+    if (typeof window !== 'undefined' && window.console) {
+      switch (level) {
+        case LogLevel.DEBUG:
+          window.console.log(formattedMessage, ...args);
+          break;
+        case LogLevel.INFO:
+          window.console.info(formattedMessage, ...args);
+          break;
+        case LogLevel.WARN:
+          window.console.warn(formattedMessage, ...args);
+          break;
+        case LogLevel.ERROR:
+          window.console.error(formattedMessage, ...args);
+          break;
+      }
+    }
   }
 
-  public debug(message: string, ...args: any[]): void {
+  private writeToLogFile<T extends unknown[]>(message: string, ...args: T): void {
+    // Implement file logging logic if needed
+    // This could write to a log file in the application's data directory
+    // Placeholder for future implementation
+  }
+
+  public debug(message: string, ...args: unknown[]): void {
     this.log(LogLevel.DEBUG, message, ...args);
   }
 
-  public info(message: string, ...args: any[]): void {
+  public info(message: string, ...args: unknown[]): void {
     this.log(LogLevel.INFO, message, ...args);
   }
 
-  public warn(message: string, ...args: any[]): void {
+  public warn(message: string, ...args: unknown[]): void {
     this.log(LogLevel.WARN, message, ...args);
   }
 
-  public error(message: string, ...args: any[]): void {
+  public error(message: string, ...args: unknown[]): void {
     this.log(LogLevel.ERROR, message, ...args);
   }
 }

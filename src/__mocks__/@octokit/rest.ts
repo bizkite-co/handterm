@@ -1,5 +1,5 @@
 export class Octokit {
-  constructor(options?: { auth?: string }) {
+  constructor(_options?: { auth?: string }) {
     return {
       rest: {
         repos: {
