@@ -1,12 +1,17 @@
 // useBaseCharacter.tsx
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { Sprite } from './sprites/Sprite';
 import { SpriteAnimation } from './types/SpriteTypes';
 import { Action, ActionType } from './types/ActionTypes';
 import { SpriteManager } from './sprites/SpriteManager';
 import { SpritePosition } from './types/Position';
-import { setPromptInfo } from 'src/signals/commandLineSignals';
+import { createLogger, LogLevel } from 'src/utils/Logger';
+
+const logger = createLogger({
+  prefix: 'BaseCharacter',
+  level: LogLevel.ERROR
+});
 
 interface BaseCharacterProps {
   currentActionType: ActionType;
@@ -18,37 +23,39 @@ interface BaseCharacterProps {
 
 export const useBaseCharacter = (props: BaseCharacterProps) => {
   const [, setSprite] = useState<Sprite | null>(null);
-  const spriteManager = new SpriteManager();
+
+  // Memoize spriteManager to prevent recreation on each render
+  const spriteManager = useMemo(() => new SpriteManager(), []);
+
   const previousActionTypeRef = useRef<ActionType>(props.currentActionType);
   const frameIndexRef = useRef<number>(0);
   const spritesRef = useRef<Record<ActionType, Sprite | undefined>>({} as Record<ActionType, Sprite | undefined>);
 
-  const loadSprite = async (actionKey: ActionType, animationData: SpriteAnimation) => {
+  // Destructure props to use in useCallback dependencies
+  const { currentActionType, actions, name } = props;
+
+  const loadSprite = useCallback(async (actionKey: ActionType, animationData: SpriteAnimation) => {
     const loadedSprite = await spriteManager.loadSprite(animationData);
     if (loadedSprite) {
       // Update the sprites ref with the new loaded sprite
       spritesRef.current[actionKey] = loadedSprite;
       // If the actionKey is still the current action, update the sprite state
-      if (actionKey === props.currentActionType) {
+      if (actionKey === currentActionType) {
         setSprite(loadedSprite);
       }
     }
-  };
+  }, [currentActionType, spriteManager]);
 
   const draw = (
     context: CanvasRenderingContext2D,
     positionRef: React.RefObject<SpritePosition>,
     scale: number | null
   ): number => {
-    const sprite = spritesRef.current[props.currentActionType];
-    const action = props.actions[props.currentActionType];
+    const sprite = spritesRef.current[currentActionType];
+    const action = actions[currentActionType];
     const newX = (positionRef?.current?.leftX ?? 0) + action.dx;
 
     incrementFrameIndex();
-    if (false && props.name.toLowerCase() === 'zombie4') {
-      setPromptInfo(` name: ${props.name}, posX:${newX}`)
-      console.log(`${props.name.toLowerCase()} draw: positionRef=${JSON.stringify(positionRef)}, newX=${newX}, action.dx=${action.dx}`);
-    }
 
     if (sprite) {
       sprite.draw(
@@ -62,11 +69,11 @@ export const useBaseCharacter = (props: BaseCharacterProps) => {
     return action.dx;
   }
 
-  const loadActions = () => {
-    Object.entries(props.actions).forEach(([actionKey, actionData]) => {
+  const loadActions = useCallback(() => {
+    Object.entries(actions).forEach(([actionKey, actionData]) => {
       loadSprite(actionKey as ActionType, actionData.animation);
     });
-  };
+  }, [actions, loadSprite]);
 
   useEffect(() => {
     loadActions();
@@ -74,50 +81,12 @@ export const useBaseCharacter = (props: BaseCharacterProps) => {
     // Did-mount and will-unmount only
     // TODO: Clean up animation frame, etc.
     return () => {
-
+      // Cleanup logic can be added here if needed
     };
-  }, []);
+  }, [loadActions]);
 
-  useEffect(() => {
-    // Update the sprite for the current action type
-    const currentSprite = spritesRef.current[props.currentActionType];
-    if (currentSprite) {
-      // If the sprite is already loaded, use it
-      setSprite(currentSprite);
-    } else {
-      // If the sprite is not loaded, load it and update the ref
-      loadSprite(props.currentActionType, props.actions[props.currentActionType].animation);
-    }
-  }, [props.currentActionType, props.actions]);
-
-  useEffect(() => {
-    // Set the current action type
-    if (props.name.toLocaleLowerCase() === 'hero')
-      setCurrentActionType(props.currentActionType);
-
-    // Specify how to clean up after this effect
-    return () => {
-    };
-  }, [props.currentActionType]);
-
-  useEffect(() => {
-    const sprite = spritesRef.current[props.currentActionType];
-    if (sprite && sprite.frameCount) {
-      if (props.currentActionType !== previousActionTypeRef.current) {
-        frameIndexRef.current = 0;
-      } else {
-        incrementFrameIndex();
-      }
-    }
-
-    // Remember the previous action type for the next call
-    previousActionTypeRef.current = props.currentActionType;
-
-    // This effect should run every time the action type changes or the sprite animation needs to be updated
-  }, [props.currentActionType, props.actions]);
-
-  const setCurrentActionType = (newActionType: ActionType) => {
-    if (props.currentActionType === newActionType) return
+  const setCurrentActionType = useCallback((newActionType: ActionType) => {
+    if (currentActionType === newActionType) return;
     // Update the current action
     props.currentActionType = newActionType;
     frameIndexRef.current = 0;
@@ -126,18 +95,56 @@ export const useBaseCharacter = (props: BaseCharacterProps) => {
     if (sprite) {
       setSprite(sprite);
     } else {
-      console.error(`Sprite not found for action type: ${newActionType}`);
+      logger.error(`Sprite not found for action type: ${newActionType}`);
     }
-  }
+  }, [currentActionType, props]);
 
-  const incrementFrameIndex = () => {
-    const sprite = spritesRef.current[props.currentActionType];
+  const incrementFrameIndex = useCallback(() => {
+    const sprite = spritesRef.current[currentActionType];
     if (sprite) {
       const nextFrameIndex = (frameIndexRef.current + 1) % sprite.frameCount;
       frameIndexRef.current = nextFrameIndex; // Update the ref's current value
     }
-  };
+  }, [currentActionType]);
 
+  useEffect(() => {
+    // Update the sprite for the current action type
+    const currentSprite = spritesRef.current[currentActionType];
+    if (currentSprite) {
+      // If the sprite is already loaded, use it
+      setSprite(currentSprite);
+    } else {
+      // If the sprite is not loaded, load it and update the ref
+      loadSprite(currentActionType, actions[currentActionType].animation);
+    }
+  }, [currentActionType, actions, loadSprite]);
+
+  useEffect(() => {
+    // Set the current action type
+    if (name.toLocaleLowerCase() === 'hero')
+      setCurrentActionType(currentActionType);
+
+    // Specify how to clean up after this effect
+    return () => {
+      // Cleanup logic can be added here if needed
+    };
+  }, [currentActionType, name, setCurrentActionType]);
+
+  useEffect(() => {
+    const sprite = spritesRef.current[currentActionType];
+    if (sprite && sprite.frameCount) {
+      if (currentActionType !== previousActionTypeRef.current) {
+        frameIndexRef.current = 0;
+      } else {
+        incrementFrameIndex();
+      }
+    }
+
+    // Remember the previous action type for the next call
+    previousActionTypeRef.current = currentActionType;
+
+    // This effect should run every time the action type changes or the sprite animation needs to be updated
+  }, [currentActionType, actions, incrementFrameIndex]);
 
   return {
     draw

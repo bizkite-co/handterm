@@ -16,6 +16,12 @@ import {
 import { activitySignal, setNotification, bypassTutorialSignal } from 'src/signals/appSignals'
 import { useComputed } from '@preact/signals-react';
 import { useReactiveLocation } from './useReactiveLocation';
+import { createLogger, LogLevel } from 'src/utils/Logger';
+
+const _logger = createLogger({
+  prefix: 'ActivityMediator',
+  level: LogLevel.DEBUG
+});
 
 export type IActivityMediatorReturn = {
   isInGameMode: boolean;
@@ -43,13 +49,9 @@ export function useActivityMediator(): IActivityMediatorReturn {
   const [, setActivityGroupKey] = useState<string>('');
   const bypassTutorial = useComputed(() => bypassTutorialSignal.value);
 
-  useEffect(() => {
-    const _activityGroup = parseLocation().groupKey || '';
-    if (_activityGroup) setActivityGroupKey(_activityGroup);
-  }, [window.location.pathname])
-
   const decideActivityChange = useCallback((commandActivity: ActivityType | null = null): ActivityType => {
-    if (bypassTutorial.value) {
+    const bypassTutorialValue = bypassTutorial.value;
+    if (bypassTutorialValue) {
       return ActivityType.NORMAL;
     }
     if (tutorialSignal.value && !tutorialSignal.value?.tutorialGroup && activity !== ActivityType.GAME) {
@@ -62,55 +64,63 @@ export function useActivityMediator(): IActivityMediatorReturn {
     if (getNextTutorial()) commandActivity = ActivityType.TUTORIAL;
 
     return commandActivity ?? ActivityType.NORMAL;
-  }, [activity, tutorialSignal, bypassTutorial]);
+  }, [activity, bypassTutorial]);
 
-  const handleCommandExecuted = useCallback((parsedCommand: ParsedCommand): boolean => {
-    let result = false;
-    if (parseLocation().activityKey === ActivityType.TUTORIAL) {
-      checkTutorialProgress(parsedCommand.command);
-    }
-    else if (parseLocation().activityKey === ActivityType.GAME && parseLocation().contentKey) {
-      const gamePhrase = GamePhrases.getGamePhraseByKey(parseLocation().contentKey || '')
-      if (gamePhrase) checkGameProgress(gamePhrase);
-    }
-    switch (parsedCommand.command) {
-      case 'play':
-        decideActivityChange(ActivityType.GAME);
+  const checkGameProgress = useCallback((successPhrase: GamePhrase) => {
+    const groupKey = parseLocation().groupKey ?? '';
+    setCompletedGamePhrase(successPhrase.key);
+    if (groupKey) {
+      const nextPhraseInGroup = getIncompletePhrasesByTutorialGroup(groupKey)[0];
+      if (nextPhraseInGroup) {
+        setGamePhrase(getNextGamePhrase());
+        activitySignal.value = ActivityType.GAME;
         updateLocation({
           activityKey: ActivityType.GAME,
-          contentKey: getNextGamePhrase()?.key
+          contentKey: nextPhraseInGroup.key,
+          groupKey: nextPhraseInGroup.tutorialGroup
         })
-        result = true;
-        break;
-      case 'tut':
-        if ('r' in parsedCommand.switches) {
-          resetCompletedTutorials();
-        }
-        decideActivityChange(ActivityType.TUTORIAL);
-        const nextTutorial = getNextTutorial();
-
+        return;
+      }
+      const incompleteTutorialInGroup = getIncompleteTutorialsInGroup(groupKey);
+      incompleteTutorialInGroup.forEach(itig => {
+        setCompletedTutorial(itig.phrase);
+      });
+      const nextTutorial = getNextTutorial();
+      if (nextTutorial) {
+        const resultActivity = decideActivityChange(ActivityType.TUTORIAL);
+        //TODO: The properties have to have a way to be zeroed out.
         updateLocation({
-          activityKey: ActivityType.TUTORIAL,
-          contentKey: nextTutorial?.phrase,
-          groupKey: nextTutorial?.tutorialGroup
+          activityKey: resultActivity,
+          contentKey: nextTutorial.phrase ?? '',
+          groupKey: nextTutorial.tutorialGroup ?? ''
         })
-        result = true;
-        break;
-      default:
-        result = false;
+        return;
+      }
     }
 
-    return result;
-  }, [decideActivityChange, window.location.pathname]);
-
-  useEffect(() => {
-    const resultActivity = decideActivityChange(null);
-    if (resultActivity === ActivityType.TUTORIAL) {
-      checkTutorialProgress(null);
+    const nextGamePhrase = getNextGamePhrase();
+    if (nextGamePhrase) {
+      setGamePhrase(nextGamePhrase);
+      updateLocation({
+        activityKey: ActivityType.GAME,
+        contentKey: nextGamePhrase.key,
+        groupKey: nextGamePhrase.tutorialGroup
+      })
+      activitySignal.value = ActivityType.GAME;
+      isInGameModeSignal.value = true;
+      return;
     }
-  }, []);
+    activitySignal.value = ActivityType.NORMAL;
 
-  const checkTutorialProgress = (
+    updateLocation({ activityKey: ActivityType.NORMAL })
+  }, [
+    parseLocation,
+    decideActivityChange,
+    updateLocation,
+    getIncompleteTutorialsInGroup
+  ]);
+
+  const checkTutorialProgress = useCallback((
     command: string | null,
   ) => {
     const currentTutorial = getNextTutorial();
@@ -162,56 +172,75 @@ export function useActivityMediator(): IActivityMediatorReturn {
       groupKey: groupKey
     })
     return;
-  };
+  }, [
+    parseLocation,
+    decideActivityChange,
+    updateLocation,
+    canUnlockTutorial
+  ]);
 
-  const checkGameProgress = (successPhrase: GamePhrase) => {
-    const groupKey = parseLocation().groupKey ?? '';
-    setCompletedGamePhrase(successPhrase.key);
-    if (groupKey) {
-      const nextPhraseInGroup = getIncompletePhrasesByTutorialGroup(groupKey)[0];
-      if (nextPhraseInGroup) {
-        setGamePhrase(getNextGamePhrase());
-        activitySignal.value = ActivityType.GAME;
+  const handleCommandExecuted = useCallback((parsedCommand: ParsedCommand): boolean => {
+    let result = false;
+    const currentLocation = parseLocation();
+    if (currentLocation.activityKey === ActivityType.TUTORIAL) {
+      checkTutorialProgress(parsedCommand.command);
+    }
+    else if (currentLocation.activityKey === ActivityType.GAME && currentLocation.contentKey) {
+      const gamePhrase = GamePhrases.getGamePhraseByKey(currentLocation.contentKey || '')
+      if (gamePhrase) checkGameProgress(gamePhrase);
+    }
+
+    const _locationPathname = window.location.pathname;
+
+    switch (parsedCommand.command) {
+      case 'play': {
+        decideActivityChange(ActivityType.GAME);
         updateLocation({
           activityKey: ActivityType.GAME,
-          contentKey: nextPhraseInGroup.key,
-          groupKey: nextPhraseInGroup.tutorialGroup
+          contentKey: getNextGamePhrase()?.key
         })
-        return;
+        result = true;
+        break;
       }
-      const incompleteTutorialInGroup = getIncompleteTutorialsInGroup(groupKey);
-      incompleteTutorialInGroup.forEach(itig => {
-        setCompletedTutorial(itig.phrase);
-      });
-      const nextTutorial = getNextTutorial();
-      if (nextTutorial) {
-        const resultActivity = decideActivityChange(ActivityType.TUTORIAL);
-        //TODO: The properties have to have a way to be zeroed out.
+      case 'tut': {
+        if ('r' in parsedCommand.switches) {
+          resetCompletedTutorials();
+        }
+        decideActivityChange(ActivityType.TUTORIAL);
+        const nextTutorial = getNextTutorial();
+
         updateLocation({
-          activityKey: resultActivity,
-          contentKey: nextTutorial.phrase ?? '',
-          groupKey: nextTutorial.tutorialGroup ?? ''
+          activityKey: ActivityType.TUTORIAL,
+          contentKey: nextTutorial?.phrase,
+          groupKey: nextTutorial?.tutorialGroup
         })
-        return;
+        result = true;
+        break;
       }
+      default:
+        result = false;
     }
 
-    const nextGamePhrase = getNextGamePhrase();
-    if (nextGamePhrase) {
-      setGamePhrase(nextGamePhrase);
-      updateLocation({
-        activityKey: ActivityType.GAME,
-        contentKey: nextGamePhrase.key,
-        groupKey: nextGamePhrase.tutorialGroup
-      })
-      activitySignal.value = ActivityType.GAME;
-      isInGameModeSignal.value = true;
-      return;
-    }
-    activitySignal.value = ActivityType.NORMAL;
+    return result;
+  }, [
+    parseLocation,
+    decideActivityChange,
+    updateLocation,
+    checkTutorialProgress,
+    checkGameProgress
+  ]);
 
-    updateLocation({ activityKey: ActivityType.NORMAL })
-  };
+  useEffect(() => {
+    const _activityGroup = parseLocation().groupKey || '';
+    if (_activityGroup) setActivityGroupKey(_activityGroup);
+  }, [parseLocation]);
+
+  useEffect(() => {
+    const resultActivity = decideActivityChange(null);
+    if (resultActivity === ActivityType.TUTORIAL) {
+      checkTutorialProgress(null);
+    }
+  }, [decideActivityChange, checkTutorialProgress]);
 
   return {
     isInGameMode: activity === ActivityType.GAME,

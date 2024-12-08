@@ -1,7 +1,7 @@
 import { useBaseCharacter } from './useBaseCharacter';
 import { Zombie4Actions } from './types/ActionTypes';
 import { ICharacterProps } from './ICharacterProps';
-import { forwardRef, useEffect, useImperativeHandle } from 'react';
+import { forwardRef, useImperativeHandle } from 'react';
 
 // * Idle - 5 frames
 // * Walk - 13 frames
@@ -12,7 +12,6 @@ import { forwardRef, useEffect, useImperativeHandle } from 'react';
 // There are 6 animations. All frames are on a 62x62 "canvas."
 
 export const Zombie4 = forwardRef((props: ICharacterProps, ref) => {
-
   const { draw } = useBaseCharacter({
     actions: Zombie4Actions,
     currentActionType: props.currentActionType,
@@ -20,7 +19,6 @@ export const Zombie4 = forwardRef((props: ICharacterProps, ref) => {
     scale: props.scale,
     positionRef: props.positionRef
   });
-
 
   useImperativeHandle(ref, () => ({
     draw: (context: CanvasRenderingContext2D) => {

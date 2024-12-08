@@ -1,5 +1,11 @@
 import { Sprite } from './Sprite';
 import { SpriteAnimation } from '../types/SpriteTypes';
+import { createLogger, LogLevel } from 'src/utils/Logger';
+
+const logger = createLogger({
+  prefix: 'SpriteManager',
+  level: LogLevel.ERROR
+});
 
 export class SpriteManager {
     private spriteCache = new Map<string, Sprite>();
@@ -32,7 +38,7 @@ export class SpriteManager {
                 // Cleanup: Remove both event listeners
                 image.removeEventListener('load', onLoad);
                 image.removeEventListener('error', onError);
-                console.error('Image failed to load: ' + image.src);
+                logger.error('Image failed to load: ' + image.src);
                 reject(new Error(`Image failed to load: ${image.src}`)); // Reject the promise on error
             };
 
@@ -42,5 +48,3 @@ export class SpriteManager {
         });
     }
 }
-
-

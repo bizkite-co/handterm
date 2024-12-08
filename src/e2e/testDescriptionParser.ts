@@ -33,7 +33,7 @@ class E2ETestRunner {
     this.steps.push({
       type,
       description,
-      action: action || (async () => {})
+      action: action || (async () => { })
     });
     return this;
   }
