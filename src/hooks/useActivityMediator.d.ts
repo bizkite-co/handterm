@@ -1,7 +1,9 @@
 import { ActionType } from '../game/types/ActionTypes';
-import { ActivityType, ParsedCommand, GamePhrase } from '../types/Types';
+import { ParsedCommand } from '../types/Types';
 
-export interface IActivityMediatorReturn {
+export declare const _ActivityType: null;
+
+export type IActivityMediatorReturn = {
   isInGameMode: boolean;
   isInTutorial: boolean;
   isInEdit: boolean;
@@ -9,15 +11,8 @@ export interface IActivityMediatorReturn {
   heroAction: ActionType;
   zombie4Action: ActionType;
   handleCommandExecuted: (parsedCommand: ParsedCommand) => boolean;
-  setHeroAction: React.Dispatch<React.SetStateAction<ActionType>>;
+  setHeroAction: React.Dispatch<React.SetStateAction<ActionType>>,
   setZombie4Action: React.Dispatch<React.SetStateAction<ActionType>>;
   checkTutorialProgress: (command: string | null) => void;
-  checkGameProgress: (successPhrase: GamePhrase) => void;
-}
-
-export function useActivityMediator(): IActivityMediatorReturn;
-
-// Explicitly declare the module to help TypeScript resolution
-declare module 'src/hooks/useActivityMediator' {
-  export { useActivityMediator, IActivityMediatorReturn };
+  checkGameProgress: (successPhrase: { key: string; value: string; tutorialGroup?: string }) => void;
 }

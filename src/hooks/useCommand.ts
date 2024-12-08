@@ -1,7 +1,7 @@
 // src/hooks/useCommand.ts
 import React, { useContext, useState, useCallback, useEffect } from 'react';
 import { CommandContext, ICommandResponse } from '../contexts/CommandContext';
-import { parseCommand, parsedCommandToString, loadCommandHistory, saveCommandHistory } from '../utils/commandUtils';
+import { parsedCommandToString, loadCommandHistory, saveCommandHistory } from '../utils/commandUtils';
 import { LogKeys } from '../types/TerminalTypes';
 import { commandRegistry } from '../commands/commandRegistry';
 import { ActivityType, OutputElement, ParsedCommand } from '../types/Types';

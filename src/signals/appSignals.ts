@@ -2,6 +2,12 @@
 import { computed, signal } from '@preact/signals-react';
 import { ActivityType, OutputElement } from 'src/types/Types';
 import { createPersistentSignal } from 'src/utils/signalPersistence';
+import { createLogger, LogLevel } from 'src/utils/Logger';
+
+const logger = createLogger({
+  prefix: 'AppSignals',
+  level: LogLevel.DEBUG
+});
 
 const currentOutputKey = 'current-output';
 export const activitySignal = signal<ActivityType>(ActivityType.NORMAL);
@@ -22,8 +28,8 @@ export const setTempEmail = (value: string) => {
 }
 
 export const toggleVideo = () => {
-  isShowVideoSignal.value = !isShowVideoSignal.value;
-  return isShowVideoSignal.value;
+    isShowVideoSignal.value = !isShowVideoSignal.value;
+    return isShowVideoSignal.value;
 }
 
 export const setIsInLoginProcess = (value: boolean) => {
@@ -66,7 +72,7 @@ export const isInTutorialModeSignal = computed(() => activitySignal.value === Ac
 
 export const setActivity = (activity: ActivityType) => {
     activitySignal.value = activity;
-    console.log(ActivityType[activitySignal.value]);
+    logger.debug(ActivityType[activitySignal.value]);
 };
 
 export const appendToOutput = (element: OutputElement) => {
@@ -94,9 +100,9 @@ export const isLoggedInSignal = signal<boolean>(false);
 export const userNameSignal = signal<string | null>(null);
 
 export const setIsLoggedIn = (value: boolean) => {
-  isLoggedInSignal.value = value;
+    isLoggedInSignal.value = value;
 };
 
 export const setUserName = (name: string | null) => {
-  userNameSignal.value = name;
+    userNameSignal.value = name;
 };

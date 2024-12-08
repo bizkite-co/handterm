@@ -1,7 +1,7 @@
 // src/hooks/useAuth.ts
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
-import { useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
 import ENDPOINTS from 'src/shared/endpoints.json';
 import { MyResponse } from '../types/Types';
 import {
@@ -10,6 +10,12 @@ import {
   setIsInLoginProcess,
   isLoggedInSignal
 } from '../signals/appSignals';
+import { createLogger, LogLevel } from 'src/utils/Logger';
+
+const logger = createLogger({
+  prefix: 'Auth',
+  level: LogLevel.ERROR
+});
 
 const API_URL = ENDPOINTS.api.BaseUrl;
 
@@ -47,8 +53,38 @@ export interface IAuthProps {
 export function useAuth(): IAuthProps {
   const queryClient = useQueryClient();
 
+  // Token refresh mutation
+  const refreshMutation = useMutation({
+    mutationFn: async (): Promise<MyResponse<AuthResponse>> => {
+      const refreshToken = localStorage.getItem('RefreshToken');
+      if (!refreshToken) throw new Error('No refresh token');
+
+      const response = await axios.post(
+        `${API_URL}${ENDPOINTS.api.RefreshToken}`,
+        { refreshToken }
+      );
+      return {
+        status: 200,
+        data: response.data,
+        message: 'Token refreshed',
+        error: []
+      };
+    },
+    onSuccess: (data) => {
+      if (data.data) {
+        setExpiresAtLocalStorage(data.data.ExpiresIn);
+        setIsLoggedIn(true);
+        isLoggedInSignal.value = true;
+        localStorage.setItem('AccessToken', data.data.AccessToken);
+        queryClient.invalidateQueries({ queryKey: ['auth', 'session'] });
+      }
+    },
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+  });
+
   // Token validation and refresh function
-  const validateAndRefreshToken = async (): Promise<MyResponse<AuthResponse>> => {
+  const validateAndRefreshToken = useCallback(async (): Promise<MyResponse<AuthResponse>> => {
     try {
       const accessToken = localStorage.getItem('AccessToken');
       const expiresAt = localStorage.getItem('ExpiresAt');
@@ -118,7 +154,7 @@ export function useAuth(): IAuthProps {
         error: []
       };
     } catch (error) {
-      console.error('Token validation failed:', error);
+      logger.error('Token validation failed:', error);
       setIsLoggedIn(false);
       isLoggedInSignal.value = false;
       return {
@@ -127,7 +163,7 @@ export function useAuth(): IAuthProps {
         error: []
       };
     }
-  };
+  }, [refreshMutation]);
 
   // Session management with automatic token validation
   const { data: session, isPending } = useQuery<MyResponse<AuthResponse>>({
@@ -155,7 +191,7 @@ export function useAuth(): IAuthProps {
           error: []
         };
       } catch (error) {
-        console.error('Session validation failed:', error);
+        logger.error('Session validation failed:', error);
         localStorage.removeItem('AccessToken');
         localStorage.removeItem('RefreshToken');
         localStorage.removeItem('ExpiresAt');
@@ -176,36 +212,6 @@ export function useAuth(): IAuthProps {
     enabled: !!localStorage.getItem('AccessToken'),
     retry: false,
     staleTime: 5 * 60 * 1000 // Consider session stale after 5 minutes
-  });
-
-  // Token refresh mutation
-  const refreshMutation = useMutation({
-    mutationFn: async (): Promise<MyResponse<AuthResponse>> => {
-      const refreshToken = localStorage.getItem('RefreshToken');
-      if (!refreshToken) throw new Error('No refresh token');
-
-      const response = await axios.post(
-        `${API_URL}${ENDPOINTS.api.RefreshToken}`,
-        { refreshToken }
-      );
-      return {
-        status: 200,
-        data: response.data,
-        message: 'Token refreshed',
-        error: []
-      };
-    },
-    onSuccess: (data) => {
-      if (data.data) {
-        setExpiresAtLocalStorage(data.data.ExpiresIn);
-        setIsLoggedIn(true);
-        isLoggedInSignal.value = true;
-        localStorage.setItem('AccessToken', data.data.AccessToken);
-        queryClient.invalidateQueries({ queryKey: ['auth', 'session'] });
-      }
-    },
-    retry: 3,
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 
   // Login mutation
@@ -247,7 +253,7 @@ export function useAuth(): IAuthProps {
 
   const setExpiresAtLocalStorage = (expiresIn: string) => {
     const expiresAt = Date.now() + parseInt(expiresIn) * 1000;
-    if(expiresIn) localStorage.setItem('ExpiresIn', expiresIn);
+    if (expiresIn) localStorage.setItem('ExpiresIn', expiresIn);
     if (!Number.isNaN(expiresAt)) {
       localStorage.setItem('ExpiresAt', expiresAt.toString());
     }
@@ -301,7 +307,7 @@ export function useAuth(): IAuthProps {
     return () => {
       window.removeEventListener('storage', () => syncLoginState());
     };
-  }, []);
+  }, [validateAndRefreshToken]);
 
   return {
     isLoggedIn: !!session?.data,

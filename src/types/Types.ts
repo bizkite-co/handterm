@@ -1,6 +1,4 @@
 import { ReactNode } from "react";
-import { commandLineSignal } from "src/signals/commandLineSignals";
-import { parseArgs } from "util";
 
 export const spaceDisplayChar = "&#x2581;";
 export const tabDisplayChar = "&#x2B7E;";
