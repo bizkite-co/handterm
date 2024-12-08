@@ -5,11 +5,28 @@ export const commandTextToHTML = (text: string): string => {
   return text.replace(/\n/g, '<br/>');
 };
 
-export const loadCommandHistory = () => {
-  return JSON.parse(localStorage.getItem(LogKeys.CommandHistory) || '[]') as ParsedCommand[];
+export const loadCommandHistory = (): string[] => {
+  const storedHistory = localStorage.getItem(LogKeys.CommandHistory);
+  if (!storedHistory) return [];
+
+  try {
+    const parsedHistory = JSON.parse(storedHistory);
+    // If it's an array of strings, return it directly
+    if (parsedHistory.every((item: unknown) => typeof item === 'string')) {
+      return parsedHistory;
+    }
+    // If it's an array of ParsedCommand, convert to strings
+    if (parsedHistory.every((item: unknown) => typeof item === 'object' && item !== null && 'command' in item)) {
+      return parsedHistory.map(parsedCommandToString);
+    }
+    // If parsing fails or is invalid, return an empty array
+    return [];
+  } catch {
+    return [];
+  }
 }
 
-export const saveCommandHistory = (commandHistory: ParsedCommand[]) => {
+export const saveCommandHistory = (commandHistory: string[]) => {
   localStorage.setItem(LogKeys.CommandHistory, JSON.stringify(commandHistory));
 }
 

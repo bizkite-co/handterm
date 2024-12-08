@@ -1,29 +1,28 @@
 import { useSignal, useComputed } from '@preact/signals-react';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
-import { useEffect, useCallback, useRef } from 'react';
+import { useEffect, useCallback } from 'react';
 import { ParsedLocation, ActivityType } from 'src/types/Types';
 import { parseLocation } from 'src/utils/navigationUtils';
 
 export function useReactiveLocation() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [searchParams] = useSearchParams();
+  const [_searchParams] = useSearchParams();
 
   const pathSignal = useSignal(location.pathname);
   const searchSignal = useSignal(location.search);
   const isInitialized = useSignal(false);
-  const initialPathRef = useRef(location.pathname);
 
   useEffect(() => {
     if (!isInitialized.value) {
-      pathSignal.value = initialPathRef.current;
+      pathSignal.value = location.pathname;
       searchSignal.value = location.search;
       isInitialized.value = true;
     } else {
       pathSignal.value = location.pathname;
       searchSignal.value = location.search;
     }
-  }, [location]);
+  }, [location, pathSignal, searchSignal, isInitialized]);
 
   const updateLocation = useCallback((options: ParsedLocation) => {
     const currentLocation = parseLocation();
@@ -45,7 +44,7 @@ export function useReactiveLocation() {
 
     pathSignal.value = path
     navigate(path);
-  }, [navigate]);
+  }, [navigate, pathSignal]);
 
   return {
     parseLocation: () => parseLocation(),

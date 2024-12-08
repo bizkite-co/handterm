@@ -1,12 +1,12 @@
-// useResizeCanvasAndFont.ts                             
-import { useState, useCallback, TouchEventHandler } from 'react';
+// useResizeCanvasAndFont.ts
+import { useState, useCallback, TouchEventHandler, useRef } from 'react';
 
 export function useResizeCanvasAndFont() {
     const initialFontSize = parseInt(localStorage.getItem("fontSize") || '17');
     const initialCanvasHeight = parseInt(localStorage.getItem('canvas-height') || '100');
     const [fontSize, setFontSize] = useState(initialFontSize);
     const [canvasHeight, setCanvasHeight] = useState(initialCanvasHeight);
-    let lastTouchDistance: number | null = null;
+    const lastTouchDistanceRef = useRef<number | null>(null);
 
     const handleTouchMove = useCallback((event: TouchEvent) => {
         if (event.touches.length === 2) {
@@ -14,10 +14,10 @@ export function useResizeCanvasAndFont() {
 
             const currentDistance =
                 getDistanceBetweenTouches(event.touches);
-            if (lastTouchDistance && lastTouchDistance > 0) {
+            if (lastTouchDistanceRef.current && lastTouchDistanceRef.current > 0) {
                 const eventTarget = event.target as HTMLElement;
                 const scaleFactor = currentDistance /
-                    lastTouchDistance;
+                    lastTouchDistanceRef.current;
                 if (eventTarget && eventTarget.nodeName ===
                     'CANVAS') {
                     setCanvasHeight(prevCanvasHeight => prevCanvasHeight * scaleFactor);
@@ -26,11 +26,10 @@ export function useResizeCanvasAndFont() {
                         scaleFactor);
                     document.documentElement.style.setProperty('--rminal-font-size', `${fontSize}px`);
                 }
-                lastTouchDistance = currentDistance;
+                lastTouchDistanceRef.current = currentDistance;
             }
         }
     }, [fontSize]);
-
 
     const handleTouchStart: TouchEventHandler<HTMLElement> = (event: React.TouchEvent<HTMLElement>) => {
         setTimeout(() => {
@@ -38,58 +37,28 @@ export function useResizeCanvasAndFont() {
         }, 500)
         if (event.touches.length === 2) {
             // event.preventDefault();
-            lastTouchDistance = getDistanceBetweenTouches(event.touches as unknown as TouchList);
+            lastTouchDistanceRef.current = getDistanceBetweenTouches(event.touches as unknown as TouchList);
         }
     }
 
-    const increaseFontSize = () => {
+    const _increaseFontSize = () => {
         setFontSize(prevFontSize => prevFontSize + 1);
         // this.terminal.options.fontSize = this.currentFontSize;
         // this.terminal.refresh(0, this.terminal.rows - 1);
         localStorage.setItem('terminalFontSize', `${fontSize}`);
-        console.log('INCREASE terminalFontSize', fontSize);
     }
 
     const handleTouchEnd: TouchEventHandler<HTMLDivElement> = () => {
         localStorage.setItem('terminalFontSize', `${fontSize}`);
-        console.log('SET terminalFontSize', fontSize);
-        lastTouchDistance = null;
+        lastTouchDistanceRef.current = null;
     }
 
-    const addTouchListeners = () => {
-        // Assuming 'terminalElementRef' points to the div you want to attach the event
-        // const output = window.document.getElementById(TerminalCssClasses.Output);
-        // if (output) {
-        //   output.addEventListener('touchmove', this.handleTouchMove, { passive: false });
-        // }
-        // const terminal = document.getElementById(TerminalCssClasses.Terminal);
-        // if (terminal) {
-        //   terminal.addEventListener('touchmove', this.handleTouchMove, { passive: false });
-        // }
-        // const game = window.document.getElementById(TerminalCssClasses.TerminalGame);
-        // if (game) {
-        //   // game.addEventListener('touchstart', this.handleTouchStart );
-        //   game.addEventListener('touchmove', this.handleTouchMove, { passive: false });
-        // }
+    const _addTouchListeners = () => {
+        // Commented out touch listener setup
     }
 
-    const removeTouchListeners = () => {
-        // const div = this.terminalElementRef.current;
-        // if (div) {
-        //   div.removeEventListener('touchmove', this.handleTouchMove);
-        // }
-        // const output = window.document.getElementById(TerminalCssClasses.Output);
-        // if (output) {
-        //   output.removeEventListener('touchmove', this.handleTouchMove);
-        // }
-        // const terminal = document.getElementById(TerminalCssClasses.Terminal);
-        // if (terminal) {
-        //   terminal.removeEventListener('touchmove', this.handleTouchMove);
-        // }
-        // const game = window.document.getElementById(TerminalCssClasses.TerminalGame);
-        // if (game) {
-        //   game.removeEventListener('touchmove', this.handleTouchMove);
-        // }
+    const _removeTouchListeners = () => {
+        // Commented out touch listener removal
     }
 
     const getDistanceBetweenTouches = (touches: TouchList): number => {
@@ -101,7 +70,7 @@ export function useResizeCanvasAndFont() {
         );
     }
 
-    // Return the state and handlers                       
+    // Return the state and handlers
     return {
         fontSize,
         canvasHeight,

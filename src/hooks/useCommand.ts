@@ -1,22 +1,21 @@
 // src/hooks/useCommand.ts
-import React, { useContext, useState, useCallback, ReactNode, useEffect } from 'react';
+import React, { useContext, useState, useCallback, useEffect } from 'react';
 import { CommandContext, ICommandResponse } from '../contexts/CommandContext';
 import { parseCommand, parsedCommandToString, loadCommandHistory, saveCommandHistory } from '../utils/commandUtils';
 import { LogKeys } from '../types/TerminalTypes';
 import { commandRegistry } from '../commands/commandRegistry';
-import { ActivityType, OutputElement, ParsedCommand, WPMs } from '../types/Types';
+import { ActivityType, OutputElement, ParsedCommand } from '../types/Types';
 import { useActivityMediator } from './useActivityMediator';
 import { activitySignal, appendToOutput } from 'src/signals/appSignals';
 import { useComputed } from '@preact/signals-react';
 import { useWPMCalculator } from './useWPMCaculator';
 import { setCommandTime } from 'src/signals/commandLineSignals';
-import { useAuth } from 'src/hooks/useAuth';
 
 export const useCommand = () => {
     const [output, setOutput] = useState<React.ReactNode[]>([]);
     const [commandHistory, setCommandHistory] = useState<string[]>([]);
     const [commandHistoryIndex, setCommandHistoryIndex] = useState(-1);
-    const [commandHistoryFilter, setCommandHistoryFilter] = useState<string | null>(null);
+    const [_commandHistoryFilter, _setCommandHistoryFilter] = useState<string | null>(null);
     const currentActivity = useComputed(() => activitySignal.value);
     const {
         handleCommandExecuted,
@@ -41,13 +40,17 @@ export const useCommand = () => {
         setOutput([]);
     }, []);
 
-    const addToCommandHistory = useCallback((command: string) => {
+    const addToCommandHistory = useCallback((command: ParsedCommand | string) => {
+        const commandString = typeof command === 'string'
+            ? command
+            : parsedCommandToString(command);
+
         setCommandHistory(prev => {
             // Don't add if it's identical to the previous command
-            if (prev.length > 0 && prev[prev.length - 1] === command) {
+            if (prev.length > 0 && prev[prev.length - 1] === commandString) {
                 return prev;
             }
-            const newHistory = [...prev, command].slice(-120); // Keep last 120 commands
+            const newHistory = [...prev, commandString].slice(-120); // Keep last 120 commands
             saveCommandHistory(newHistory); // Save to localStorage whenever history changes
             return newHistory;
         });
@@ -74,7 +77,7 @@ export const useCommand = () => {
 
     const createCommandRecord = useCallback((
         command: ParsedCommand,
-        response: ReactNode,
+        response: React.ReactNode,
         status: number,
         commandTime: Date,
         sensitive?: boolean
@@ -89,7 +92,7 @@ export const useCommand = () => {
             commandTime,
             sensitive
         };
-    }, []);
+    }, [wpmCalculator]);
 
     const processCommandOutput = useCallback((
         command: ParsedCommand,
@@ -104,7 +107,7 @@ export const useCommand = () => {
             response.sensitive
         );
         appendToOutput(outputElement);
-        addToCommandHistory(parsedCommandToString(command));
+        addToCommandHistory(command);
     }, [createCommandRecord, appendToOutput, addToCommandHistory]);
 
     const executeCommand = useCallback(async (parsedCommand: ParsedCommand) => {
@@ -151,8 +154,8 @@ export const useCommand = () => {
         handleCommand,
         commandHistoryIndex,
         setCommandHistoryIndex,
-        commandHistoryFilter,
-        setCommandHistoryFilter,
+        commandHistoryFilter: _commandHistoryFilter,
+        setCommandHistoryFilter: _setCommandHistoryFilter,
         appendToOutput,
     };
 };

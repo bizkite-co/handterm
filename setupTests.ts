@@ -1,14 +1,5 @@
-// Import Vitest's expect
-import { expect } from 'vitest';
+import { vi } from 'vitest';
 
-// Import testing-library matchers
-import * as matchers from '@testing-library/jest-dom/matchers';
-
-// Extend Vitest with testing library matchers
-expect.extend(matchers);
-
-// Optional: Add a global console error handler to catch and log errors
-const originalConsoleError = console.error;
-console.error = (message, ...optionalParams) => {
-  originalConsoleError(message, ...optionalParams);
-};
+// Suppress console warnings by mocking console methods
+vi.spyOn(console, 'warn').mockImplementation(() => {});
+vi.spyOn(console, 'error').mockImplementation(() => {});

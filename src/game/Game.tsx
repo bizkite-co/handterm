@@ -1,5 +1,5 @@
 // TerminalGame.ts
-import React, { useState, useEffect, useRef, useImperativeHandle } from 'react';
+import React, { useState, useEffect, useRef, useImperativeHandle, useCallback } from 'react';
 import { Zombie4 } from './Zombie4';
 import { Hero } from './Hero';
 import { Action, ActionType } from './types/ActionTypes';
@@ -12,6 +12,12 @@ import confetti from 'canvas-confetti';
 import { useComputed, useSignalEffect } from "@preact/signals-react";
 import { commandLineSignal } from "src/signals/commandLineSignals";
 import { isInGameModeSignal } from 'src/signals/gameSignals';
+import { createLogger, LogLevel } from 'src/utils/Logger';
+
+const logger = createLogger({
+  prefix: 'Game',
+  level: LogLevel.DEBUG
+});
 
 export interface IGameProps {
   canvasHeight: number
@@ -64,11 +70,7 @@ const Game: React.ForwardRefRenderFunction<IGameHandle, IGameProps> = ((props, r
   const commandLine = useComputed(() => commandLineSignal.value);
   const isInGameMode = useComputed(() => isInGameModeSignal.value).value;
 
-  useSignalEffect(() => {
-    handleCommandLineChange(commandLine.value);
-  })
-
-  const setHeroRunAction = () => {
+  const setHeroRunAction = useCallback(() => {
     if (heroRunTimeoutId) {
       clearTimeout(heroRunTimeoutId);
       heroRunTimeoutId = null;
@@ -79,65 +81,69 @@ const Game: React.ForwardRefRenderFunction<IGameHandle, IGameProps> = ((props, r
       setHeroAction('Idle');
       heroRunTimeoutId = null;
     }, 800);
-  }
+  }, []);
 
-  const handleCommandLineChange = (comandLine: string) => {
+  const handleCommandLineChange = useCallback((comandLine: string) => {
     setHeroRunAction();
-  }
+  }, [setHeroRunAction]);
 
-  const startGame = () => {
+  useSignalEffect(() => {
+    handleCommandLineChange(commandLine.value);
+  });
+
+  const startGame = useCallback(() => {
     if (context) {
       startAnimationLoop(context);
     }
     // Reset game state here if needed
     setIsPhraseComplete(false);
     // Add any other necessary game start logic
-  };
+  }, [context]);
 
   const getLevel = () => currentLevel;
-  const setLevel = (newLevel: number) => {
+  const setLevel = useCallback((newLevel: number) => {
     const newLayers = layers[newLevel - 1];
     setCurrentLevel(newLevel);
     setLayersState(newLayers);
-  };
+  }, []);
 
-  const levelUp = (setLevelValue: number | null = null) => {
+  const levelUp = useCallback((setLevelValue: number | null = null) => {
     const levelCount = getLevelCount();
     if (setLevelValue && setLevelValue > levelCount) setLevelValue = levelCount;
     let nextLevel = setLevelValue || getLevel() + 1;
     if (nextLevel > levelCount) nextLevel = 0;
     if (nextLevel < 1) nextLevel = 1;
     setLevel(nextLevel);
-  };
+  }, [setLevel]);
 
-  const setupCanvas = (canvas: HTMLCanvasElement) => {
-    const context = canvas.getContext('2d');
-    if (context) {
-      setContext(context);
+  const setupCanvas = useCallback((canvas: HTMLCanvasElement) => {
+    const canvasContext = canvas.getContext('2d');
+    if (canvasContext) {
+      setContext(canvasContext);
     } else {
-      console.error("Failed to get canvas context.");
+      logger.error("Failed to get canvas context.");
     }
-  };
+  }, []);
 
-  const toggleScrollingText = (show: boolean | null = null) => {
+  const toggleScrollingText = useCallback((show: boolean | null = null) => {
     if (show === null) show = !isTextScrolling;
     setIsTextScrolling(show);
-  };
+  }, [isTextScrolling]);
 
-  const drawScrollingText = () => {
+  const drawScrollingText = useCallback(() => {
     toggleScrollingText(true);
     setTimeout(() => {
       toggleScrollingText(false);
     }, 3000);
-  };
+  }, [toggleScrollingText]);
 
-  const completeGame = () => {
+  const completeGame = useCallback(() => {
     setZombie4ToDeathThenResetPosition();
     triggerConfettiCannon();
     setIsPhraseComplete(true);
-  };
+  }, []);
 
-  const setZombie4ToDeathThenResetPosition = () => {
+  const setZombie4ToDeathThenResetPosition = useCallback(() => {
     if (zombie4DeathTimeout.current) {
       clearTimeout(zombie4DeathTimeout.current);
       zombie4DeathTimeout.current = null;
@@ -150,9 +156,9 @@ const Game: React.ForwardRefRenderFunction<IGameHandle, IGameProps> = ((props, r
       setIsPhraseComplete(false);
       zombie4DeathTimeout.current = null;
     }, 3000);
-  };
+  }, []);
 
-  const checkProximityAndSetAction = () => {
+  const checkProximityAndSetAction = useCallback(() => {
     const ATTACK_THRESHOLD = 100;
     const distance = heroPosition.leftX - zombie4PositionRef.current.leftX;
 
@@ -169,9 +175,9 @@ const Game: React.ForwardRefRenderFunction<IGameHandle, IGameProps> = ((props, r
         setZombie4Action('Walk');
       }
     }
-  };
+  }, [heroPosition, zombie4Action]);
 
-  const updateCharacterAndBackgroundPostion = (_context: CanvasRenderingContext2D): number => {
+  const updateCharacterAndBackgroundPostion = useCallback((_context: CanvasRenderingContext2D): number => {
     const canvasCenterX = canvasWidth * heroXPercent;
     const characterReachThreshold = canvasCenterX;
 
@@ -204,9 +210,9 @@ const Game: React.ForwardRefRenderFunction<IGameHandle, IGameProps> = ((props, r
       };
     }
     return heroDx;
-  };
+  }, [canvasWidth, canvasHeight, heroPosition]);
 
-  const startAnimationLoop = (context: CanvasRenderingContext2D) => {
+  const startAnimationLoop = useCallback((context: CanvasRenderingContext2D) => {
     const frameDelay = 150;
     let lastFrameTime = performance.now();
 
@@ -228,16 +234,16 @@ const Game: React.ForwardRefRenderFunction<IGameHandle, IGameProps> = ((props, r
     };
 
     animationFrameIndex.current = requestAnimationFrame(loop);
-  };
+  }, [isPhraseComplete, drawScrollingText, updateCharacterAndBackgroundPostion, checkProximityAndSetAction]);
 
-  const stopAnimationLoop = () => {
+  const stopAnimationLoop = useCallback(() => {
     if (animationFrameIndex.current) {
       cancelAnimationFrame(animationFrameIndex.current);
       animationFrameIndex.current = undefined;
     }
-  };
+  }, []);
 
-  const triggerConfettiCannon = () => {
+  const triggerConfettiCannon = useCallback(() => {
     confetti({
       zIndex: 3,
       angle: 160,
@@ -246,7 +252,7 @@ const Game: React.ForwardRefRenderFunction<IGameHandle, IGameProps> = ((props, r
       particleCount: 150,
       origin: { x: 0.99, y: 0.8 }
     });
-  };
+  }, []);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -260,13 +266,13 @@ const Game: React.ForwardRefRenderFunction<IGameHandle, IGameProps> = ((props, r
         clearTimeout(zombie4DeathTimeout.current);
       }
     };
-  }, []);
+  }, [setupCanvas, stopAnimationLoop]);
 
   useEffect(() => {
     if (context) {
       startAnimationLoop(context);
     }
-  }, [context]);
+  }, [context, startAnimationLoop]);
 
   useImperativeHandle(ref, () => ({
     startGame,
@@ -276,7 +282,7 @@ const Game: React.ForwardRefRenderFunction<IGameHandle, IGameProps> = ((props, r
       setIsPhraseComplete(false);
     },
     levelUp,
-  }));
+  }), [startGame, completeGame, levelUp]);
 
   return (
     <>

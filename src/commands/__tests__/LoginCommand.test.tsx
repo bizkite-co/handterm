@@ -5,16 +5,22 @@ import {
   ICommandResponse,
   ParsedCommand,
   IAuthProps,
-  IHandTermWrapperMethods
+  IHandTermWrapperMethods,
+  MyResponse,
+  AuthResponse
 } from 'src/types/HandTerm';
 import * as appSignals from 'src/signals/appSignals';
 
+// Type-safe mock of signals
+type SignalMock = { value: boolean };
+type SetSignalFn = (value: boolean) => void;
+
 // Mock the signals
 vi.mock('src/signals/appSignals', () => ({
-  isInLoginProcessSignal: { value: false },
-  setIsInLoginProcess: vi.fn(),
+  isInLoginProcessSignal: { value: false } as SignalMock,
+  setIsInLoginProcess: vi.fn() as unknown as SetSignalFn,
   setTempUserName: vi.fn(),
-  tempUserNameSignal: { value: '' }
+  tempUserNameSignal: { value: '' } as { value: string }
 }));
 
 describe('LoginCommand', () => {
@@ -56,8 +62,8 @@ describe('LoginCommand', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    // Reset signal values
-    (appSignals.isInLoginProcessSignal as any).value = false;
+    // Reset signal values with type-safe approach
+    (appSignals.isInLoginProcessSignal as SignalMock).value = false;
   });
 
   it('should initiate login process with username', async () => {
@@ -78,14 +84,23 @@ describe('LoginCommand', () => {
 
   it('should complete login process successfully', async () => {
     const mockContext = createMockContext();
-    // Mock login method to resolve successfully
-    (mockContext.auth.login as jest.Mock).mockResolvedValue({
+    // Type-safe mock of login method with full MyResponse structure
+    const mockLogin = mockContext.auth.login as jest.MockedFunction<typeof mockContext.auth.login>;
+    const successResponse: MyResponse<AuthResponse> = {
       status: 200,
-      message: 'Login successful'
-    });
+      data: {
+        AccessToken: 'mock-access-token',
+        RefreshToken: 'mock-refresh-token',
+        IdToken: 'mock-id-token',
+        ExpiresIn: '3600'
+      },
+      message: 'Login successful',
+      error: []
+    };
+    mockLogin.mockResolvedValue(successResponse);
 
     // Simulate being in login process
-    (appSignals.isInLoginProcessSignal as any).value = true;
+    (appSignals.isInLoginProcessSignal as SignalMock).value = true;
 
     const parsedCommand: ParsedCommand = {
       command: 'login',
@@ -95,7 +110,7 @@ describe('LoginCommand', () => {
 
     const response: ICommandResponse = await LoginCommand.execute(mockContext, parsedCommand);
 
-    expect(mockContext.auth.login).toHaveBeenCalledWith('testuser', 'password123');
+    expect(mockLogin).toHaveBeenCalledWith('testuser', 'password123');
     expect(appSignals.setIsInLoginProcess).toHaveBeenCalledWith(false);
     expect(response.status).toBe(200);
     expect(response.message).toBe('Login successful!');
@@ -104,11 +119,18 @@ describe('LoginCommand', () => {
 
   it('should handle login failure', async () => {
     const mockContext = createMockContext();
-    // Mock login method to reject
-    (mockContext.auth.login as jest.Mock).mockRejectedValue(new Error('Invalid credentials'));
+    // Type-safe mock of login method with error response
+    const mockLogin = mockContext.auth.login as jest.MockedFunction<typeof mockContext.auth.login>;
+    const errorResponse: MyResponse<AuthResponse> = {
+      status: 401,
+      message: 'Invalid credentials',
+      error: ['Authentication failed'],
+      data: undefined
+    };
+    mockLogin.mockRejectedValue(errorResponse);
 
     // Simulate being in login process
-    (appSignals.isInLoginProcessSignal as any).value = true;
+    (appSignals.isInLoginProcessSignal as SignalMock).value = true;
 
     const parsedCommand: ParsedCommand = {
       command: 'login',
@@ -118,7 +140,7 @@ describe('LoginCommand', () => {
 
     const response: ICommandResponse = await LoginCommand.execute(mockContext, parsedCommand);
 
-    expect(mockContext.auth.login).toHaveBeenCalledWith('testuser', 'wrongpassword');
+    expect(mockLogin).toHaveBeenCalledWith('testuser', 'wrongpassword');
     expect(appSignals.setIsInLoginProcess).toHaveBeenCalledWith(false);
     expect(response.status).toBe(500);
     expect(response.message).toContain('Login error: Invalid credentials');

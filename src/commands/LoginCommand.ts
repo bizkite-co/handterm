@@ -3,6 +3,9 @@
 import { ICommand, ICommandContext, ICommandResponse } from '../contexts/CommandContext';
 import { ParsedCommand } from '../types/Types';
 import { isInLoginProcessSignal, tempUserNameSignal, setTempUserName, setIsInLoginProcess } from 'src/signals/appSignals';
+import { createLogger } from '../utils/Logger';
+
+const logger = createLogger();
 
 interface LoginErrorResponse {
     status: number;
@@ -23,7 +26,7 @@ export const LoginCommand: ICommand = {
 
             // Demonstrate usage of tempUserNameSignal
             if (tempUserNameSignal.value !== username) {
-                console.error('Username mismatch');
+                logger.error('Username mismatch');
             }
 
             return { status: 200, message: 'Enter password:' };

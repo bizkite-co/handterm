@@ -85,6 +85,33 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
   const { parseLocation, updateLocation } = useReactiveLocation();
   const currentActivity = parseLocation().activityKey;
 
+  // Declare handlePhraseComplete first
+  const handlePhraseComplete = useCallback(() => {
+    localStorage.setItem('currentCommand', '');
+    setGamePhrase(null);
+    if (nextCharsDisplayRef.current && nextCharsDisplayRef.current.cancelTimer) {
+      nextCharsDisplayRef.current.cancelTimer();
+    }
+    gameHandleRef.current?.completeGame();
+    resetPrompt();
+  }, [resetPrompt]);
+
+  // Then use it in handlePhraseSuccess
+  const handlePhraseSuccess = useCallback((phrase: GamePhrase | null) => {
+    if (!phrase) return;
+    logger.debug(`handlePhraseSuccess called with phrase:`, phrase.key, "Activity:", ActivityType[activitySignal.value]);
+    const wpms = wpmCalculator.getWPMs();
+    const wpmAverage = wpms.wpmAverage;
+
+    if (wpmAverage > targetWPM) {
+      activityMediator.checkGameProgress(phrase);
+    }
+
+    gameHandleRef.current?.completeGame();
+    gameHandleRef.current?.levelUp();
+    handlePhraseComplete();
+  }, [wpmCalculator, activityMediator, handlePhraseComplete]);
+
   // Load tree items when entering tree view mode
   useEffect(() => {
     if (currentActivity === ActivityType.TREE) {
@@ -179,31 +206,6 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
       groupKey: null
     });
   }, [updateLocation]);
-
-  const handlePhraseSuccess = useCallback((phrase: GamePhrase | null) => {
-    if (!phrase) return;
-    logger.debug(`handlePhraseSuccess called with phrase:`, phrase.key, "Activity:", ActivityType[activitySignal.value]);
-    const wpms = wpmCalculator.getWPMs();
-    const wpmAverage = wpms.wpmAverage;
-
-    if (wpmAverage > targetWPM) {
-      activityMediator.checkGameProgress(phrase);
-    }
-
-    gameHandleRef.current?.completeGame();
-    gameHandleRef.current?.levelUp();
-    handlePhraseComplete();
-  }, [wpmCalculator, activityMediator]);
-
-  const handlePhraseComplete = useCallback(() => {
-    localStorage.setItem('currentCommand', '');
-    setGamePhrase(null);
-    if (nextCharsDisplayRef.current && nextCharsDisplayRef.current.cancelTimer) {
-      nextCharsDisplayRef.current.cancelTimer();
-    }
-    gameHandleRef.current?.completeGame();
-    resetPrompt();
-  }, [resetPrompt]);
 
   const handlePhraseErrorState = useCallback((errorIndex: number | undefined) => {
     setErrorCharIndex(errorIndex);

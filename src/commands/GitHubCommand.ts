@@ -1,6 +1,9 @@
 import { ICommand, ICommandContext, ICommandResponse } from '../contexts/CommandContext';
 import { ParsedCommand, ActivityType } from '../types/Types';
 import { getRepoTree, listRecentRepos, unlinkGitHub, getGitHubDeviceCode, pollGitHubDeviceAuth } from '../utils/apiClient';
+import { createLogger } from '../utils/Logger';
+
+const logger = createLogger();
 
 const POLL_INTERVAL = 5000; // 5 seconds
 const MAX_POLL_TIME = 300000; // 5 minutes
@@ -55,10 +58,10 @@ export const GitHubCommand: ICommand = {
                 // Open browser to verification URL
                 window.open(verification_uri, '_blank');
 
-                // Show instructions
-                console.log(`Opening browser for GitHub authentication...`);
-                console.log(`Device code copied to clipboard!`, user_code);
-                console.log(`Waiting for authentication...`);
+                // Log authentication steps
+                logger.info(`Opening browser for GitHub authentication...`);
+                logger.info(`Device code copied to clipboard!`, user_code);
+                logger.info(`Waiting for authentication...`);
 
                 // Poll for completion
                 const startTime = Date.now();
@@ -143,9 +146,9 @@ export const GitHubCommand: ICommand = {
                 const path = parsedCommand.args[1] || '';
                 const sha = parsedCommand.args[2] || '';
 
-                console.log('Fetching tree for repo:', repoArg);
+                logger.info('Fetching tree for repo:', repoArg);
                 const response = await getRepoTree(context.auth, repoArg, path, sha);
-                console.log('Tree response:', response);
+                logger.info('Tree response:', response);
 
                 if (response.status === 200 && response.data) {
                     // Store current repository for file fetching
@@ -155,7 +158,7 @@ export const GitHubCommand: ICommand = {
                     localStorage.setItem('github_tree_items', JSON.stringify(response.data));
 
                     // Switch to tree view mode
-                    console.log('Switching to TREE mode');
+                    logger.info('Switching to TREE mode');
                     context.updateLocation({
                         activityKey: ActivityType.TREE,
                         contentKey: null,
@@ -179,7 +182,7 @@ export const GitHubCommand: ICommand = {
                 message: 'Invalid command. Use -h to show command help info',
             };
         } catch (error) {
-            console.error('GitHub command error:', error);
+            logger.error('GitHub command error:', error);
             return {
                 status: 501,
                 message: 'Failed to process GitHub command',

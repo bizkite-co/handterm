@@ -1,6 +1,6 @@
 import { TerminalCssClasses } from "../types/TerminalTypes";
 
-import React, { useState, useRef, useImperativeHandle } from 'react';
+import React, { useState, useRef, useImperativeHandle, useEffect, useCallback } from 'react';
 import Timer, { TimerHandle } from './Timer';
 import ErrorDisplay from "./ErrorDisplay";
 import { Phrase } from "../utils/Phrase";
@@ -27,11 +27,6 @@ const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, INextCharsDisp
     onPhraseSuccess,
     onError
 }, ref) => {
-    useImperativeHandle(ref, () => ({
-        resetTimer,
-        cancelTimer
-    }));
-
     const [_mismatchedChar, setMismatchedChar] = useState<string | null>(null);
     const [_mismatchedIsVisible, setMismatchedIsVisible] = useState(false);
     const [_nextChars, setNextChars] = useState<string>('');
@@ -45,29 +40,80 @@ const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, INextCharsDisp
     const commandLine = useComputed(() => commandLineSignal.value);
     const { parseLocation } = useReactiveLocation();
 
-    React.useEffect(() => {
-        if (!parseLocation().activityKey || !parseLocation().contentKey) return;
-        const foundPhrase = GamePhrases.default.getGamePhraseByKey(parseLocation().contentKey ?? '');
-        if (!foundPhrase) return;
-        setGamePhrase(foundPhrase);
-        setPhrase(new Phrase(foundPhrase.value.split('')));
-        setNextChars(foundPhrase.value);
-    }, [window.location.pathname]);
+    const getFirstNonMatchingChar = useCallback((stringBeingTested: string): number => {
+        if (!_phrase.value) return 0;
+        const sourcePhrase = _phrase.value;
+        const sourcePhraseString = sourcePhrase.join('');
+        if (stringBeingTested === sourcePhraseString) return sourcePhraseString.length;
+        if (!stringBeingTested || stringBeingTested.length === 0) {
+            return 0;
+        }
+        let result = 0;
+        for (let i = 0; i < stringBeingTested.length; i++) {
+            if (stringBeingTested[i] !== sourcePhrase[i]) {
+                return i;
+            }
+            result++;
+        }
+        return result;
+    }, [_phrase.value]);
 
-    useSignalEffect(() => {
-        // every time the command line changes.
-        handleCommandLineChange(commandLine.value);
-    });
+    const getNextCharacters = useCallback((stringBeingTested: string): string => {
+        const nextIndex = getFirstNonMatchingChar(stringBeingTested);
+        const result = _phrase.value.join('').substring(nextIndex);
+        return result;
+    }, [_phrase.value, getFirstNonMatchingChar]);
 
-    const handleCommandLineChange = (stringBeingTested: string) => {
+    const showError = useCallback((char: string, charIndex: number) => {
+        setMismatchedChar(char);
+        setMismatchedIsVisible(true);
+        onError(charIndex);
+    }, [onError]);
+
+    const hideError = useCallback(() => {
+        setMismatchedChar(null);
+        setMismatchedIsVisible(false);
+        onError(undefined);
+    }, [onError]);
+
+    const handleSuccess = useCallback(() => {
+        setMismatchedChar('');
+        setMismatchedIsVisible(false);
+        setNextChars('');
+        if (_gamePhrase && _gamePhrase.key) setCompletedGamePhrase(_gamePhrase.key)
+        onPhraseSuccess(_gamePhrase);
+    }, [_gamePhrase, onPhraseSuccess]);
+
+    const stopTimer = useCallback(() => {
+        if (timerRef.current) {
+            timerRef.current.stop();
+        }
+    }, []);
+
+    const startOrContinueTimer = useCallback(() => {
+        if (timerRef.current) {
+            timerRef.current.start();
+        }
+    }, []);
+
+    const resetTimer = useCallback(() => {
+        if (timerRef.current) {
+            timerRef.current.reset();
+        }
+    }, []);
+
+    const cancelTimer = useCallback(() => {
+        if (timerRef.current) {
+            timerRef.current.reset();
+        }
+        if (nextCharsRef.current) nextCharsRef.current.innerText = _phrase.value.join('');
+    }, [_phrase.value]);
+
+    const handleCommandLineChange = useCallback((stringBeingTested: string) => {
         startOrContinueTimer();
 
         const nextIndex = getFirstNonMatchingChar(stringBeingTested);
-        if (nextIndex < 0) {
-            return null;
-        }
-
-        if (nextIndex > _phrase.value.length) {
+        if (nextIndex < 0 || nextIndex > _phrase.value.length) {
             return null;
         }
 
@@ -99,78 +145,38 @@ const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, INextCharsDisp
         }
 
         const nextCharactersString = getNextCharacters(stringBeingTested);
-        // TODO: figure out a better way to handle initial value.
         setNextChars(nextCharactersString);
-    };
+    }, [
+        startOrContinueTimer,
+        getFirstNonMatchingChar,
+        _phrase.value,
+        _phrase.chordsHTML,
+        cancelTimer,
+        hideError,
+        showError,
+        stopTimer,
+        handleSuccess,
+        getNextCharacters
+    ]);
 
-    const getNextCharacters = (stringBeingTested: string): string => {
-        const nextIndex = getFirstNonMatchingChar(stringBeingTested);
-        const result = _phrase.value.join('').substring(nextIndex);
-        return result;
-    };
+    useImperativeHandle(ref, () => ({
+        resetTimer,
+        cancelTimer
+    }), [resetTimer, cancelTimer]);
 
-    const getFirstNonMatchingChar = (stringBeingTested: string): number => {
-        if (!_phrase.value) return 0;
-        const sourcePhrase = _phrase.value;
-        const sourcePhraseString = sourcePhrase.join('');
-        if (stringBeingTested === sourcePhraseString) return sourcePhraseString.length;
-        if (!stringBeingTested || stringBeingTested.length === 0) {
-            return 0;
-        }
-        let result = 0;
-        for (let i = 0; i < stringBeingTested.length; i++) {
-            if (stringBeingTested[i] !== sourcePhrase[i]) {
-                return i;
-            }
-            result++;
-        }
-        return result;
-    };
+    useEffect(() => {
+        if (!parseLocation().activityKey || !parseLocation().contentKey) return;
+        const foundPhrase = GamePhrases.default.getGamePhraseByKey(parseLocation().contentKey ?? '');
+        if (!foundPhrase) return;
+        setGamePhrase(foundPhrase);
+        setPhrase(new Phrase(foundPhrase.value.split('')));
+        setNextChars(foundPhrase.value);
+    }, [parseLocation]);
 
-    const showError = (char: string, charIndex: number) => {
-        setMismatchedChar(char);
-        setMismatchedIsVisible(true);
-        onError(charIndex);
-    };
-
-    const hideError = () => {
-        setMismatchedChar(null);
-        setMismatchedIsVisible(false);
-        onError(undefined);
-    };
-
-    const handleSuccess = () => {
-        setMismatchedChar('');
-        setMismatchedIsVisible(false);
-        setNextChars('');
-        if (_gamePhrase && _gamePhrase.key) setCompletedGamePhrase(_gamePhrase.key)
-        onPhraseSuccess(_gamePhrase);
-    };
-
-    const stopTimer = () => {
-        if (timerRef.current) {
-            timerRef.current.stop();
-        }
-    };
-
-    const startOrContinueTimer = () => {
-        if (timerRef.current) {
-            timerRef.current.start();
-        }
-    };
-
-    const resetTimer = () => {
-        if (timerRef.current) {
-            timerRef.current.reset();
-        }
-    };
-
-    const cancelTimer = () => {
-        if (timerRef.current) {
-            timerRef.current.reset();
-        }
-        if (nextCharsRef.current) nextCharsRef.current.innerText = _phrase.value.join('');
-    };
+    useSignalEffect(() => {
+        // every time the command line changes.
+        handleCommandLineChange(commandLine.value);
+    });
 
     return (
         (parseLocation().contentKey &&
