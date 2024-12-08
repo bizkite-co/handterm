@@ -1,19 +1,18 @@
 
 // src/commands/cleanCommand.ts
 import { LogKeys } from '../types/TerminalTypes';
-import { ICommand, ICommandContext } from '../contexts/CommandContext';
+import { ICommand, ICommandContext, ICommandResponse } from '../contexts/CommandContext';
 import { saveCommandHistory } from '../utils/commandUtils';
+import { ParsedCommand } from 'src/types/Types';
 
 export const cleanCommand: ICommand = {
     name: 'clean',
     description: 'clean the command history',
     // Make sure the parameters match the ICommand execute definition
-    execute: (
-        _commandName: string,
+    execute: async (
         context: ICommandContext,
-        _args?: string[],
-        _switches?: Record<string, boolean | string>,
-    ) => {
+        _parsedCommand: ParsedCommand
+    ): Promise<ICommandResponse> => {
         if (!context) {
             return { status: 404, message: 'No command context available.' };
         }
@@ -32,8 +31,7 @@ export const cleanCommand: ICommand = {
 
         saveCommandHistory(commandHistory);
         localStorage.setItem(LogKeys.CommandHistory, JSON.stringify(commandHistory));
-        handTerm?.current?.terminalReset();
-        handTerm?.current?.prompt();
+        context.handTermRef?.current?.prompt();
         return { status: 200, message: 'Command history cleaned.' };
     }
 };
