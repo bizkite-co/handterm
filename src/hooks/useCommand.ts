@@ -108,7 +108,7 @@ export const useCommand = () => {
         );
         appendToOutput(outputElement);
         addToCommandHistory(command);
-    }, [createCommandRecord, appendToOutput, addToCommandHistory]);
+    }, [createCommandRecord, addToCommandHistory]);
 
     const executeCommand = useCallback(async (parsedCommand: ParsedCommand) => {
         const command = commandRegistry.getCommand(parsedCommand.command);
@@ -143,7 +143,7 @@ export const useCommand = () => {
         }
 
         await executeCommand(parsedCommand);
-    }, [currentActivity.value, executeCommand, setCommandTime, checkTutorialProgress]);
+    }, [currentActivity.value, executeCommand, checkTutorialProgress]);
 
     return {
         output,

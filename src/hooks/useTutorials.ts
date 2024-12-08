@@ -61,7 +61,7 @@ export const useTutorial = () => {
     useEffect(() => {
         const nextTutorial = getNextTutorial();
         setCurrentTutorial(nextTutorial);
-    }, [completedTutorials, getNextTutorial]);
+    }, [completedTutorials]);
 
     return {
         getTutorialByPhrasekey,
