@@ -13,6 +13,7 @@ export const Hero = forwardRef((props: ICharacterProps, ref) => {
     currentActionType: props.currentActionType, // Replace with actual default action
     name: 'Hero',
     scale: props.scale,
+    xOffset: 0,
     positionRef: props.positionRef
   });
 

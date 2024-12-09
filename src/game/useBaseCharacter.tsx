@@ -18,6 +18,7 @@ interface BaseCharacterProps {
   actions: Record<ActionType, Action>;
   name: string;
   scale: number;
+  xOffset: number;
   positionRef: React.RefObject<SpritePosition>;
 }
 
@@ -71,7 +72,7 @@ export const useBaseCharacter = (props: BaseCharacterProps) => {
   ): number => {
     const sprite = spritesRef.current[currentActionRef.current];
     const action = actions[currentActionRef.current];
-    const newX = (positionRef?.current?.leftX ?? 0) + action.dx;
+    const newX = (positionRef?.current?.leftX ?? 0) + props.xOffset + action.dx;
 
     if (sprite) {
       const nextFrameIndex = (frameIndexRef.current + 1) % sprite.frameCount;

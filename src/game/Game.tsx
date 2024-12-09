@@ -45,7 +45,7 @@ const Game: React.ForwardRefRenderFunction<IGameHandle, IGameProps> = ((props, r
   } = props;
 
   // Use useMemo to memoize static objects
-  const zombie4StartPosition = useMemo(() => ({ leftX: -70, topY: 0 }), []);
+  const zombie4StartPosition = useMemo(() => ({ leftX: 0, topY: 0 }), []);
   const heroStartPosition = useMemo(() => ({ leftX: 165, topY: 29 }), []);
   const heroXPercent = 0.23;
 
@@ -57,7 +57,7 @@ const Game: React.ForwardRefRenderFunction<IGameHandle, IGameProps> = ((props, r
   const zombie4DeathTimeout = useRef<NodeJS.Timeout | null>(null);
   const heroRunTimeoutRef = useRef<number | null>(null);
 
-  const herpoPositionRef = useRef<SpritePosition>(heroStartPosition);
+  const heroPositionRef = useRef<SpritePosition>(heroStartPosition);
   const [heroPosition, setHeroPosition] = useState<SpritePosition>({ leftX: canvasWidth * heroXPercent, topY: 30 });
 
   const [currentLevel, setCurrentLevel] = useState(1);
@@ -147,8 +147,9 @@ const Game: React.ForwardRefRenderFunction<IGameHandle, IGameProps> = ((props, r
   const checkProximityAndSetAction = useCallback(() => {
     const ATTACK_THRESHOLD = 100;
     const distance = heroPosition.leftX - zombie4PositionRef.current.leftX;
+    console.log("Distance:", Math.round(distance / 5) * 5, heroAction, zombie4Action);
 
-    if (20 < distance && distance < ATTACK_THRESHOLD) {
+    if (-20 < distance && distance < ATTACK_THRESHOLD) {
       setZombie4Action('Attack');
       if (distance < 50) {
         setHeroAction('Hurt');
@@ -320,7 +321,7 @@ const Game: React.ForwardRefRenderFunction<IGameHandle, IGameProps> = ((props, r
           />
           <Hero
             ref={heroRef}
-            positionRef={herpoPositionRef}
+            positionRef={heroPositionRef}
             currentActionType={heroAction}
             scale={1.95}
           />

@@ -17,6 +17,7 @@ export const Zombie4 = forwardRef((props: ICharacterProps, ref) => {
     currentActionType: props.currentActionType,
     name: 'Zombie4',
     scale: props.scale,
+    xOffset: 77,
     positionRef: props.positionRef
   });
 
