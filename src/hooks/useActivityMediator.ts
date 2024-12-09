@@ -181,19 +181,15 @@ export function useActivityMediator(): IActivityMediatorReturn {
 
   const handleCommandExecuted = useCallback((parsedCommand: ParsedCommand): boolean => {
     let result = false;
-    const currentLocation = parseLocation();
-    if (currentLocation.activityKey === ActivityType.TUTORIAL) {
+    if (parseLocation().activityKey === ActivityType.TUTORIAL) {
       checkTutorialProgress(parsedCommand.command);
     }
-    else if (currentLocation.activityKey === ActivityType.GAME && currentLocation.contentKey) {
-      const gamePhrase = GamePhrases.getGamePhraseByKey(currentLocation.contentKey || '')
+    else if (parseLocation().activityKey === ActivityType.GAME && parseLocation().contentKey) {
+      const gamePhrase = GamePhrases.getGamePhraseByKey(parseLocation().contentKey || '')
       if (gamePhrase) checkGameProgress(gamePhrase);
     }
-
-    const _locationPathname = window.location.pathname;
-
     switch (parsedCommand.command) {
-      case 'play': {
+      case 'play':
         decideActivityChange(ActivityType.GAME);
         updateLocation({
           activityKey: ActivityType.GAME,
@@ -201,8 +197,7 @@ export function useActivityMediator(): IActivityMediatorReturn {
         })
         result = true;
         break;
-      }
-      case 'tut': {
+      case 'tut':
         if ('r' in parsedCommand.switches) {
           resetCompletedTutorials();
         }
@@ -216,31 +211,19 @@ export function useActivityMediator(): IActivityMediatorReturn {
         })
         result = true;
         break;
-      }
       default:
         result = false;
     }
 
     return result;
-  }, [
-    parseLocation,
-    decideActivityChange,
-    updateLocation,
-    checkTutorialProgress,
-    checkGameProgress
-  ]);
-
-  useEffect(() => {
-    const _activityGroup = parseLocation().groupKey || '';
-    if (_activityGroup) setActivityGroupKey(_activityGroup);
-  }, [parseLocation]);
+  }, [decideActivityChange, window.location.pathname]);
 
   useEffect(() => {
     const resultActivity = decideActivityChange(null);
     if (resultActivity === ActivityType.TUTORIAL) {
       checkTutorialProgress(null);
     }
-  }, [decideActivityChange, checkTutorialProgress]);
+  }, []);
 
   return {
     isInGameMode: activity === ActivityType.GAME,

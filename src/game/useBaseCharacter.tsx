@@ -22,42 +22,61 @@ interface BaseCharacterProps {
 }
 
 export const useBaseCharacter = (props: BaseCharacterProps) => {
-  const [, setSprite] = useState<Sprite | null>(null);
-
-  // Memoize spriteManager to prevent recreation on each render
+  const [sprite, setSprite] = useState<Sprite | null>(null);
   const spriteManager = useMemo(() => new SpriteManager(), []);
-
-  const previousActionTypeRef = useRef<ActionType>(props.currentActionType);
   const frameIndexRef = useRef<number>(0);
-  const spritesRef = useRef<Record<ActionType, Sprite | undefined>>({} as Record<ActionType, Sprite | undefined>);
+  const currentActionRef = useRef<ActionType>(props.currentActionType);
 
-  // Destructure props to use in useCallback dependencies
+  // Initialize spritesRef with undefined values for all action types
+  const spritesRef = useRef<Record<ActionType, Sprite | undefined>>(
+    Object.keys(props.actions).reduce((acc, key) => ({
+      ...acc,
+      [key]: undefined
+    }), {} as Record<ActionType, Sprite | undefined>)
+  );
+
   const { currentActionType, actions, name } = props;
 
   const loadSprite = useCallback(async (actionKey: ActionType, animationData: SpriteAnimation) => {
     const loadedSprite = await spriteManager.loadSprite(animationData);
     if (loadedSprite) {
-      // Update the sprites ref with the new loaded sprite
       spritesRef.current[actionKey] = loadedSprite;
-      // If the actionKey is still the current action, update the sprite state
-      if (actionKey === currentActionType) {
+      if (actionKey === currentActionRef.current) {
         setSprite(loadedSprite);
       }
     }
-  }, [currentActionType, spriteManager]);
+  }, [spriteManager]);
+
+  const setCurrentActionType = useCallback((newActionType: ActionType) => {
+    if (currentActionRef.current === newActionType) return;
+
+    // Update both the ref and the prop
+    currentActionRef.current = newActionType;
+    props.currentActionType = newActionType;
+    frameIndexRef.current = 0;
+
+    const sprite = spritesRef.current[newActionType];
+    if (sprite) {
+      setSprite(sprite);
+    } else {
+      // Try to load the sprite if it's missing
+      loadSprite(newActionType, actions[newActionType].animation);
+    }
+  }, [actions, loadSprite]);
 
   const draw = (
     context: CanvasRenderingContext2D,
     positionRef: React.RefObject<SpritePosition>,
     scale: number | null
   ): number => {
-    const sprite = spritesRef.current[currentActionType];
-    const action = actions[currentActionType];
+    const sprite = spritesRef.current[currentActionRef.current];
+    const action = actions[currentActionRef.current];
     const newX = (positionRef?.current?.leftX ?? 0) + action.dx;
 
-    incrementFrameIndex();
-
     if (sprite) {
+      const nextFrameIndex = (frameIndexRef.current + 1) % sprite.frameCount;
+      frameIndexRef.current = nextFrameIndex;
+
       sprite.draw(
         context,
         frameIndexRef.current,
@@ -69,84 +88,39 @@ export const useBaseCharacter = (props: BaseCharacterProps) => {
     return action.dx;
   }
 
-  const loadActions = useCallback(() => {
+  // Load all sprites on mount
+  useEffect(() => {
     Object.entries(actions).forEach(([actionKey, actionData]) => {
       loadSprite(actionKey as ActionType, actionData.animation);
     });
+
+    return () => {
+      // Clear sprite references on unmount
+      spritesRef.current = Object.keys(actions).reduce((acc, key) => ({
+        ...acc,
+        [key]: undefined
+      }), {} as Record<ActionType, Sprite | undefined>);
+      setSprite(null);
+    };
   }, [actions, loadSprite]);
 
+  // Handle prop changes for currentActionType
   useEffect(() => {
-    loadActions();
-
-    // Did-mount and will-unmount only
-    // TODO: Clean up animation frame, etc.
-    return () => {
-      // Cleanup logic can be added here if needed
-    };
-  }, [loadActions]);
-
-  const setCurrentActionType = useCallback((newActionType: ActionType) => {
-    if (currentActionType === newActionType) return;
-    // Update the current action
-    props.currentActionType = newActionType;
-    frameIndexRef.current = 0;
-    // Update the current sprite to match the new action
-    const sprite = spritesRef.current[newActionType];
-    if (sprite) {
-      setSprite(sprite);
-    } else {
-      logger.error(`Sprite not found for action type: ${newActionType}`);
-    }
-  }, [currentActionType, props]);
-
-  const incrementFrameIndex = useCallback(() => {
-    const sprite = spritesRef.current[currentActionType];
-    if (sprite) {
-      const nextFrameIndex = (frameIndexRef.current + 1) % sprite.frameCount;
-      frameIndexRef.current = nextFrameIndex; // Update the ref's current value
-    }
-  }, [currentActionType]);
-
-  useEffect(() => {
-    // Update the sprite for the current action type
-    const currentSprite = spritesRef.current[currentActionType];
-    if (currentSprite) {
-      // If the sprite is already loaded, use it
-      setSprite(currentSprite);
-    } else {
-      // If the sprite is not loaded, load it and update the ref
-      loadSprite(currentActionType, actions[currentActionType].animation);
-    }
-  }, [currentActionType, actions, loadSprite]);
-
-  useEffect(() => {
-    // Set the current action type
-    if (name.toLocaleLowerCase() === 'hero')
+    if (currentActionType !== currentActionRef.current) {
       setCurrentActionType(currentActionType);
-
-    // Specify how to clean up after this effect
-    return () => {
-      // Cleanup logic can be added here if needed
-    };
-  }, [currentActionType, name, setCurrentActionType]);
-
-  useEffect(() => {
-    const sprite = spritesRef.current[currentActionType];
-    if (sprite && sprite.frameCount) {
-      if (currentActionType !== previousActionTypeRef.current) {
-        frameIndexRef.current = 0;
-      } else {
-        incrementFrameIndex();
-      }
     }
+  }, [currentActionType, setCurrentActionType]);
 
-    // Remember the previous action type for the next call
-    previousActionTypeRef.current = currentActionType;
-
-    // This effect should run every time the action type changes or the sprite animation needs to be updated
-  }, [currentActionType, actions, incrementFrameIndex]);
+  // Handle initial sprite loading for current action
+  useEffect(() => {
+    const currentSprite = spritesRef.current[currentActionRef.current];
+    if (!currentSprite) {
+      loadSprite(currentActionRef.current, actions[currentActionRef.current].animation);
+    }
+  }, [currentActionRef.current, actions, loadSprite]);
 
   return {
-    draw
+    draw,
+    setCurrentActionType  // Export this so parent components can trigger action changes
   };
 };

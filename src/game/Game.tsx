@@ -197,7 +197,7 @@ const Game: React.ForwardRefRenderFunction<IGameHandle, IGameProps> = ((props, r
     };
 
     animationFrameIndex.current = requestAnimationFrame(loop);
-  }, [isPhraseComplete, drawScrollingText, updateCharacterAndBackgroundPostion, checkProximityAndSetAction]);
+  }, [isPhraseComplete, drawScrollingText]);
 
   const setHeroRunAction = useCallback(() => {
     if (heroRunTimeoutRef.current) {
@@ -217,7 +217,7 @@ const Game: React.ForwardRefRenderFunction<IGameHandle, IGameProps> = ((props, r
   }, [setHeroRunAction]);
 
   useSignalEffect(() => {
-    handleCommandLineChange(commandLine.value);
+    if (commandLine.value) handleCommandLineChange(commandLine.value);
   });
 
   const setupCanvas = useCallback((canvas: HTMLCanvasElement) => {
