@@ -3,15 +3,12 @@ import { render, RenderResult, fireEvent } from '@testing-library/react';
 import { expect, test } from "vitest";
 import React, { ReactElement } from 'react';
 import App from '../../App';
+import { Scenario, Step } from "@amiceli/vitest-cucumber/dist/src/parser/models";
 
-interface Step {
-  text: string;
-  keyword: string;
-}
 
 const feature = await loadFeature('src/e2e/scenarios/tutorialProgression.feature');
 
-const scenario = feature.getScenarioByName('Initial Tutorial Steps');
+const scenario = feature.getScenarioByName('Initial Tutorial Steps') as Scenario;
 if (!scenario) {
   throw new Error('Scenario not found');
 }
@@ -31,8 +28,9 @@ test('Initial Tutorial Steps', () => {
   renderResult = render(AppWrapper());
 
   // Steps
-  for (const step of scenario.steps) {
-    switch (step.text) {
+  const steps = scenario.steps as Readonly<Step[]>;
+  for (const step of steps) {
+    switch (step.title) {
       case 'the user is in the tutorial mode':
         // Additional setup for tutorial mode if needed
         break;

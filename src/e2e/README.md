@@ -9,10 +9,9 @@ This E2E testing approach focuses on describing test scenarios in a human-readab
 ```
 Scenario: User logs in and starts a typing game
 Given the user is on the home page
-When the user types "Login <username>"
-And enters valid Handterm credentials
-Then the user should be redirected to the TUI
-And the tutorial should be available
+When the user has not completed the tutorial
+Then the user should be presented with the first phrase
+And the user should be shown instructions on typing the phrase
 ```
 
 ### Implementation Strategy

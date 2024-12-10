@@ -28,3 +28,7 @@ public/images/glitch-parallax-bg
 .aider.tags.*
 .aider.env
 prompt-temp.md
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
