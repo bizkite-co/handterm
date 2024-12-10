@@ -5,4 +5,4 @@ Scenario: Initial Tutorial Steps
   When the user types "Enter"
   And the user types "fdsa"
   And the user types "jkl;"
-  Then the tutorial should progress successfully
+  Then the Activity should change from Tutorial to Game
