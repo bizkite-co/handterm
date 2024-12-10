@@ -70,12 +70,21 @@ const mockTerminal = {
   loadAddon: vi.fn(),
   open: vi.fn(),
   write: vi.fn((data: string) => {
-    console.log('Terminal write:', { data, charCodes: [...data].map(c => c.charCodeAt(0)) });
+    console.log('Terminal write:', {
+      data,
+      charCodes: [...data].map(c => c.charCodeAt(0)),
+      hex: [...data].map(c => '0x' + c.charCodeAt(0).toString(16))
+    });
   }),
   onData: vi.fn((callback) => {
     console.log('Terminal onData registered');
     (window as any).__xtermDataCallback = (data: string) => {
-      console.log('Terminal received data:', { data, charCodes: [...data].map(c => c.charCodeAt(0)) });
+      // debugger; // Breakpoint 5: Terminal data received
+      console.log('Terminal received data:', {
+        data,
+        charCodes: [...data].map(c => c.charCodeAt(0)),
+        hex: [...data].map(c => '0x' + c.charCodeAt(0).toString(16))
+      });
       callback(data);
     };
     return { dispose: vi.fn() };
@@ -116,7 +125,12 @@ vi.mock('@xterm/addon-fit', () => ({
 
 // Helper to trigger terminal input
 (window as any).triggerTerminalInput = (data: string) => {
-  console.log('Triggering terminal input:', { data, charCodes: [...data].map(c => c.charCodeAt(0)) });
+  // debugger; // Breakpoint 6: Before triggering terminal input
+  console.log('Triggering terminal input:', {
+    data,
+    charCodes: [...data].map(c => c.charCodeAt(0)),
+    hex: [...data].map(c => '0x' + c.charCodeAt(0).toString(16))
+  });
   if ((window as any).__xtermDataCallback) {
     // For Enter key, ensure we send just \r
     if (data === '\r\n') {
@@ -126,4 +140,11 @@ vi.mock('@xterm/addon-fit', () => ({
       (window as any).__xtermDataCallback(data);
     }
   }
+};
+
+// Mock console.log to include timestamps
+const originalLog = console.log;
+console.log = (...args) => {
+  const timestamp = new Date().toISOString();
+  originalLog(`[${timestamp}]`, ...args);
 };

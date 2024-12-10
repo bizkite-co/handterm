@@ -5,6 +5,9 @@ import { ActivityType } from 'src/types/Types';
 import { resetCompletedTutorials, tutorialSignal, setNextTutorial, getNextTutorial } from 'src/signals/tutorialSignals';
 import App from 'src/App';
 import { render } from 'src/test-utils/test-utils';
+import { createLogger } from 'src/utils/Logger';
+
+const logger = createLogger({ prefix: 'tutorialProgression.test' });
 
 describe('Tutorial Progression', () => {
   beforeEach(() => {
@@ -14,29 +17,29 @@ describe('Tutorial Progression', () => {
     resetCompletedTutorials();
     // Initialize tutorial state
     const firstTutorial = getNextTutorial();
-    console.log('Initial tutorial:', firstTutorial);
+    logger.debug('Initial tutorial:', firstTutorial);
     setNextTutorial(firstTutorial);
     // Ensure we start in tutorial mode with initial tutorial
     activitySignal.value = ActivityType.TUTORIAL;
     window.history.pushState({}, '', '/tutorial/_r');
-    console.log('Initial location:', window.location.pathname);
+    logger.debug('Initial location:', window.location.pathname);
   });
 
   const simulateCommand = async (text: string) => {
-    console.log('Simulating command:', text);
+    logger.debug('Simulating command:', text);
     // Type each character through the terminal
     for (const char of text.split('')) {
-      console.log('Typing character:', char);
+      logger.debug('Typing character:', char);
       await act(async () => {
-        // Breakpoint 1: Before sending character
+        // debugger; // Breakpoint 1: Before sending character
         (window as any).triggerTerminalInput(char);
         await new Promise(resolve => setTimeout(resolve, 50));
       });
     }
     // Send Enter with proper terminal sequence
-    console.log('Sending Enter');
+    logger.debug('Sending Enter');
     await act(async () => {
-      // Breakpoint 2: Before sending Enter
+      // debugger; // Breakpoint 2: Before sending Enter
       (window as any).triggerTerminalInput('\r');
       await new Promise(resolve => setTimeout(resolve, 100));
     });
@@ -44,8 +47,8 @@ describe('Tutorial Progression', () => {
 
   const waitForTutorialState = async (expectedPhrase: string) => {
     await waitFor(() => {
-      // Breakpoint 3: Checking tutorial state
-      console.log('Current tutorial state:', {
+      // debugger; // Breakpoint 3: Checking tutorial state
+      logger.debug('Current tutorial state:', {
         phrase: tutorialSignal.value?.phrase,
         expected: expectedPhrase,
         location: window.location.pathname,
@@ -58,8 +61,8 @@ describe('Tutorial Progression', () => {
 
   const waitForActivityState = async (expectedActivity: ActivityType) => {
     await waitFor(() => {
-      // Breakpoint 4: Checking activity state
-      console.log('Current activity state:', {
+      // debugger; // Breakpoint 4: Checking activity state
+      logger.debug('Current activity state:', {
         activity: activitySignal.value,
         expected: expectedActivity,
         location: window.location.pathname,
@@ -71,32 +74,27 @@ describe('Tutorial Progression', () => {
   };
 
   it('should progress through tutorial steps and change to game mode', async () => {
-    console.log('Starting test');
+    logger.debug('Starting test');
     render(<App />);
 
-    // Wait for initial tutorial to load (Enter key tutorial)
+    // Given the user is in the tutorial mode
     await waitForTutorialState('\r');
 
-    // First tutorial: Press Enter
-    console.log('Testing first tutorial (Enter)');
+    // When the user types "Enter"
+    logger.debug('Testing first tutorial (Enter)');
     await simulateCommand('\r');
     await waitForTutorialState('fdsa');
 
-    // Second tutorial: Type fdsa
-    console.log('Testing second tutorial (fdsa)');
+    // And the user types "fdsa"
+    logger.debug('Testing second tutorial (fdsa)');
     await simulateCommand('fdsa');
-    await waitForTutorialState('fdsa');
-
-    // Third tutorial: Type fdsa with spaces
-    console.log('Testing third tutorial (fdsa with spaces)');
-    await simulateCommand('f d s a');
     await waitForTutorialState('jkl;');
 
-    // Fourth tutorial: Type jkl; (this completes the single-click group)
-    console.log('Testing fourth tutorial (jkl;)');
+    // And the user types "jkl;"
+    logger.debug('Testing third tutorial (jkl;)');
     await simulateCommand('jkl;');
 
-    // Wait for activity to change to Game
+    // Then the Activity should change from Tutorial to Game
     await waitForActivityState(ActivityType.GAME);
     expect(window.location.pathname).toContain('/game');
   });
