@@ -10,6 +10,9 @@ import { activitySignal, appendToOutput } from 'src/signals/appSignals';
 import { useComputed } from '@preact/signals-react';
 import { useWPMCalculator } from './useWPMCaculator';
 import { setCommandTime } from 'src/signals/commandLineSignals';
+import { createLogger } from 'src/utils/Logger';
+
+const logger = createLogger({ prefix: 'useCommand' });
 
 export const useCommand = () => {
     const [output, setOutput] = useState<React.ReactNode[]>([]);
@@ -32,11 +35,13 @@ export const useCommand = () => {
     useEffect(() => {
         const savedHistory = loadCommandHistory();
         if (savedHistory && savedHistory.length > 0) {
+            logger.debug('Loaded command history:', savedHistory);
             setCommandHistory(savedHistory);
         }
     }, []);
 
     const resetOutput = useCallback(() => {
+        logger.debug('Resetting output');
         setOutput([]);
     }, []);
 
@@ -45,6 +50,7 @@ export const useCommand = () => {
             ? command
             : parsedCommandToString(command);
 
+        logger.debug('Adding to command history:', commandString);
         setCommandHistory(prev => {
             // Don't add if it's identical to the previous command
             if (prev.length > 0 && prev[prev.length - 1] === commandString) {
@@ -72,6 +78,7 @@ export const useCommand = () => {
                 history.push(historyJSON);
             }
         }
+        logger.debug('Retrieved command response history:', history);
         return history;
     }, []);
 
@@ -83,6 +90,7 @@ export const useCommand = () => {
         sensitive?: boolean
     ): OutputElement => {
         const wpms = wpmCalculator.getWPMs();
+        logger.debug('Creating command record:', { command, response, status });
         return {
             command,
             response,
@@ -98,6 +106,7 @@ export const useCommand = () => {
         command: ParsedCommand,
         response: ICommandResponse,
     ): void => {
+        logger.debug('Processing command output:', { command, response });
         const commandTime = new Date();
         const outputElement = createCommandRecord(
             command,
@@ -111,14 +120,18 @@ export const useCommand = () => {
     }, [createCommandRecord, addToCommandHistory]);
 
     const executeCommand = useCallback(async (parsedCommand: ParsedCommand) => {
+        // Breakpoint 5: Start of command execution
+        logger.debug('Executing command:', parsedCommand);
         const command = commandRegistry.getCommand(parsedCommand.command);
         if (command && context) {
             try {
                 const response = await command.execute(context, parsedCommand);
+                logger.debug('Command executed successfully:', response);
                 processCommandOutput(parsedCommand, response);
                 handleCommandExecuted(parsedCommand);
             } catch (error) {
                 const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+                logger.error('Command execution failed:', error);
                 processCommandOutput(parsedCommand, {
                     status: 500,
                     message: errorMessage
@@ -126,7 +139,9 @@ export const useCommand = () => {
                 handleCommandExecuted(parsedCommand);
             }
         } else {
+            // Breakpoint 6: Tutorial command handling
             const response = currentActivity.value === ActivityType.TUTORIAL ? `Tutorial attempt: ${parsedCommand.command}` : `Command not found: ${parsedCommand.command}`;
+            logger.debug('Command not found:', { command: parsedCommand.command, activity: currentActivity.value });
             processCommandOutput(parsedCommand, {
                 status: 404,
                 message: response
@@ -136,10 +151,13 @@ export const useCommand = () => {
     }, [context, processCommandOutput, handleCommandExecuted, currentActivity]);
 
     const handleCommand = useCallback(async (parsedCommand: ParsedCommand) => {
+        // Breakpoint 7: Start of command handling
+        logger.debug('Handling command:', { parsedCommand, activity: currentActivity.value });
         setCommandTime(new Date());
         if (currentActivity.value === ActivityType.TUTORIAL) {
+            // Breakpoint 8: Tutorial progress check
+            logger.debug('Processing tutorial command:', parsedCommand.command);
             checkTutorialProgress(parsedCommand.command);
-            // TODO: Write result to output
         }
 
         await executeCommand(parsedCommand);

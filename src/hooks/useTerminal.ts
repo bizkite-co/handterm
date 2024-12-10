@@ -24,6 +24,9 @@ import {
 import { ActivityType } from 'src/types/Types';
 import { useCharacterHandler } from './useCharacterHandler';
 import { parseCommand } from 'src/utils/commandUtils';
+import { createLogger } from 'src/utils/Logger';
+
+const logger = createLogger({ prefix: 'useTerminal' });
 
 export const useTerminal = () => {
   const { instance, ref: xtermRef } = useXTerm({ options: XtermAdapterConfig });
@@ -38,11 +41,13 @@ export const useTerminal = () => {
   const promptLength = PROMPT.length;
 
   const writeToTerminal = useCallback((data: string) => {
+    logger.debug('Writing to terminal:', data);
     instance?.write(data);
   }, [instance]);
 
   const resetPrompt = useCallback(() => {
     if (!instance) return;
+    logger.debug('Resetting prompt');
     instance.reset();
     setCommandLine('');
     _setCommandLineState('');
@@ -60,7 +65,7 @@ export const useTerminal = () => {
   } = useCharacterHandler({
     _setCommandLine: _setCommandLineState,
     setLastTypedCharacter,
-    isInSvgMode: false, // Set appropriately
+    isInSvgMode: false,
     isInLoginProcess: isInLoginProcessSignal.value,
     writeOutputInternal: writeToTerminal,
   });
@@ -76,12 +81,14 @@ export const useTerminal = () => {
       }
     }
     const promptEndIndex = command.indexOf(PROMPT) + promptLength;
-    return command.substring(promptEndIndex).trimStart();
+    const currentCommand = command.substring(promptEndIndex).trimStart();
+    logger.debug('Getting current command:', currentCommand);
+    return currentCommand;
   }, [instance, promptLength]);
 
   const clearCurrentLine = useCallback(() => {
     if (!instance) return;
-    // Move cursor to end of line
+    logger.debug('Clearing current line');
     instance.write('\x1b[2K\r'); // Clear the current line
     instance.write(PROMPT); // Rewrite prompt
   }, [instance]);
@@ -92,7 +99,6 @@ export const useTerminal = () => {
     let newIndex = commandHistoryIndex;
 
     if (direction === 'up') {
-      // If we're not already navigating history, save current command
       if (newIndex === -1) {
         const currentCommand = getCurrentCommand();
         if (currentCommand) {
@@ -104,7 +110,6 @@ export const useTerminal = () => {
     } else {
       newIndex = newIndex === -1 ? -1 : Math.min(commandHistory.length - 1, newIndex + 1);
       if (newIndex === -1) {
-        // Restore the saved command when reaching the bottom
         clearCurrentLine();
         const savedCommand = commandLine.value;
         if (savedCommand) {
@@ -145,6 +150,7 @@ export const useTerminal = () => {
     if (!instance) return;
 
     const handleControlCharacters = (data: string, cursorX: number) => {
+      logger.debug('Handling control character:', { data, cursorX });
       switch (data) {
         case '\x03': // Ctrl+C
           setCommandLine('');
@@ -182,6 +188,7 @@ export const useTerminal = () => {
     };
 
     const handleEnterKey = () => {
+      logger.debug('Handling Enter key');
       if (isInLoginProcessSignal.value) {
         const loginCommand = parseCommand([
           'login',
@@ -206,7 +213,9 @@ export const useTerminal = () => {
         setTempEmail('');
       } else {
         const currentCommand = getCurrentCommand();
+        logger.debug('Processing command:', currentCommand);
         const parsedCommand = parseCommand(currentCommand === '' ? '\r' : currentCommand);
+        logger.debug('Parsed command:', parsedCommand);
         instance?.write('\r\n');
         setCommandLine('');
         _setCommandLineState('');
@@ -218,6 +227,7 @@ export const useTerminal = () => {
     };
 
     const handleBackspace = (cursorX: number) => {
+      logger.debug('Handling backspace:', { cursorX });
       if (isInLoginProcessSignal.value || isInSignUpProcessSignal.value) {
         if (tempPasswordSignal.value.length > 0) {
           tempPasswordSignal.value = tempPasswordSignal.value.slice(0, -1);
@@ -233,6 +243,7 @@ export const useTerminal = () => {
 
     const handleData = (data: string) => {
       if (!instance) return;
+      logger.debug('Handling terminal data:', data);
       const cursorX = instance.buffer.active.cursorX;
 
       if (handleControlCharacters(data, cursorX)) {
