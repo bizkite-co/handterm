@@ -9,7 +9,7 @@ export const TutorialManager: React.FC = memo(() => {
     const phraseKey = parseLocation().contentKey
     const tutorial = Tutorials.find(t => t.phrase === phraseKey?.replace('_r', '\r'));
     return (tutorial &&
-        <div className="tutorial-component">
+        <div className="tutorial-component" data-testid="tutorial-component">
             <pre className="tutorial-prompt">{tutorial.prompt}</pre>
             <div className="chord-display-container">
                 {tutorial.display &&

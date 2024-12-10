@@ -7,8 +7,10 @@ export class TutorialPage {
 
   constructor(page: Page) {
     this.page = page;
-    this.tutorialMode = page.getByTestId('tutorial-component');
-    this.gameMode = page.getByTestId('game-mode');
+    // Use existing class for tutorial component
+    this.tutorialMode = page.locator('.tutorial-component');
+    // Use existing ID for game component
+    this.gameMode = page.locator('#terminal-game');
   }
 
   async goto() {
