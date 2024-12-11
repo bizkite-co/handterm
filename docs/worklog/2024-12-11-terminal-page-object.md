@@ -17,12 +17,18 @@ Create a broader Terminal page object class to handle Xterm.js terminal interact
     - [x] getCurrentCommand() to get command without prompt
     - [x] waitForPrompt() to wait for terminal ready state
     - [x] clearLine() using Ctrl+C
+- [x] Migrate TutorialPage functionality
+  - [x] Added tutorial/game mode locators to TerminalPage
+  - [x] Added typeKeys() and pressEnter() methods
+  - [x] Updated tutorial.spec.ts to use TerminalPage
+  - [x] Removed TutorialPage.ts
 
-The TerminalPage class now provides a clean interface for interacting with the terminal in e2e tests, with methods for:
+The TerminalPage class now provides a comprehensive interface for interacting with the terminal in e2e tests, with methods for:
 - Typing and executing commands
 - Reading terminal output
 - Waiting for specific output text or prompt
 - Managing terminal focus and command line state
-- Handling the terminal prompt consistently across the application
+- Handling the terminal prompt consistently
+- Supporting tutorial progression testing
 
-The implementation uses shared constants between the React components and e2e tests, ensuring consistent behavior when interacting with the terminal prompt.
+The implementation consolidates all terminal-related test functionality into a single, well-organized page object, making the tests more maintainable and the test infrastructure more cohesive.

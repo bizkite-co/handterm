@@ -5,12 +5,16 @@ export class TerminalPage {
   readonly page: Page;
   readonly terminal: Locator;
   readonly output: Locator;
+  readonly tutorialMode: Locator;
+  readonly gameMode: Locator;
   private readonly prompt = TERMINAL_CONSTANTS.PROMPT;
 
   constructor(page: Page) {
     this.page = page;
     this.terminal = page.locator('#xtermRef');
     this.output = page.locator('#output-container');
+    this.tutorialMode = page.locator('.tutorial-component');
+    this.gameMode = page.locator('#terminal-game');
   }
 
   async goto() {
@@ -27,12 +31,28 @@ export class TerminalPage {
   }
 
   /**
+   * Types a sequence of keys without executing a command
+   * @param keys The keys to type
+   */
+  async typeKeys(keys: string) {
+    await this.terminal.click();
+    await this.page.keyboard.type(keys);
+  }
+
+  /**
+   * Presses the Enter key
+   */
+  async pressEnter() {
+    await this.page.keyboard.press('Enter');
+  }
+
+  /**
    * Executes a command by typing it and pressing Enter
    * @param command The command to execute
    */
   async executeCommand(command: string) {
     await this.typeCommand(command);
-    await this.page.keyboard.press('Enter');
+    await this.pressEnter();
   }
 
   /**
