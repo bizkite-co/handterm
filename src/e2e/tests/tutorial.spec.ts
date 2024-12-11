@@ -17,7 +17,6 @@ test.describe('Tutorial Progression', () => {
     await tutorialPage.pressEnter();
     await tutorialPage.pressEnter();
     await tutorialPage.pressEnter();
-    await tutorialPage.pressEnter();
     await tutorialPage.typeKey('fdsa');
     await tutorialPage.pressEnter();
     await tutorialPage.typeKey('jkl;');

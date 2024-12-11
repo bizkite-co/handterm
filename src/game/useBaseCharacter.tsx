@@ -6,12 +6,6 @@ import { SpriteAnimation } from './types/SpriteTypes';
 import { Action, ActionType } from './types/ActionTypes';
 import { SpriteManager } from './sprites/SpriteManager';
 import { SpritePosition } from './types/Position';
-import { createLogger, LogLevel } from 'src/utils/Logger';
-
-const logger = createLogger({
-  prefix: 'BaseCharacter',
-  level: LogLevel.ERROR
-});
 
 interface BaseCharacterProps {
   currentActionType: ActionType;
@@ -23,7 +17,7 @@ interface BaseCharacterProps {
 }
 
 export const useBaseCharacter = (props: BaseCharacterProps) => {
-  const [sprite, setSprite] = useState<Sprite | null>(null);
+  const [, setSprite] = useState<Sprite | null>(null);
   const spriteManager = useMemo(() => new SpriteManager(), []);
   const frameIndexRef = useRef<number>(0);
   const currentActionRef = useRef<ActionType>(props.currentActionType);
@@ -36,7 +30,7 @@ export const useBaseCharacter = (props: BaseCharacterProps) => {
     }), {} as Record<ActionType, Sprite | undefined>)
   );
 
-  const { currentActionType, actions, name } = props;
+  const { currentActionType, actions } = props;
 
   const loadSprite = useCallback(async (actionKey: ActionType, animationData: SpriteAnimation) => {
     const loadedSprite = await spriteManager.loadSprite(animationData);

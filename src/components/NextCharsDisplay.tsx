@@ -10,6 +10,7 @@ import { setCompletedGamePhrase } from "src/signals/gameSignals";
 import { GamePhrase } from "src/types/Types";
 import { useReactiveLocation } from "src/hooks/useReactiveLocation";
 import * as GamePhrases from "src/utils/GamePhrases";
+import { parseLocation } from "src/utils/navigationUtils";
 
 export interface INextCharsDisplayProps {
     isInPhraseMode: boolean;
@@ -38,7 +39,6 @@ const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, INextCharsDisp
     const timerRef = useRef<TimerHandle>(null);
     const wpmRef = useRef<HTMLSpanElement>(null);
     const commandLine = useComputed(() => commandLineSignal.value);
-    const { parseLocation } = useReactiveLocation();
 
     // Memoize location parsing to prevent unnecessary re-renders
     const currentLocation = useMemo(() => parseLocation(), []);

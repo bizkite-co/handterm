@@ -7,9 +7,9 @@ import { Output } from './components/Output';
 import { AppProvider } from './contexts/AppContext';
 import { CommandProvider } from './contexts/CommandProvider';
 import { ActivityMediatorProvider } from './contexts/ActivityMediatorContext';
-import { useReactiveLocation } from './hooks/useReactiveLocation';
 import { bypassTutorialSignal } from './signals/appSignals';
 import { useComputed } from '@preact/signals-react';
+import { parseLocation } from './utils/navigationUtils';
 
 export default function App() {
   const containerRef = React.createRef<HTMLDivElement>();
@@ -17,7 +17,6 @@ export default function App() {
 
   const auth = useAuth();
   const handexTermWrapperRef = useRef<IHandTermWrapperMethods>(null);
-  const { parseLocation } = useReactiveLocation();
   const isBypassActive = useComputed(() => bypassTutorialSignal.value);
 
   const getContainerWidth = useCallback(() => {

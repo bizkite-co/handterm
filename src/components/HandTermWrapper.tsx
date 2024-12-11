@@ -16,10 +16,11 @@ import {
 import { useComputed } from '@preact/signals-react';
 import MonacoEditor from './MonacoEditor';
 import WebCam from 'src/utils/WebCam';
-import { useReactiveLocation } from 'src/hooks/useReactiveLocation';
 import { createLogger, LogLevel } from 'src/utils/Logger';
 import { commandTimeSignal } from 'src/signals/commandLineSignals';
 import { getFileContent } from '../utils/apiClient';
+import { navigate, parseLocation } from 'src/utils/navigationUtils';
+import { tutorialSignal } from 'src/signals/tutorialSignals';
 
 const logger = createLogger({
   prefix: 'HandTermWrapper',
@@ -82,7 +83,6 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
   const [treeItems, setTreeItems] = useState<TreeItem[]>([]);
   const [, setCurrentFile] = useState<string | null>(null);
 
-  const { parseLocation, updateLocation } = useReactiveLocation();
   const currentActivity = parseLocation().activityKey;
 
   // Declare handlePhraseComplete with all its dependencies
@@ -166,7 +166,7 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
         setCurrentFile(path);
 
         // Update location with file path
-        updateLocation({
+        navigate({
           activityKey: ActivityType.EDIT,
           contentKey: `${currentRepo}/${path}`,
           groupKey: null
@@ -179,7 +179,7 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
       // Stay in tree view mode on error
       return;
     }
-  }, [props.auth, updateLocation]);
+  }, [props.auth, navigate]);
 
   const handleEditorClose = useCallback((): void => {
     logger.info('Closing editor, returning to NORMAL mode');
@@ -187,12 +187,12 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
     localStorage.removeItem('edit-content');
     setCurrentFile(null);
     // Return to normal mode
-    updateLocation({
+    navigate({
       activityKey: ActivityType.NORMAL,
       contentKey: null,
       groupKey: null
     });
-  }, [updateLocation]);
+  }, [navigate]);
 
   const handleTreeClose = useCallback((): void => {
     logger.info('Closing tree view, returning to NORMAL mode');
@@ -200,12 +200,12 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
     setTreeItems([]);
     localStorage.removeItem('github_tree_items');
     // Return to normal mode
-    updateLocation({
+    navigate({
       activityKey: ActivityType.NORMAL,
       contentKey: null,
       groupKey: null
     });
-  }, [updateLocation]);
+  }, [navigate]);
 
   const handlePhraseErrorState = useCallback((errorIndex: number | undefined) => {
     setErrorCharIndex(errorIndex);

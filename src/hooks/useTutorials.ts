@@ -6,16 +6,14 @@ import {
     completedTutorialsSignal,
     getNextTutorial,
 } from 'src/signals/tutorialSignals';
-import { useReactiveLocation } from './useReactiveLocation';
 import { createLogger } from 'src/utils/Logger';
+import { parseLocation } from 'src/utils/navigationUtils';
 
 const logger = createLogger({ prefix: 'useTutorials' });
 
 export const useTutorial = () => {
     const [, setCurrentTutorial] = useState<Tutorial | null>(null);
     const completedTutorials = useComputed(() => completedTutorialsSignal.value);
-
-    const { parseLocation } = useReactiveLocation();
 
     // Get all completed tutorials as an array if needed
     const completedTutorialsArray = () => {

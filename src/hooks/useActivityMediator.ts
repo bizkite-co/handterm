@@ -15,8 +15,8 @@ import {
 } from 'src/signals/gameSignals';
 import { activitySignal, setNotification, bypassTutorialSignal } from 'src/signals/appSignals'
 import { useComputed } from '@preact/signals-react';
-import { useReactiveLocation } from './useReactiveLocation';
 import { createLogger } from 'src/utils/Logger';
+import { navigate, parseLocation } from 'src/utils/navigationUtils';
 
 const logger = createLogger({ prefix: 'ActivityMediator' });
 
@@ -67,7 +67,7 @@ export function useActivityMediator() {
             if (nextPhraseInGroup) {
                 setGamePhrase(getNextGamePhrase());
                 activitySignal.value = ActivityType.GAME;
-                updateLocation({
+                navigate({
                     activityKey: ActivityType.GAME,
                     contentKey: nextPhraseInGroup.key,
                     groupKey: nextPhraseInGroup.tutorialGroup
@@ -81,7 +81,7 @@ export function useActivityMediator() {
             const nextTutorial = getNextTutorial();
             if (nextTutorial) {
                 const resultActivity = decideActivityChange(ActivityType.TUTORIAL);
-                updateLocation({
+                navigate({
                     activityKey: resultActivity,
                     contentKey: nextTutorial.phrase ?? '',
                     groupKey: nextTutorial.tutorialGroup ?? ''
@@ -93,7 +93,7 @@ export function useActivityMediator() {
         const nextGamePhrase = getNextGamePhrase();
         if (nextGamePhrase) {
             setGamePhrase(nextGamePhrase);
-            updateLocation({
+            navigate({
                 activityKey: ActivityType.GAME,
                 contentKey: nextGamePhrase.key,
                 groupKey: nextGamePhrase.tutorialGroup
@@ -104,11 +104,11 @@ export function useActivityMediator() {
         }
         activitySignal.value = ActivityType.NORMAL;
 
-        updateLocation({ activityKey: ActivityType.NORMAL })
+        navigate({ activityKey: ActivityType.NORMAL })
     }, [
         parseLocation,
         decideActivityChange,
-        updateLocation,
+        navigate,
         getIncompleteTutorialsInGroup
     ]);
 
@@ -146,7 +146,7 @@ export function useActivityMediator() {
                     const incompletePhrasesInGroup = getIncompletePhrasesByTutorialGroup(groupKey)[0];
                     if (incompletePhrasesInGroup) {
                         activitySignal.value = ActivityType.GAME;
-                        updateLocation({
+                        navigate({
                             activityKey: ActivityType.GAME,
                             contentKey: incompletePhrasesInGroup.key,
                             groupKey: incompletePhrasesInGroup.tutorialGroup
@@ -174,7 +174,7 @@ export function useActivityMediator() {
         if (nextTutorial?.phrase) {
             const resultActivity = decideActivityChange(ActivityType.TUTORIAL);
             setNextTutorial(nextTutorial);
-            updateLocation({
+            navigate({
                 activityKey: resultActivity,
                 contentKey: nextTutorial.phrase,
                 groupKey: nextTutorial.tutorialGroup
@@ -183,7 +183,7 @@ export function useActivityMediator() {
         }
         activitySignal.value = ActivityType.GAME;
         const nextGamePhrase = getNextGamePhrase();
-        if (nextGamePhrase) updateLocation({
+        if (nextGamePhrase) navigate({
             activityKey: ActivityType.GAME,
             contentKey: nextGamePhrase?.key,
             groupKey: groupKey
@@ -192,7 +192,7 @@ export function useActivityMediator() {
     }, [
         parseLocation,
         decideActivityChange,
-        updateLocation,
+        navigate,
         canUnlockTutorial
     ]);
 
@@ -210,7 +210,7 @@ export function useActivityMediator() {
         switch (parsedCommand.command) {
             case 'play':
                 decideActivityChange(ActivityType.GAME);
-                updateLocation({
+                navigate({
                     activityKey: ActivityType.GAME,
                     contentKey: getNextGamePhrase()?.key
                 })
@@ -223,7 +223,7 @@ export function useActivityMediator() {
                 decideActivityChange(ActivityType.TUTORIAL);
                 const nextTutorial = getNextTutorial();
 
-                updateLocation({
+                navigate({
                     activityKey: ActivityType.TUTORIAL,
                     contentKey: nextTutorial?.phrase,
                     groupKey: nextTutorial?.tutorialGroup
@@ -257,4 +257,4 @@ export function useActivityMediator() {
         setZombie4Action,
         checkGameProgress,
     };
-};
+}
