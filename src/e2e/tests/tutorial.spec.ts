@@ -21,9 +21,18 @@ test.describe('Tutorial Progression', () => {
 
     // When the user types the required sequences
     await terminalPage.pressEnter();
+    const command1 = await terminalPage.getCurrentCommand();
+    console.log('Command after first Enter:', command1);
+
     await terminalPage.typeKeys('fdsa');
+    const command2 = await terminalPage.getCurrentCommand();
+    console.log('Command after typing fdsa:', command2);
+
     await terminalPage.pressEnter();
     await terminalPage.typeKeys('jkl;');
+    const command3 = await terminalPage.getCurrentCommand();
+    console.log('Command after typing jkl;:', command3);
+
     await terminalPage.pressEnter();
 
     // Then the activity should change to game mode

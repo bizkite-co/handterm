@@ -4,12 +4,18 @@ import React from 'react';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { QueryProvider } from './providers/QueryProvider';
 import App from './App'
+import { exposeSignals } from './e2e/helpers/exposeSignals';
 
 window.Buffer = Buffer;
 
 // Define 'global' if it's undefined (for browser environments)
 if (typeof global === 'undefined') {
   window.global = window;
+}
+
+// Expose signals for e2e testing in development/test environments
+if (import.meta.env.DEV || import.meta.env.TEST) {
+  exposeSignals();
 }
 
 (async () => {
