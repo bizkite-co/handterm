@@ -29,7 +29,7 @@ export function useActivityMediator() {
     } = useTutorial();
     const activity = useComputed(() => activitySignal.value).value;
     const bypassTutorial = useComputed(() => bypassTutorialSignal.value);
-    const [currentTutorial, setCurrentTutorial] = useState<Tutorial | null>(null);
+    let currentTutorial:(Tutorial | null) = null;
 
     const decideActivityChange = useCallback((commandActivity: ActivityType | null = null): ActivityType => {
         // Breakpoint 15: Deciding activity change
@@ -48,7 +48,7 @@ export function useActivityMediator() {
             return ActivityType.TUTORIAL;
         }
 
-        if (currentTutorial && currentTutorial.tutorialGroup && activity !== ActivityType.GAME) {
+        if (currentTutorial && currentTutorial?.tutorialGroup && activity !== ActivityType.GAME) {
             return ActivityType.GAME;
         }
         if (getNextTutorial()) commandActivity = ActivityType.TUTORIAL;
@@ -120,7 +120,7 @@ export function useActivityMediator() {
             location: parseLocation()
         });
 
-        setCurrentTutorial(getNextTutorial());
+        currentTutorial = getNextTutorial();
         if (!currentTutorial) {
             logger.debug('No current tutorial found');
             return;
