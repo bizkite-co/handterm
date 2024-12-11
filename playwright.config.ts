@@ -25,6 +25,14 @@ export default defineConfig({
     storageState: undefined
   },
 
+  /* Configure web server to run before tests */
+  webServer: {
+    command: 'npm run dev',
+    url: 'http://localhost:5173',
+    reuseExistingServer: !process.env.CI,
+    timeout: 120 * 1000, // 2 minutes for dev server to start
+  },
+
   /* Configure projects for major browsers */
   projects: [
     {
