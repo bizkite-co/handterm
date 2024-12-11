@@ -17,7 +17,7 @@ export class TutorialPage {
     await this.page.goto('/');
   }
 
-  async typeKey(key: string) {
+  async typeKeys(key: string) {
     await this.page.keyboard.type(key);
   }
 

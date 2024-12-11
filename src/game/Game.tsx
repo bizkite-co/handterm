@@ -294,7 +294,7 @@ const Game: React.ForwardRefRenderFunction<IGameHandle, IGameProps> = ((props, r
     <>
       {isInGameMode && (
         <div
-          data-testid="terminal-game"
+          id="terminal-game"
           style={{ position: "relative", height: canvasHeight }}
         >
           <div className="parallax-background">

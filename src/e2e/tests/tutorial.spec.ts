@@ -6,10 +6,10 @@ test.describe('Tutorial Progression', () => {
 
   test.beforeEach(async ({ page }) => {
     tutorialPage = new TutorialPage(page);
-    try{
-      await page.evaluate("localStorage.clear()");
+    try {
+      // await page.evaluate("localStorage.clear()");
     }
-    catch(ex){
+    catch (ex) {
       console.log("Error:", ex);
     }
     await tutorialPage.goto();
@@ -21,11 +21,9 @@ test.describe('Tutorial Progression', () => {
 
     // When the user types the required sequences
     await tutorialPage.pressEnter();
+    await tutorialPage.typeKeys('fdsa');
     await tutorialPage.pressEnter();
-    await tutorialPage.pressEnter();
-    await tutorialPage.typeKey('fdsa');
-    await tutorialPage.pressEnter();
-    await tutorialPage.typeKey('jkl;');
+    await tutorialPage.typeKeys('jkl;');
     await tutorialPage.pressEnter();
 
     // Then the activity should change to game mode
