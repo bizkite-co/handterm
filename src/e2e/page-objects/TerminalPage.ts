@@ -26,7 +26,7 @@ export class TerminalPage {
    * @param command The command to type
    */
   async typeCommand(command: string) {
-    await this.terminal.click();
+    await this.terminal.focus();
     await this.page.keyboard.type(command);
   }
 
@@ -35,7 +35,7 @@ export class TerminalPage {
    * @param keys The keys to type
    */
   async typeKeys(keys: string) {
-    await this.terminal.click();
+    await this.terminal.focus();
     await this.page.keyboard.type(keys);
   }
 
@@ -92,14 +92,14 @@ export class TerminalPage {
    * Focuses the terminal
    */
   async focus() {
-    await this.terminal.click();
+    await this.terminal.focus();
   }
 
   /**
    * Clears the current command line using Ctrl+C
    */
   async clearLine() {
-    await this.terminal.click();
+    await this.terminal.focus();
     await this.page.keyboard.press('Control+C');
     await this.waitForPrompt();
   }
