@@ -25,6 +25,7 @@ import { ActivityType } from 'src/types/Types';
 import { useCharacterHandler } from './useCharacterHandler';
 import { parseCommand } from 'src/utils/commandUtils';
 import { createLogger } from 'src/utils/Logger';
+import { TERMINAL_CONSTANTS } from 'src/constants/terminal';
 
 const logger = createLogger({ prefix: 'useTerminal' });
 
@@ -37,8 +38,7 @@ export const useTerminal = () => {
   const [_commandLineState, _setCommandLineState] = React.useState('');
 
   const fitAddon = useRef(new FitAddon());
-  const PROMPT = '> ';
-  const promptLength = PROMPT.length;
+  const { PROMPT, PROMPT_LENGTH } = TERMINAL_CONSTANTS;
 
   const writeToTerminal = useCallback((data: string) => {
     logger.debug('Writing to terminal:', data);
@@ -80,11 +80,11 @@ export const useTerminal = () => {
         command += line.translateToString(true);
       }
     }
-    const promptEndIndex = command.indexOf(PROMPT) + promptLength;
+    const promptEndIndex = command.indexOf(PROMPT) + PROMPT_LENGTH;
     const currentCommand = command.substring(promptEndIndex).trimStart();
     logger.debug('Getting current command:', currentCommand);
     return currentCommand;
-  }, [instance, promptLength]);
+  }, [instance]);
 
   const clearCurrentLine = useCallback(() => {
     if (!instance) return;
@@ -169,7 +169,7 @@ export const useTerminal = () => {
           return true;
 
         case '\x1b[D': // Left arrow
-          if (cursorX > promptLength) {
+          if (cursorX > PROMPT_LENGTH) {
             instance?.write(data);
           }
           return true;
@@ -233,7 +233,7 @@ export const useTerminal = () => {
           tempPasswordSignal.value = tempPasswordSignal.value.slice(0, -1);
           instance?.write('\b \b');
         }
-      } else if (cursorX > promptLength) {
+      } else if (cursorX > PROMPT_LENGTH) {
         instance?.write('\b \b');
         const newCommandLine = _commandLineState.slice(0, -1);
         setCommandLine(newCommandLine);
@@ -282,7 +282,6 @@ export const useTerminal = () => {
     wpmCalculator,
     commandLine,
     navigateHistory,
-    promptLength,
     handleCharacter,
     _commandLineState,
     handleCommand,
