@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { ActivityType, ParsedCommand, GamePhrase } from '../types/Types';
+import { ActivityType, ParsedCommand, GamePhrase, Tutorial } from '../types/Types';
 import { ActionType } from '../game/types/ActionTypes';
 import GamePhrases from '../utils/GamePhrases';
 import { useTutorial } from './useTutorials';
@@ -28,9 +28,8 @@ export function useActivityMediator() {
         canUnlockTutorial
     } = useTutorial();
     const activity = useComputed(() => activitySignal.value).value;
-    const { updateLocation, parseLocation } = useReactiveLocation();
-    const [, setActivityGroupKey] = useState<string>('');
     const bypassTutorial = useComputed(() => bypassTutorialSignal.value);
+    const [currentTutorial, setCurrentTutorial] = useState<Tutorial | null>(null);
 
     const decideActivityChange = useCallback((commandActivity: ActivityType | null = null): ActivityType => {
         // Breakpoint 15: Deciding activity change
@@ -49,7 +48,7 @@ export function useActivityMediator() {
             return ActivityType.TUTORIAL;
         }
 
-        if (tutorialSignal.value?.tutorialGroup && activity !== ActivityType.GAME) {
+        if (currentTutorial && currentTutorial.tutorialGroup && activity !== ActivityType.GAME) {
             return ActivityType.GAME;
         }
         if (getNextTutorial()) commandActivity = ActivityType.TUTORIAL;
@@ -121,7 +120,7 @@ export function useActivityMediator() {
             location: parseLocation()
         });
 
-        const currentTutorial = getNextTutorial();
+        setCurrentTutorial(getNextTutorial());
         if (!currentTutorial) {
             logger.debug('No current tutorial found');
             return;

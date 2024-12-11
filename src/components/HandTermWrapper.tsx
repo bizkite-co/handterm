@@ -248,8 +248,10 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
       {lastTypedCharacter && (
         <Chord displayChar={lastTypedCharacter} />
       )}
-      {parseLocation().activityKey === ActivityType.TUTORIAL && (
-        <TutorialManager />
+      {parseLocation().activityKey === ActivityType.TUTORIAL && tutorialSignal.value && (
+        <TutorialManager
+          tutorial={tutorialSignal.value}
+        />
       )}
 
       {/* Always show terminal unless in EDIT or TREE mode */}

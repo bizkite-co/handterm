@@ -6,6 +6,12 @@ test.describe('Tutorial Progression', () => {
 
   test.beforeEach(async ({ page }) => {
     tutorialPage = new TutorialPage(page);
+    try{
+      await page.evaluate("localStorage.clear()");
+    }
+    catch(ex){
+      console.log("Error:", ex);
+    }
     await tutorialPage.goto();
   });
 

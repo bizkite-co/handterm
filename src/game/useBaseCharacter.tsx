@@ -47,7 +47,6 @@ export const useBaseCharacter = (props: BaseCharacterProps) => {
 
     // Update both the ref and the prop
     currentActionRef.current = newActionType;
-    props.currentActionType = newActionType;
     frameIndexRef.current = 0;
 
     const sprite = spritesRef.current[newActionType];
@@ -57,7 +56,7 @@ export const useBaseCharacter = (props: BaseCharacterProps) => {
       // Try to load the sprite if it's missing
       loadSprite(newActionType, actions[newActionType].animation);
     }
-  }, [actions, loadSprite]);
+  }, [currentActionType, actions, loadSprite]);
 
   const draw = (
     context: CanvasRenderingContext2D,
