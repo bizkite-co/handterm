@@ -1,17 +1,12 @@
 import { test, expect } from '@playwright/test';
 import { TerminalPage } from '../page-objects/TerminalPage';
+import { ActivityType } from 'src/types/Types';
 
 test.describe('Tutorial Progression', () => {
   let terminalPage: TerminalPage;
 
   test.beforeEach(async ({ page }) => {
     terminalPage = new TerminalPage(page);
-    try {
-      // await page.evaluate("localStorage.clear()");
-    }
-    catch (ex) {
-      console.log("Error:", ex);
-    }
     await terminalPage.goto();
   });
 
@@ -19,28 +14,31 @@ test.describe('Tutorial Progression', () => {
     // Given the user is in tutorial mode
     await expect(terminalPage.tutorialMode).toBeVisible();
 
-    // When the user types the required sequences
+    // Given the user is in the tutorial mode
+    // When the user types "Enter"
     await terminalPage.pressEnter();
-    const command1 = await terminalPage.getCurrentCommand();
-    console.log('Command after first Enter:', command1);
 
+    // And the user types "fdsa"
     await terminalPage.typeKeys('fdsa');
-    const command2 = await terminalPage.getCurrentCommand();
-    console.log('Command after typing fdsa:', command2);
-
     await terminalPage.pressEnter();
+
+    // And the user types "jkl;"
     await terminalPage.typeKeys('jkl;');
-    const command3 = await terminalPage.getCurrentCommand();
-    console.log('Command after typing jkl;:', command3);
-
     await terminalPage.pressEnter();
 
-    // Then the activity should change to game mode
+    // Then the Activity should change from Tutorial to Game
     await expect(terminalPage.gameMode).toBeVisible();
     await expect(terminalPage.tutorialMode).not.toBeVisible();
+
+    // And the user is presented with a Game phrase
+    // When the user types "all sad lads ask dad; alas fads fall"
+    await terminalPage.typeKeys('all sad lads ask dad; alas fads fall');
+
+    // Then the user is returned to the tutorial
+    await expect(terminalPage.tutorialMode).toBeVisible();
+    await expect(terminalPage.gameMode).not.toBeVisible();
   });
 
-  // Example of another test in the same suite
   test('should start in tutorial mode with clean state', async () => {
     // This test will start fresh because of new context
     await expect(terminalPage.tutorialMode).toBeVisible();
