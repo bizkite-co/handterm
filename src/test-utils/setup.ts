@@ -122,13 +122,6 @@ vi.mock('@xterm/addon-fit', () => ({
   }
 };
 
-// Mock console.log to include timestamps
-const originalLog = console.log;
-console.log = (...args) => {
-  const timestamp = new Date().toISOString();
-  originalLog(`[${timestamp}]`, ...args);
-};
-
 (window as { __xtermDataCallback?: (data: string) => void }).__xtermDataCallback = undefined;
 (window as any).triggerTerminalInput = (data: string) => {
   const xtermDataCallback = (window as { __xtermDataCallback?: (data: string) => void }).__xtermDataCallback;
@@ -160,7 +153,6 @@ console.log = (...args) => {
   (window as { __xtermDataCallback?: (data: string) => void }).__xtermDataCallback?.(data);
 };
 (window as any).triggerTerminalInput = (data: string) => {
-  // debugger; // Breakpoint 6: Before triggering terminal input
   const xtermDataCallback = (window as { __xtermDataCallback?: (data: string) => void }).__xtermDataCallback;
   if (xtermDataCallback) {
     // For Enter key, ensure we send just \r
@@ -173,7 +165,6 @@ console.log = (...args) => {
 };
 (window as any).mockTerminal = mockTerminal;
 (window as any).triggerTerminalInput = (data: string) => {
-  // debugger; // Breakpoint 6: Before triggering terminal input
   const xtermDataCallback = (window as { __xtermDataCallback?: (data: string) => void }).__xtermDataCallback;
   if (xtermDataCallback) {
     // For Enter key, ensure we send just \r
@@ -186,7 +177,6 @@ console.log = (...args) => {
 };
 (window as any).mockTerminal = mockTerminal;
 (window as any).triggerTerminalInput = (data: string) => {
-  // debugger; // Breakpoint 6: Before triggering terminal input
   const xtermDataCallback = (window as { __xtermDataCallback?: (data: string) => void }).__xtermDataCallback;
   if (xtermDataCallback) {
     // For Enter key, ensure we send just \r

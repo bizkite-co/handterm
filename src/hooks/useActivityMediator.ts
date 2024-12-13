@@ -105,9 +105,7 @@ export function useActivityMediator() {
 
         navigate({ activityKey: ActivityType.NORMAL })
     }, [
-        parseLocation,
         decideActivityChange,
-        navigate,
         getIncompleteTutorialsInGroup
     ]);
 
@@ -189,9 +187,7 @@ export function useActivityMediator() {
         })
         return;
     }, [
-        parseLocation,
         decideActivityChange,
-        navigate,
         canUnlockTutorial
     ]);
 
@@ -236,7 +232,7 @@ export function useActivityMediator() {
         }
 
         return result;
-    }, [decideActivityChange, checkGameProgress, checkTutorialProgress, parseLocation]);
+    }, [decideActivityChange, checkGameProgress, checkTutorialProgress]);
 
     useEffect(() => {
         const resultActivity = decideActivityChange(null);

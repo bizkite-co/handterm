@@ -179,7 +179,7 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
       // Stay in tree view mode on error
       return;
     }
-  }, [props.auth, navigate]);
+  }, [props.auth]);
 
   const handleEditorClose = useCallback((): void => {
     logger.info('Closing editor, returning to NORMAL mode');
@@ -192,7 +192,7 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
       contentKey: null,
       groupKey: null
     });
-  }, [navigate]);
+  }, []);
 
   const handleTreeClose = useCallback((): void => {
     logger.info('Closing tree view, returning to NORMAL mode');
@@ -205,7 +205,7 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
       contentKey: null,
       groupKey: null
     });
-  }, [navigate]);
+  }, []);
 
   const handlePhraseErrorState = useCallback((errorIndex: number | undefined) => {
     setErrorCharIndex(errorIndex);

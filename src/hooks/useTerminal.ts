@@ -38,7 +38,7 @@ export const useTerminal = () => {
   const [_commandLineState, _setCommandLineState] = React.useState('');
 
   const fitAddon = useRef(new FitAddon());
-  const { PROMPT, PROMPT_LENGTH } = TERMINAL_CONSTANTS;
+  const { PROMPT: _PROMPT, PROMPT_LENGTH: _PROMPT_LENGTH } = TERMINAL_CONSTANTS;
 
   const writeToTerminal = useCallback((data: string) => {
     logger.debug('Writing to terminal:', data);
@@ -51,9 +51,9 @@ export const useTerminal = () => {
     instance.reset();
     setCommandLine('');
     _setCommandLineState('');
-    instance.write(PROMPT);
+    instance.write(TERMINAL_CONSTANTS.PROMPT);
     instance.scrollToBottom();
-  }, [instance, PROMPT]);
+  }, [instance]);
 
   const lastTypedCharacterRef = useRef<string | null>(null);
   const setLastTypedCharacter = (value: string | null) => {
@@ -80,18 +80,18 @@ export const useTerminal = () => {
         command += line.translateToString(true);
       }
     }
-    const promptEndIndex = command.indexOf(PROMPT) + PROMPT_LENGTH;
+    const promptEndIndex = command.indexOf(TERMINAL_CONSTANTS.PROMPT) + TERMINAL_CONSTANTS.PROMPT_LENGTH;
     const currentCommand = command.substring(promptEndIndex).trimStart();
     logger.debug('Getting current command:', currentCommand);
     return currentCommand;
-  }, [instance, PROMPT, PROMPT_LENGTH]);
+  }, [instance]);
 
   const clearCurrentLine = useCallback(() => {
     if (!instance) return;
     logger.debug('Clearing current line');
     instance.write('\x1b[2K\r'); // Clear the current line
-    instance.write(PROMPT); // Rewrite prompt
-  }, [instance, PROMPT]);
+    instance.write(TERMINAL_CONSTANTS.PROMPT); // Rewrite prompt
+  }, [instance]);
 
   const navigateHistory = useCallback((direction: 'up' | 'down') => {
     if (!instance || !commandHistory.length) return;
@@ -137,8 +137,6 @@ export const useTerminal = () => {
     setCommandHistoryIndex,
     commandLine,
     _setCommandLineState,
-    PROMPT,
-    PROMPT_LENGTH
   ]);
 
   useEffect(() => {
@@ -171,7 +169,7 @@ export const useTerminal = () => {
           return true;
 
         case '\x1b[D': // Left arrow
-          if (cursorX > PROMPT_LENGTH) {
+          if (cursorX > TERMINAL_CONSTANTS.PROMPT_LENGTH) {
             instance?.write(data);
           }
           return true;
@@ -235,7 +233,7 @@ export const useTerminal = () => {
           tempPasswordSignal.value = tempPasswordSignal.value.slice(0, -1);
           instance?.write('\b \b');
         }
-      } else if (cursorX > PROMPT_LENGTH) {
+      } else if (cursorX > TERMINAL_CONSTANTS.PROMPT_LENGTH) {
         instance?.write('\b \b');
         const newCommandLine = _commandLineState.slice(0, -1);
         setCommandLine(newCommandLine);
@@ -288,8 +286,6 @@ export const useTerminal = () => {
     _commandLineState,
     handleCommand,
     setCommandHistoryIndex,
-    PROMPT,
-    PROMPT_LENGTH
   ]);
 
   return {
