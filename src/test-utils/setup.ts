@@ -9,7 +9,7 @@ const localStorageMock = {
   length: 0,
   key: vi.fn(),
 };
-global.localStorage = localStorageMock as any;
+global.localStorage = localStorageMock as typeof localStorage;
 
 // Mock matchMedia
 Object.defineProperty(window, 'matchMedia', {
@@ -70,21 +70,9 @@ const mockTerminal = {
   loadAddon: vi.fn(),
   open: vi.fn(),
   write: vi.fn((data: string) => {
-    console.log('Terminal write:', {
-      data,
-      charCodes: [...data].map(c => c.charCodeAt(0)),
-      hex: [...data].map(c => '0x' + c.charCodeAt(0).toString(16))
-    });
   }),
   onData: vi.fn((callback) => {
-    console.log('Terminal onData registered');
-    (window as any).__xtermDataCallback = (data: string) => {
-      // debugger; // Breakpoint 5: Terminal data received
-      console.log('Terminal received data:', {
-        data,
-        charCodes: [...data].map(c => c.charCodeAt(0)),
-        hex: [...data].map(c => '0x' + c.charCodeAt(0).toString(16))
-      });
+    (window as { __xtermDataCallback?: (data: string) => void }).__xtermDataCallback = (data: string) => {
       callback(data);
     };
     return { dispose: vi.fn() };
@@ -94,7 +82,6 @@ const mockTerminal = {
   focus: vi.fn(),
   dispose: vi.fn(),
   reset: vi.fn(() => {
-    console.log('Terminal reset');
   }),
   scrollToBottom: vi.fn(),
   buffer: {
@@ -103,7 +90,6 @@ const mockTerminal = {
       cursorY: 0,
       getLine: () => ({
         translateToString: () => {
-          console.log('Terminal getLine called');
           return '> ';
         }
       })
@@ -125,19 +111,13 @@ vi.mock('@xterm/addon-fit', () => ({
 
 // Helper to trigger terminal input
 (window as any).triggerTerminalInput = (data: string) => {
-  // debugger; // Breakpoint 6: Before triggering terminal input
-  console.log('Triggering terminal input:', {
-    data,
-    charCodes: [...data].map(c => c.charCodeAt(0)),
-    hex: [...data].map(c => '0x' + c.charCodeAt(0).toString(16))
-  });
-  if ((window as any).__xtermDataCallback) {
+  const xtermDataCallback = (window as { __xtermDataCallback?: (data: string) => void }).__xtermDataCallback;
+  if (xtermDataCallback) {
     // For Enter key, ensure we send just \r
     if (data === '\r\n') {
-      console.log('Converting \\r\\n to \\r for Enter key');
-      (window as any).__xtermDataCallback('\r');
+      xtermDataCallback('\r');
     } else {
-      (window as any).__xtermDataCallback(data);
+      xtermDataCallback(data);
     }
   }
 };
@@ -147,4 +127,73 @@ const originalLog = console.log;
 console.log = (...args) => {
   const timestamp = new Date().toISOString();
   originalLog(`[${timestamp}]`, ...args);
+};
+
+(window as { __xtermDataCallback?: (data: string) => void }).__xtermDataCallback = undefined;
+(window as any).triggerTerminalInput = (data: string) => {
+  const xtermDataCallback = (window as { __xtermDataCallback?: (data: string) => void }).__xtermDataCallback;
+    if (xtermDataCallback) {
+    // For Enter key, ensure we send just \r
+    if (data === '\r\n') {
+      xtermDataCallback('\r');
+    } else {
+      xtermDataCallback(data);
+    }
+  }
+};
+
+(window as any).__xtermDataCallback = undefined;
+(window as any).triggerTerminalInput = (data: string) => {
+  const xtermDataCallback = (window as { __xtermDataCallback?: (data: string) => void }).__xtermDataCallback;
+    if (xtermDataCallback) {
+    // For Enter key, ensure we send just \r
+    if (data === '\r\n') {
+      xtermDataCallback('\r');
+    } else {
+      xtermDataCallback(data);
+    }
+  }
+};
+
+(window as any).mockTerminal = mockTerminal;
+(window as any).__xtermDataCallback = (data: string) => {
+  (window as { __xtermDataCallback?: (data: string) => void }).__xtermDataCallback?.(data);
+};
+(window as any).triggerTerminalInput = (data: string) => {
+  // debugger; // Breakpoint 6: Before triggering terminal input
+  const xtermDataCallback = (window as { __xtermDataCallback?: (data: string) => void }).__xtermDataCallback;
+  if (xtermDataCallback) {
+    // For Enter key, ensure we send just \r
+    if (data === '\r\n') {
+      xtermDataCallback('\r');
+    } else {
+      xtermDataCallback(data);
+    }
+  }
+};
+(window as any).mockTerminal = mockTerminal;
+(window as any).triggerTerminalInput = (data: string) => {
+  // debugger; // Breakpoint 6: Before triggering terminal input
+  const xtermDataCallback = (window as { __xtermDataCallback?: (data: string) => void }).__xtermDataCallback;
+  if (xtermDataCallback) {
+    // For Enter key, ensure we send just \r
+    if (data === '\r\n') {
+      xtermDataCallback('\r');
+    } else {
+      xtermDataCallback(data);
+    }
+  }
+};
+(window as any).mockTerminal = mockTerminal;
+(window as any).triggerTerminalInput = (data: string) => {
+  // debugger; // Breakpoint 6: Before triggering terminal input
+  const xtermDataCallback = (window as { __xtermDataCallback?: (data: string) => void }).__xtermDataCallback;
+  if (xtermDataCallback) {
+    // For Enter key, ensure we send just \r
+    if (data === '\r\n') {
+      xtermDataCallback('\r');
+    } else {
+      xtermDataCallback(data);
+    }
+  }
 };

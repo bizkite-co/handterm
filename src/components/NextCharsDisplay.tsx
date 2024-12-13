@@ -8,7 +8,6 @@ import { commandLineSignal } from "src/signals/commandLineSignals";
 import { useComputed, useSignalEffect } from "@preact/signals-react";
 import { setCompletedGamePhrase } from "src/signals/gameSignals";
 import { GamePhrase } from "src/types/Types";
-import { useReactiveLocation } from "src/hooks/useReactiveLocation";
 import * as GamePhrases from "src/utils/GamePhrases";
 import { parseLocation } from "src/utils/navigationUtils";
 
@@ -181,7 +180,7 @@ const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, INextCharsDisp
         );
         setPhrase(new Phrase(foundPhrase.value.split('')));
         setNextChars(foundPhrase.value);
-    }, [currentLocation.contentKey]);
+    }, [currentLocation, currentLocation.contentKey]);
 
     // Optimize signal effect to prevent unnecessary re-renders
     useSignalEffect(() => {

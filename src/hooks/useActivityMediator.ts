@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { ActivityType, ParsedCommand, GamePhrase, Tutorial } from '../types/Types';
 import { ActionType } from '../game/types/ActionTypes';
 import GamePhrases from '../utils/GamePhrases';
@@ -29,7 +29,7 @@ export function useActivityMediator() {
     } = useTutorial();
     const activity = useComputed(() => activitySignal.value).value;
     const bypassTutorial = useComputed(() => bypassTutorialSignal.value);
-    let currentTutorial:(Tutorial | null) = null;
+    const currentTutorial = useRef<Tutorial | null>(null);
 
     const decideActivityChange = useCallback((commandActivity: ActivityType | null = null): ActivityType => {
         // Breakpoint 15: Deciding activity change
@@ -48,7 +48,7 @@ export function useActivityMediator() {
             return ActivityType.TUTORIAL;
         }
 
-        if (currentTutorial && currentTutorial?.tutorialGroup && activity !== ActivityType.GAME) {
+        if (currentTutorial.current && currentTutorial.current?.tutorialGroup && activity !== ActivityType.GAME) {
             return ActivityType.GAME;
         }
         if (getNextTutorial()) commandActivity = ActivityType.TUTORIAL;
@@ -120,8 +120,8 @@ export function useActivityMediator() {
             location: parseLocation()
         });
 
-        currentTutorial = getNextTutorial();
-        if (!currentTutorial) {
+        currentTutorial.current = getNextTutorial();
+        if (!currentTutorial.current) {
             logger.debug('No current tutorial found');
             return;
         }
@@ -133,9 +133,9 @@ export function useActivityMediator() {
             // Breakpoint 18: Tutorial unlock check
             logger.debug('Checking if can unlock tutorial:', {
                 command,
-                currentPhrase: currentTutorial.phrase,
+                currentPhrase: currentTutorial.current.phrase,
                 charCodesCommand: [...command].map(c => c.charCodeAt(0)),
-                charCodesPhrase: [...currentTutorial.phrase].map(c => c.charCodeAt(0))
+                charCodesPhrase: [...currentTutorial.current.phrase].map(c => c.charCodeAt(0))
             });
 
             if (canUnlockTutorial(command)) {
@@ -154,10 +154,10 @@ export function useActivityMediator() {
                     }
                     return;
                 }
-                setCompletedTutorial(currentTutorial.phrase);
+                setCompletedTutorial(currentTutorial.current.phrase);
             } else {
                 logger.debug('Tutorial not unlocked:', {
-                    expected: currentTutorial.phrase,
+                    expected: currentTutorial.current.phrase,
                     received: command
                 });
                 setNotification(
@@ -207,7 +207,7 @@ export function useActivityMediator() {
             if (gamePhrase) checkGameProgress(gamePhrase);
         }
         switch (parsedCommand.command) {
-            case 'play':
+            case 'play': {
                 decideActivityChange(ActivityType.GAME);
                 navigate({
                     activityKey: ActivityType.GAME,
@@ -215,7 +215,8 @@ export function useActivityMediator() {
                 })
                 result = true;
                 break;
-            case 'tut':
+            }
+            case 'tut': {
                 if ('r' in parsedCommand.switches) {
                     resetCompletedTutorials();
                 }
@@ -229,19 +230,20 @@ export function useActivityMediator() {
                 })
                 result = true;
                 break;
+            }
             default:
                 result = false;
         }
 
         return result;
-    }, [decideActivityChange, window.location.pathname]);
+    }, [decideActivityChange, checkGameProgress, checkTutorialProgress, parseLocation]);
 
     useEffect(() => {
         const resultActivity = decideActivityChange(null);
         if (resultActivity === ActivityType.TUTORIAL) {
             checkTutorialProgress(null);
         }
-    }, []);
+    }, [decideActivityChange, checkTutorialProgress]);
 
     return {
         isInGameMode: activity === ActivityType.GAME,

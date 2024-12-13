@@ -15,7 +15,7 @@ import { createLogger } from 'src/utils/Logger';
 const logger = createLogger({ prefix: 'useCommand' });
 
 export const useCommand = () => {
-    const [output, setOutput] = useState<React.ReactNode[]>([]);
+    const [output, setOutput] = useState<OutputElement[]>([]);
     const [commandHistory, setCommandHistory] = useState<string[]>([]);
     const [commandHistoryIndex, setCommandHistoryIndex] = useState(-1);
     const [_commandHistoryFilter, _setCommandHistoryFilter] = useState<string | null>(null);
@@ -175,5 +175,6 @@ export const useCommand = () => {
         commandHistoryFilter: _commandHistoryFilter,
         setCommandHistoryFilter: _setCommandHistoryFilter,
         appendToOutput,
+        executeCommand
     };
 };

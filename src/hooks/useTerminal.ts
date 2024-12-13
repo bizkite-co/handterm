@@ -53,7 +53,7 @@ export const useTerminal = () => {
     _setCommandLineState('');
     instance.write(PROMPT);
     instance.scrollToBottom();
-  }, [instance]);
+  }, [instance, PROMPT]);
 
   const lastTypedCharacterRef = useRef<string | null>(null);
   const setLastTypedCharacter = (value: string | null) => {
@@ -84,14 +84,14 @@ export const useTerminal = () => {
     const currentCommand = command.substring(promptEndIndex).trimStart();
     logger.debug('Getting current command:', currentCommand);
     return currentCommand;
-  }, [instance]);
+  }, [instance, PROMPT, PROMPT_LENGTH]);
 
   const clearCurrentLine = useCallback(() => {
     if (!instance) return;
     logger.debug('Clearing current line');
     instance.write('\x1b[2K\r'); // Clear the current line
     instance.write(PROMPT); // Rewrite prompt
-  }, [instance]);
+  }, [instance, PROMPT]);
 
   const navigateHistory = useCallback((direction: 'up' | 'down') => {
     if (!instance || !commandHistory.length) return;
@@ -136,7 +136,9 @@ export const useTerminal = () => {
     clearCurrentLine,
     setCommandHistoryIndex,
     commandLine,
-    _setCommandLineState
+    _setCommandLineState,
+    PROMPT,
+    PROMPT_LENGTH
   ]);
 
   useEffect(() => {
@@ -285,7 +287,9 @@ export const useTerminal = () => {
     handleCharacter,
     _commandLineState,
     handleCommand,
-    setCommandHistoryIndex
+    setCommandHistoryIndex,
+    PROMPT,
+    PROMPT_LENGTH
   ]);
 
   return {

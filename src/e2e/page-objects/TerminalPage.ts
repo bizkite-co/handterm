@@ -81,7 +81,7 @@ export class TerminalPage {
 
     // Get the value from commandLineSignal
     const commandLine = await this.page.evaluate(() => {
-      return (window as any).commandLineSignal.value;
+      return (window as unknown as { commandLineSignal: { value: string } }).commandLineSignal.value;
     });
 
     return commandLine || '';

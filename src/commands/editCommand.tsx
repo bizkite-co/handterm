@@ -7,12 +7,12 @@ const EditCommand: ICommand = {
     description: 'Edit file contents',
     execute: async (
         context: ICommandContext,
-        _parsedCommand: ParsedCommand,
+        parsedCommand: ParsedCommand,
     ): Promise<ICommandResponse> => {
-        if (_parsedCommand.command.toLowerCase() === 'edit') {
+        if (parsedCommand.command.toLowerCase() === 'edit') {
             context.updateLocation({
                 activityKey: ActivityType.EDIT,
-                contentKey: _parsedCommand.args[0] || '_index.md',
+                contentKey: parsedCommand.args[0] || '_index.md',
                 groupKey: null
             })
             return { status: 200, message: "Editing file content" };

@@ -56,7 +56,7 @@ export const useBaseCharacter = (props: BaseCharacterProps) => {
       // Try to load the sprite if it's missing
       loadSprite(newActionType, actions[newActionType].animation);
     }
-  }, [currentActionType, actions, loadSprite]);
+  }, [actions, loadSprite]);
 
   const draw = (
     context: CanvasRenderingContext2D,
@@ -111,7 +111,7 @@ export const useBaseCharacter = (props: BaseCharacterProps) => {
     if (!currentSprite) {
       loadSprite(currentActionRef.current, actions[currentActionRef.current].animation);
     }
-  }, [currentActionRef.current, actions, loadSprite]);
+  }, [actions, loadSprite]);
 
   return {
     draw,

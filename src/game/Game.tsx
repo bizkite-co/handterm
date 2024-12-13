@@ -147,7 +147,7 @@ const Game: React.ForwardRefRenderFunction<IGameHandle, IGameProps> = ((props, r
   const checkProximityAndSetAction = useCallback(() => {
     const ATTACK_THRESHOLD = 100;
     const distance = heroPosition.leftX - zombie4PositionRef.current.leftX;
-    console.log("Distance:", Math.round(distance / 5) * 5, heroAction, zombie4Action);
+    // console.log("Distance:", Math.round(distance / 5) * 5, heroAction, zombie4Action);
 
     if (-20 < distance && distance < ATTACK_THRESHOLD) {
       setZombie4Action('Attack');
@@ -162,7 +162,7 @@ const Game: React.ForwardRefRenderFunction<IGameHandle, IGameProps> = ((props, r
         setZombie4Action('Walk');
       }
     }
-  }, [heroPosition, zombie4Action]);
+  }, [heroPosition, zombie4Action, setHeroAction]);
 
   const toggleScrollingText = useCallback((show: boolean | null = null) => {
     if (show === null) show = !isTextScrolling;
@@ -198,7 +198,7 @@ const Game: React.ForwardRefRenderFunction<IGameHandle, IGameProps> = ((props, r
     };
 
     animationFrameIndex.current = requestAnimationFrame(loop);
-  }, [isPhraseComplete, drawScrollingText]);
+  }, [isPhraseComplete, drawScrollingText, updateCharacterAndBackgroundPostion, checkProximityAndSetAction]);
 
   const setHeroRunAction = useCallback(() => {
     if (heroRunTimeoutRef.current) {
@@ -211,7 +211,7 @@ const Game: React.ForwardRefRenderFunction<IGameHandle, IGameProps> = ((props, r
       setHeroAction('Idle');
       heroRunTimeoutRef.current = null;
     }, 800);
-  }, []);
+  }, [setHeroAction]);
 
   const handleCommandLineChange = useCallback((_comandLine: string) => {
     setHeroRunAction();
