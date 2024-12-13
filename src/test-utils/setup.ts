@@ -69,10 +69,10 @@ HTMLCanvasElement.prototype.getContext = vi.fn(() => ({
 const mockTerminal = {
   loadAddon: vi.fn(),
   open: vi.fn(),
-  write: vi.fn((data: string) => {
+  write: vi.fn((_data: string) => {
   }),
   onData: vi.fn((callback) => {
-    (window as { __xtermDataCallback?: (data: string) => void }).__xtermDataCallback = (data: string) => {
+    (window as WindowWithXtermCallback).__xtermDataCallback = (data: string) => {
       callback(data);
     };
     return { dispose: vi.fn() };
@@ -109,9 +109,16 @@ vi.mock('@xterm/addon-fit', () => ({
   }))
 }));
 
+// Define types for window extensions
+interface WindowWithXtermCallback extends Window {
+  __xtermDataCallback?: (data: string) => void;
+  mockTerminal?: typeof mockTerminal;
+  triggerTerminalInput?: (data: string) => void;
+}
+
 // Helper to trigger terminal input
-(window as any).triggerTerminalInput = (data: string) => {
-  const xtermDataCallback = (window as { __xtermDataCallback?: (data: string) => void }).__xtermDataCallback;
+function createTriggerTerminalInput(data: string) {
+  const xtermDataCallback = (window as WindowWithXtermCallback).__xtermDataCallback;
   if (xtermDataCallback) {
     // For Enter key, ensure we send just \r
     if (data === '\r\n') {
@@ -120,70 +127,14 @@ vi.mock('@xterm/addon-fit', () => ({
       xtermDataCallback(data);
     }
   }
-};
+}
 
-(window as { __xtermDataCallback?: (data: string) => void }).__xtermDataCallback = undefined;
-(window as any).triggerTerminalInput = (data: string) => {
-  const xtermDataCallback = (window as { __xtermDataCallback?: (data: string) => void }).__xtermDataCallback;
-    if (xtermDataCallback) {
-    // For Enter key, ensure we send just \r
-    if (data === '\r\n') {
-      xtermDataCallback('\r');
-    } else {
-      xtermDataCallback(data);
-    }
-  }
-};
+// Initialize window extensions
+(window as WindowWithXtermCallback).__xtermDataCallback = undefined;
+(window as WindowWithXtermCallback).triggerTerminalInput = createTriggerTerminalInput;
+(window as WindowWithXtermCallback).mockTerminal = mockTerminal;
 
-(window as any).__xtermDataCallback = undefined;
-(window as any).triggerTerminalInput = (data: string) => {
-  const xtermDataCallback = (window as { __xtermDataCallback?: (data: string) => void }).__xtermDataCallback;
-    if (xtermDataCallback) {
-    // For Enter key, ensure we send just \r
-    if (data === '\r\n') {
-      xtermDataCallback('\r');
-    } else {
-      xtermDataCallback(data);
-    }
-  }
-};
-
-(window as any).mockTerminal = mockTerminal;
-(window as any).__xtermDataCallback = (data: string) => {
-  (window as { __xtermDataCallback?: (data: string) => void }).__xtermDataCallback?.(data);
-};
-(window as any).triggerTerminalInput = (data: string) => {
-  const xtermDataCallback = (window as { __xtermDataCallback?: (data: string) => void }).__xtermDataCallback;
-  if (xtermDataCallback) {
-    // For Enter key, ensure we send just \r
-    if (data === '\r\n') {
-      xtermDataCallback('\r');
-    } else {
-      xtermDataCallback(data);
-    }
-  }
-};
-(window as any).mockTerminal = mockTerminal;
-(window as any).triggerTerminalInput = (data: string) => {
-  const xtermDataCallback = (window as { __xtermDataCallback?: (data: string) => void }).__xtermDataCallback;
-  if (xtermDataCallback) {
-    // For Enter key, ensure we send just \r
-    if (data === '\r\n') {
-      xtermDataCallback('\r');
-    } else {
-      xtermDataCallback(data);
-    }
-  }
-};
-(window as any).mockTerminal = mockTerminal;
-(window as any).triggerTerminalInput = (data: string) => {
-  const xtermDataCallback = (window as { __xtermDataCallback?: (data: string) => void }).__xtermDataCallback;
-  if (xtermDataCallback) {
-    // For Enter key, ensure we send just \r
-    if (data === '\r\n') {
-      xtermDataCallback('\r');
-    } else {
-      xtermDataCallback(data);
-    }
-  }
+// Set up callback handler
+(window as WindowWithXtermCallback).__xtermDataCallback = (data: string) => {
+  (window as WindowWithXtermCallback).__xtermDataCallback?.(data);
 };
