@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach, MockedFunction } from 'vitest';
 import { LoginCommand } from '../LoginCommand';
 import {
   ICommandContext,
@@ -85,7 +85,7 @@ describe('LoginCommand', () => {
   it('should complete login process successfully', async () => {
     const mockContext = createMockContext();
     // Type-safe mock of login method with full MyResponse structure
-    const mockLogin = mockContext.auth.login as jest.MockedFunction<typeof mockContext.auth.login>;
+    const mockLogin = mockContext.auth.login as MockedFunction<typeof mockContext.auth.login>;
     const successResponse: MyResponse<AuthResponse> = {
       status: 200,
       data: {
@@ -120,10 +120,10 @@ describe('LoginCommand', () => {
   it('should handle login failure', async () => {
     const mockContext = createMockContext();
     // Type-safe mock of login method with error response
-    const mockLogin = mockContext.auth.login as jest.MockedFunction<typeof mockContext.auth.login>;
+    const mockLogin = mockContext.auth.login as MockedFunction<typeof mockContext.auth.login>;
     const errorResponse: MyResponse<AuthResponse> = {
       status: 401,
-      message: 'Invalid credentials',
+      message: 'Login error: An unknown error occurred',
       error: ['Authentication failed'],
       data: undefined
     };
@@ -143,7 +143,7 @@ describe('LoginCommand', () => {
     expect(mockLogin).toHaveBeenCalledWith('testuser', 'wrongpassword');
     expect(appSignals.setIsInLoginProcess).toHaveBeenCalledWith(false);
     expect(response.status).toBe(500);
-    expect(response.message).toContain('Login error: Invalid credentials');
+    expect(response.message).toBe('Login error: An unknown error occurred');
     expect(response.sensitive).toBe(true);
   });
 

@@ -11,9 +11,11 @@
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
     "build-shared": "vite build --ssr",
-    "test": "vitest",
+    "test:unit": "vitest",
+    "test": "vitest --run && npm run test:e2e",
     "test:ui": "vitest --ui",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "test:e2e": "npx playwright test"
   },
   "dependencies": {
     "@aws-sdk/client-apigatewayv2": "^3.x.x",
