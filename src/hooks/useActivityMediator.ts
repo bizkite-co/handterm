@@ -12,7 +12,6 @@ import {
     isInGameModeSignal, setCompletedGamePhrase,
     getNextGamePhrase,
     setGamePhrase,
-    gameInitSignal
 } from 'src/signals/gameSignals';
 import { activitySignal, setNotification, bypassTutorialSignal } from 'src/signals/appSignals'
 import { useComputed } from '@preact/signals-react';
@@ -30,50 +29,14 @@ export function useActivityMediator() {
     } = useTutorial();
     const activity = useComputed(() => activitySignal.value).value;
     const bypassTutorial = useComputed(() => bypassTutorialSignal.value);
-    const currentTutorialSignal = useComputed(() => tutorialSignal.value);
-
-    const transitionToGame = useCallback((contentKey?: string | null, groupKey?: string | null) => {
-        // First set the game mode signals
-        isInGameModeSignal.value = true;
-        gameInitSignal.value = true;
-        activitySignal.value = ActivityType.GAME;
-
-        // Then update location and wait for navigation to complete
-        return new Promise<void>((resolve) => {
-            const handleLocationChange = () => {
-                window.removeEventListener('locationchange', handleLocationChange);
-                resolve();
-            };
-            window.addEventListener('locationchange', handleLocationChange);
-
-            navigate({
-                activityKey: ActivityType.GAME,
-                contentKey: contentKey ?? null,
-                groupKey: groupKey ?? null
-            });
-        });
-    }, []);
-
-    const setActivityWithNavigation = useCallback(async (newActivity: ActivityType, contentKey?: string | null, groupKey?: string | null) => {
-        if (newActivity === ActivityType.GAME) {
-            await transitionToGame(contentKey, groupKey);
-        } else {
-            activitySignal.value = newActivity;
-            isInGameModeSignal.value = false;
-            navigate({
-                activityKey: newActivity,
-                contentKey: contentKey ?? null,
-                groupKey: groupKey ?? null
-            });
-        }
-    }, [transitionToGame]);
+    let currentTutorial: Tutorial | null = null;
 
     const decideActivityChange = useCallback((commandActivity: ActivityType | null = null): ActivityType => {
         logger.debug('Deciding activity change:', {
             commandActivity,
             currentActivity: activity,
             bypassTutorial: bypassTutorial.value,
-            currentTutorial: currentTutorialSignal.value
+            currentTutorial: tutorialSignal.value
         });
 
         const bypassTutorialValue = bypassTutorial.value;
@@ -84,15 +47,15 @@ export function useActivityMediator() {
             return ActivityType.TUTORIAL;
         }
 
-        if (currentTutorialSignal.value && currentTutorialSignal.value?.tutorialGroup && activity !== ActivityType.GAME) {
+        if (currentTutorial && currentTutorial?.tutorialGroup && activity !== ActivityType.GAME) {
             return ActivityType.GAME;
         }
         if (getNextTutorial()) commandActivity = ActivityType.TUTORIAL;
 
         return commandActivity ?? ActivityType.NORMAL;
-    }, [activity, bypassTutorial, currentTutorialSignal]);
+    }, [activity, bypassTutorial]);
 
-    const checkGameProgress = useCallback(async (successPhrase: GamePhrase) => {
+    const checkGameProgress = useCallback((successPhrase: GamePhrase) => {
         logger.debug('Checking game progress:', successPhrase);
         const groupKey = parseLocation().groupKey ?? '';
         setCompletedGamePhrase(successPhrase.key);
@@ -100,7 +63,12 @@ export function useActivityMediator() {
             const nextPhraseInGroup = getIncompletePhrasesByTutorialGroup(groupKey)[0];
             if (nextPhraseInGroup) {
                 setGamePhrase(getNextGamePhrase());
-                await setActivityWithNavigation(ActivityType.GAME, nextPhraseInGroup.key, nextPhraseInGroup.tutorialGroup);
+                activitySignal.value = ActivityType.GAME;
+                navigate({
+                    activityKey: ActivityType.GAME,
+                    contentKey: nextPhraseInGroup.key,
+                    groupKey: nextPhraseInGroup.tutorialGroup
+                })
                 return;
             }
             const incompleteTutorialInGroup = getIncompleteTutorialsInGroup(groupKey);
@@ -110,7 +78,11 @@ export function useActivityMediator() {
             const nextTutorial = getNextTutorial();
             if (nextTutorial) {
                 const resultActivity = decideActivityChange(ActivityType.TUTORIAL);
-                await setActivityWithNavigation(resultActivity, nextTutorial.phrase, nextTutorial.tutorialGroup);
+                navigate({
+                    activityKey: resultActivity,
+                    contentKey: nextTutorial.phrase ?? '',
+                    groupKey: nextTutorial.tutorialGroup ?? ''
+                })
                 return;
             }
         }
@@ -118,17 +90,23 @@ export function useActivityMediator() {
         const nextGamePhrase = getNextGamePhrase();
         if (nextGamePhrase) {
             setGamePhrase(nextGamePhrase);
-            await setActivityWithNavigation(ActivityType.GAME, nextGamePhrase.key, nextGamePhrase.tutorialGroup);
+            navigate({
+                activityKey: ActivityType.GAME,
+                contentKey: nextGamePhrase.key,
+                groupKey: nextGamePhrase.tutorialGroup
+            })
+            activitySignal.value = ActivityType.GAME;
+            isInGameModeSignal.value = true;
             return;
         }
-        await setActivityWithNavigation(ActivityType.NORMAL);
+        activitySignal.value = ActivityType.NORMAL;
+        navigate({ activityKey: ActivityType.NORMAL })
     }, [
         decideActivityChange,
-        getIncompleteTutorialsInGroup,
-        setActivityWithNavigation
+        getIncompleteTutorialsInGroup
     ]);
 
-    const checkTutorialProgress = useCallback(async (command: string | null) => {
+    const checkTutorialProgress = useCallback((command: string | null) => {
         logger.debug('Checking tutorial progress:', {
             command,
             currentTutorial: tutorialSignal.value,
@@ -136,8 +114,8 @@ export function useActivityMediator() {
             location: parseLocation()
         });
 
-        const nextTutorialValue = getNextTutorial();
-        if (!nextTutorialValue) {
+        currentTutorial = getNextTutorial();
+        if (!currentTutorial) {
             logger.debug('No current tutorial found');
             return;
         }
@@ -148,9 +126,9 @@ export function useActivityMediator() {
         if (command) {
             logger.debug('Checking if can unlock tutorial:', {
                 command,
-                currentPhrase: nextTutorialValue.phrase,
+                currentPhrase: currentTutorial.phrase,
                 charCodesCommand: [...command].map(c => c.charCodeAt(0)),
-                charCodesPhrase: [...nextTutorialValue.phrase].map(c => c.charCodeAt(0))
+                charCodesPhrase: [...currentTutorial.phrase].map(c => c.charCodeAt(0))
             });
 
             if (canUnlockTutorial(command)) {
@@ -158,17 +136,20 @@ export function useActivityMediator() {
                 if (groupKey) {
                     const incompletePhrasesInGroup = getIncompletePhrasesByTutorialGroup(groupKey)[0];
                     if (incompletePhrasesInGroup) {
-                        // Initialize game first
+                        activitySignal.value = ActivityType.GAME;
+                        navigate({
+                            activityKey: ActivityType.GAME,
+                            contentKey: incompletePhrasesInGroup.key,
+                            groupKey: incompletePhrasesInGroup.tutorialGroup
+                        })
                         initializeGame(groupKey);
-                        // Then transition to game mode
-                        await setActivityWithNavigation(ActivityType.GAME, incompletePhrasesInGroup.key, incompletePhrasesInGroup.tutorialGroup);
                     }
                     return;
                 }
-                setCompletedTutorial(nextTutorialValue.phrase);
+                setCompletedTutorial(currentTutorial.phrase);
             } else {
                 logger.debug('Tutorial not unlocked:', {
-                    expected: nextTutorialValue.phrase,
+                    expected: currentTutorial.phrase,
                     received: command
                 });
                 setNotification(
@@ -183,35 +164,44 @@ export function useActivityMediator() {
         if (nextTutorial?.phrase) {
             const resultActivity = decideActivityChange(ActivityType.TUTORIAL);
             setNextTutorial(nextTutorial);
-            await setActivityWithNavigation(resultActivity, nextTutorial.phrase, nextTutorial.tutorialGroup);
+            navigate({
+                activityKey: resultActivity,
+                contentKey: nextTutorial.phrase,
+                groupKey: nextTutorial.tutorialGroup
+            })
             return;
         }
+        activitySignal.value = ActivityType.GAME;
         const nextGamePhrase = getNextGamePhrase();
-        if (nextGamePhrase) {
-            await setActivityWithNavigation(ActivityType.GAME, nextGamePhrase?.key, groupKey);
-        }
+        if (nextGamePhrase) navigate({
+            activityKey: ActivityType.GAME,
+            contentKey: nextGamePhrase?.key,
+            groupKey: groupKey
+        })
         return;
     }, [
         decideActivityChange,
-        canUnlockTutorial,
-        setActivityWithNavigation
+        canUnlockTutorial
     ]);
 
-    const handleCommandExecuted = useCallback(async (parsedCommand: ParsedCommand): Promise<boolean> => {
+    const handleCommandExecuted = useCallback((parsedCommand: ParsedCommand): boolean => {
         logger.debug('Handling command:', parsedCommand);
         let result = false;
         if (parseLocation().activityKey === ActivityType.TUTORIAL) {
-            await checkTutorialProgress(parsedCommand.command);
+            checkTutorialProgress(parsedCommand.command);
         }
         else if (parseLocation().activityKey === ActivityType.GAME && parseLocation().contentKey) {
             const gamePhrase = GamePhrases.getGamePhraseByKey(parseLocation().contentKey || '')
-            if (gamePhrase) await checkGameProgress(gamePhrase);
+            if (gamePhrase) checkGameProgress(gamePhrase);
         }
         switch (parsedCommand.command) {
             case 'play': {
                 const nextGamePhrase = getNextGamePhrase();
                 initializeGame();
-                await setActivityWithNavigation(ActivityType.GAME, nextGamePhrase?.key);
+                navigate({
+                    activityKey: ActivityType.GAME,
+                    contentKey: nextGamePhrase?.key
+                })
                 result = true;
                 break;
             }
@@ -220,7 +210,11 @@ export function useActivityMediator() {
                     resetCompletedTutorials();
                 }
                 const nextTutorial = getNextTutorial();
-                await setActivityWithNavigation(ActivityType.TUTORIAL, nextTutorial?.phrase, nextTutorial?.tutorialGroup);
+                navigate({
+                    activityKey: ActivityType.TUTORIAL,
+                    contentKey: nextTutorial?.phrase,
+                    groupKey: nextTutorial?.tutorialGroup
+                })
                 result = true;
                 break;
             }
@@ -229,12 +223,12 @@ export function useActivityMediator() {
         }
 
         return result;
-    }, [checkGameProgress, checkTutorialProgress, setActivityWithNavigation]);
+    }, [decideActivityChange]);
 
     useEffect(() => {
         const resultActivity = decideActivityChange(null);
         if (resultActivity === ActivityType.TUTORIAL) {
-            void checkTutorialProgress(null);
+            checkTutorialProgress(null);
         }
     }, [decideActivityChange, checkTutorialProgress]);
 
