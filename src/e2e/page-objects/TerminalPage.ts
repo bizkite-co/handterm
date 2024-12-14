@@ -1,4 +1,4 @@
-import { type Page, type Locator } from '@playwright/test';
+import { type Page, type Locator, expect } from '@playwright/test';
 import { TERMINAL_CONSTANTS } from 'src/constants/terminal';
 
 export class TerminalPage {
@@ -7,6 +7,7 @@ export class TerminalPage {
   readonly output: Locator;
   readonly tutorialMode: Locator;
   readonly gameMode: Locator;
+  readonly nextChars: Locator;
   private readonly prompt = TERMINAL_CONSTANTS.PROMPT;
 
   constructor(page: Page) {
@@ -14,7 +15,8 @@ export class TerminalPage {
     this.terminal = page.locator('#xtermRef');
     this.output = page.locator('#output-container');
     this.tutorialMode = page.locator('.tutorial-component');
-    this.gameMode = page.locator('#terminal-game', { timeout: 10000 }); // Increased timeout for game mode
+    this.gameMode = page.locator('#terminal-game');
+    this.nextChars = page.locator('pre#next-chars');
   }
 
   async goto() {
@@ -30,8 +32,6 @@ export class TerminalPage {
   async typeCommand(command: string) {
     await this.terminal.click();
     await this.page.keyboard.type(command);
-    // Wait for the signal to update
-    await this.waitForCommandUpdate();
   }
 
   /**
@@ -41,19 +41,13 @@ export class TerminalPage {
   async typeKeys(keys: string) {
     await this.terminal.click();
     await this.page.keyboard.type(keys);
-    // Wait for the signal to update
-    await this.waitForCommandUpdate();
   }
 
   /**
-   * Presses the Enter key and waits for any activity transitions to complete
+   * Presses the Enter key
    */
   async pressEnter() {
     await this.page.keyboard.press('Enter');
-    // Wait for the signal to update
-    await this.waitForCommandUpdate();
-    // Wait for any activity transitions
-    await this.waitForActivityTransition();
   }
 
   /**
@@ -90,47 +84,28 @@ export class TerminalPage {
   }
 
   /**
-   * Waits for the command line signal to update
-   * This helps ensure we get the latest value after typing or other actions
-   */
-  private async waitForCommandUpdate(): Promise<void> {
-    await this.page.waitForFunction(() => {
-      return 'commandLineSignal' in window;
-    }, { timeout: 5000 });
-  }
-
-  /**
-   * Waits for any activity transitions to complete
-   * This ensures we wait for navigation and state updates
-   */
-  private async waitForActivityTransition(): Promise<void> {
-    await this.page.waitForFunction(() => {
-      return new Promise((resolve) => {
-        const handleLocationChange = () => {
-          window.removeEventListener('locationchange', handleLocationChange);
-          // Give more time for React to update the DOM and game to initialize
-          setTimeout(resolve, 500);
-        };
-        window.addEventListener('locationchange', handleLocationChange);
-        // Also resolve if no navigation occurs within a reasonable timeout
-        setTimeout(resolve, 2000);
-      });
-    });
-
-    // Additional wait for game initialization
-    await this.page.waitForFunction(() => {
-      const gameElement = document.querySelector('#terminal-game');
-      const isGameMode = window.location.pathname.includes('/GAME');
-      return !isGameMode || (isGameMode && gameElement !== null);
-    }, { timeout: 10000 });
-  }
-
-  /**
    * Waits for specific text to appear in the output
    * @param text The text to wait for
    */
   async waitForOutput(text: string) {
-    await this.output.getByText(text).waitFor();
+    await this.output.getByText(text, { exact: false }).waitFor();
+  }
+
+  /**
+   * Waits for specific text to appear in the next chars display
+   * @param text The text to wait for
+   */
+  async waitForNextChars(text: string) {
+    // First wait for the element to exist
+    await this.nextChars.waitFor({ state: 'attached' });
+
+    // Log current text for debugging
+    const currentText = await this.nextChars.textContent();
+    console.log('Current next-chars text:', currentText);
+
+    // Then wait for the specific text
+    await this.nextChars.waitFor({ state: 'visible' });
+    await expect(this.nextChars).toHaveText(text, { timeout: 10000 });
   }
 
   /**

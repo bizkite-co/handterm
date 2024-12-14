@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { ActivityType, ParsedCommand, GamePhrase, Tutorial } from '../types/Types';
 import { ActionType } from '../game/types/ActionTypes';
 import GamePhrases from '../utils/GamePhrases';
@@ -9,7 +9,7 @@ import {
 } from 'src/signals/tutorialSignals';
 import {
     getIncompletePhrasesByTutorialGroup, initializeGame,
-    isInGameModeSignal, setCompletedGamePhrase,
+    setCompletedGamePhrase,
     getNextGamePhrase,
     setGamePhrase,
 } from 'src/signals/gameSignals';
@@ -29,7 +29,23 @@ export function useActivityMediator() {
     } = useTutorial();
     const activity = useComputed(() => activitySignal.value).value;
     const bypassTutorial = useComputed(() => bypassTutorialSignal.value);
-    let currentTutorial: Tutorial | null = null;
+    const currentTutorialRef = useRef<Tutorial | null>(null);
+
+    const transitionToGame = useCallback((contentKey?: string | null, groupKey?: string | null) => {
+        // First initialize game if group key is provided
+        if (groupKey) {
+            initializeGame(groupKey);
+        } else {
+            initializeGame();
+        }
+        // Then update activity and navigate
+        activitySignal.value = ActivityType.GAME;
+        navigate({
+            activityKey: ActivityType.GAME,
+            contentKey: contentKey ?? null,
+            groupKey: groupKey ?? null
+        });
+    }, []);
 
     const decideActivityChange = useCallback((commandActivity: ActivityType | null = null): ActivityType => {
         logger.debug('Deciding activity change:', {
@@ -47,7 +63,7 @@ export function useActivityMediator() {
             return ActivityType.TUTORIAL;
         }
 
-        if (currentTutorial && currentTutorial?.tutorialGroup && activity !== ActivityType.GAME) {
+        if (currentTutorialRef.current && currentTutorialRef.current?.tutorialGroup && activity !== ActivityType.GAME) {
             return ActivityType.GAME;
         }
         if (getNextTutorial()) commandActivity = ActivityType.TUTORIAL;
@@ -63,12 +79,7 @@ export function useActivityMediator() {
             const nextPhraseInGroup = getIncompletePhrasesByTutorialGroup(groupKey)[0];
             if (nextPhraseInGroup) {
                 setGamePhrase(getNextGamePhrase());
-                activitySignal.value = ActivityType.GAME;
-                navigate({
-                    activityKey: ActivityType.GAME,
-                    contentKey: nextPhraseInGroup.key,
-                    groupKey: nextPhraseInGroup.tutorialGroup
-                })
+                transitionToGame(nextPhraseInGroup.key, nextPhraseInGroup.tutorialGroup);
                 return;
             }
             const incompleteTutorialInGroup = getIncompleteTutorialsInGroup(groupKey);
@@ -90,20 +101,15 @@ export function useActivityMediator() {
         const nextGamePhrase = getNextGamePhrase();
         if (nextGamePhrase) {
             setGamePhrase(nextGamePhrase);
-            navigate({
-                activityKey: ActivityType.GAME,
-                contentKey: nextGamePhrase.key,
-                groupKey: nextGamePhrase.tutorialGroup
-            })
-            activitySignal.value = ActivityType.GAME;
-            isInGameModeSignal.value = true;
+            transitionToGame(nextGamePhrase.key, nextGamePhrase.tutorialGroup);
             return;
         }
         activitySignal.value = ActivityType.NORMAL;
         navigate({ activityKey: ActivityType.NORMAL })
     }, [
         decideActivityChange,
-        getIncompleteTutorialsInGroup
+        getIncompleteTutorialsInGroup,
+        transitionToGame
     ]);
 
     const checkTutorialProgress = useCallback((command: string | null) => {
@@ -114,8 +120,8 @@ export function useActivityMediator() {
             location: parseLocation()
         });
 
-        currentTutorial = getNextTutorial();
-        if (!currentTutorial) {
+        currentTutorialRef.current = getNextTutorial();
+        if (!currentTutorialRef.current) {
             logger.debug('No current tutorial found');
             return;
         }
@@ -126,9 +132,9 @@ export function useActivityMediator() {
         if (command) {
             logger.debug('Checking if can unlock tutorial:', {
                 command,
-                currentPhrase: currentTutorial.phrase,
+                currentPhrase: currentTutorialRef.current.phrase,
                 charCodesCommand: [...command].map(c => c.charCodeAt(0)),
-                charCodesPhrase: [...currentTutorial.phrase].map(c => c.charCodeAt(0))
+                charCodesPhrase: [...currentTutorialRef.current.phrase].map(c => c.charCodeAt(0))
             });
 
             if (canUnlockTutorial(command)) {
@@ -136,20 +142,14 @@ export function useActivityMediator() {
                 if (groupKey) {
                     const incompletePhrasesInGroup = getIncompletePhrasesByTutorialGroup(groupKey)[0];
                     if (incompletePhrasesInGroup) {
-                        activitySignal.value = ActivityType.GAME;
-                        navigate({
-                            activityKey: ActivityType.GAME,
-                            contentKey: incompletePhrasesInGroup.key,
-                            groupKey: incompletePhrasesInGroup.tutorialGroup
-                        })
-                        initializeGame(groupKey);
+                        transitionToGame(incompletePhrasesInGroup.key, incompletePhrasesInGroup.tutorialGroup);
                     }
                     return;
                 }
-                setCompletedTutorial(currentTutorial.phrase);
+                setCompletedTutorial(currentTutorialRef.current.phrase);
             } else {
                 logger.debug('Tutorial not unlocked:', {
-                    expected: currentTutorial.phrase,
+                    expected: currentTutorialRef.current.phrase,
                     received: command
                 });
                 setNotification(
@@ -171,17 +171,15 @@ export function useActivityMediator() {
             })
             return;
         }
-        activitySignal.value = ActivityType.GAME;
         const nextGamePhrase = getNextGamePhrase();
-        if (nextGamePhrase) navigate({
-            activityKey: ActivityType.GAME,
-            contentKey: nextGamePhrase?.key,
-            groupKey: groupKey
-        })
+        if (nextGamePhrase) {
+            transitionToGame(nextGamePhrase?.key, groupKey);
+        }
         return;
     }, [
         decideActivityChange,
-        canUnlockTutorial
+        canUnlockTutorial,
+        transitionToGame
     ]);
 
     const handleCommandExecuted = useCallback((parsedCommand: ParsedCommand): boolean => {
@@ -197,11 +195,7 @@ export function useActivityMediator() {
         switch (parsedCommand.command) {
             case 'play': {
                 const nextGamePhrase = getNextGamePhrase();
-                initializeGame();
-                navigate({
-                    activityKey: ActivityType.GAME,
-                    contentKey: nextGamePhrase?.key
-                })
+                transitionToGame(nextGamePhrase?.key);
                 result = true;
                 break;
             }
@@ -223,7 +217,7 @@ export function useActivityMediator() {
         }
 
         return result;
-    }, [decideActivityChange]);
+    }, [decideActivityChange, checkGameProgress, checkTutorialProgress, transitionToGame]);
 
     useEffect(() => {
         const resultActivity = decideActivityChange(null);
