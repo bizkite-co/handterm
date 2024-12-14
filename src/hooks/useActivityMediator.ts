@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { ActivityType, ParsedCommand, GamePhrase, Tutorial } from '../types/Types';
 import { ActionType } from '../game/types/ActionTypes';
 import GamePhrases from '../utils/GamePhrases';
@@ -12,6 +12,7 @@ import {
     isInGameModeSignal, setCompletedGamePhrase,
     getNextGamePhrase,
     setGamePhrase,
+    gameInitSignal
 } from 'src/signals/gameSignals';
 import { activitySignal, setNotification, bypassTutorialSignal } from 'src/signals/appSignals'
 import { useComputed } from '@preact/signals-react';
@@ -29,15 +30,50 @@ export function useActivityMediator() {
     } = useTutorial();
     const activity = useComputed(() => activitySignal.value).value;
     const bypassTutorial = useComputed(() => bypassTutorialSignal.value);
-    const currentTutorial = useRef<Tutorial | null>(null);
+    const currentTutorialSignal = useComputed(() => tutorialSignal.value);
+
+    const transitionToGame = useCallback((contentKey?: string | null, groupKey?: string | null) => {
+        // First set the game mode signals
+        isInGameModeSignal.value = true;
+        gameInitSignal.value = true;
+        activitySignal.value = ActivityType.GAME;
+
+        // Then update location and wait for navigation to complete
+        return new Promise<void>((resolve) => {
+            const handleLocationChange = () => {
+                window.removeEventListener('locationchange', handleLocationChange);
+                resolve();
+            };
+            window.addEventListener('locationchange', handleLocationChange);
+
+            navigate({
+                activityKey: ActivityType.GAME,
+                contentKey: contentKey ?? null,
+                groupKey: groupKey ?? null
+            });
+        });
+    }, []);
+
+    const setActivityWithNavigation = useCallback(async (newActivity: ActivityType, contentKey?: string | null, groupKey?: string | null) => {
+        if (newActivity === ActivityType.GAME) {
+            await transitionToGame(contentKey, groupKey);
+        } else {
+            activitySignal.value = newActivity;
+            isInGameModeSignal.value = false;
+            navigate({
+                activityKey: newActivity,
+                contentKey: contentKey ?? null,
+                groupKey: groupKey ?? null
+            });
+        }
+    }, [transitionToGame]);
 
     const decideActivityChange = useCallback((commandActivity: ActivityType | null = null): ActivityType => {
-        // Breakpoint 15: Deciding activity change
         logger.debug('Deciding activity change:', {
             commandActivity,
             currentActivity: activity,
             bypassTutorial: bypassTutorial.value,
-            currentTutorial: tutorialSignal.value
+            currentTutorial: currentTutorialSignal.value
         });
 
         const bypassTutorialValue = bypassTutorial.value;
@@ -48,16 +84,15 @@ export function useActivityMediator() {
             return ActivityType.TUTORIAL;
         }
 
-        if (currentTutorial.current && currentTutorial.current?.tutorialGroup && activity !== ActivityType.GAME) {
+        if (currentTutorialSignal.value && currentTutorialSignal.value?.tutorialGroup && activity !== ActivityType.GAME) {
             return ActivityType.GAME;
         }
         if (getNextTutorial()) commandActivity = ActivityType.TUTORIAL;
 
         return commandActivity ?? ActivityType.NORMAL;
-    }, [activity, bypassTutorial]);
+    }, [activity, bypassTutorial, currentTutorialSignal]);
 
-    const checkGameProgress = useCallback((successPhrase: GamePhrase) => {
-        // Breakpoint 16: Checking game progress
+    const checkGameProgress = useCallback(async (successPhrase: GamePhrase) => {
         logger.debug('Checking game progress:', successPhrase);
         const groupKey = parseLocation().groupKey ?? '';
         setCompletedGamePhrase(successPhrase.key);
@@ -65,12 +100,7 @@ export function useActivityMediator() {
             const nextPhraseInGroup = getIncompletePhrasesByTutorialGroup(groupKey)[0];
             if (nextPhraseInGroup) {
                 setGamePhrase(getNextGamePhrase());
-                activitySignal.value = ActivityType.GAME;
-                navigate({
-                    activityKey: ActivityType.GAME,
-                    contentKey: nextPhraseInGroup.key,
-                    groupKey: nextPhraseInGroup.tutorialGroup
-                })
+                await setActivityWithNavigation(ActivityType.GAME, nextPhraseInGroup.key, nextPhraseInGroup.tutorialGroup);
                 return;
             }
             const incompleteTutorialInGroup = getIncompleteTutorialsInGroup(groupKey);
@@ -80,11 +110,7 @@ export function useActivityMediator() {
             const nextTutorial = getNextTutorial();
             if (nextTutorial) {
                 const resultActivity = decideActivityChange(ActivityType.TUTORIAL);
-                navigate({
-                    activityKey: resultActivity,
-                    contentKey: nextTutorial.phrase ?? '',
-                    groupKey: nextTutorial.tutorialGroup ?? ''
-                })
+                await setActivityWithNavigation(resultActivity, nextTutorial.phrase, nextTutorial.tutorialGroup);
                 return;
             }
         }
@@ -92,25 +118,17 @@ export function useActivityMediator() {
         const nextGamePhrase = getNextGamePhrase();
         if (nextGamePhrase) {
             setGamePhrase(nextGamePhrase);
-            navigate({
-                activityKey: ActivityType.GAME,
-                contentKey: nextGamePhrase.key,
-                groupKey: nextGamePhrase.tutorialGroup
-            })
-            activitySignal.value = ActivityType.GAME;
-            isInGameModeSignal.value = true;
+            await setActivityWithNavigation(ActivityType.GAME, nextGamePhrase.key, nextGamePhrase.tutorialGroup);
             return;
         }
-        activitySignal.value = ActivityType.NORMAL;
-
-        navigate({ activityKey: ActivityType.NORMAL })
+        await setActivityWithNavigation(ActivityType.NORMAL);
     }, [
         decideActivityChange,
-        getIncompleteTutorialsInGroup
+        getIncompleteTutorialsInGroup,
+        setActivityWithNavigation
     ]);
 
-    const checkTutorialProgress = useCallback((command: string | null) => {
-        // Breakpoint 17: Start of tutorial progress check
+    const checkTutorialProgress = useCallback(async (command: string | null) => {
         logger.debug('Checking tutorial progress:', {
             command,
             currentTutorial: tutorialSignal.value,
@@ -118,8 +136,8 @@ export function useActivityMediator() {
             location: parseLocation()
         });
 
-        currentTutorial.current = getNextTutorial();
-        if (!currentTutorial.current) {
+        const nextTutorialValue = getNextTutorial();
+        if (!nextTutorialValue) {
             logger.debug('No current tutorial found');
             return;
         }
@@ -128,34 +146,29 @@ export function useActivityMediator() {
         // Normalize command for Enter key
         command = command === '' ? '\r' : command;
         if (command) {
-            // Breakpoint 18: Tutorial unlock check
             logger.debug('Checking if can unlock tutorial:', {
                 command,
-                currentPhrase: currentTutorial.current.phrase,
+                currentPhrase: nextTutorialValue.phrase,
                 charCodesCommand: [...command].map(c => c.charCodeAt(0)),
-                charCodesPhrase: [...currentTutorial.current.phrase].map(c => c.charCodeAt(0))
+                charCodesPhrase: [...nextTutorialValue.phrase].map(c => c.charCodeAt(0))
             });
 
             if (canUnlockTutorial(command)) {
-                // Breakpoint 19: Tutorial unlocked
                 logger.debug('Tutorial unlocked:', command);
                 if (groupKey) {
                     const incompletePhrasesInGroup = getIncompletePhrasesByTutorialGroup(groupKey)[0];
                     if (incompletePhrasesInGroup) {
-                        activitySignal.value = ActivityType.GAME;
-                        navigate({
-                            activityKey: ActivityType.GAME,
-                            contentKey: incompletePhrasesInGroup.key,
-                            groupKey: incompletePhrasesInGroup.tutorialGroup
-                        })
+                        // Initialize game first
                         initializeGame(groupKey);
+                        // Then transition to game mode
+                        await setActivityWithNavigation(ActivityType.GAME, incompletePhrasesInGroup.key, incompletePhrasesInGroup.tutorialGroup);
                     }
                     return;
                 }
-                setCompletedTutorial(currentTutorial.current.phrase);
+                setCompletedTutorial(nextTutorialValue.phrase);
             } else {
                 logger.debug('Tutorial not unlocked:', {
-                    expected: currentTutorial.current.phrase,
+                    expected: nextTutorialValue.phrase,
                     received: command
                 });
                 setNotification(
@@ -166,49 +179,39 @@ export function useActivityMediator() {
         }
 
         const nextTutorial = getNextTutorial();
-        // Breakpoint 20: Setting next tutorial
         logger.debug('Next tutorial:', nextTutorial);
         if (nextTutorial?.phrase) {
             const resultActivity = decideActivityChange(ActivityType.TUTORIAL);
             setNextTutorial(nextTutorial);
-            navigate({
-                activityKey: resultActivity,
-                contentKey: nextTutorial.phrase,
-                groupKey: nextTutorial.tutorialGroup
-            })
+            await setActivityWithNavigation(resultActivity, nextTutorial.phrase, nextTutorial.tutorialGroup);
             return;
         }
-        activitySignal.value = ActivityType.GAME;
         const nextGamePhrase = getNextGamePhrase();
-        if (nextGamePhrase) navigate({
-            activityKey: ActivityType.GAME,
-            contentKey: nextGamePhrase?.key,
-            groupKey: groupKey
-        })
+        if (nextGamePhrase) {
+            await setActivityWithNavigation(ActivityType.GAME, nextGamePhrase?.key, groupKey);
+        }
         return;
     }, [
         decideActivityChange,
-        canUnlockTutorial
+        canUnlockTutorial,
+        setActivityWithNavigation
     ]);
 
-    const handleCommandExecuted = useCallback((parsedCommand: ParsedCommand): boolean => {
-        // Breakpoint 21: Command execution
+    const handleCommandExecuted = useCallback(async (parsedCommand: ParsedCommand): Promise<boolean> => {
         logger.debug('Handling command:', parsedCommand);
         let result = false;
         if (parseLocation().activityKey === ActivityType.TUTORIAL) {
-            checkTutorialProgress(parsedCommand.command);
+            await checkTutorialProgress(parsedCommand.command);
         }
         else if (parseLocation().activityKey === ActivityType.GAME && parseLocation().contentKey) {
             const gamePhrase = GamePhrases.getGamePhraseByKey(parseLocation().contentKey || '')
-            if (gamePhrase) checkGameProgress(gamePhrase);
+            if (gamePhrase) await checkGameProgress(gamePhrase);
         }
         switch (parsedCommand.command) {
             case 'play': {
-                decideActivityChange(ActivityType.GAME);
-                navigate({
-                    activityKey: ActivityType.GAME,
-                    contentKey: getNextGamePhrase()?.key
-                })
+                const nextGamePhrase = getNextGamePhrase();
+                initializeGame();
+                await setActivityWithNavigation(ActivityType.GAME, nextGamePhrase?.key);
                 result = true;
                 break;
             }
@@ -216,14 +219,8 @@ export function useActivityMediator() {
                 if ('r' in parsedCommand.switches) {
                     resetCompletedTutorials();
                 }
-                decideActivityChange(ActivityType.TUTORIAL);
                 const nextTutorial = getNextTutorial();
-
-                navigate({
-                    activityKey: ActivityType.TUTORIAL,
-                    contentKey: nextTutorial?.phrase,
-                    groupKey: nextTutorial?.tutorialGroup
-                })
+                await setActivityWithNavigation(ActivityType.TUTORIAL, nextTutorial?.phrase, nextTutorial?.tutorialGroup);
                 result = true;
                 break;
             }
@@ -232,12 +229,12 @@ export function useActivityMediator() {
         }
 
         return result;
-    }, [decideActivityChange, checkGameProgress, checkTutorialProgress]);
+    }, [checkGameProgress, checkTutorialProgress, setActivityWithNavigation]);
 
     useEffect(() => {
         const resultActivity = decideActivityChange(null);
         if (resultActivity === ActivityType.TUTORIAL) {
-            checkTutorialProgress(null);
+            void checkTutorialProgress(null);
         }
     }, [decideActivityChange, checkTutorialProgress]);
 

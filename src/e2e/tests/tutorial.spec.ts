@@ -25,8 +25,13 @@ test('should progress from tutorial to game mode after completing initial steps'
   await terminalPage.pressEnter();
 
   // Then the Activity should change from Tutorial to Game
-  await expect(terminalPage.gameMode).toBeVisible();
-  await expect(terminalPage.tutorialMode).not.toBeVisible();
+  // Wait for both game mode and the specific phrase to be visible
+  await Promise.all([
+    expect(terminalPage.gameMode).toBeVisible(),
+    expect(terminalPage.tutorialMode).not.toBeVisible(),
+    // Wait for the first game phrase from the single-click group
+    expect(terminalPage.page.getByText('all sad lads ask dad; alas fads fall')).toBeVisible()
+  ]);
 
   // And the user is presented with a Game phrase
   // When the user types "all sad lads ask dad; alas fads fall"

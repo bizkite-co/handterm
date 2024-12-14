@@ -14,7 +14,7 @@ export class TerminalPage {
     this.terminal = page.locator('#xtermRef');
     this.output = page.locator('#output-container');
     this.tutorialMode = page.locator('.tutorial-component');
-    this.gameMode = page.locator('#terminal-game');
+    this.gameMode = page.locator('#terminal-game', { timeout: 10000 }); // Increased timeout for game mode
   }
 
   async goto() {
@@ -46,12 +46,14 @@ export class TerminalPage {
   }
 
   /**
-   * Presses the Enter key
+   * Presses the Enter key and waits for any activity transitions to complete
    */
   async pressEnter() {
     await this.page.keyboard.press('Enter');
     // Wait for the signal to update
     await this.waitForCommandUpdate();
+    // Wait for any activity transitions
+    await this.waitForActivityTransition();
   }
 
   /**
@@ -95,6 +97,32 @@ export class TerminalPage {
     await this.page.waitForFunction(() => {
       return 'commandLineSignal' in window;
     }, { timeout: 5000 });
+  }
+
+  /**
+   * Waits for any activity transitions to complete
+   * This ensures we wait for navigation and state updates
+   */
+  private async waitForActivityTransition(): Promise<void> {
+    await this.page.waitForFunction(() => {
+      return new Promise((resolve) => {
+        const handleLocationChange = () => {
+          window.removeEventListener('locationchange', handleLocationChange);
+          // Give more time for React to update the DOM and game to initialize
+          setTimeout(resolve, 500);
+        };
+        window.addEventListener('locationchange', handleLocationChange);
+        // Also resolve if no navigation occurs within a reasonable timeout
+        setTimeout(resolve, 2000);
+      });
+    });
+
+    // Additional wait for game initialization
+    await this.page.waitForFunction(() => {
+      const gameElement = document.querySelector('#terminal-game');
+      const isGameMode = window.location.pathname.includes('/GAME');
+      return !isGameMode || (isGameMode && gameElement !== null);
+    }, { timeout: 10000 });
   }
 
   /**
