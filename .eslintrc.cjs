@@ -68,7 +68,7 @@ module.exports = {
         aspects: ['invalidHref', 'preferButton'],
       },
     ],
-  },
+  ignorePatterns: ['tests-examples/demo-todo-app.spec.ts'],
   overrides: [
     {
       files: ['**/__tests__/**/*.[jt]s?(x)', '**/?(*.)+(spec|test).[jt]s?(x)'],
