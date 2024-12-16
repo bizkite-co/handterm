@@ -1,9 +1,9 @@
-import { describe, it, expect, vi } from 'vitest';
+import { render, screen } from '@testing-library/react';
 import React from 'react';
-import { render } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+
+import { setupCanvasMock , CanvasMock } from '../../test-utils/canvasMock';
 import Game from '../Game';
-import { setupCanvasMock } from '../../test-utils/canvasMock';
-import { CanvasMock } from '../../test-utils/canvasMock';
 
 // Mock dependencies
 vi.mock('src/hooks/useReactiveLocation', () => ({
@@ -43,19 +43,19 @@ describe('Game Component', () => {
   };
 
   it('renders without canvas context errors', () => {
-    const { container } = render(<Game {...defaultProps} />);
+    render(<Game {...defaultProps} />);
 
-    expect(container).toBeTruthy();
+    expect(screen.getByRole('presentation')).toBeTruthy();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     expect((canvasMock as any).mockGetContext).toHaveBeenCalledWith('2d');
   });
 
   it('initializes canvas with correct dimensions', () => {
-    const { container } = render(<Game {...defaultProps} />);
+    render(<Game {...defaultProps} />);
 
-    const canvas = container.querySelector('canvas');
+    const canvas = screen.getByRole('presentation');
     expect(canvas).toBeTruthy();
-    expect(canvas?.getAttribute('width')).toBe('800');
-    expect(canvas?.getAttribute('height')).toBe('600');
+    expect(canvas).toHaveAttribute('width', '800');
+    expect(canvas).toHaveAttribute('height', '600');
   });
 });

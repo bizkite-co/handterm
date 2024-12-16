@@ -1,4 +1,5 @@
 import { type Page, type Locator, expect } from '@playwright/test';
+
 import { TERMINAL_CONSTANTS } from 'src/constants/terminal';
 
 export class TerminalPage {
@@ -23,6 +24,8 @@ export class TerminalPage {
     await this.page.goto('/');
     // Wait for the signal to be exposed
     await this.page.waitForFunction(() => 'commandLineSignal' in window);
+    await this.waitForTerminal();
+    await this.waitForPrompt();
   }
 
   /**
@@ -30,6 +33,7 @@ export class TerminalPage {
    * @param command The command to type
    */
   async typeCommand(command: string) {
+    await this.waitForTerminal();
     await this.terminal.click();
     await this.page.keyboard.type(command);
   }
@@ -39,6 +43,7 @@ export class TerminalPage {
    * @param keys The keys to type
    */
   async typeKeys(keys: string) {
+    await this.waitForTerminal();
     await this.terminal.click();
     await this.page.keyboard.type(keys);
   }
@@ -47,6 +52,7 @@ export class TerminalPage {
    * Presses the Enter key
    */
   async pressEnter() {
+    await this.waitForTerminal();
     await this.page.keyboard.press('Enter');
   }
 
@@ -55,6 +61,7 @@ export class TerminalPage {
    * @param command The command to execute
    */
   async executeCommand(command: string) {
+    await this.waitForTerminal();
     await this.typeCommand(command);
     await this.pressEnter();
   }
@@ -99,10 +106,6 @@ export class TerminalPage {
     // First wait for the element to exist
     await this.nextChars.waitFor({ state: 'attached' });
 
-    // Log current text for debugging
-    const currentText = await this.nextChars.textContent();
-    console.log('Current next-chars text:', currentText);
-
     // Then wait for the specific text
     await this.nextChars.waitFor({ state: 'visible' });
     await expect(this.nextChars).toHaveText(text, { timeout: 10000 });
@@ -113,6 +116,14 @@ export class TerminalPage {
    */
   async waitForPrompt() {
     await this.terminal.getByText(this.prompt).last().waitFor();
+  }
+
+  /**
+   * Waits for the terminal to be ready
+   */
+  async waitForTerminal() {
+    await this.terminal.waitFor({ state: 'attached' });
+    await this.terminal.waitFor({ state: 'visible' });
   }
 
   /**

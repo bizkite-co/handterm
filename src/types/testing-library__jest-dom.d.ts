@@ -9,7 +9,6 @@ declare global {
     }
   }
 }
-import '@testing-library/jest-dom';
 
 declare global {
   namespace jest {
@@ -21,7 +20,6 @@ declare global {
   }
 }
 declare module '@testing-library/jest-dom';
-import '@testing-library/jest-dom';
 
 declare global {
   namespace jest {

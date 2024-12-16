@@ -1,10 +1,9 @@
 // src/commands/BypassCommand.ts
 
+import { activitySignal , setBypassTutorial, bypassTutorialSignal } from 'src/signals/appSignals';
+
 import { ICommand, ICommandContext, ICommandResponse } from '../contexts/CommandContext';
-import { ParsedCommand } from '../types/Types';
-import { setBypassTutorial, bypassTutorialSignal } from '../signals/appSignals';
-import { activitySignal } from 'src/signals/appSignals';
-import { ActivityType } from '../types/Types';
+import { ParsedCommand , ActivityType } from '../types/Types';
 import { navigate } from '../utils/navigationUtils';
 
 export const BypassCommand: ICommand = {

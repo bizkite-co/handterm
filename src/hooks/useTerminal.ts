@@ -1,13 +1,10 @@
 // hooks/useTerminal.ts
+import { useComputed } from '@preact/signals-react';
+import { FitAddon } from '@xterm/addon-fit';
 import React, { useCallback, useEffect, useRef } from 'react';
 import { useXTerm } from 'react-xtermjs';
-import { FitAddon } from '@xterm/addon-fit';
-import { XtermAdapterConfig } from '../components/XtermAdapterConfig';
-import { useCommand } from './useCommand';
-import { useWPMCalculator } from './useWPMCaculator';
-import { addKeystroke, commandLineSignal } from 'src/signals/commandLineSignals';
-import { useComputed } from '@preact/signals-react';
-import { setCommandLine } from 'src/signals/commandLineSignals';
+
+import { TERMINAL_CONSTANTS } from 'src/constants/terminal';
 import {
   isInLoginProcessSignal,
   isInSignUpProcessSignal,
@@ -21,11 +18,16 @@ import {
   tempPasswordSignal,
   tempUserNameSignal
 } from 'src/signals/appSignals';
+import { addKeystroke, commandLineSignal , setCommandLine } from 'src/signals/commandLineSignals';
 import { ActivityType } from 'src/types/Types';
-import { useCharacterHandler } from './useCharacterHandler';
 import { parseCommand } from 'src/utils/commandUtils';
 import { createLogger } from 'src/utils/Logger';
-import { TERMINAL_CONSTANTS } from 'src/constants/terminal';
+
+import { XtermAdapterConfig } from '../components/XtermAdapterConfig';
+
+import { useCharacterHandler } from './useCharacterHandler';
+import { useCommand } from './useCommand';
+import { useWPMCalculator } from './useWPMCaculator';
 
 const logger = createLogger({ prefix: 'useTerminal' });
 
@@ -38,7 +40,6 @@ export const useTerminal = () => {
   const [_commandLineState, _setCommandLineState] = React.useState('');
 
   const fitAddon = useRef(new FitAddon());
-  const { PROMPT: _PROMPT, PROMPT_LENGTH: _PROMPT_LENGTH } = TERMINAL_CONSTANTS;
 
   const writeToTerminal = useCallback((data: string) => {
     logger.debug('Writing to terminal:', data);
@@ -63,7 +64,6 @@ export const useTerminal = () => {
   const {
     handleCharacter,
   } = useCharacterHandler({
-    _setCommandLine: _setCommandLineState,
     setLastTypedCharacter,
     isInSvgMode: false,
     isInLoginProcess: isInLoginProcessSignal.value,
@@ -261,6 +261,7 @@ export const useTerminal = () => {
         _setCommandLineState(newCommandLine);
         addKeystroke(data);
       }
+      return;
     };
 
     const resizeHandler = () => {

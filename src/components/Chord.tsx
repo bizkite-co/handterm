@@ -3,6 +3,7 @@ export interface ChordProps {
 }
 
 import React from 'react';
+
 import { allChords } from "../allChords";
 
 export const Chord: React.FC<ChordProps> = ({ displayChar }) => {

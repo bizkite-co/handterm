@@ -1,7 +1,8 @@
 import React from 'react';
+
 import { ICommand, ICommandResponse, ICommandContext } from '../contexts/CommandContext';
-import { ActivityType, OutputElement, ParsedCommand } from '../types/Types';
 import { IAuthProps } from '../hooks/useAuth';
+import { ActivityType, OutputElement, ParsedCommand } from '../types/Types';
 
 // Extend the command context with optional methods
 interface ExtendedCommandContext extends ICommandContext {

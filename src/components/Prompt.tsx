@@ -1,7 +1,9 @@
-import React from 'react';
-import { TerminalCssClasses } from "../types/TerminalTypes"
 import { useComputed } from '@preact/signals-react';
+import React from 'react';
+
 import { promptInfoSignal } from 'src/signals/commandLineSignals';
+
+import { TerminalCssClasses } from "../types/TerminalTypes"
 
 interface PromptProps {
     domain: string;

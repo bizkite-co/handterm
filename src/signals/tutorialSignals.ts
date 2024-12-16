@@ -1,8 +1,10 @@
 // src/signals/tutorialSignals.ts
 import { computed, signal } from "@preact/signals-react";
-import { createPersistentSignal } from "../utils/signalPersistence";
+
 import { Tutorial, Tutorials } from "src/types/Types";
 import { createLogger } from "src/utils/Logger";
+
+import { createPersistentSignal } from "../utils/signalPersistence";
 
 const logger = createLogger({ prefix: 'tutorialSignals' });
 

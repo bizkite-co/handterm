@@ -1,8 +1,9 @@
 // src/commands/clearCommand.tsx
 import React from 'react';
-import { LogKeys } from '../types/TerminalTypes';
+
 import { IHandTermWrapperMethods } from "../components/HandTermWrapper";
 import { ICommand, ICommandContext, ICommandResponse } from '../contexts/CommandContext';
+import { LogKeys } from '../types/TerminalTypes';
 import { ParsedCommand, OutputElement } from '../types/Types';
 
 interface HandTermState {

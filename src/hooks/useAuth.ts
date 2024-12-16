@@ -2,15 +2,17 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { useEffect, useCallback } from 'react';
+
 import ENDPOINTS from 'src/shared/endpoints.json';
-import { MyResponse } from '../types/Types';
+import { createLogger, LogLevel } from 'src/utils/Logger';
+
 import {
   setIsLoggedIn,
   setUserName,
   setIsInLoginProcess,
   isLoggedInSignal
 } from '../signals/appSignals';
-import { createLogger, LogLevel } from 'src/utils/Logger';
+import { MyResponse } from '../types/Types';
 
 const logger = createLogger({
   prefix: 'Auth',

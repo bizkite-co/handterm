@@ -1,13 +1,15 @@
 // src/hooks/useTutorial.ts
-import { useState, useCallback, useEffect } from 'react';
-import { Tutorial, Tutorials } from "../types/Types";
 import { useComputed } from '@preact/signals-react';
+import { useState, useCallback, useEffect } from 'react';
+
 import {
     completedTutorialsSignal,
     getNextTutorial,
 } from 'src/signals/tutorialSignals';
 import { createLogger } from 'src/utils/Logger';
 import { parseLocation } from 'src/utils/navigationUtils';
+
+import { Tutorial, Tutorials } from "../types/Types";
 
 const logger = createLogger({ prefix: 'useTutorials' });
 

@@ -1,8 +1,8 @@
 import { useCallback } from 'react';
+
 import { isInLoginProcessSignal, isInSignUpProcessSignal } from 'src/signals/appSignals';
 
 interface IUseCharacterHandlerProps {
-  _setCommandLine: React.Dispatch<React.SetStateAction<string>>;
   setLastTypedCharacter: (value:string|null) => void;
   isInSvgMode: boolean;
   isInLoginProcess: boolean;
@@ -12,7 +12,6 @@ interface IUseCharacterHandlerProps {
 export type { IUseCharacterHandlerProps };
 
 export const useCharacterHandler = ({
-  _setCommandLine,
   setLastTypedCharacter,
   isInSvgMode,
   writeOutputInternal,

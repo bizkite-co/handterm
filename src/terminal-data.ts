@@ -8,14 +8,14 @@ const logger = createLogger({
 function openDatabase() {
   const request = indexedDB.open('HandTermDatabase', 1);
 
-  request.onupgradeneeded = function(_event: IDBVersionChangeEvent) {
+  request.onupgradeneeded = function() {
     const db = request.result;
     if (!db.objectStoreNames.contains('terminalData')) {
       db.createObjectStore('terminalData', { keyPath: 'id' });
     }
   };
 
-  request.onsuccess = function(_event: Event) {
+  request.onsuccess = function() {
     const db = request.result;
     const transaction = db.transaction(['terminalData'], 'readwrite');
     const store = transaction.objectStore('terminalData');

@@ -1,9 +1,11 @@
+import { vi } from 'vitest';
+
 export class Octokit {
-  constructor(_options?: { auth?: string }) {
+  constructor() {
     return {
-      request: jest.fn(),
-      graphql: jest.fn(),
-      auth: jest.fn().mockResolvedValue({
+      request: vi.fn(),
+      graphql: vi.fn(),
+      auth: vi.fn().mockResolvedValue({
         type: 'token',
         tokenType: 'installation',
         token: 'test-token',

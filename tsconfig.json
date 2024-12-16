@@ -54,7 +54,20 @@
     "./src/**/*",
     "./src/types/**/*.d.ts",
     "./src/types/**/*.ts",
-    "vitest-setup.ts"
+    "vitest-setup.ts",
+    "e2e/**/*.ts",
+    "playwright.config.ts",
+    "setupTests.ts",
+    "tests-examples/**/*.ts",
+    "tests/**/*.ts",
+    "vite.config.ts",
+    "vitest.config.ts",
+    "src/**/*.tsx",
+    "src/**/*.js",
+    "src/**/*.jsx",
+    "src/**/*.d.ts",
+    "src/hooks/**/*.d.ts",
+    "src/test-utils/**/*.d.ts"
   ],
   "exclude": [
     "node_modules",

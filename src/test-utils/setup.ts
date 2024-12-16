@@ -69,8 +69,7 @@ HTMLCanvasElement.prototype.getContext = vi.fn(() => ({
 const mockTerminal = {
   loadAddon: vi.fn(),
   open: vi.fn(),
-  write: vi.fn((_data: string) => {
-  }),
+  write: vi.fn(),
   onData: vi.fn((callback) => {
     (window as WindowWithXtermCallback).__xtermDataCallback = (data: string) => {
       callback(data);

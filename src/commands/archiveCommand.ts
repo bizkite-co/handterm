@@ -1,7 +1,6 @@
-import { LogKeys } from '../types/TerminalTypes';
 import { ICommand, ICommandContext, ICommandResponse } from '../contexts/CommandContext';
-import { ParsedCommand } from '../types/Types';
-import { OutputElement } from '../types/Types';
+import { LogKeys } from '../types/TerminalTypes';
+import { ParsedCommand , OutputElement } from '../types/Types';
 
 interface HandTermProps {
     auth: {

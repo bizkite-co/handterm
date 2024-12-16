@@ -41,24 +41,9 @@ export function useResizeCanvasAndFont() {
         }
     }
 
-    const _increaseFontSize = () => {
-        setFontSize(prevFontSize => prevFontSize + 1);
-        // this.terminal.options.fontSize = this.currentFontSize;
-        // this.terminal.refresh(0, this.terminal.rows - 1);
-        localStorage.setItem('terminalFontSize', `${fontSize}`);
-    }
-
     const handleTouchEnd: TouchEventHandler<HTMLDivElement> = () => {
         localStorage.setItem('terminalFontSize', `${fontSize}`);
         lastTouchDistanceRef.current = null;
-    }
-
-    const _addTouchListeners = () => {
-        // Commented out touch listener setup
-    }
-
-    const _removeTouchListeners = () => {
-        // Commented out touch listener removal
     }
 
     const getDistanceBetweenTouches = (touches: TouchList): number => {

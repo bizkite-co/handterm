@@ -1,9 +1,11 @@
 // src/components/Output.tsx
-import React, { useState } from 'react';
-import { OutputElement } from 'src/types/Types';
-import { CommandOutput } from './CommandOutput';
 import { useSignalEffect } from '@preact/signals-react';
+import React, { useState } from 'react';
+
 import { outputElementsSignal } from 'src/signals/appSignals';
+import { OutputElement } from 'src/types/Types';
+
+import { CommandOutput } from './CommandOutput';
 
 
 export const Output: React.FC = () => {

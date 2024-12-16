@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactDOMServer from 'react-dom/server';
+
 import { Chord } from '../components/Chord';
 import { ICommand, ICommandContext, ICommandResponse } from '../contexts/CommandContext';
 import { ParsedCommand } from '../types/Types';

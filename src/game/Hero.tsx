@@ -1,9 +1,11 @@
 // Hero.tsx
 
-import { useBaseCharacter } from "./useBaseCharacter";
-import { HeroActions } from "./types/ActionTypes";
-import { ICharacterProps } from "./ICharacterProps";
 import { forwardRef, useImperativeHandle } from "react";
+
+import { ICharacterProps } from "./ICharacterProps";
+import { HeroActions } from "./types/ActionTypes";
+import { useBaseCharacter } from "./useBaseCharacter";
+
 
 export const Hero = forwardRef((props: ICharacterProps, ref) => {
 
@@ -25,3 +27,5 @@ export const Hero = forwardRef((props: ICharacterProps, ref) => {
 
   return null;
 });
+
+Hero.displayName = 'Hero';

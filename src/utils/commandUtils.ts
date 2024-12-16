@@ -1,5 +1,5 @@
-import { ParsedCommand } from "../types/Types";
 import { LogKeys } from "../types/TerminalTypes";
+import { ParsedCommand } from "../types/Types";
 
 export const commandTextToHTML = (text: string): string => {
   return text.replace(/\n/g, '<br/>');

@@ -1,26 +1,30 @@
+import { useComputed } from '@preact/signals-react';
 import React, { useEffect, useRef, useState, useCallback, useImperativeHandle } from 'react';
-import { ActivityType, OutputElement, GamePhrase } from '../types/Types';
+
 import { useActivityMediator } from 'src/hooks/useActivityMediator';
-import Game, { IGameHandle } from '../game/Game';
-import { IAuthProps } from '../hooks/useAuth';
-import NextCharsDisplay, { NextCharsDisplayHandle } from './NextCharsDisplay';
-import { TutorialManager } from './TutorialManager';
-import { Chord } from './Chord';
-import { Prompt } from './Prompt';
+import { useAuth, IAuthProps } from '../hooks/useAuth';
 import { useTerminal } from '../hooks/useTerminal';
 import { useWPMCalculator } from '../hooks/useWPMCaculator';
 import { activitySignal, isShowVideoSignal } from 'src/signals/appSignals';
+import { commandTimeSignal } from 'src/signals/commandLineSignals';
 import {
   setGamePhrase,
 } from 'src/signals/gameSignals';
-import { useComputed } from '@preact/signals-react';
-import MonacoEditor from './MonacoEditor';
-import WebCam from 'src/utils/WebCam';
-import { createLogger, LogLevel } from 'src/utils/Logger';
-import { commandTimeSignal } from 'src/signals/commandLineSignals';
-import { getFileContent } from '../utils/apiClient';
-import { navigate, parseLocation } from 'src/utils/navigationUtils';
 import { tutorialSignal } from 'src/signals/tutorialSignals';
+import { createLogger, LogLevel } from 'src/utils/Logger';
+import { navigate, parseLocation } from 'src/utils/navigationUtils';
+import WebCam from 'src/utils/WebCam';
+import { getFileContent } from '../utils/apiClient';
+
+import Game, { IGameHandle } from '../game/Game';
+
+import { Prompt } from './Prompt';
+import { TutorialManager } from './TutorialManager';
+import MonacoEditor from './MonacoEditor';
+import NextCharsDisplay, { NextCharsDisplayHandle } from './NextCharsDisplay';
+import { Chord } from './Chord';
+
+import { ActivityType, OutputElement, GamePhrase } from '../types/Types';
 
 const logger = createLogger({
   prefix: 'HandTermWrapper',

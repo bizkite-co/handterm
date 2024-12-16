@@ -1,7 +1,8 @@
 // src/commands/SignUpCommand.ts
+import { tempUserNameSignal, setTempEmail, tempEmailSignal, setTempUserName, tempPasswordSignal, isInSignUpProcessSignal, setIsInSignUpProcess } from 'src/signals/appSignals';
+
 import { ICommand, ICommandContext, ICommandResponse } from '../contexts/CommandContext';
 import { ParsedCommand } from '../types/Types';
-import { tempUserNameSignal, setTempEmail, tempEmailSignal, setTempUserName, tempPasswordSignal, isInSignUpProcessSignal, setIsInSignUpProcess } from 'src/signals/appSignals';
 
 export const SignUpCommand: ICommand = {
     name: 'signup',

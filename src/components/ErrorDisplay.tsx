@@ -1,4 +1,5 @@
 import { useState, useImperativeHandle, forwardRef } from 'react';
+
 import { Chord } from './Chord';
 
 interface ErrorDisplayProps {
@@ -30,5 +31,7 @@ const ErrorDisplay = forwardRef((props: ErrorDisplayProps, ref) => {
     </div>
   );
 });
+
+ErrorDisplay.displayName = 'ErrorDisplay';
 
 export default ErrorDisplay;

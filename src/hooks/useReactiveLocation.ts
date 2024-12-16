@@ -1,10 +1,10 @@
 import { useSignal, useComputed } from '@preact/signals-react';
-import { useLocation, useSearchParams } from 'react-router-dom';
 import { useEffect } from 'react';
+import { useLocation, useSearchParams } from 'react-router-dom';
 
 export function useReactiveLocation() {
   const location = useLocation();
-  const [_searchParams] = useSearchParams();
+  useSearchParams();
 
   const pathSignal = useSignal(location.pathname);
   const searchSignal = useSignal(location.search);

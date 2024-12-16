@@ -1,18 +1,20 @@
 // TerminalGame.ts
-import React, { useState, useEffect, useRef, useImperativeHandle, useCallback, useMemo } from 'react';
-import { Zombie4 } from './Zombie4';
-import { Hero } from './Hero';
-import { Action, ActionType } from './types/ActionTypes';
-import { SpritePosition } from './types/Position';
-import { layers, getLevelCount } from './Level';
-import { Sprite } from './sprites/Sprite';
-import { IParallaxLayer, ParallaxLayer } from './ParallaxLayer';
-import ScrollingTextLayer from './ScrollingTextLayer';
-import confetti from 'canvas-confetti';
 import { useComputed, useSignalEffect } from "@preact/signals-react";
+import confetti from 'canvas-confetti';
+import React, { useState, useEffect, useRef, useImperativeHandle, useCallback, useMemo } from 'react';
+
 import { commandLineSignal } from "src/signals/commandLineSignals";
 import { isInGameModeSignal } from 'src/signals/gameSignals';
 import { createLogger, LogLevel } from 'src/utils/Logger';
+
+import { Hero } from './Hero';
+import { layers, getLevelCount } from './Level';
+import { IParallaxLayer, ParallaxLayer } from './ParallaxLayer';
+import ScrollingTextLayer from './ScrollingTextLayer';
+import { Sprite } from './sprites/Sprite';
+import { Action, ActionType } from './types/ActionTypes';
+import { SpritePosition } from './types/Position';
+import { Zombie4 } from './Zombie4';
 
 const logger = createLogger({
   prefix: 'Game',
@@ -213,12 +215,12 @@ const Game: React.ForwardRefRenderFunction<IGameHandle, IGameProps> = ((props, r
     }, 800);
   }, [setHeroAction]);
 
-  const handleCommandLineChange = useCallback((_comandLine: string) => {
+  const handleCommandLineChange = useCallback(() => {
     setHeroRunAction();
   }, [setHeroRunAction]);
 
   useSignalEffect(() => {
-    if (commandLine.value) handleCommandLineChange(commandLine.value);
+    if (commandLine.value) handleCommandLineChange();
   });
 
   const setupCanvas = useCallback((canvas: HTMLCanvasElement) => {

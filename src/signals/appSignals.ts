@@ -1,8 +1,9 @@
 // src/signals/appSignals.ts
 import { computed, signal } from '@preact/signals-react';
+
 import { ActivityType, OutputElement } from 'src/types/Types';
-import { createPersistentSignal } from 'src/utils/signalPersistence';
 import { createLogger, LogLevel } from 'src/utils/Logger';
+import { createPersistentSignal } from 'src/utils/signalPersistence';
 
 const logger = createLogger({
   prefix: 'AppSignals',

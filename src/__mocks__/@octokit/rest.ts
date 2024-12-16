@@ -1,9 +1,11 @@
+import { vi } from 'vitest';
+
 export class Octokit {
-  constructor(_options?: { auth?: string }) {
+  constructor() {
     return {
       rest: {
         repos: {
-          listForAuthenticatedUser: jest.fn().mockResolvedValue({
+          listForAuthenticatedUser: vi.fn().mockResolvedValue({
             data: [
               {
                 id: 1,
@@ -20,7 +22,7 @@ export class Octokit {
           })
         },
         git: {
-          getTree: jest.fn().mockResolvedValue({
+          getTree: vi.fn().mockResolvedValue({
             data: {
               tree: [
                 {
@@ -36,7 +38,7 @@ export class Octokit {
               ]
             }
           }),
-          getBlob: jest.fn().mockResolvedValue({
+          getBlob: vi.fn().mockResolvedValue({
             data: {
               content: Buffer.from('Hello, World!').toString('base64'),
               encoding: 'base64',
@@ -46,7 +48,7 @@ export class Octokit {
           })
         }
       },
-      auth: jest.fn().mockResolvedValue({
+      auth: vi.fn().mockResolvedValue({
         type: 'token',
         tokenType: 'installation',
         token: 'test-token',

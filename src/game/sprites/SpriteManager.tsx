@@ -1,6 +1,8 @@
-import { Sprite } from './Sprite';
-import { SpriteAnimation } from '../types/SpriteTypes';
 import { createLogger, LogLevel } from 'src/utils/Logger';
+
+import { SpriteAnimation } from '../types/SpriteTypes';
+
+import { Sprite } from './Sprite';
 
 const logger = createLogger({
   prefix: 'SpriteManager',

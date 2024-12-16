@@ -1,11 +1,12 @@
 // useBaseCharacter.tsx
 
 import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
+
 import { Sprite } from './sprites/Sprite';
-import { SpriteAnimation } from './types/SpriteTypes';
-import { Action, ActionType } from './types/ActionTypes';
 import { SpriteManager } from './sprites/SpriteManager';
+import { Action, ActionType } from './types/ActionTypes';
 import { SpritePosition } from './types/Position';
+import { SpriteAnimation } from './types/SpriteTypes';
 
 interface BaseCharacterProps {
   currentActionType: ActionType;

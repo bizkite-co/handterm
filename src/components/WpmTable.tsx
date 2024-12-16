@@ -1,5 +1,6 @@
 // src/components/WpmTable.tsx
 import React, { useMemo } from 'react';
+
 import { CharWPM } from '../types/TerminalTypes';
 
 interface WpmTableProps {

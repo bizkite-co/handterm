@@ -1,10 +1,12 @@
 import { Buffer } from 'buffer';
+
 import './commands';
 import React from 'react';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
-import { QueryProvider } from './providers/QueryProvider';
+
 import App from './App'
 import { exposeSignals } from './e2e/helpers/exposeSignals';
+import { QueryProvider } from './providers/QueryProvider';
 
 window.Buffer = Buffer;
 

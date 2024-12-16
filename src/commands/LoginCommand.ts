@@ -1,8 +1,9 @@
 // src/commands/LoginCommand.ts
 
+import { isInLoginProcessSignal, tempUserNameSignal, setTempUserName, setIsInLoginProcess } from 'src/signals/appSignals';
+
 import { ICommand, ICommandContext, ICommandResponse } from '../contexts/CommandContext';
 import { ParsedCommand } from '../types/Types';
-import { isInLoginProcessSignal, tempUserNameSignal, setTempUserName, setIsInLoginProcess } from 'src/signals/appSignals';
 import { createLogger } from '../utils/Logger';
 
 const logger = createLogger();

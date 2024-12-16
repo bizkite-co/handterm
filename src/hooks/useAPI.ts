@@ -1,6 +1,8 @@
-import { useCallback } from 'react';
 import axios, { AxiosError } from 'axios';
+import { useCallback } from 'react';
+
 import ENDPOINTS from '../shared/endpoints.json';
+
 import { IAuthProps } from './useAuth';
 
 interface APIResponse<T> {

@@ -1,14 +1,15 @@
+import { useComputed } from '@preact/signals-react';
 import React, { useEffect, useRef, useCallback } from 'react';
-import { ActivityType, OutputElement } from './types/Types';
+
 import { HandTermWrapper, IHandTermWrapperMethods } from './components/HandTermWrapper';
-import { TerminalCssClasses } from './types/TerminalTypes';
-import { useAuth } from './hooks/useAuth';
 import { Output } from './components/Output';
+import { ActivityMediatorProvider } from './contexts/ActivityMediatorContext';
 import { AppProvider } from './contexts/AppContext';
 import { CommandProvider } from './contexts/CommandProvider';
-import { ActivityMediatorProvider } from './contexts/ActivityMediatorContext';
+import { useAuth } from './hooks/useAuth';
 import { bypassTutorialSignal } from './signals/appSignals';
-import { useComputed } from '@preact/signals-react';
+import { TerminalCssClasses } from './types/TerminalTypes';
+import { ActivityType } from './types/Types';
 import { parseLocation } from './utils/navigationUtils';
 
 export default function App() {
@@ -33,7 +34,7 @@ export default function App() {
     return () => window.removeEventListener('resize', handleResize);
   }, [getContainerWidth]);
 
-  const handleOutputUpdate = (_newOutput: OutputElement) => {
+  const handleOutputUpdate = () => {
     // Placeholder for future implementation
   };
 

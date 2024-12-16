@@ -1,9 +1,11 @@
 
 // src/commands/cleanCommand.ts
-import { LogKeys } from '../types/TerminalTypes';
-import { ICommand, ICommandContext, ICommandResponse } from '../contexts/CommandContext';
-import { saveCommandHistory } from '../utils/commandUtils';
 import { ParsedCommand } from 'src/types/Types';
+
+import { ICommand, ICommandContext, ICommandResponse } from '../contexts/CommandContext';
+import { LogKeys } from '../types/TerminalTypes';
+import { saveCommandHistory } from '../utils/commandUtils';
+
 
 export const cleanCommand: ICommand = {
     name: 'clean',

@@ -1,12 +1,16 @@
 // src/contexts/CommandProvider.tsx
 import React from 'react';
-import { CommandContext } from './CommandContext';
-import { useCommand } from '../hooks/useCommand';
-import { IAuthProps } from '../hooks/useAuth';
-import { IHandTermWrapperMethods } from '../components/HandTermWrapper';
-import { navigate } from 'src/utils/navigationUtils';
-import { parseCommand } from 'src/utils/commandUtils';
+
 import { ParsedCommand } from 'src/types/Types';
+import { parseCommand } from 'src/utils/commandUtils';
+import { navigate } from 'src/utils/navigationUtils';
+
+import { IHandTermWrapperMethods } from '../components/HandTermWrapper';
+import { IAuthProps } from '../hooks/useAuth';
+import { useCommand } from '../hooks/useCommand';
+
+import { CommandContext } from './CommandContext';
+
 
 interface CommandProviderProps {
   children: React.ReactNode;

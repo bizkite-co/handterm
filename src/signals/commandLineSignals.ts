@@ -1,5 +1,6 @@
 // src/signals/wpmSignals.ts
 import { signal } from "@preact/signals-react";
+
 import { Keystroke, ParsedCommand } from "../types/Types"; // Assuming you have this type defined
 
 export const keystrokesSignal = signal<Keystroke[]>([]);

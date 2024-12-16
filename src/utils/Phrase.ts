@@ -1,5 +1,6 @@
 import { allChords } from "../allChords";
 import { Chord } from "../types/Types";
+
 import { createHTMLElementFromHTML } from "./dom";
 
 export class Phrase {

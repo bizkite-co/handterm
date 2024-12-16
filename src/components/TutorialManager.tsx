@@ -1,6 +1,8 @@
 // TutorialManager.tsx
 import React, { memo } from 'react';
+
 import { Tutorial } from '../types/Types';
+
 import { Chord } from './Chord';
 
 export const TutorialManager: React.FC<{tutorial:Tutorial}> = memo(({tutorial}) => {
@@ -26,3 +28,5 @@ export const TutorialManager: React.FC<{tutorial:Tutorial}> = memo(({tutorial}) 
         </div>
     );
 });
+
+TutorialManager.displayName = 'TutorialManager';

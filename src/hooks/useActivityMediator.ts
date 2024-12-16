@@ -1,22 +1,26 @@
+import { useComputed } from '@preact/signals-react';
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { ActivityType, ParsedCommand, GamePhrase, Tutorial } from '../types/Types';
-import { ActionType } from '../game/types/ActionTypes';
-import GamePhrases from '../utils/GamePhrases';
-import { useTutorial } from './useTutorials';
-import {
-    setNextTutorial, resetCompletedTutorials,
-    tutorialSignal, getNextTutorial, setCompletedTutorial
-} from 'src/signals/tutorialSignals';
+
+import { activitySignal, setNotification, bypassTutorialSignal } from 'src/signals/appSignals'
 import {
     getIncompletePhrasesByTutorialGroup, initializeGame,
     setCompletedGamePhrase,
     getNextGamePhrase,
     setGamePhrase,
 } from 'src/signals/gameSignals';
-import { activitySignal, setNotification, bypassTutorialSignal } from 'src/signals/appSignals'
-import { useComputed } from '@preact/signals-react';
+import {
+    setNextTutorial, resetCompletedTutorials,
+    tutorialSignal, getNextTutorial, setCompletedTutorial
+} from 'src/signals/tutorialSignals';
 import { createLogger } from 'src/utils/Logger';
 import { navigate, parseLocation } from 'src/utils/navigationUtils';
+
+import { ActionType } from '../game/types/ActionTypes';
+import { ActivityType, ParsedCommand, GamePhrase, Tutorial } from '../types/Types';
+import GamePhrases from '../utils/GamePhrases';
+
+import { useTutorial } from './useTutorials';
+
 
 const logger = createLogger({ prefix: 'ActivityMediator' });
 
@@ -107,7 +111,6 @@ export function useActivityMediator() {
         activitySignal.value = ActivityType.NORMAL;
         navigate({ activityKey: ActivityType.NORMAL })
     }, [
-        decideActivityChange,
         getIncompleteTutorialsInGroup,
         transitionToGame
     ]);
@@ -177,7 +180,6 @@ export function useActivityMediator() {
         }
         return;
     }, [
-        decideActivityChange,
         canUnlockTutorial,
         transitionToGame
     ]);
@@ -217,7 +219,7 @@ export function useActivityMediator() {
         }
 
         return result;
-    }, [decideActivityChange, checkGameProgress, checkTutorialProgress, transitionToGame]);
+    }, [checkGameProgress, checkTutorialProgress, transitionToGame]);
 
     useEffect(() => {
         const resultActivity = decideActivityChange(null);

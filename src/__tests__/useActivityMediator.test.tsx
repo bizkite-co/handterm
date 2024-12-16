@@ -1,7 +1,5 @@
-import { describe, it, expect, vi } from 'vitest';
-import React from 'react';
 import { renderHook } from '@testing-library/react';
-import { act } from 'react';
+import { describe, it, expect, vi } from 'vitest';
 
 // Mocking dependencies
 vi.mock('src/hooks/useActivityMediator', async () => {

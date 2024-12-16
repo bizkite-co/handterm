@@ -1,16 +1,20 @@
 // src/hooks/useCommand.ts
-import React, { useContext, useState, useCallback, useEffect } from 'react';
-import { CommandContext, ICommandResponse } from '../contexts/CommandContext';
-import { parsedCommandToString, loadCommandHistory, saveCommandHistory } from '../utils/commandUtils';
-import { LogKeys } from '../types/TerminalTypes';
-import { commandRegistry } from '../commands/commandRegistry';
-import { ActivityType, OutputElement, ParsedCommand } from '../types/Types';
-import { useActivityMediator } from './useActivityMediator';
-import { activitySignal, appendToOutput } from 'src/signals/appSignals';
 import { useComputed } from '@preact/signals-react';
-import { useWPMCalculator } from './useWPMCaculator';
+import React, { useContext, useState, useCallback, useEffect } from 'react';
+
+import { activitySignal, appendToOutput } from 'src/signals/appSignals';
 import { setCommandTime } from 'src/signals/commandLineSignals';
 import { createLogger } from 'src/utils/Logger';
+
+import { commandRegistry } from '../commands/commandRegistry';
+import { CommandContext, ICommandResponse } from '../contexts/CommandContext';
+import { LogKeys } from '../types/TerminalTypes';
+import { ActivityType, OutputElement, ParsedCommand } from '../types/Types';
+import { parsedCommandToString, loadCommandHistory, saveCommandHistory } from '../utils/commandUtils';
+
+import { useActivityMediator } from './useActivityMediator';
+import { useWPMCalculator } from './useWPMCaculator';
+
 
 const logger = createLogger({ prefix: 'useCommand' });
 

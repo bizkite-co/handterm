@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, MockedFunction } from 'vitest';
-import { LoginCommand } from '../LoginCommand';
+
+import * as appSignals from 'src/signals/appSignals';
 import {
   ICommandContext,
   ICommandResponse,
@@ -9,7 +10,8 @@ import {
   MyResponse,
   AuthResponse
 } from 'src/types/HandTerm';
-import * as appSignals from 'src/signals/appSignals';
+
+import { LoginCommand } from '../LoginCommand';
 
 // Type-safe mock of signals
 type SignalMock = { value: boolean };

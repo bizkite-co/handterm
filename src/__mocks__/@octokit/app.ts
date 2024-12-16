@@ -1,8 +1,10 @@
+import { vi } from 'vitest';
+
 export class App {
-  constructor(_options: { appId: string; privateKey: string }) {
+  constructor() {
     return {
-      getInstallationOctokit: jest.fn().mockResolvedValue({
-        auth: jest.fn().mockResolvedValue({
+      getInstallationOctokit: vi.fn().mockResolvedValue({
+        auth: vi.fn().mockResolvedValue({
           type: 'token',
           tokenType: 'installation',
           token: 'test-token',
@@ -10,7 +12,7 @@ export class App {
         }),
         rest: {
           apps: {
-            getUserInstallation: jest.fn().mockResolvedValue({
+            getUserInstallation: vi.fn().mockResolvedValue({
               data: {
                 id: 12345,
                 account: {

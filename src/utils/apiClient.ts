@@ -1,6 +1,8 @@
 import axios from 'axios';
-import ENDPOINTS from '../shared/endpoints.json';
+
 import { IAuthProps } from '../hooks/useAuth';
+import ENDPOINTS from '../shared/endpoints.json';
+
 import { Logger } from './Logger';
 
 export interface APIResponse<T> {

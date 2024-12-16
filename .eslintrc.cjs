@@ -13,8 +13,6 @@ module.exports = {
     'plugin:jsx-a11y/recommended',
     'plugin:import/recommended',
     'plugin:import/typescript',
-    'plugin:vitest/recommended',
-    'plugin:prettier/recommended',
   ],
   parser: '@typescript-eslint/parser',
   parserOptions: {
@@ -30,16 +28,17 @@ module.exports = {
     'react-hooks',
     '@typescript-eslint',
     'jsx-a11y',
-    'import',
-    'vitest',
-    'prettier',
+    'eslint-plugin-testing-library',
+    'import'
   ],
   settings: {
     react: {
       version: 'detect',
     },
     'import/resolver': {
-      typescript: {},
+      typescript: {
+        project: './tsconfig.json',
+      },
       node: {
         extensions: ['.js', '.jsx', '.ts', '.tsx'],
       },
@@ -68,6 +67,14 @@ module.exports = {
         aspects: ['invalidHref', 'preferButton'],
       },
     ],
+    '@typescript-eslint/no-explicit-any': 'warn',
+    'no-unused-vars': 'warn',
+    'consistent-return': 'warn',
+    'no-console': 'warn',
+    'testing-library/no-unnecessary-act': 'warn',
+    'import/no-named-as-default-member': 'off',
+    'import/no-duplicates': 'warn',
+  },
   ignorePatterns: ['tests-examples/demo-todo-app.spec.ts'],
   overrides: [
     {

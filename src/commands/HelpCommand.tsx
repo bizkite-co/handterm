@@ -1,7 +1,7 @@
-import { Chord } from '../components/Chord';
 import ReactDOMServer from 'react-dom/server';
-import { ICommand, ICommandResponse } from '../contexts/CommandContext';
-import { ICommandContext } from '../contexts/CommandContext';
+
+import { Chord } from '../components/Chord';
+import { ICommand, ICommandResponse , ICommandContext } from '../contexts/CommandContext';
 import { ParsedCommand } from '../types/Types';
 
 export const HelpCommand: ICommand = {

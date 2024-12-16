@@ -1,6 +1,6 @@
 import { ICommand, ICommandContext, ICommandResponse } from '../contexts/CommandContext';
-import { ParsedCommand } from '../types/Types';
 import { isShowVideoSignal } from '../signals/appSignals';
+import { ParsedCommand } from '../types/Types';
 
 export const toggleVideoCommand: ICommand = {
     name: 'video',

@@ -1,10 +1,13 @@
 // src/components/CommandOutput.tsx
 
 import React, { ReactNode } from 'react';
+
+import { parsedCommandToString } from 'src/utils/commandUtils';
+
+import { ParsedCommand, WPMs } from '../types/Types';
+
 import { TimeDisplay } from './TimeDisplay';
 import WpmTable from './WpmTable';
-import { ParsedCommand, WPMs } from '../types/Types';
-import { parsedCommandToString } from 'src/utils/commandUtils';
 
 interface CommandOutputProps {
     command: ParsedCommand;

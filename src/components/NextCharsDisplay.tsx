@@ -1,15 +1,17 @@
-import { TerminalCssClasses } from "../types/TerminalTypes";
-
-import React, { useState, useRef, useImperativeHandle, useCallback, useEffect, useMemo } from 'react';
-import Timer, { TimerHandle } from './Timer';
-import ErrorDisplay from "./ErrorDisplay";
-import { Phrase } from "../utils/Phrase";
-import { commandLineSignal } from "src/signals/commandLineSignals";
 import { useComputed, useSignalEffect } from "@preact/signals-react";
+import React, { useState, useRef, useImperativeHandle, useCallback, useEffect, useMemo } from 'react';
+
+import { commandLineSignal } from "src/signals/commandLineSignals";
 import { setCompletedGamePhrase } from "src/signals/gameSignals";
 import { GamePhrase } from "src/types/Types";
 import * as GamePhrases from "src/utils/GamePhrases";
 import { parseLocation } from "src/utils/navigationUtils";
+
+import { TerminalCssClasses } from "../types/TerminalTypes";
+import { Phrase } from "../utils/Phrase";
+
+import ErrorDisplay from "./ErrorDisplay";
+import Timer, { TimerHandle } from './Timer';
 
 export interface INextCharsDisplayProps {
     isInPhraseMode: boolean;
@@ -148,6 +150,7 @@ const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, INextCharsDisp
 
         const nextCharactersString = getNextCharacters(stringBeingTested);
         setNextChars(nextCharactersString);
+        return;
     }, [
         startOrContinueTimer,
         getFirstNonMatchingChar,
@@ -210,5 +213,7 @@ const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, INextCharsDisp
         )
     );
 });
+
+NextCharsDisplay.displayName = 'NextCharsDisplay';
 
 export default NextCharsDisplay;

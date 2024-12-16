@@ -1,9 +1,11 @@
 // src/hooks/useWPMCalculator.ts
 
-import { useCallback } from 'react';
-import { WPM, WPMs } from '../types/Types';
-import { keystrokesSignal, addKeystroke, clearKeystrokes } from 'src/signals/commandLineSignals';
 import { useComputed } from '@preact/signals-react';
+import { useCallback } from 'react';
+
+import { keystrokesSignal, addKeystroke, clearKeystrokes } from 'src/signals/commandLineSignals';
+
+import { WPM, WPMs } from '../types/Types';
 
 
 export const useWPMCalculator = () => {

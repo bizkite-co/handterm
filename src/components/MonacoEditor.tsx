@@ -1,8 +1,10 @@
-import React, { useState, useRef, useImperativeHandle, forwardRef, useCallback } from 'react';
-import { Monaco } from '@monaco-editor/react';
 import { editor } from 'monaco-editor';
-import { useAuth } from '../hooks/useAuth';
+import React, { useRef, useImperativeHandle, forwardRef, useCallback } from 'react';
+
 import { createLogger, LogLevel } from 'src/utils/Logger';
+
+import { useAuth } from '../hooks/useAuth';
+
 
 const logger = createLogger({
   prefix: 'MonacoEditor',
@@ -26,8 +28,6 @@ interface MonacoEditorProps {
 
 const MonacoEditor = forwardRef<editor.IStandaloneCodeEditor, MonacoEditorProps>(
   ({
-    initialValue: _initialValue,
-    language: _language,
     onClose,
     height = '80vh',
     isTreeView,
@@ -35,12 +35,9 @@ const MonacoEditor = forwardRef<editor.IStandaloneCodeEditor, MonacoEditorProps>
     onFileSelect
   }, ref) => {
     const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
-    const _monacoRef = useRef<Monaco | null>(null);
-    const [_isEditorReady, setIsEditorReady] = useState(false);
-    const [_expandedFolders] = useState<Set<string>>(new Set());
     const auth = useAuth();
 
-    const _handleGitHubSave = useCallback(async (_value?: string): Promise<void> => {
+    const handleGitHubSave = useCallback(async (): Promise<void> => {
       try {
         const currentRepo = localStorage.getItem('current_github_repo');
         const currentFile = localStorage.getItem('current_github_file');
@@ -64,16 +61,13 @@ const MonacoEditor = forwardRef<editor.IStandaloneCodeEditor, MonacoEditorProps>
       }
     }, [auth]);
 
-    const _handleEditorDidMount = useCallback((editor: editor.IStandaloneCodeEditor, _monaco: Monaco) => {
+    const handleEditorDidMount = useCallback((editor: editor.IStandaloneCodeEditor) => {
       logger.info('Editor mounted, setting up...');
       editorRef.current = editor;
 
       if (isTreeView) {
         logger.info('Setting up tree view mode');
         editor.updateOptions({ readOnly: true });
-      } else {
-        setIsEditorReady(true);
-        logger.info('Editor ready');
       }
     }, [isTreeView]);
 
@@ -99,9 +93,9 @@ const MonacoEditor = forwardRef<editor.IStandaloneCodeEditor, MonacoEditorProps>
         {isTreeView && treeItems.length > 0 && (
           <div>
             {treeItems.map((item, index) => (
-              <div key={index} onClick={() => handleFileSelection(item)}>
+              <button key={index} onClick={() => handleFileSelection(item)}>
                 {item.path}
-              </div>
+              </button>
             ))}
           </div>
         )}
@@ -110,5 +104,7 @@ const MonacoEditor = forwardRef<editor.IStandaloneCodeEditor, MonacoEditorProps>
     );
   }
 );
+
+MonacoEditor.displayName = 'MonacoEditor';
 
 export default MonacoEditor;

@@ -1,7 +1,9 @@
-import { useBaseCharacter } from './useBaseCharacter';
-import { Zombie4Actions } from './types/ActionTypes';
-import { ICharacterProps } from './ICharacterProps';
 import { forwardRef, useImperativeHandle } from 'react';
+
+import { ICharacterProps } from './ICharacterProps';
+import { Zombie4Actions } from './types/ActionTypes';
+import { useBaseCharacter } from './useBaseCharacter';
+
 
 // * Idle - 5 frames
 // * Walk - 13 frames
@@ -29,3 +31,5 @@ export const Zombie4 = forwardRef((props: ICharacterProps, ref) => {
 
   return null;
 });
+
+Zombie4.displayName = 'Zombie4';
