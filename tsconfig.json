@@ -1,81 +1,37 @@
 {
+  "extends": "./tsconfig.base.json",
   "compilerOptions": {
-    "baseUrl": ".",
-    "rootDir": ".",
-    "sourceRoot": "src",
-    "target": "ES2020",
-    "useDefineForClassFields": true,
-    "sourceMap": true,
-    "lib": [
-      "ESNext",
-      "DOM",
-      "DOM.Iterable"
-    ],
-    "jsx": "react-jsx",
-    "jsxImportSource": "react",
-    "types": [
-      "node"
-    ],
-    "module": "ESNext",
-    "skipLibCheck": true,
-    "outDir": "./dist",
-    /* Bundler mode */
-    "moduleResolution": "bundler",
-    "allowImportingTsExtensions": true,
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "noEmit": true,
-    "allowJs": true,
-    /* Linting */
-    "strict": true,
-    "noFallthroughCasesInSwitch": true,
-    "noUnusedLocals": false,
-    "noUnusedParameters": false,
-    "typeRoots": [
-      "./node_modules/@types",
-      "./src/types"
-    ],
-    "paths": {
-      "src/*": [
-        "src/*"
-      ],
-      "@xterm/xterm": [
-        "node_modules/@xterm/xterm"
-      ]
-    },
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true
+    "types": ["node"],
+    "composite": true
   },
-  "typeRoots": [
-    "./node_modules/@types",
-    "./src/types"
-  ],
   "include": [
-    "./src/**/*",
-    "./src/types/**/*.d.ts",
-    "./src/types/**/*.ts",
-    "vitest-setup.ts",
-    "e2e/**/*.ts",
-    "playwright.config.ts",
-    "setupTests.ts",
-    "tests-examples/**/*.ts",
-    "tests/**/*.ts",
-    "vite.config.ts",
-    "vitest.config.ts",
+    "src/**/*",
+    "src/**/*.json",
+    "src/types/**/*.d.ts",
+    "src/hooks/**/*.d.ts",
+    "src/test-utils/**/*.d.ts",
     "src/**/*.tsx",
+    "src/**/*.ts",
     "src/**/*.js",
     "src/**/*.jsx",
-    "src/**/*.d.ts",
-    "src/hooks/**/*.d.ts",
-    "src/test-utils/**/*.d.ts"
+    "moduleResolver.js",
+    "@monaco-editor-react.js",
+    "scripts/**/*.js"
   ],
   "exclude": [
     "node_modules",
-    ".vscode"
-  ],
-  "references": [
-    {
-      "path": "./tsconfig.node.json"
-    }
+    ".vscode",
+    "dist",
+    "coverage",
+    "e2e",
+    "tests",
+    "tests-examples",
+    "**/*.spec.ts",
+    "**/*.test.ts",
+    "**/*.spec.tsx",
+    "**/*.test.tsx",
+    "playwright.config.ts",
+    "vitest.config.ts",
+    "vite.config.ts"
   ]
 }
