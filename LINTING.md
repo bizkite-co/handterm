@@ -1,196 +1,287 @@
 # ESLint Configuration Guide
 
-This document explains the ESLint configuration choices made for this React/TypeScript/Vite project.
+## Core Philosophy
 
-## Core Principles
+This ESLint configuration represents our gold standard for code quality. We deliberately configure rules to enforce best practices, rather than accommodating existing patterns. When encountering linting errors, the solution is to improve the code to meet our standards, not to relax the rules.
 
-1. **Type Safety**: Strict TypeScript checking while allowing pragmatic exceptions
-2. **Import Organization**: Clear and consistent module organization
-3. **Testing Support**: Flexible rules for different types of tests
-4. **Code Quality**: Enforced best practices with reasonable warnings
+Key principles:
+1. Type safety is non-negotiable
+2. Explicit is better than implicit
+3. Consistency across the codebase
+4. No unsafe operations
+5. Clean and maintainable code
+6. Refine linting rules for the project-specific tech stack.
 
-## Unused Variables and Parameters
+## Type Safety
 
-### Parameter Naming Rules
-
+### Core Rules
 ```typescript
-// Good: Unused required callback parameter
-function onEvent(_event: Event) {
-  // Only using event in types, not in implementation
-}
-
-// Good: Unused error in catch clause
-try {
-  // ...
-} catch (_error) {
-  // Only need to catch, not use error
-}
-
-// Bad: Underscore prefix without additional characters
-function process(_: string) {} // Error: Must have chars after underscore
-
-// Bad: Unused variable with underscore
-const _unused = 'something'; // Error: Variables can't use underscore prefix
+'@typescript-eslint/no-explicit-any': 'error',
+'@typescript-eslint/no-unsafe-assignment': 'error',
+'@typescript-eslint/no-unsafe-member-access': 'error',
+'@typescript-eslint/no-unsafe-call': 'error',
+'@typescript-eslint/no-unsafe-return': 'error',
+'@typescript-eslint/no-unsafe-argument': 'error',
 ```
 
-The configuration enforces:
-- Only allow underscore prefix for required callback parameters
-- Must have at least one character after underscore
-- Only allow `_error` in catch clauses
-- No unused variables with underscore prefix (they should be removed)
+### Rationale
+- Type safety prevents runtime errors
+- Makes code self-documenting
+- Enables better tooling support
+- Facilitates refactoring
+
+### Examples
+
+```typescript
+// BAD: Using any
+function process(data: any): any {
+  return data.someField;
+}
+
+// GOOD: Proper typing
+interface Data {
+  someField: string;
+}
+function process(data: Data): string {
+  return data.someField;
+}
+```
+
+## Promise Handling
+
+### Core Rules
+```typescript
+'@typescript-eslint/no-floating-promises': 'error',
+'@typescript-eslint/require-await': 'error',
+'@typescript-eslint/no-misused-promises': ['error', {
+  checksVoidReturn: true,
+  checksConditionals: true,
+  checksSpreads: true,
+}],
+```
 
 ### Rationale
+- Unhandled promises can lead to silent failures
+- Async functions should have a purpose
+- Promise handling should be explicit
 
-1. **Required Parameters**: Sometimes callback parameters are required by type but not used in implementation. Prefixing with underscore makes this explicit.
-2. **Catch Clauses**: When you need to catch errors but don't use them, `_error` is the standard name.
-3. **Variables**: Unlike parameters, variables are never "required" by the type system, so unused ones should be removed.
+### Examples
+
+```typescript
+// BAD: Floating promise
+someAsyncOperation();
+
+// GOOD: Explicit handling
+await someAsyncOperation();
+// or
+void someAsyncOperation();
+// or
+someAsyncOperation().catch(handleError);
+
+// BAD: Async without await
+async function noAwait(): Promise<void> {
+  doSomething(); // No await needed
+}
+
+// GOOD: Proper async usage
+async function withAwait(): Promise<void> {
+  await someAsyncOperation();
+}
+```
 
 ## Naming Conventions
 
-### Variables and Functions
-
+### Core Rules
 ```typescript
-// Variables
-const myVariable = 'value';          // Good: camelCase
-const MyComponent = () => {};        // Good: PascalCase for components
-const MAX_VALUE = 100;              // Good: UPPER_CASE for constants
-
-// Functions
-function handleClick() {}           // Good: camelCase
-function MyComponent() {}           // Good: PascalCase for components
+'@typescript-eslint/naming-convention': [
+  'error',
+  {
+    selector: 'default',
+    format: ['camelCase'],
+    leadingUnderscore: 'forbid',
+    trailingUnderscore: 'forbid',
+  },
+  // Additional configurations for different types
+]
 ```
 
-### Types and Interfaces
+### Rationale
+- Consistent naming improves readability
+- Different cases convey different meanings
+- No leading underscores (except in very specific cases)
+
+### Examples
 
 ```typescript
-// Good: PascalCase for types
-interface UserProps {
-  name: string;
+// BAD: Inconsistent naming
+const user_data = getData();
+const APIEndpoint = '/api';
+const _privateVar = 'hidden';
+
+// GOOD: Consistent naming
+const userData = getData();
+const API_ENDPOINT = '/api';
+const privateVar = 'hidden';
+
+// GOOD: React components in PascalCase
+function UserProfile(): JSX.Element {
+  return <div>Profile</div>;
 }
 
-// Good: PascalCase for enums
-enum ButtonSize {
-  Small = 'small',
-  Large = 'large'
+// GOOD: Event handlers
+function handleClick(): void {
+  // ...
 }
-
-// Bad: non-PascalCase for types
-interface userProps {}              // Error: Must be PascalCase
-```
-
-### Parameters
-
-```typescript
-// Good: camelCase for used parameters
-function process(userData: UserData) {}
-
-// Good: underscore prefix for unused required parameters
-function onEvent(_event: Event) {}
-
-// Bad: underscore without reason
-function process(_data: Data) {}    // Error: Parameter is used but has underscore
 ```
 
 ## Import Organization
 
-Imports are organized in the following order:
+### Core Rules
+```typescript
+'import/order': ['error', {
+  groups: [
+    'builtin',
+    'external',
+    'internal',
+    'parent',
+    'sibling',
+    'index',
+    'object',
+    'type'
+  ],
+  'newlines-between': 'always',
+  // Additional configurations
+}],
+'import/no-default-export': 'error',
+```
 
-1. React and core libraries
-2. External libraries
-3. Internal modules
-4. Relative imports
-5. Type imports
+### Rationale
+- Organized imports improve readability
+- Named exports are more refactoring-friendly
+- Clear separation between different types of imports
+
+### Examples
 
 ```typescript
-// Good import order
-import React from 'react';
+// GOOD: Organized imports
+import React, { useState } from 'react';
+
 import { signal } from '@preact/signals-react';
 import { QueryClient } from '@tanstack/react-query';
-import { render } from '@testing-library/react';
-import { MyComponent } from '@/components';
-import { useAuth } from '../hooks/useAuth';
-import type { UserData } from './types';
 
-// Bad: Wrong order
-import { useAuth } from '../hooks/useAuth';
-import React from 'react';          // Error: React should come first
+import { useAuth } from '@/hooks/useAuth';
+import { Button } from '@/components/Button';
+
+import { type User } from './types';
+import { formatDate } from './utils';
+
+// BAD: Default exports
+export default function Component() {}
+
+// GOOD: Named exports
+export function Component(): JSX.Element {}
 ```
 
-## Testing Configuration
+## React Best Practices
 
-### Unit Tests
+### Core Rules
+```typescript
+'react/function-component-definition': ['error', {
+  namedComponents: 'function-declaration',
+  unnamedComponents: 'arrow-function',
+}],
+'react-hooks/exhaustive-deps': 'error',
+```
 
-More lenient rules for test files:
-- Allow any types
-- Allow non-null assertions
-- Allow unused variables with underscore
-- Relaxed naming conventions
+### Rationale
+- Consistent component definitions
+- Proper hook dependencies
+- Explicit event handler naming
+
+### Examples
 
 ```typescript
-// Good: Test-specific patterns allowed
-describe('MyComponent', () => {
-  const _unusedInTest = 'value';    // Allowed in tests
-  const element = screen.getByRole('button')!;  // Non-null assertion allowed
-});
+// BAD: Inconsistent component definition
+const Component = () => {
+  return <div />;
+};
+
+// GOOD: Function declaration for named components
+function Component(): JSX.Element {
+  return <div />;
+}
+
+// BAD: Missing dependencies
+useEffect(() => {
+  doSomething(value);
+}, []); // value is missing from deps
+
+// GOOD: Complete dependencies
+useEffect(() => {
+  doSomething(value);
+}, [value]);
 ```
 
-### E2E Tests
+## Testing Standards
 
-Even more relaxed rules:
-- No screen query requirements
-- Allow unsafe operations
-- Flexible naming
+### Core Rules
+```typescript
+'testing-library/prefer-screen-queries': 'error',
+'testing-library/no-debugging-utils': process.env.CI ? 'error' : 'warn',
+```
 
-## Common Issues and Solutions
+### Rationale
+- Consistent testing patterns
+- No debugging code in production
+- Clear test structure
 
-### Unused Variables
+### Examples
 
 ```typescript
-// Problem: Unused variable
-const unused = 'value';             // Error: Unused variable
+// BAD: Direct queries
+const element = container.querySelector('.button');
 
-// Solution: Remove it
-// No unused variables allowed, even with underscore prefix
+// GOOD: Screen queries
+const element = screen.getByRole('button');
+
+// BAD: Debugging in tests
+console.log(element);
+
+// GOOD: Clear assertions
+expect(element).toBeInTheDocument();
 ```
-
-### Required Unused Parameters
-
-```typescript
-// Problem: Required callback parameter
-function onClick(event: Event) {}    // Error: event is unused
-
-// Solution: Use underscore prefix
-function onClick(_event: Event) {}
-```
-
-### Promise Handling
-
-```typescript
-// Problem: Unhandled promise
-somePromise();                      // Error: Floating promise
-
-// Solution 1: Use void operator
-void somePromise();
-
-// Solution 2: Use async IIFE
-void (async () => {
-  await somePromise();
-})();
-```
-
-## Maintenance
-
-When updating the ESLint configuration:
-
-1. Consider the impact on existing code
-2. Test changes with `npm run lint`
-3. Document significant changes
-4. Update this guide as needed
 
 ## Configuration Files
 
-The complete configuration is in `.eslintrc.cjs`. Key files:
+Special rules apply to configuration files:
+- Allow require statements
+- Allow default exports
+- Allow console usage
 
-- `.eslintrc.cjs`: Main ESLint configuration
-- `tsconfig.json`: TypeScript configuration for source
-- `tsconfig.test.json`: TypeScript configuration for tests
+This is because configuration files often need to work in different environments and follow different patterns than application code.
+
+## Maintenance
+
+When encountering linting errors:
+
+1. **Understand the Rule**
+   - Read the rule documentation
+   - Understand why it exists
+   - Consider the benefits it provides
+
+2. **Fix the Code**
+   - Improve the code to meet the standard
+   - Don't disable rules without strong justification
+   - Document any necessary exceptions
+
+3. **Review Impact**
+   - Consider if similar issues exist elsewhere
+   - Update related code for consistency
+   - Add tests if needed
+
+4. **Documentation**
+   - Update comments if needed
+   - Document any non-obvious patterns
+   - Share learnings with the team
+
+Remember: The goal is to improve code quality, not to make the linter happy. When you encounter a linting error, ask "How can I make this code better?" rather than "How can I make this error go away?"

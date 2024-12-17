@@ -1,32 +1,35 @@
 module.exports = {
   root: true,
   env: {
-    browser: true,
-    es2021: true,
-    node: true,
+    browser: true, // Enable browser globals
+    es2021: true,  // Enable ES2021 features
+    node: true,    // Enable Node.js globals
   },
+  // Core rule sets in order of increasing specificity
   extends: [
-    'eslint:recommended',
-    'plugin:@typescript-eslint/recommended',
-    'plugin:@typescript-eslint/recommended-requiring-type-checking',
-    'plugin:@typescript-eslint/strict',
-    'plugin:react/recommended',
-    'plugin:react/jsx-runtime',
-    'plugin:react-hooks/recommended',
-    'plugin:jsx-a11y/recommended',
-    'plugin:import/recommended',
-    'plugin:import/typescript',
+    'eslint:recommended',                                        // Base JavaScript best practices
+    'plugin:@typescript-eslint/recommended',                     // TypeScript best practices
+    'plugin:@typescript-eslint/recommended-requiring-type-checking', // Strict TypeScript type checking
+    'plugin:@typescript-eslint/strict',                         // Stricter TypeScript rules
+    'plugin:react/recommended',                                 // React best practices
+    'plugin:react/jsx-runtime',                                 // Modern React JSX features
+    'plugin:react-hooks/recommended',                           // React Hooks best practices
+    'plugin:jsx-a11y/recommended',                             // Accessibility best practices
+    'plugin:import/recommended',                               // Import/export best practices
+    'plugin:import/typescript',                                // TypeScript-specific import rules
   ],
   parser: '@typescript-eslint/parser',
   parserOptions: {
     ecmaVersion: 'latest',
     sourceType: 'module',
-    project: ['./tsconfig.json', './tsconfig.test.json'],
+    // Include all TypeScript configuration files
+    project: ['./tsconfig.json', './tsconfig.test.json', './tsconfig.node.json'],
     ecmaFeatures: {
       jsx: true,
     },
     tsconfigRootDir: __dirname,
   },
+  // Required plugins for our rule sets
   plugins: [
     'react',
     'react-hooks',
@@ -37,11 +40,12 @@ module.exports = {
   ],
   settings: {
     react: {
-      version: 'detect',
+      version: 'detect', // Automatically detect React version
     },
     'import/resolver': {
       typescript: {
-        project: ['./tsconfig.json', './tsconfig.test.json'],
+        // Configure import resolution for TypeScript
+        project: ['./tsconfig.json', './tsconfig.test.json', './tsconfig.node.json'],
         alwaysTryTypes: true,
       },
       node: {
@@ -51,28 +55,79 @@ module.exports = {
     'import/parsers': {
       '@typescript-eslint/parser': ['.ts', '.tsx'],
     },
-    'import/internal-regex': '^@/',
+    'import/internal-regex': '^@/', // Mark @/ imports as internal
   },
   rules: {
     // React Rules
-    'react/react-in-jsx-scope': 'off',
-    'react/prop-types': 'off',
-    'react/jsx-uses-react': 'off',
-    'react/jsx-handler-names': 'warn',
-    'react/jsx-key': ['error', { checkFragmentShorthand: true }],
+    'react/react-in-jsx-scope': 'off',      // Modern React doesn't need React imports
+    'react/prop-types': 'off',              // Using TypeScript instead of PropTypes
+    'react/jsx-uses-react': 'off',          // Modern React doesn't need React imports
+    'react/jsx-handler-names': ['error', {  // Enforce consistent event handler naming
+      eventHandlerPrefix: 'handle',         // Functions that handle events should start with 'handle'
+      eventHandlerPropPrefix: 'on',         // Props that accept handlers should start with 'on'
+      checkLocalVariables: true,            // Apply to local variables too
+    }],
+    'react/jsx-key': ['error', {           // Prevent missing key props in iterators
+      checkFragmentShorthand: true,        // Check fragment shorthand syntax too
+      checkKeyMustBeforeSpread: true,      // Key should come before spread props
+      warnOnDuplicates: true,              // Warn about duplicate keys
+    }],
+    'react/function-component-definition': ['error', {  // Enforce consistent component definitions
+      namedComponents: 'function-declaration',          // Use function declarations for named components
+      unnamedComponents: 'arrow-function',              // Use arrow functions for anonymous components
+    }],
+    'react/jsx-no-useless-fragment': 'error',          // Prevent unnecessary fragments
+    'react/jsx-pascal-case': 'error',                  // Components must be PascalCase
 
     // TypeScript Rules
-    '@typescript-eslint/explicit-module-boundary-types': 'off',
-    '@typescript-eslint/no-unused-vars': ['error', {
-      // Only allow underscore prefix for required callback parameters
-      argsIgnorePattern: '^_(?!$)', // Must have at least one character after underscore
-      varsIgnorePattern: null, // Don't allow unused variables with underscore prefix
-      caughtErrorsIgnorePattern: '^_error$', // Only allow _error in catch clauses
-      destructuredArrayIgnorePattern: '^_', // Allow unused array destructuring with underscore
-      ignoreRestSiblings: true, // Ignore rest siblings in object destructuring
+    '@typescript-eslint/explicit-module-boundary-types': 'error',  // Require return types on exports
+    '@typescript-eslint/no-unused-vars': ['error', {              // Prevent unused variables
+      argsIgnorePattern: '^_[a-zA-Z][a-zA-Z0-9]*$',             // Allow unused params with meaningful names
+      caughtErrorsIgnorePattern: '^_error$',                     // Allow _error in catch clauses
     }],
-    '@typescript-eslint/naming-convention': [
+    '@typescript-eslint/no-explicit-any': 'error',               // Forbid explicit any
+    '@typescript-eslint/consistent-type-imports': ['error', {    // Enforce consistent type imports
+      prefer: 'type-imports',                                    // Use import type syntax
+      fixStyle: 'inline-type-imports',                          // Prefer inline type imports
+      disallowTypeAnnotations: true,                            // Forbid type annotations in imports
+    }],
+    '@typescript-eslint/consistent-type-definitions': ['error', 'interface'], // Prefer interfaces over types
+    '@typescript-eslint/no-misused-promises': [                 // Prevent promise misuse
       'error',
+      {
+        checksVoidReturn: true,                                // Check void returns
+        checksConditionals: true,                             // Check conditionals
+        checksSpreads: true,                                 // Check spreads
+      },
+    ],
+    '@typescript-eslint/no-floating-promises': 'error',        // Require promise handling
+    '@typescript-eslint/require-await': 'error',              // Prevent async without await
+    '@typescript-eslint/no-unsafe-assignment': 'error',       // Prevent unsafe assignments
+    '@typescript-eslint/no-unsafe-member-access': 'error',    // Prevent unsafe member access
+    '@typescript-eslint/no-unsafe-call': 'error',            // Prevent unsafe function calls
+    '@typescript-eslint/no-unsafe-return': 'error',          // Prevent unsafe returns
+    '@typescript-eslint/no-unsafe-argument': 'error',        // Prevent unsafe arguments
+    '@typescript-eslint/unbound-method': 'error',           // Prevent unbound method references
+    '@typescript-eslint/no-unnecessary-type-assertion': 'error', // Prevent redundant type assertions
+    '@typescript-eslint/no-redundant-type-constituents': 'error', // Prevent redundant union/intersection members
+    '@typescript-eslint/strict-boolean-expressions': ['error', { // Enforce strict boolean expressions
+      allowString: false,                                    // Don't allow string coercion
+      allowNumber: false,                                   // Don't allow number coercion
+      allowNullableObject: false,                          // Don't allow nullable object coercion
+      allowNullableBoolean: false,                        // Don't allow nullable boolean coercion
+      allowNullableString: false,                        // Don't allow nullable string coercion
+      allowNullableNumber: false,                       // Don't allow nullable number coercion
+      allowAny: false,                                 // Don't allow any coercion
+    }],
+    '@typescript-eslint/no-unnecessary-condition': 'error',  // Prevent unnecessary conditions
+    '@typescript-eslint/naming-convention': [               // Enforce naming conventions
+      'error',
+      {
+        selector: 'default',
+        format: ['camelCase'],
+        leadingUnderscore: 'forbid',
+        trailingUnderscore: 'forbid',
+      },
       {
         selector: 'variable',
         format: ['camelCase', 'PascalCase', 'UPPER_CASE'],
@@ -81,148 +136,109 @@ module.exports = {
       },
       {
         selector: 'function',
-        format: ['camelCase', 'PascalCase'],
+        format: ['camelCase', 'PascalCase'],              // Allow PascalCase for React components
         leadingUnderscore: 'forbid',
-        trailingUnderscore: 'forbid',
-      },
-      {
-        selector: 'parameter',
-        format: ['camelCase'],
-        leadingUnderscore: 'allow', // Allow underscore for unused parameters
         trailingUnderscore: 'forbid',
       },
       {
         selector: 'typeLike',
-        format: ['PascalCase'],
-        leadingUnderscore: 'forbid',
-        trailingUnderscore: 'forbid',
+        format: ['PascalCase'],                          // Types must be PascalCase
       },
       {
         selector: 'enumMember',
-        format: ['PascalCase', 'UPPER_CASE'],
+        format: ['UPPER_CASE'],                         // Enum members must be UPPER_CASE
+      },
+      {
+        selector: 'parameter',
+        format: ['camelCase'],                         // Parameters must be camelCase
+        leadingUnderscore: 'forbid',
+        trailingUnderscore: 'forbid',
+      },
+      {
+        selector: 'property',
+        format: ['camelCase', 'UPPER_CASE'],          // Properties can be camelCase or UPPER_CASE
         leadingUnderscore: 'forbid',
         trailingUnderscore: 'forbid',
       },
     ],
-    '@typescript-eslint/no-explicit-any': 'warn',
-    '@typescript-eslint/consistent-type-imports': ['warn', {
-      prefer: 'type-imports',
-      fixStyle: 'inline-type-imports',
-      disallowTypeAnnotations: true,
-    }],
-    '@typescript-eslint/consistent-type-definitions': ['warn', 'interface'],
-    '@typescript-eslint/no-misused-promises': [
-      'error',
-      {
-        checksVoidReturn: false,
-        checksConditionals: true,
-        checksSpreads: true,
-      },
-    ],
-    '@typescript-eslint/no-floating-promises': ['warn', {
-      ignoreVoid: true,
-      ignoreIIFE: true,
-    }],
-    '@typescript-eslint/no-unsafe-assignment': 'warn',
-    '@typescript-eslint/no-unsafe-member-access': 'warn',
-    '@typescript-eslint/no-unsafe-call': 'warn',
-    '@typescript-eslint/no-unsafe-return': 'warn',
-    '@typescript-eslint/no-unsafe-argument': 'warn',
-    '@typescript-eslint/unbound-method': 'warn',
-    '@typescript-eslint/no-unnecessary-type-assertion': 'error',
-    '@typescript-eslint/no-redundant-type-constituents': 'error',
 
     // Import Rules
-    'import/order': [
+    'import/order': [                                // Enforce import order
       'error',
       {
-        groups: [
-          'builtin',
-          'external',
-          'internal',
-          'parent',
-          'sibling',
-          'index',
-          'object',
-          'type'
+        groups: [                                   // Group imports by type
+          'builtin',                               // Node.js builtins
+          'external',                              // npm packages
+          'internal',                              // Internal modules
+          'parent',                                // Parent directories
+          'sibling',                               // Same directory
+          'index',                                 // Index files
+          'object',                                // Object imports
+          'type'                                   // Type imports
         ],
-        pathGroups: [
+        pathGroups: [                              // Special import groups
           {
-            pattern: 'react',
+            pattern: 'react',                      // React comes first
             group: 'builtin',
             position: 'before'
           },
           {
-            pattern: '@preact/**',
+            pattern: '@preact/**',                 // Preact after external
             group: 'external',
             position: 'after'
           },
           {
-            pattern: '@tanstack/**',
+            pattern: '@tanstack/**',               // Tanstack after external
             group: 'external',
             position: 'after'
           },
           {
-            pattern: '@testing-library/**',
+            pattern: '@testing-library/**',        // Testing library after external
             group: 'external',
             position: 'after'
           },
           {
-            pattern: '@/**',
+            pattern: '@/**',                       // Internal modules
             group: 'internal',
             position: 'before'
           }
         ],
         pathGroupsExcludedImportTypes: ['react', '@preact/**'],
-        'newlines-between': 'always',
-        alphabetize: {
+        'newlines-between': 'always',              // Require newlines between groups
+        alphabetize: {                             // Sort imports alphabetically
           order: 'asc',
           caseInsensitive: true
         }
       }
     ],
-    'import/no-duplicates': 'error',
-    'import/no-named-as-default-member': 'off',
-    'import/namespace': 'off',
-    'import/export': 'error',
-    'import/first': 'error',
-    'import/no-cycle': ['warn', {
+    'import/no-duplicates': 'error',              // Prevent duplicate imports
+    'import/no-default-export': 'error',          // Prefer named exports
+    'import/no-cycle': ['error', {                // Prevent circular dependencies
       maxDepth: 1,
       ignoreExternal: true
     }],
-    'import/no-unresolved': 'error',
+    'import/no-unresolved': 'error',              // Ensure imports can be resolved
+    'import/first': 'error',                      // Imports must come first
+    'import/exports-last': 'error',               // Exports must come last
+    'import/no-mutable-exports': 'error',         // Prevent mutable exports
 
     // React Hooks Rules
-    'react-hooks/rules-of-hooks': 'error',
-    'react-hooks/exhaustive-deps': 'warn',
+    'react-hooks/rules-of-hooks': 'error',        // Enforce Rules of Hooks
+    'react-hooks/exhaustive-deps': 'error',       // Enforce exhaustive deps
 
     // Accessibility Rules
-    'jsx-a11y/anchor-is-valid': [
-      'error',
-      {
-        components: ['Link'],
-        specialLink: ['hrefLeft', 'hrefRight'],
-        aspects: ['invalidHref', 'preferButton'],
-      },
-    ],
-    'jsx-a11y/media-has-caption': 'warn',
+    'jsx-a11y/anchor-is-valid': 'error',         // Ensure anchors are valid
+    'jsx-a11y/media-has-caption': 'error',       // Require media captions
+    'jsx-a11y/click-events-have-key-events': 'error', // Require keyboard events
+    'jsx-a11y/no-noninteractive-element-interactions': 'error', // Prevent misuse of non-interactive elements
 
     // General Rules
-    'consistent-return': 'warn',
-    'no-console': process.env.NODE_ENV === 'production' ? 'error' : 'warn',
+    'consistent-return': 'error',                // Require consistent return values
+    'no-console': process.env.NODE_ENV === 'production' ? 'error' : 'warn', // No console in production
+    'no-debugger': process.env.NODE_ENV === 'production' ? 'error' : 'warn', // No debugger in production
   },
-  ignorePatterns: [
-    'dist',
-    'node_modules',
-    'coverage',
-    'public',
-    '*.config.js',
-    '*.config.ts',
-    'vite.config.ts',
-    'vitest.config.ts',
-  ],
   overrides: [
-    // Test Files
+    // Test Files - More permissive rules for tests
     {
       files: [
         'src/**/*.{test,spec}.{ts,tsx}',
@@ -233,52 +249,37 @@ module.exports = {
       ],
       extends: ['plugin:testing-library/react'],
       rules: {
-        '@typescript-eslint/no-explicit-any': 'off',
-        '@typescript-eslint/no-non-null-assertion': 'off',
-        '@typescript-eslint/no-unsafe-assignment': 'off',
-        '@typescript-eslint/no-unsafe-member-access': 'off',
-        '@typescript-eslint/no-unsafe-call': 'off',
-        '@typescript-eslint/no-unsafe-return': 'off',
-        '@typescript-eslint/no-unsafe-argument': 'off',
-        '@typescript-eslint/naming-convention': 'off', // Allow more flexible naming in tests
-        'testing-library/no-unnecessary-act': 'warn',
-        'testing-library/prefer-screen-queries': 'error',
-        'testing-library/no-wait-for-multiple-assertions': 'warn',
-        'testing-library/no-render-in-setup': 'off',
-        'testing-library/no-node-access': 'warn',
-        'testing-library/render-result-naming-convention': 'warn',
-        'testing-library/no-debugging-utils': process.env.CI ? 'error' : 'warn',
-        'import/no-duplicates': 'off',
-        'import/first': 'error',
-        'import/order': 'error',
-        'import/export': 'warn',
+        '@typescript-eslint/no-explicit-any': 'off',           // Allow any in tests
+        '@typescript-eslint/no-non-null-assertion': 'off',     // Allow non-null assertions in tests
+        '@typescript-eslint/no-unsafe-assignment': 'off',      // Allow unsafe assignments in tests
+        '@typescript-eslint/no-unsafe-member-access': 'off',   // Allow unsafe member access in tests
+        '@typescript-eslint/no-unsafe-call': 'off',           // Allow unsafe calls in tests
+        '@typescript-eslint/no-unsafe-return': 'off',         // Allow unsafe returns in tests
+        '@typescript-eslint/no-unsafe-argument': 'off',       // Allow unsafe arguments in tests
+        'testing-library/no-unnecessary-act': 'error',        // Prevent unnecessary act()
+        'testing-library/prefer-screen-queries': 'error',     // Prefer screen queries
+        'testing-library/no-wait-for-multiple-assertions': 'error', // One assertion per wait
+        'testing-library/no-render-in-setup': 'off',         // Allow render in setup
+        'testing-library/no-node-access': 'error',          // Prefer queries over DOM access
+        'testing-library/render-result-naming-convention': 'error', // Consistent render result naming
+        'testing-library/no-debugging-utils': process.env.CI ? 'error' : 'warn', // No debug in CI
       },
     },
-    // E2E Test Files
-    {
-      files: ['e2e/**/*.[jt]s?(x)', 'tests/**/*.[jt]s?(x)', 'tests-examples/**/*'],
-      rules: {
-        'testing-library/prefer-screen-queries': 'off',
-        '@typescript-eslint/no-explicit-any': 'off',
-        '@typescript-eslint/no-unsafe-argument': 'off',
-        '@typescript-eslint/no-unsafe-member-access': 'off',
-        'testing-library/no-render-in-setup': 'off',
-      },
-    },
-    // TypeScript Declaration Files
+    // TypeScript Declaration Files - Special rules for .d.ts files
     {
       files: ['*.d.ts', 'src/**/*.d.ts'],
       rules: {
-        '@typescript-eslint/no-explicit-any': 'off',
-        '@typescript-eslint/no-unused-vars': 'off',
-        'import/no-duplicates': 'off',
-        '@typescript-eslint/consistent-type-definitions': 'off',
-        'import/no-cycle': 'off',
-        '@typescript-eslint/consistent-type-imports': 'off',
-        '@typescript-eslint/ban-types': 'off',
+        '@typescript-eslint/no-explicit-any': 'off',           // Allow any in declarations
+        '@typescript-eslint/no-unused-vars': 'off',           // Allow unused vars in declarations
+        'import/no-duplicates': 'off',                       // Allow duplicate imports in declarations
+        '@typescript-eslint/consistent-type-definitions': 'off', // Allow both types and interfaces
+        'import/no-cycle': 'off',                           // Allow cycles in declarations
+        '@typescript-eslint/consistent-type-imports': 'off', // Allow inconsistent imports in declarations
+        '@typescript-eslint/ban-types': 'off',             // Allow banned types in declarations
+        '@typescript-eslint/naming-convention': 'off',     // Allow any naming in declarations
       },
     },
-    // Configuration and Build Files
+    // Configuration Files - Special rules for config files
     {
       files: [
         '*.config.ts',
@@ -288,26 +289,9 @@ module.exports = {
         'scripts/**/*',
       ],
       rules: {
-        '@typescript-eslint/no-unsafe-assignment': 'off',
-        '@typescript-eslint/no-unsafe-member-access': 'off',
-        '@typescript-eslint/no-unsafe-call': 'off',
-        '@typescript-eslint/no-unsafe-return': 'off',
-        '@typescript-eslint/no-var-requires': 'off',
-        'import/no-default-export': 'off',
-        'no-console': 'off',
-      },
-    },
-    // Mock Files
-    {
-      files: ['src/__mocks__/**/*', 'src/test-utils/**/*'],
-      rules: {
-        '@typescript-eslint/no-explicit-any': 'off',
-        '@typescript-eslint/no-unsafe-assignment': 'off',
-        '@typescript-eslint/no-unsafe-member-access': 'off',
-        '@typescript-eslint/no-unsafe-call': 'off',
-        '@typescript-eslint/no-unsafe-return': 'off',
-        '@typescript-eslint/no-extraneous-class': 'off',
-        '@typescript-eslint/unbound-method': 'off',
+        '@typescript-eslint/no-var-requires': 'off',    // Allow require in configs
+        'import/no-default-export': 'off',             // Allow default exports in configs
+        'no-console': 'off',                          // Allow console in configs
       },
     },
   ],

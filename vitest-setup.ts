@@ -1,6 +1,8 @@
 import '@testing-library/jest-dom/vitest';
-import { cleanup } from '@testing-library/react';
 import { afterEach, vi } from 'vitest';
+
+import { cleanup } from '@testing-library/react';
+
 import type { Mock } from 'vitest';
 
 // Automatically cleanup after each test
