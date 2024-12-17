@@ -5,6 +5,10 @@ module.exports = {
     es2021: true,
     node: true,
   },
+  ignorePatterns: [
+    '@monaco-editor-react.js',
+    'tests-examples/demo-todo-app.spec.ts'
+  ],
   extends: [
     'eslint:recommended',
     'plugin:@typescript-eslint/recommended',
@@ -59,7 +63,7 @@ module.exports = {
     'import/parsers': {
       '@typescript-eslint/parser': ['.ts', '.tsx'],
     },
-    'import/internal-regex': '^@/',
+    'import/internal-regex': '^src/',
   },
   rules: {
     // React Rules
@@ -201,7 +205,7 @@ module.exports = {
             position: 'after'
           },
           {
-            pattern: '@/**',
+            pattern: 'src/**',
             group: 'internal',
             position: 'before'
           }
@@ -297,5 +301,17 @@ module.exports = {
         'no-console': 'off',
       },
     },
+    {
+      files: [
+        'e2e/example.spec.ts',
+      ],
+      rules: {
+        'testing-library/prefer-screen-queries': 'off',
+      },
+    },
+  ],
+  ignorePatterns: [
+    '@monaco-editor-react.js',
+    'tests-examples/demo-todo-app.spec.ts'
   ],
 };
