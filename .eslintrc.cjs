@@ -64,10 +64,46 @@ module.exports = {
     // TypeScript Rules
     '@typescript-eslint/explicit-module-boundary-types': 'off',
     '@typescript-eslint/no-unused-vars': ['error', {
-      argsIgnorePattern: '^_',
-      varsIgnorePattern: '^_',
-      caughtErrorsIgnorePattern: '^_'
+      // Only allow underscore prefix for callback parameters and catch clause variables
+      argsIgnorePattern: '^_[a-zA-Z][a-zA-Z0-9]*$',
+      varsIgnorePattern: null, // Don't allow unused variables with underscore prefix
+      caughtErrorsIgnorePattern: '^_error$', // Only allow _error in catch clauses
+      destructuredArrayIgnorePattern: '^_', // Allow unused array destructuring with underscore
+      ignoreRestSiblings: true, // Ignore rest siblings in object destructuring
     }],
+    '@typescript-eslint/naming-convention': [
+      'error',
+      // Enforce camelCase for variables, properties, and methods
+      {
+        selector: ['variable', 'parameter', 'property', 'method'],
+        format: ['camelCase'],
+        leadingUnderscore: 'allow',
+        trailingUnderscore: 'forbid',
+      },
+      // Allow PascalCase for types, interfaces, and classes
+      {
+        selector: ['typeLike', 'enumMember'],
+        format: ['PascalCase'],
+      },
+      // Enforce that unused parameters start with underscore
+      {
+        selector: 'parameter',
+        modifiers: ['unused'],
+        format: ['camelCase'],
+        leadingUnderscore: 'require',
+      },
+      // Enforce that catch clause parameters are named _error
+      {
+        selector: 'parameter',
+        modifiers: ['unused'],
+        filter: {
+          regex: '^_error$',
+          match: true,
+        },
+        format: ['camelCase'],
+        leadingUnderscore: 'require',
+      },
+    ],
     '@typescript-eslint/no-explicit-any': 'warn',
     '@typescript-eslint/consistent-type-imports': ['warn', {
       prefer: 'type-imports',
@@ -215,6 +251,15 @@ module.exports = {
         'import/first': 'error',
         'import/order': 'error',
         'import/export': 'warn',
+        '@typescript-eslint/no-unused-vars': ['error', {
+          // More lenient unused vars rules for tests
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+          caughtErrorsIgnorePattern: '^_',
+          destructuredArrayIgnorePattern: '^_',
+          ignoreRestSiblings: true,
+        }],
+        '@typescript-eslint/naming-convention': 'off', // More lenient naming in tests
       },
     },
     // E2E Test Files
