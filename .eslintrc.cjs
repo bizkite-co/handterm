@@ -64,8 +64,8 @@ module.exports = {
     // TypeScript Rules
     '@typescript-eslint/explicit-module-boundary-types': 'off',
     '@typescript-eslint/no-unused-vars': ['error', {
-      // Only allow underscore prefix for callback parameters and catch clause variables
-      argsIgnorePattern: '^_[a-zA-Z][a-zA-Z0-9]*$',
+      // Only allow underscore prefix for required callback parameters
+      argsIgnorePattern: '^_(?!$)', // Must have at least one character after underscore
       varsIgnorePattern: null, // Don't allow unused variables with underscore prefix
       caughtErrorsIgnorePattern: '^_error$', // Only allow _error in catch clauses
       destructuredArrayIgnorePattern: '^_', // Allow unused array destructuring with underscore
@@ -73,35 +73,35 @@ module.exports = {
     }],
     '@typescript-eslint/naming-convention': [
       'error',
-      // Enforce camelCase for variables, properties, and methods
       {
-        selector: ['variable', 'parameter', 'property', 'method'],
-        format: ['camelCase'],
-        leadingUnderscore: 'allow',
+        selector: 'variable',
+        format: ['camelCase', 'PascalCase', 'UPPER_CASE'],
+        leadingUnderscore: 'forbid',
         trailingUnderscore: 'forbid',
       },
-      // Allow PascalCase for types, interfaces, and classes
       {
-        selector: ['typeLike', 'enumMember'],
+        selector: 'function',
+        format: ['camelCase', 'PascalCase'],
+        leadingUnderscore: 'forbid',
+        trailingUnderscore: 'forbid',
+      },
+      {
+        selector: 'parameter',
+        format: ['camelCase'],
+        leadingUnderscore: 'allow', // Allow underscore for unused parameters
+        trailingUnderscore: 'forbid',
+      },
+      {
+        selector: 'typeLike',
         format: ['PascalCase'],
+        leadingUnderscore: 'forbid',
+        trailingUnderscore: 'forbid',
       },
-      // Enforce that unused parameters start with underscore
       {
-        selector: 'parameter',
-        modifiers: ['unused'],
-        format: ['camelCase'],
-        leadingUnderscore: 'require',
-      },
-      // Enforce that catch clause parameters are named _error
-      {
-        selector: 'parameter',
-        modifiers: ['unused'],
-        filter: {
-          regex: '^_error$',
-          match: true,
-        },
-        format: ['camelCase'],
-        leadingUnderscore: 'require',
+        selector: 'enumMember',
+        format: ['PascalCase', 'UPPER_CASE'],
+        leadingUnderscore: 'forbid',
+        trailingUnderscore: 'forbid',
       },
     ],
     '@typescript-eslint/no-explicit-any': 'warn',
@@ -240,6 +240,7 @@ module.exports = {
         '@typescript-eslint/no-unsafe-call': 'off',
         '@typescript-eslint/no-unsafe-return': 'off',
         '@typescript-eslint/no-unsafe-argument': 'off',
+        '@typescript-eslint/naming-convention': 'off', // Allow more flexible naming in tests
         'testing-library/no-unnecessary-act': 'warn',
         'testing-library/prefer-screen-queries': 'error',
         'testing-library/no-wait-for-multiple-assertions': 'warn',
@@ -251,15 +252,6 @@ module.exports = {
         'import/first': 'error',
         'import/order': 'error',
         'import/export': 'warn',
-        '@typescript-eslint/no-unused-vars': ['error', {
-          // More lenient unused vars rules for tests
-          argsIgnorePattern: '^_',
-          varsIgnorePattern: '^_',
-          caughtErrorsIgnorePattern: '^_',
-          destructuredArrayIgnorePattern: '^_',
-          ignoreRestSiblings: true,
-        }],
-        '@typescript-eslint/naming-convention': 'off', // More lenient naming in tests
       },
     },
     // E2E Test Files

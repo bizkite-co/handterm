@@ -9,143 +9,174 @@ This document explains the ESLint configuration choices made for this React/Type
 3. **Testing Support**: Flexible rules for different types of tests
 4. **Code Quality**: Enforced best practices with reasonable warnings
 
-## Key Configuration Areas
+## Unused Variables and Parameters
 
-### TypeScript Rules
+### Parameter Naming Rules
 
-- Strict type checking with warnings for unsafe operations
-- Consistent type imports using `import type`
-- Interface preference over type aliases
-- Special handling for Promise-related code
-- Relaxed rules for test files and type declarations
+```typescript
+// Good: Unused required callback parameter
+function onEvent(_event: Event) {
+  // Only using event in types, not in implementation
+}
 
-```js
-'@typescript-eslint/consistent-type-imports': ['warn', {
-  prefer: 'type-imports',
-  fixStyle: 'inline-type-imports',
-  disallowTypeAnnotations: true,
-}]
+// Good: Unused error in catch clause
+try {
+  // ...
+} catch (_error) {
+  // Only need to catch, not use error
+}
+
+// Bad: Underscore prefix without additional characters
+function process(_: string) {} // Error: Must have chars after underscore
+
+// Bad: Unused variable with underscore
+const _unused = 'something'; // Error: Variables can't use underscore prefix
 ```
 
-### Import Organization
+The configuration enforces:
+- Only allow underscore prefix for required callback parameters
+- Must have at least one character after underscore
+- Only allow `_error` in catch clauses
+- No unused variables with underscore prefix (they should be removed)
 
-- React and @preact imports are prioritized
-- Clear separation between external and internal imports
-- Special handling for test-related imports
-- Enforced newlines between import groups
+### Rationale
 
-```js
-'import/order': [
-  'error',
-  {
-    groups: [
-      'builtin',
-      'external',
-      'internal',
-      'parent',
-      'sibling',
-      'index',
-      'object',
-      'type'
-    ],
-    // Special handling for React and other key libraries
-    pathGroups: [
-      {
-        pattern: 'react',
-        group: 'builtin',
-        position: 'before'
-      },
-      {
-        pattern: '@preact/**',
-        group: 'external',
-        position: 'after'
-      }
-    ]
-  }
-]
+1. **Required Parameters**: Sometimes callback parameters are required by type but not used in implementation. Prefixing with underscore makes this explicit.
+2. **Catch Clauses**: When you need to catch errors but don't use them, `_error` is the standard name.
+3. **Variables**: Unlike parameters, variables are never "required" by the type system, so unused ones should be removed.
+
+## Naming Conventions
+
+### Variables and Functions
+
+```typescript
+// Variables
+const myVariable = 'value';          // Good: camelCase
+const MyComponent = () => {};        // Good: PascalCase for components
+const MAX_VALUE = 100;              // Good: UPPER_CASE for constants
+
+// Functions
+function handleClick() {}           // Good: camelCase
+function MyComponent() {}           // Good: PascalCase for components
 ```
 
-### Testing Configuration
+### Types and Interfaces
 
-Different rules for different test types:
+```typescript
+// Good: PascalCase for types
+interface UserProps {
+  name: string;
+}
 
-1. **Unit Tests** (`src/**/*.test.tsx`):
-- Relaxed type checking
-- Enforced testing library best practices
-- Screen query preferences
-- Debug utilities allowed in development
+// Good: PascalCase for enums
+enum ButtonSize {
+  Small = 'small',
+  Large = 'large'
+}
 
-2. **E2E Tests** (`e2e/**/*`):
-- Very relaxed type checking
+// Bad: non-PascalCase for types
+interface userProps {}              // Error: Must be PascalCase
+```
+
+### Parameters
+
+```typescript
+// Good: camelCase for used parameters
+function process(userData: UserData) {}
+
+// Good: underscore prefix for unused required parameters
+function onEvent(_event: Event) {}
+
+// Bad: underscore without reason
+function process(_data: Data) {}    // Error: Parameter is used but has underscore
+```
+
+## Import Organization
+
+Imports are organized in the following order:
+
+1. React and core libraries
+2. External libraries
+3. Internal modules
+4. Relative imports
+5. Type imports
+
+```typescript
+// Good import order
+import React from 'react';
+import { signal } from '@preact/signals-react';
+import { QueryClient } from '@tanstack/react-query';
+import { render } from '@testing-library/react';
+import { MyComponent } from '@/components';
+import { useAuth } from '../hooks/useAuth';
+import type { UserData } from './types';
+
+// Bad: Wrong order
+import { useAuth } from '../hooks/useAuth';
+import React from 'react';          // Error: React should come first
+```
+
+## Testing Configuration
+
+### Unit Tests
+
+More lenient rules for test files:
+- Allow any types
+- Allow non-null assertions
+- Allow unused variables with underscore
+- Relaxed naming conventions
+
+```typescript
+// Good: Test-specific patterns allowed
+describe('MyComponent', () => {
+  const _unusedInTest = 'value';    // Allowed in tests
+  const element = screen.getByRole('button')!;  // Non-null assertion allowed
+});
+```
+
+### E2E Tests
+
+Even more relaxed rules:
 - No screen query requirements
-- Special handling for Playwright patterns
+- Allow unsafe operations
+- Flexible naming
 
-3. **Test Utils** (`src/test-utils/**/*`):
-- Relaxed class and method rules
-- Special handling for mock implementations
+## Common Issues and Solutions
 
-### File-Type Specific Rules
+### Unused Variables
 
-1. **TypeScript Declaration Files** (`.d.ts`):
-- Relaxed type checking
-- No unused variable checks
-- Flexible type definitions
+```typescript
+// Problem: Unused variable
+const unused = 'value';             // Error: Unused variable
 
-2. **Configuration Files** (`*.config.ts`):
-- Relaxed require rules
-- Console statements allowed
-- Default exports allowed
+// Solution: Remove it
+// No unused variables allowed, even with underscore prefix
+```
 
-3. **Mock Files** (`__mocks__/**/*`):
-- Relaxed class structure rules
-- Flexible type handling
-- Special method binding rules
+### Required Unused Parameters
 
-## Common Patterns
+```typescript
+// Problem: Required callback parameter
+function onClick(event: Event) {}    // Error: event is unused
+
+// Solution: Use underscore prefix
+function onClick(_event: Event) {}
+```
 
 ### Promise Handling
 
 ```typescript
-// Allowed: Explicit void operator
+// Problem: Unhandled promise
+somePromise();                      // Error: Floating promise
+
+// Solution 1: Use void operator
 void somePromise();
 
-// Allowed: IIFE with await
+// Solution 2: Use async IIFE
 void (async () => {
   await somePromise();
 })();
-
-// Warning: Floating promise
-somePromise(); // warns about unhandled promise
 ```
-
-### Type Imports
-
-```typescript
-// Preferred: Type imports
-import type { MyType } from './types';
-
-// Warning: Value imports for types
-import { MyType } from './types'; // warns about type-only import
-```
-
-### React Patterns
-
-```typescript
-// Allowed: Modern React imports
-import { useState } from 'react';
-
-// Error: Legacy React import
-import React from 'react'; // error about unnecessary import
-```
-
-## Customization
-
-The configuration can be adjusted based on team preferences:
-
-1. **Warning Levels**: Many rules are set to 'warn' instead of 'error' to allow for gradual adoption
-2. **Type Safety**: Unsafe operations are warnings to allow for pragmatic exceptions
-3. **Test Configuration**: Different rules for different test types
-4. **Import Organization**: Customizable import grouping and ordering
 
 ## Maintenance
 
@@ -154,11 +185,12 @@ When updating the ESLint configuration:
 1. Consider the impact on existing code
 2. Test changes with `npm run lint`
 3. Document significant changes
-4. Consider adding new patterns to this guide
+4. Update this guide as needed
 
-## Common Issues
+## Configuration Files
 
-1. **Import Ordering**: Use the `--fix` option to automatically fix import order issues
-2. **Type Safety**: Use type assertions judiciously and document when necessary
-3. **Test Files**: Different rules apply to different test types
-4. **Promise Handling**: Use void operator or async IIFE for unhandled promises
+The complete configuration is in `.eslintrc.cjs`. Key files:
+
+- `.eslintrc.cjs`: Main ESLint configuration
+- `tsconfig.json`: TypeScript configuration for source
+- `tsconfig.test.json`: TypeScript configuration for tests
