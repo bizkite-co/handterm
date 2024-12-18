@@ -37,13 +37,13 @@ function tryExtensions(basePath: string): string | null {
 interface PackageJson {
   type?: string;
   exports?:
-    | string
-    | {
-        require?: string;
-        default?: string;
-      }
-    | undefined
-    | null;
+  | string
+  | {
+    require?: string;
+    default?: string;
+  }
+  | undefined
+  | null;
   main?: string;
 }
 
@@ -102,7 +102,7 @@ function resolveWithBaseDir(
 const moduleResolver = (
   request: string,
   options: ResolverOptions
-): string => {
+): string | null => {
   // Handle src/ prefix
   if (request.startsWith('src/')) {
     const relativePath: string = request.substring(4); // Remove 'src/'
@@ -111,39 +111,35 @@ const moduleResolver = (
       'src',
       relativePath
     );
-    const resolvedPath: string | null = tryExtensions(absolutePath);
+    const resolvedPath = tryExtensions(absolutePath);
 
-    if (resolvedPath) {
-      return resolvedPath;
-    }
+    return resolvedPath;
   }
 
   // Try default resolution
   try {
-    if (options.defaultResolver) {
-      return options.defaultResolver(request, {
-        ...options,
-        packageFilter: (pkg: PackageJson): PackageJson => {
-          // Force CommonJS resolution
-          if (pkg.type === 'module') {
-            const newPkg: PackageJson = { ...pkg };
-            delete newPkg.type;
+    return options.defaultResolver(request, {
+      ...options,
+      packageFilter: (pkg: PackageJson): PackageJson => {
+        // Force CommonJS resolution
+        if (pkg.type === 'module') {
+          const newPkg: PackageJson = { ...pkg };
+          delete newPkg.type;
 
-            if (isValidExports(newPkg.exports)) {
-              if (isNonEmptyString(newPkg.exports.require)) {
-                newPkg.main = newPkg.exports.require;
-              } else if (isNonEmptyString(newPkg.exports.default)) {
-                newPkg.main = newPkg.exports.default;
-              }
-            } else {
-              newPkg.exports = undefined;
+          if (isValidExports(newPkg.exports)) {
+            if (isNonEmptyString(newPkg.exports.require)) {
+              newPkg.main = newPkg.exports.require;
+            } else if (isNonEmptyString(newPkg.exports.default)) {
+              newPkg.main = newPkg.exports.default;
             }
-            return newPkg;
+          } else {
+            newPkg.exports = undefined;
           }
-          return pkg;
-        },
-      });
-    }
+          return newPkg;
+        }
+        return pkg;
+      },
+    });
   } catch (error) {
     // If default resolution fails, try our custom resolution
     if (
@@ -155,9 +151,7 @@ const moduleResolver = (
         request,
         options.basedir
       );
-      if (resolvedPath) {
-        return resolvedPath;
-      }
+      return resolvedPath;
     }
 
     if (
@@ -169,14 +163,11 @@ const moduleResolver = (
         request,
         options.rootDir
       );
-      if (resolvedPath) {
-        return resolvedPath;
-      }
+      return resolvedPath;
     }
 
     throw error;
   }
-  throw new Error('Could not resolve module');
 };
 
 export { moduleResolver };

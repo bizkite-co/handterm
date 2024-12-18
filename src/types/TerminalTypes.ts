@@ -1,22 +1,21 @@
-
-export const TerminalCssClasses = {
-    Terminal: 'terminal',
-    Line: 'terminal-line',
-    Output: 'terminal-output',
-    Input: 'terminal-input',
-    TerminalGame: 'terminal-game',
-    Prompt: 'prompt',
-    Head: 'head',
-    Tail: 'tail',
-    LogPrefix: 'log-prefix',
-    LogTime: 'log-time',
-    NextChars: 'next-chars',
-    NextCharsRate: 'next-chars-rate',
-    WholePhraseChords: 'wholePhraseChords',
-    ChordImageHolder: 'chord-image-holder',
-    TestArea: 'testArea',
-    SvgCharacter: 'svgCharacter',
-    TestMode: 'testMode',
+export const TerminalCssClasses: Record<string, string> = {
+    terminal: 'terminal',
+    line: 'terminal-line',
+    output: 'terminal-output',
+    input: 'terminal-input',
+    terminalGame: 'terminal-game',
+    prompt: 'prompt',
+    head: 'head',
+    tail: 'tail',
+    logPrefix: 'log-prefix',
+    logTime: 'log-time',
+    nextChars: 'next-chars',
+    nextCharsRate: 'next-chars-rate',
+    wholePhraseChords: 'wholePhraseChords',
+    chordImageHolder: 'chord-image-holder',
+    testArea: 'testArea',
+    svgCharacter: 'svgCharacter',
+    testMode: 'testMode',
     chordified: 'chordified',
     pangrams: 'pangrams',
     chordSection: 'chord-section',
@@ -24,60 +23,66 @@ export const TerminalCssClasses = {
     videoSection: 'video-section',
     allChordsList: 'allChordsList',
     errorCount: 'errorCount',
-    Phrase: 'phrase',
-    Timer: 'timer',
-    TimerSvg: 'timerSvg',
-    CharTimes: 'charTimes',
-    WPM: 'wpm',
-} as const;
+    phrase: 'phrase',
+    timer: 'timer',
+    timerSvg: 'timerSvg',
+    charTimes: 'charTimes',
+    wpm: 'wpm',
+} satisfies Record<keyof typeof TerminalCssClasses, string>;
 
-export const AnsiColorCodes = {
-  Reset: "\x1B[0m",
-  Bright: "\x1B[1m",
-  Dim: "\x1B[2m",
-  Underscore: "\x1B[4m",
-  Blink: "\x1B[5m",
-  Reverse: "\x1B[7m",
-  Hidden: "\x1B[8m",
+export const AnsiColorCodes: Record<string, string> = {
+  reset: "\x1B[0m",
+  bright: "\x1B[1m",
+  dim: "\x1B[2m",
+  underscore: "\x1B[4m",
+  blink: "\x1B[5m",
+  reverse: "\x1B[7m",
+  hidden: "\x1B[8m",
 
-  FgBlack: "\x1B[30m",
-  FgRed: "\x1B[31m",
-  FgGreen: "\x1B[32m",
-  FgYellow: "\x1B[33m",
-  FgBlue: "\x1B[34m",
-  FgMagenta: "\x1B[35m",
-  FgCyan: "\x1B[36m",
-  FgWhite: "\x1B[37m",
+  fgBlack: "\x1B[30m",
+  fgRed: "\x1B[31m",
+  fgGreen: "\x1B[32m",
+  fgYellow: "\x1B[33m",
+  fgBlue: "\x1B[34m",
+  fgMagenta: "\x1B[35m",
+  fgCyan: "\x1B[36m",
+  fgWhite: "\x1B[37m",
 
-  BgBlack: "\x1B[40m",
-  BgRed: "\x1B[41m",
-  BgGreen: "\x1B[42m",
-  BgYellow: "\x1B[43m",
-  BgBlue: "\x1B[44m",
-  BgMagenta: "\x1B[45m",
-  BgCyan: "\x1B[46m",
-  BgWhite: "\x1B[47m"
-} as const;
+  bgBlack: "\x1B[40m",
+  bgRed: "\x1B[41m",
+  bgGreen: "\x1B[42m",
+  bgYellow: "\x1B[43m",
+  bgBlue: "\x1B[44m",
+  bgMagenta: "\x1B[45m",
+  bgCyan: "\x1B[46m",
+  bgWhite: "\x1B[47m"
+} satisfies Record<keyof typeof AnsiColorCodes, string>;
 
-export const LogKeys = {
-    CharTime: 'char-time',
-    Command: 'command',
-    CommandHistory: 'commandHistory',
-    PhrasesAchieved: 'phrasesAchieved',
-    TargetWPM: 'targetWPM',
-    CurrentCommand: 'currentCommand',
-    RepoNames: 'repoNames',
-    Username: 'userName',
-    GitHubUsername: 'githubUserName',
-} as const;
+export const LogKeys: Record<string, string> = {
+    charTime: 'char-time',
+    command: 'command',
+    commandHistory: 'commandHistory',
+    phrasesAchieved: 'phrasesAchieved',
+    targetWPM: 'targetWPM',
+    currentCommand: 'currentCommand',
+    repoNames: 'repoNames',
+    username: 'userName',
+    gitHubUsername: 'githubUserName',
+} satisfies Record<keyof typeof LogKeys, string>;
 
 export type TimeCode = string;
 export type TimeHTML = string;
-export type CharDuration = {
+/**
+ * Represents the duration of a character.
+ */
+export interface CharDuration {
     character: string;
     durationMilliseconds: number;
 }
-export type CharWPM = {
+/**
+ * Represents the WPM of a character.
+ */
+export interface CharWPM {
     character: string;
     wpm: number;
     durationMilliseconds: number;
