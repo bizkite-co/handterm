@@ -1,37 +1,53 @@
 {
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
-    "types": ["node"],
-    "composite": true
+    "jsx": "react-jsx",
+    "jsxImportSource": "@emotion/react",
+    "allowJs": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "types": ["vite/client", "vitest/globals"],
+    "paths": {
+      "'*'": ["./src/*"],
+      "@components/*": ["./src/components/*"],
+      "@utils/*": ["./src/utils/*"],
+      "@assets/*": ["./src/assets/*"],
+      "@game/*": ["./src/game/*"],
+      "@hooks/*": ["./src/hooks/*"],
+      "@contexts/*": ["./src/contexts/*"],
+      "@constants/*": ["./src/constants/*"],
+      "@providers/*": ["./src/providers/*"],
+      "@shared/*": ["./src/shared/*"],
+      "@e2e/*": ["./src/e2e/*"],
+      "@test-utils/*": ["./src/test-utils/*"],
+      "@commands/*": ["./src/commands/*"],
+      "@signals/*": ["./src/signals/*"],
+      "@types/*": ["./src/types/*"]
+    },
+    "plugins": [
+      {
+        "name": "typescript-plugin-css-modules",
+        "options": {
+          "rendererOptions": {
+            "sass": {
+              "includePaths": ["./src/styles"]
+            }
+          }
+        }
+      },
+      {
+        "transform": "@zerollup/ts-transform-paths",
+        "exclude": ["**/node_modules/**", "**/dist/**"]
+      }
+    ]
   },
   "include": [
-    "src/**/*",
-    "src/**/*.json",
-    "src/types/**/*.d.ts",
-    "src/hooks/**/*.d.ts",
-    "src/test-utils/**/*.d.ts",
-    "src/**/*.tsx",
-    "src/**/*.ts",
-    "src/**/*.js",
-    "src/**/*.jsx",
-    "moduleResolver.js",
-    "@monaco-editor-react.js",
-    "scripts/**/*.js"
+    "src",
+    "moduleResolver.ts",
+    "@monaco-editor-react.js"
   ],
-  "exclude": [
-    "node_modules",
-    ".vscode",
-    "dist",
-    "coverage",
-    "e2e",
-    "tests",
-    "tests-examples",
-    "**/*.spec.ts",
-    "**/*.test.ts",
-    "**/*.spec.tsx",
-    "**/*.test.tsx",
-    "playwright.config.ts",
-    "vitest.config.ts",
-    "vite.config.ts"
-  ]
+  "references": [{ "path": "./tsconfig.node.json" }]
 }

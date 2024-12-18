@@ -4,6 +4,7 @@ module.exports = {
     browser: true,
     es2021: true,
     node: true,
+    'vitest-globals/env': true,
   },
   ignorePatterns: [
     '@monaco-editor-react.js',
@@ -20,6 +21,7 @@ module.exports = {
     'plugin:jsx-a11y/recommended',
     'plugin:import/recommended',
     'plugin:import/typescript',
+    'plugin:vitest-globals/recommended',
   ],
   parser: '@typescript-eslint/parser',
   parserOptions: {
@@ -41,7 +43,8 @@ module.exports = {
     '@typescript-eslint',
     'jsx-a11y',
     'testing-library',
-    'import'
+    'import',
+    'vitest-globals'
   ],
   settings: {
     react: {
@@ -214,7 +217,7 @@ module.exports = {
         'newlines-between': 'always',
         alphabetize: {
           order: 'asc',
-          caseInsensitive: true
+          caseInsensitive: true,
         }
       }
     ],
