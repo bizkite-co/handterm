@@ -6,10 +6,6 @@ module.exports = {
     node: true,
     'vitest-globals/env': true,
   },
-  ignorePatterns: [
-    '@monaco-editor-react.js',
-    'tests-examples/demo-todo-app.spec.ts'
-  ],
   extends: [
     'eslint:recommended',
     'plugin:@typescript-eslint/recommended',

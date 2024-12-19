@@ -1,9 +1,11 @@
 // src/hooks/useAuth.ts
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
 import { useEffect, useCallback } from 'react';
 
-import ENDPOINTS from 'src/shared/endpoints.json';
+import axios from 'axios';
+
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+
+import endpoints from 'src/shared/endpoints.json';
 import { createLogger, LogLevel } from 'src/utils/Logger';
 
 import {
@@ -12,14 +14,14 @@ import {
   setIsInLoginProcess,
   isLoggedInSignal
 } from '../signals/appSignals';
-import { MyResponse } from '../types/Types';
+import { type MyResponse } from '../types/Types';
 
 const logger = createLogger({
   prefix: 'Auth',
   level: LogLevel.ERROR
 });
 
-const API_URL = ENDPOINTS.api.BaseUrl;
+const API_URL = endpoints.api.BaseUrl;
 
 interface LoginCredentials {
   username: string;
@@ -31,12 +33,12 @@ interface SignUpCredentials extends LoginCredentials {
 }
 
 interface AuthResponse {
-  AccessToken: string;
-  RefreshToken: string;
-  IdToken: string;
-  ExpiresAt?: string;
-  ExpiresIn: string;
-  githubUsername?: string;
+  accessToken: string;
+  refreshToken: string;
+  idToken: string;
+  expiresAt: string;
+  expiresIn: string;
+  githubUsername?: string | undefined; // Explicitly define githubUsername as string | undefined
 }
 
 export interface IAuthProps {
@@ -58,26 +60,31 @@ export function useAuth(): IAuthProps {
   // Token refresh mutation
   const refreshMutation = useMutation({
     mutationFn: async (): Promise<MyResponse<AuthResponse>> => {
-      const refreshToken = localStorage.getItem('RefreshToken');
-      if (!refreshToken) throw new Error('No refresh token');
+      const refreshToken = localStorage.getItem('refreshToken');
+      if (typeof refreshToken !== 'string' || refreshToken === '') throw new Error('No refresh token');
 
       const response = await axios.post(
-        `${API_URL}${ENDPOINTS.api.RefreshToken}`,
+        `${API_URL}${endpoints.api.RefreshToken}`,
         { refreshToken }
       );
-      return {
-        status: 200,
-        data: response.data,
-        message: 'Token refreshed',
-        error: []
-      };
+
+      if (response.data && typeof response.data === 'object' && 'accessToken' in response.data) {
+        return {
+          status: 200,
+          data: response.data as AuthResponse,
+          message: 'Token refreshed',
+          error: []
+        };
+      } else {
+        throw new Error('Invalid refresh token response');
+      }
     },
     onSuccess: (data) => {
       if (data.data) {
-        setExpiresAtLocalStorage(data.data.ExpiresIn);
+        setExpiresAtLocalStorage(data.data.expiresIn);
         setIsLoggedIn(true);
         isLoggedInSignal.value = true;
-        localStorage.setItem('AccessToken', data.data.AccessToken);
+        localStorage.setItem('accessToken', data.data.accessToken);
         queryClient.invalidateQueries({ queryKey: ['auth', 'session'] });
       }
     },
@@ -88,11 +95,11 @@ export function useAuth(): IAuthProps {
   // Token validation and refresh function
   const validateAndRefreshToken = useCallback(async (): Promise<MyResponse<AuthResponse>> => {
     try {
-      const accessToken = localStorage.getItem('AccessToken');
-      const expiresAt = localStorage.getItem('ExpiresAt');
-      const expiresIn = localStorage.getItem('ExpiresIn');
-      const refreshToken = localStorage.getItem('RefreshToken');
-      const idToken = localStorage.getItem('IdToken');
+      const accessToken = localStorage.getItem('accessToken');
+      const expiresAt = localStorage.getItem('expiresAt');
+      const expiresIn = localStorage.getItem('expiresIn');
+      const refreshToken = localStorage.getItem('refreshToken');
+      const idToken = localStorage.getItem('idToken');
       const githubUsername = localStorage.getItem('githubUsername');
 
       // Exit early if any of these are missing
@@ -107,39 +114,39 @@ export function useAuth(): IAuthProps {
       }
 
       // Check if token is expired or will expire soon (within 5 minutes)
-      const isExpiringSoon = parseInt(expiresAt) - Date.now() < 5 * 60 * 1000;
+      const isExpiringSoon = expiresAt ? parseInt(expiresAt) - Date.now() < 5 * 60 * 1000 : false;
 
       if (isExpiringSoon) {
         // Attempt to refresh the token
         const response = await refreshMutation.mutateAsync();
-        if (response.data?.AccessToken) {
+        if (response.data?.accessToken) {
           // Token refresh successful
           setIsLoggedIn(true);
           return {
             status: 200,
             data: {
-              AccessToken: response.data.AccessToken,
-              ExpiresAt: response.data.ExpiresAt,
-              ExpiresIn: response.data.ExpiresIn,
-              IdToken: response.data.IdToken,
-              RefreshToken: response.data.RefreshToken,
+              accessToken: response.data.accessToken,
+              expiresAt: response.data.expiresAt,
+              expiresIn: response.data.expiresIn,
+              idToken: response.data.idToken,
+              refreshToken: response.data.refreshToken,
               githubUsername: response.data.githubUsername
             },
             message: "Token refreshed",
             error: []
           };
         }
-      } else if (parseInt(expiresAt) > Date.now()) {
+      } else if (expiresAt && parseInt(expiresAt) > Date.now()) {
         // Token is still valid
         setIsLoggedIn(true);
         return {
           status: 200,
           data: {
-            AccessToken: accessToken,
-            ExpiresAt: expiresAt,
-            ExpiresIn: expiresIn,
-            IdToken: idToken || '',
-            RefreshToken: refreshToken,
+            accessToken: accessToken,
+            expiresAt: expiresAt,
+            expiresIn: expiresIn,
+            idToken: idToken || '',
+            refreshToken: refreshToken,
             githubUsername: githubUsername || ''
           },
           message: "Token refreshed",
@@ -156,7 +163,11 @@ export function useAuth(): IAuthProps {
         error: []
       };
     } catch (error) {
-      logger.error('Token validation failed:', error);
+      if (error instanceof Error) {
+        logger.error('Token validation failed:', error.message);
+      } else {
+        logger.error('An unexpected error occurred during token validation');
+      }
       setIsLoggedIn(false);
       isLoggedInSignal.value = false;
       return {
@@ -177,29 +188,38 @@ export function useAuth(): IAuthProps {
           throw new Error('Token validation failed');
         }
 
-        const accessToken = localStorage.getItem('AccessToken');
+        const accessToken = localStorage.getItem('accessToken');
+        if (typeof accessToken !== 'string' || accessToken === '') throw new Error('No access token');
         const config = {
           headers: {
-            'Authorization': `Bearer ${accessToken}`,
-            'Content-Type': 'application/json'
+            'AUTHORIZATION': `Bearer ${accessToken}`,
+            'CONTENT_TYPE': 'application/json'
           }
         };
 
-        const response = await axios.get(`${API_URL}${ENDPOINTS.api.GetUser}`, config);
-        return {
-          status: 200,
-          data: response.data as AuthResponse,
-          message: 'Session valid',
-          error: []
-        };
+        const response = await axios.get(`${API_URL}${endpoints.api.GetUser}`, config);
+        if (response.data && typeof response.data === 'object' && 'accessToken' in response.data) {
+          return {
+            status: 200,
+            data: response.data as AuthResponse,
+            message: 'Session valid',
+            error: []
+          };
+        } else {
+          throw new Error('Invalid session response');
+        }
       } catch (error) {
-        logger.error('Session validation failed:', error);
-        localStorage.removeItem('AccessToken');
-        localStorage.removeItem('RefreshToken');
-        localStorage.removeItem('ExpiresAt');
-        localStorage.removeItem('ExpiresIn');
-        localStorage.removeItem('IdToken');
-        localStorage.removeItem('githubUsername');
+        if (error instanceof Error) {
+          logger.error('Session validation failed:', error.message);
+        } else {
+          logger.error('An unexpected error occurred during session validation');
+        }
+        if (typeof localStorage.getItem('accessToken') === 'string') localStorage.removeItem('accessToken');
+        if (typeof localStorage.getItem('refreshToken') === 'string') localStorage.removeItem('refreshToken');
+        if (typeof localStorage.getItem('expiresAt') === 'string') localStorage.removeItem('expiresAt');
+        if (typeof localStorage.getItem('expiresIn') === 'string') localStorage.removeItem('expiresIn');
+        if (typeof localStorage.getItem('idToken') === 'string') localStorage.removeItem('idToken');
+        if (typeof localStorage.getItem('githubUsername') === 'string') localStorage.removeItem('githubUsername');
         setIsLoggedIn(false);
         isLoggedInSignal.value = false;
         setUserName(null);
@@ -211,7 +231,7 @@ export function useAuth(): IAuthProps {
         };
       }
     },
-    enabled: !!localStorage.getItem('AccessToken'),
+    enabled: typeof localStorage.getItem('accessToken') === 'string',
     retry: false,
     staleTime: 5 * 60 * 1000 // Consider session stale after 5 minutes
   });
@@ -220,26 +240,30 @@ export function useAuth(): IAuthProps {
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginCredentials): Promise<MyResponse<AuthResponse>> => {
       const response = await axios.post(
-        `${API_URL}${ENDPOINTS.api.SignIn}`,
+        `${API_URL}${endpoints.api.SignIn}`,
         credentials
       );
-      return {
-        status: 200,
-        data: response.data,
-        message: 'Login successful',
-        error: []
-      };
+      if (response.data && typeof response.data === 'object' && 'accessToken' in response.data) {
+        return {
+          status: 200,
+          data: response.data as AuthResponse,
+          message: 'Login successful',
+          error: []
+        };
+      } else {
+        throw new Error('Invalid login response');
+      }
     },
     onSuccess: (data) => {
-      if (data.data) {
-        setExpiresAtLocalStorage(data.data.ExpiresIn);
-
+      if (data.data && data.data.expiresIn && typeof data.data.expiresIn === 'string') {
+        setExpiresAtLocalStorage(data.data.expiresIn);
+        setIsLoggedIn(true);
         isLoggedInSignal.value = true;
-        localStorage.setItem('AccessToken', data.data.AccessToken);
-        localStorage.setItem('RefreshToken', data.data.RefreshToken);
-        localStorage.setItem('IdToken', data.data.IdToken);
+        localStorage.setItem('accessToken', data.data.accessToken);
+        localStorage.setItem('refreshToken', data.data.refreshToken);
+        localStorage.setItem('idToken', data.data.idToken);
 
-        if (data.data.githubUsername) {
+        if (typeof data.data.githubUsername === 'string') {
           localStorage.setItem('githubUsername', data.data.githubUsername);
         }
         setIsLoggedIn(true);
@@ -255,9 +279,9 @@ export function useAuth(): IAuthProps {
 
   const setExpiresAtLocalStorage = (expiresIn: string) => {
     const expiresAt = Date.now() + parseInt(expiresIn) * 1000;
-    if (expiresIn) localStorage.setItem('ExpiresIn', expiresIn);
-    if (!Number.isNaN(expiresAt)) {
-      localStorage.setItem('ExpiresAt', expiresAt.toString());
+    if (expiresIn && expiresIn !== "") localStorage.setItem('expiresIn', expiresIn);
+    if (expiresAt && !Number.isNaN(expiresAt)) {
+      localStorage.setItem('expiresAt', expiresAt.toString());
     }
   }
 
@@ -265,15 +289,19 @@ export function useAuth(): IAuthProps {
   const signupMutation = useMutation({
     mutationFn: async (credentials: SignUpCredentials): Promise<MyResponse<unknown>> => {
       const response = await axios.post(
-        `${API_URL}${ENDPOINTS.api.SignUp}`,
+        `${API_URL}${endpoints.api.SignUp}`,
         credentials
       );
-      return {
-        status: 200,
-        data: response.data,
-        message: 'Signup successful',
-        error: []
-      };
+      if (response.data && typeof response.data === 'object') {
+        return {
+          status: 200,
+          data: response.data,
+          message: 'Signup successful',
+          error: []
+        };
+      } else {
+        throw new Error('Invalid signup response');
+      }
     },
     onSuccess: () => {
       setIsInLoginProcess(false);
@@ -287,10 +315,14 @@ export function useAuth(): IAuthProps {
   const verifyMutation = useMutation({
     mutationFn: async ({ username, code }: { username: string; code: string }) => {
       const response = await axios.post(
-        `${API_URL}${ENDPOINTS.api.ConfirmSignUp}`,
+        `${API_URL}${endpoints.api.ConfirmSignUp}`,
         { username, code }
       );
-      return response.data;
+      if(response.data && typeof response.data === 'object') {
+        return response.data as unknown;
+      } else {
+        throw new Error('Invalid verify response');
+      }
     }
   });
 
@@ -298,32 +330,56 @@ export function useAuth(): IAuthProps {
   useEffect(() => {
     const syncLoginState = async () => {
       const myResponse = await validateAndRefreshToken();
-      isLoggedInSignal.value = myResponse.status === 200;
-      setIsLoggedIn(myResponse.status === 200);
+      if (myResponse.status === 200) {
+        isLoggedInSignal.value = true;
+        setIsLoggedIn(true);
+      } else {
+        isLoggedInSignal.value = false;
+        setIsLoggedIn(false);
+      }
     };
 
     // Sync on initial load and when storage changes
-    syncLoginState();
-    window.addEventListener('storage', () => syncLoginState());
+    void syncLoginState();
+    const onStorageChange = (): void => {void syncLoginState()};
+    window.addEventListener('storage', onStorageChange);
 
     return () => {
-      window.removeEventListener('storage', () => syncLoginState());
+      window.removeEventListener('storage', onStorageChange);
     };
   }, [validateAndRefreshToken]);
 
-  return {
-    isLoggedIn: !!session?.data,
-    isPending,
-    login: (username: string, password: string) =>
-      loginMutation.mutateAsync({ username, password }),
-    signup: (credentials: SignUpCredentials) =>
-      signupMutation.mutateAsync(credentials),
-    verify: (username: string, code: string) =>
-      verifyMutation.mutateAsync({ username, code }),
-    refreshToken: refreshMutation.mutateAsync,
-    validateAndRefreshToken,
-    isLoading: loginMutation.isPending || signupMutation.isPending,
-    isError: loginMutation.isError || signupMutation.isError,
-    error: loginMutation.error || signupMutation.error,
-  };
+  if (session && typeof session === 'object' && session.data !== undefined && session.data !== null) {
+    return {
+      isLoggedIn: true,
+      isPending,
+      login: async (username: string, password: string) =>
+        await loginMutation.mutateAsync({ username, password }),
+      signup: async (credentials: SignUpCredentials) =>
+        await signupMutation.mutateAsync(credentials),
+      verify: async (username: string, code: string) =>
+        await verifyMutation.mutateAsync({ username, code }),
+      refreshToken: async () => await refreshMutation.mutateAsync(),
+      validateAndRefreshToken,
+      isLoading: loginMutation.isPending || signupMutation.isPending,
+      isError: loginMutation.isError || signupMutation.isError,
+      error: loginMutation.error || signupMutation.error,
+    }
+  } else {
+    return {
+      isLoggedIn: false,
+      isPending,
+      login: async (username: string, password: string) =>
+        await loginMutation.mutateAsync({ username, password }),
+      signup: async (credentials: SignUpCredentials) =>
+        await signupMutation.mutateAsync(credentials),
+      verify: async (username: string, code: string) =>
+        await verifyMutation.mutateAsync({ username, code }),
+      refreshToken: async () => await refreshMutation.mutateAsync(),
+      validateAndRefreshToken,
+      isLoading: loginMutation.isPending || signupMutation.isPending,
+      isError: loginMutation.isError || signupMutation.isError,
+      error: loginMutation.error || signupMutation.error,
+    };
+  }
 }

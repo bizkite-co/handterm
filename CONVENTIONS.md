@@ -1,7 +1,7 @@
 ---
 title: Conventions
 description: This file describes the rules that should be followed with sovling a task.
-date: 2024-12-16
+date: 2024-12-18
 ---
 
 Check `pwd` to determine which project you're running CLI commands in.
@@ -10,7 +10,7 @@ Create ONE work item description file per conversation in `docs/worklog/`. Use t
 
 The `eslint-files.json` contains the list of `filePath`, `errorCount`, and `warningCount` of linted files with problems. Use that file to work through all the files with problems.
 
-The `eslint-files.json` can be refreshed by running `npm run lint:save` and then `npm run lint:get-files`.
+The `eslint-files.json` can be refreshed by running `npm run lint:save-files`.
 
 Run `npm run lint -- <edited-file-relative-path>` after editing each file to ensure the changes you're making are _reducing_ the number of linting problems.
 
