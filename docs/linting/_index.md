@@ -21,3 +21,8 @@ This document is being updated to include a detailed analysis of each ESLint rul
 -   [General Rules](./general_rules.md)
 -   [Overrides](./overrides.md)
 -   [Ignore Patterns](./ignore_patterns.md)
+
+## Reference Documention
+
+* [ESLint online docs](https://eslint.org/docs/latest/use/getting-started)
+* [TypeScript ESLint docs](https://typescript-eslint.io/getting-started/)
