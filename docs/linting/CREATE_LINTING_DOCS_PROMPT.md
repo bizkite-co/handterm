@@ -1,4 +1,4 @@
-## Task
+# Create Linting Docs
 
 The current task is to review and update the ESLint configuration in `.eslintrc.cjs` and document the rationale and recommendations for each rule in `./docs/linting/_index.md` and each of the files it links to.  We are analyzing each rule, comparing it with the AirBNB style guide and other modern best practices, and providing recommendations based on the project's specific tech stack and goals.
 
