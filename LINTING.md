@@ -29,228 +29,6 @@ This document is being updated to include a detailed analysis of each ESLint rul
 
 # ESLint Configuration Guide
 
-## Core Philosophy
-
-This ESLint configuration represents our gold standard for code quality. We deliberately configure rules to enforce best practices, rather than accommodating existing patterns. When encountering linting errors, the solution is to improve the code to meet our standards, not to relax the rules.
-
-Key principles:
-1. Type safety is non-negotiable
-2. Explicit is better than implicit
-3. Consistency across the codebase
-4. No unsafe operations
-5. Clean and maintainable code
-6. Refine linting rules for the project-specific tech stack.
-
-## Type Safety
-
-### Core Rules
-```typescript
-'@typescript-eslint/no-explicit-any': 'error',
-'@typescript-eslint/no-unsafe-assignment': 'error',
-'@typescript-eslint/no-unsafe-member-access': 'error',
-'@typescript-eslint/no-unsafe-call': 'error',
-'@typescript-eslint/no-unsafe-return': 'error',
-'@typescript-eslint/no-unsafe-argument': 'error',
-```
-
-### Rationale
-- Type safety prevents runtime errors
-- Makes code self-documenting
-- Enables better tooling support
-- Facilitates refactoring
-
-### Examples
-
-```typescript
-// BAD: Using any
-function process(data: any): any {
-  return data.someField;
-}
-
-// GOOD: Proper typing
-interface Data {
-  someField: string;
-}
-function process(data: Data): string {
-  return data.someField;
-}
-```
-
-## Promise Handling
-
-### Core Rules
-```typescript
-'@typescript-eslint/no-floating-promises': 'error',
-'@typescript-eslint/require-await': 'error',
-'@typescript-eslint/no-misused-promises': ['error', {
-  checksVoidReturn: true,
-  checksConditionals: true,
-  checksSpreads: true,
-}],
-```
-
-### Rationale
-- Unhandled promises can lead to silent failures
-- Async functions should have a purpose
-- Promise handling should be explicit
-
-### Examples
-
-```typescript
-// BAD: Floating promise
-someAsyncOperation();
-
-// GOOD: Explicit handling
-await someAsyncOperation();
-// or
-void someAsyncOperation();
-// or
-someAsyncOperation().catch(handleError);
-
-// BAD: Async without await
-async function noAwait(): Promise<void> {
-  doSomething(); // No await needed
-}
-
-// GOOD: Proper async usage
-async function withAwait(): Promise<void> {
-  await someAsyncOperation();
-}
-```
-
-## Naming Conventions
-
-### Core Rules
-```typescript
-'@typescript-eslint/naming-convention': [
-  'error',
-  {
-    selector: 'default',
-    format: ['camelCase'],
-    leadingUnderscore: 'forbid',
-    trailingUnderscore: 'forbid',
-  },
-  // Additional configurations for different types
-]
-```
-
-### Rationale
-- Consistent naming improves readability
-- Different cases convey different meanings
-- No leading underscores (except in very specific cases)
-
-### Examples
-
-```typescript
-// BAD: Inconsistent naming
-const user_data = getData();
-const APIEndpoint = '/api';
-const _privateVar = 'hidden';
-
-// GOOD: Consistent naming
-const userData = getData();
-const API_ENDPOINT = '/api';
-const privateVar = 'hidden';
-
-// GOOD: React components in PascalCase
-function UserProfile(): JSX.Element {
-  return <div>Profile</div>;
-}
-
-// GOOD: Event handlers
-function handleClick(): void {
-  // ...
-}
-```
-
-## Import Organization
-
-### Core Rules
-```typescript
-'import/order': ['error', {
-  groups: [
-    'builtin',
-    'external',
-    'internal',
-    'parent',
-    'sibling',
-    'index',
-    'object',
-    'type'
-  ],
-  'newlines-between': 'always',
-  // Additional configurations
-}],
-'import/no-default-export': 'error',
-```
-
-### Rationale
-- Organized imports improve readability
-- Named exports are more refactoring-friendly
-- Clear separation between different types of imports
-
-### Examples
-
-```typescript
-// GOOD: Organized imports
-import React, { useState } from 'react';
-
-import { signal } from '@preact/signals-react';
-import { QueryClient } from '@tanstack/react-query';
-
-import { useAuth } from 'hooks/useAuth' (see below for file content);
-import { Button } from 'components/Button' (see below for file content);
-
-import { type User } from './types';
-import { formatDate } from './utils';
-
-// BAD: Default exports
-export default function Component() {}
-
-// GOOD: Named exports
-export function Component(): JSX.Element {}
-```
-
-## React Best Practices
-
-### Core Rules
-```typescript
-'react/function-component-definition': ['error', {
-  namedComponents: 'function-declaration',
-  unnamedComponents: 'arrow-function',
-}],
-'react-hooks/exhaustive-deps': 'error',
-```
-
-### Rationale
-- Consistent component definitions
-- Proper hook dependencies
-- Explicit event handler naming
-
-### Examples
-
-```typescript
-// BAD: Inconsistent component definition
-const Component = () => {
-  return <div />;
-};
-
-// GOOD: Function declaration for named components
-function Component(): JSX.Element {
-  return <div />;
-}
-
-// BAD: Missing dependencies
-useEffect(() => {
-  doSomething(value);
-}, []); // value is missing from deps
-
-// GOOD: Complete dependencies
-useEffect(() => {
-  doSomething(value);
-}, [value]);
-```
-
 ## Testing Standards
 
 ### Core Rules
@@ -1100,4 +878,95 @@ export const myVar = 10;
 // BAD: Conditional Hook call
 function MyComponent({ condition }) {
   if (condition) {
-    const [count, setCount] =
+    const [count, setCount] = useState(0); // This is a conditional Hook call
+    // ...
+  }
+  // ...
+}
+
+// BAD: Hook call inside a loop
+function MyComponent({ items }) {
+  for (let i = 0; i < items.length; i++) {
+    const [value, setValue] = useState(items[i]); // This is a Hook call inside a loop
+    // ...
+  }
+  // ...
+}
+
+// BAD: Hook call inside a nested function
+function MyComponent() {
+  function nestedFunction() {
+    const [value, setValue] = useState(0); // This is a Hook call inside a nested function
+    // ...
+  }
+  // ...
+}
+
+// GOOD: Hooks called at the top level of a function component
+function MyComponent({ condition, items }) {
+  const [count, setCount] = useState(0);
+  const [values, setValues] = useState(items);
+
+  useEffect(() => {
+    // It's OK to use Hooks inside useEffect
+    const [value, setValue] = useState(0);
+    // ...
+  }, []);
+
+  return (
+    <div>
+      {/* ... */}
+    </div>
+  );
+}
+```
+
+### `react-hooks/exhaustive-deps`
+
+-   **Current Setting:** `'error'`
+-   **Rationale:** Requires that all dependencies used inside `useEffect`, `useMemo`, `useCallback`, and other effect-like Hooks are included in the dependency array. This ensures that the effect re-runs whenever any of its dependencies change, preventing stale closures and unexpected behavior.
+-   **AirBNB:** Also enabled.
+-   **Recommendation:** Keep this rule as is. It is crucial for preventing subtle bugs that can be hard to track down.
+-   **Example:**
+
+```jsx
+// BAD: Missing dependency
+function MyComponent({ value }) {
+  useEffect(() => {
+    doSomething(value); // `value` is used inside the effect but not included in the deps array
+  }, []); // Missing dependency: `value`
+}
+
+// GOOD: All dependencies included
+function MyComponent({ value }) {
+  useEffect(() => {
+    doSomething(value);
+  }, [value]); // `value` is included in the deps array
+}
+
+// BAD: Unnecessary dependency
+function MyComponent() {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    document.title = 'You clicked ' + count + ' times';
+  }, [count, setCount]); // `setCount` is a setter from useState and will never change, so it doesn't need to be included
+}
+
+// GOOD: Only necessary dependencies included
+function MyComponent() {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    document.title = 'You clicked ' + count + ' times';
+  }, [count]); // Only `count` is included in the deps array
+}
+```
+
+## Accessibility Rules
+
+## General Rules
+
+## Overrides
+
+## Ignore Patterns
