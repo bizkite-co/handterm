@@ -17,9 +17,6 @@ This document is being updated to include a detailed analysis of each ESLint rul
 -   [TypeScript Rules](./typescript_rules.md)
 -   [Import Rules](./import_rules.md)
 -   [React Hooks Rules](./react_hooks_rules.md)
-
-**Pending Sections:**
-
 -   [Accessibility Rules](./accessibility_rules.md)
 -   [General Rules](./general_rules.md)
 -   [Overrides](./overrides.md)

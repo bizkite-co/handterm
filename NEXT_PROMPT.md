@@ -1,10 +1,10 @@
 ## Task
 
-The current task is to review and update the ESLint configuration in `.eslintrc.cjs` and document the rationale and recommendations for each rule in `LINTING.md`. We are analyzing each rule, comparing it with the AirBNB style guide and other modern best practices, and providing recommendations based on the project's specific tech stack and goals.
+The current task is to review and update the ESLint configuration in `.eslintrc.cjs` and document the rationale and recommendations for each rule in `./docs/linting/_index.md` and each of the files it links to.  We are analyzing each rule, comparing it with the AirBNB style guide and other modern best practices, and providing recommendations based on the project's specific tech stack and goals.
 
 ## Progress
 
-We have completed the analysis and documentation for the following sections in `LINTING.md`:
+We have completed the analysis and documentation for the following sections in `./docs/linting/_index.md`:
 
 -   Core Philosophy
 -   Type Safety
@@ -28,11 +28,11 @@ We have completed the analysis and documentation for the following sections in `
     -   Provide a rationale for the rule and its current setting.
     -   Give a recommendation on whether to keep the rule as is or modify it.
     -   Provide examples of good and bad code if applicable.
-3. Update `LINTING.md` with the analysis and recommendations for each rule, following the existing format.
+3. Update the files linked to in `./docs/linting/_index.md` with the analysis and recommendations for each rule, following the existing format, creating any new files in the same directory as needed.
 
 ## Context
 
-**File: LINTING.md**
+**File: ./docs/linting/*.md**
 
 ```markdown
 ## In Progress
