@@ -1,3 +1,40 @@
+## Task
+
+The current task is to review and update the ESLint configuration in `.eslintrc.cjs` and document the rationale and recommendations for each rule in `LINTING.md`. We are analyzing each rule, comparing it with the AirBNB style guide and other modern best practices, and providing recommendations based on the project's specific tech stack and goals.
+
+## Progress
+
+We have completed the analysis and documentation for the following sections in `LINTING.md`:
+
+-   Core Philosophy
+-   Type Safety
+-   Promise Handling
+-   Naming Conventions
+-   Import Organization
+-   React Best Practices
+-   Testing Standards
+-   Configuration Files
+-   Maintenance
+-   React Rules
+-   TypeScript Rules
+-   Import Rules (up to `import/no-mutable-exports`)
+
+## Next Steps
+
+1. Continue analyzing the remaining rules in `.eslintrc.cjs`, starting with the **React Hooks Rules** section.
+2. For each rule:
+    -   Analyze the current setting.
+    -   Compare it with the AirBNB style guide and other best practices.
+    -   Provide a rationale for the rule and its current setting.
+    -   Give a recommendation on whether to keep the rule as is or modify it.
+    -   Provide examples of good and bad code if applicable.
+3. Update `LINTING.md` with the analysis and recommendations for each rule, following the existing format.
+
+## Context
+
+**File: LINTING.md**
+
+```markdown
 ## In Progress
 
 This document is being updated to include a detailed analysis of each ESLint rule in `.eslintrc.cjs`. Each rule is compared with the AirBNB style guide and other modern best practices. Recommendations are provided for each rule based on the project's specific tech stack and goals.
@@ -16,10 +53,10 @@ This document is being updated to include a detailed analysis of each ESLint rul
 -   React Rules
 -   TypeScript Rules
 -   Import Rules (up to `import/no-mutable-exports`)
--   React Hooks Rules
 
 **Pending Sections:**
 
+-   React Hooks Rules
 -   Accessibility Rules
 -   General Rules
 -   Overrides
@@ -1065,39 +1102,4 @@ const myVar = 10;
 // GOOD: Export statement at the end
 const myVar = 10;
 
-export function myFunction() {
-  // ...
-}
-```
-
-### `import/no-mutable-exports`
-
--   **Current Setting:** `'error'`
--   **Rationale:** Disallows the use of mutable exports with `let` or `var`, promoting immutability and preventing accidental modification of exported values from other modules.
--   **AirBNB:** Also enabled.
--   **Recommendation:** Keep this rule as is.
--   **Example:**
-
-```typescript
-// BAD: Mutable export using let
-export let myVar = 10;
-
-// GOOD: Immutable export using const
-export const myVar = 10;
-```
-
-## React Hooks Rules
-
-### `react-hooks/rules-of-hooks`
-
--   **Current Setting:** `'error'`
--   **Rationale:** Enforces the Rules of Hooks, ensuring that Hooks are called only inside React function components and are called unconditionally from the top level of the component. This prevents subtle bugs that can arise from conditional or nested Hook calls.
--   **AirBNB:** Also enabled.
--   **Recommendation:** Keep this rule as is.
--   **Example:**
-
-```jsx
-// BAD: Conditional Hook call
-function MyComponent({ condition }) {
-  if (condition) {
-    const [count, setCount] =
+export function myFunction()
