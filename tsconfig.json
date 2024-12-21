@@ -49,5 +49,8 @@
     "moduleResolver.ts",
     "@monaco-editor-react.js"
   ],
+  "exclude": [
+    "scripts"
+  ],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

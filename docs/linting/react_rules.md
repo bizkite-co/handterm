@@ -4,15 +4,41 @@
 ### `react/react-in-jsx-scope`
 
 - **Current Setting:** `'off'`
-- **Rationale:** Not needed with the new JSX transform introduced in React 17.
+- **Rationale:** Not needed with the new JSX transform introduced in React 17 and configured in Vite through `@vitejs/plugin-react`.
 - **AirBNB:**  Effectively `off` due to the inclusion of `plugin:react/jsx-runtime` in `eslint-config-airbnb-typescript`.
 - **Recommendation:** Keep this rule turned off.
+- **Implementation Notes:**
+  - The new JSX transform is automatically configured by `@vitejs/plugin-react` in `vite.config.ts`
+  - When using React hooks or types, import them directly:
+    ```typescript
+    // Good: Import specific hooks/types
+    import { useState, useEffect, type FC } from 'react';
+
+    // Bad: Import React namespace
+    import React from 'react';
+    import * as React from 'react';
+    ```
+  - This approach maintains type safety while leveraging the automatic JSX transform
+  - TypeScript will properly type-check the JSX syntax without requiring the React namespace import
 - **Example:**
 
 ```jsx
 // No need to import React with the new JSX transform
 function MyComponent() {
   return <div>Hello</div>;
+}
+
+// When using hooks, import them directly
+import { useState, useEffect } from 'react';
+
+function MyComponentWithHooks() {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    document.title = `Count: ${count}`;
+  }, [count]);
+
+  return <div>{count}</div>;
 }
 ```
 

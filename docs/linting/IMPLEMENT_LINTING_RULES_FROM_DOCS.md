@@ -121,9 +121,7 @@ After implementing the changes, it's crucial to test the new linting configurati
 
 -   **Run the linter:** Execute the ESLint command to check for linting errors and warnings.
     ```bash
-    npm run lint
-    # or
-    yarn lint
+    npm run lint:file <file-path>
     ```
     (The actual command might vary based on the project's `package.json` scripts.)
 -   **Address linting issues:** Fix any new linting errors or warnings that arise from the updated configuration.

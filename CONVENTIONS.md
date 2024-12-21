@@ -12,8 +12,6 @@ The `eslint-files.json` contains the list of `filePath`, `errorCount`, and `warn
 
 The `eslint-files.json` can be refreshed by running `npm run lint:save-files`.
 
-Run `npm run lint -- <edited-file-relative-path>` after editing each file to ensure the changes you're making are _reducing_ the number of linting problems.
-
-To run linting on a single file, use the command `npm run lint -- <filepath>`. Replace `<filepath>` with the path to the file you want to lint.
+Use the VS Code linter after editing each file to ensure the changes you're making are _reducing_ the number of linting problems.
 
 Specify the intended work with checkboxes and update the checkboxes or modify the changes _after_ any successes, such as solved linting or solved tests.

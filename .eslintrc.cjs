@@ -21,6 +21,7 @@ module.exports = {
   ],
   parser: '@typescript-eslint/parser',
   parserOptions: {
+    project: './tsconfig.json',
     ecmaVersion: 'latest',
     sourceType: 'module',
     project: [
@@ -302,15 +303,30 @@ module.exports = {
     },
     {
       files: [
-        'e2e/example.spec.ts',
+        'scripts/*.js',
       ],
-      rules: {
-        'testing-library/prefer-screen-queries': 'off',
+      parser: 'espree',
+      parserOptions: {
+        ecmaVersion: 'latest',
+        sourceType: 'module',
+      },
+      rules: {}
+    },
+    {
+      files: [
+        '*.config.js',
+        '.eslintrc.cjs',
+      ],
+      parser: 'espree',
+      parserOptions: {
+        ecmaVersion: 'latest',
+        sourceType: 'module',
       },
     },
   ],
   ignorePatterns: [
     '@monaco-editor-react.js',
-    'tests-examples/demo-todo-app.spec.ts'
+    'tests-examples/demo-todo-app.spec.ts',
+    'scripts/clearLocalStorage.js',
   ],
 };

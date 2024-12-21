@@ -1,4 +1,4 @@
 @monaco-editor-react.js
 /tests-examples
 /tests/example.spec.ts
-scripts/clearLocalStorage.js
+webpack.lambda.config.js

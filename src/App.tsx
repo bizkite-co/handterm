@@ -1,8 +1,8 @@
-import { useComputed } from '@preact/signals-react';
-import React, { useEffect, useRef, useCallback } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { HandTermWrapper, IHandTermWrapperMethods } from './components/HandTermWrapper';
-import { Output } from './components/Output';
+import { useComputed } from '@preact/signals-react';
+
+import { HandTermWrapper, type IHandTermWrapperMethods } from './components/HandTermWrapper';
 import { ActivityMediatorProvider } from './contexts/ActivityMediatorContext';
 import { AppProvider } from './contexts/AppContext';
 import { CommandProvider } from './contexts/CommandProvider';
@@ -12,9 +12,9 @@ import { TerminalCssClasses } from './types/TerminalTypes';
 import { ActivityType } from './types/Types';
 import { parseLocation } from './utils/navigationUtils';
 
-export default function App() {
-  const containerRef = React.createRef<HTMLDivElement>();
-  const [_containerWidth, setContainerWidth] = React.useState<number>(0);
+export function App(): JSX.Element {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [containerWidth, setContainerWidth] = useState<number>(0);
 
   const auth = useAuth();
   const handexTermWrapperRef = useRef<IHandTermWrapperMethods>(null);
@@ -43,17 +43,22 @@ export default function App() {
     setContainerWidth(w);
 
     const handleClickOutsideTerminal = (event: UIEvent) => {
-      // Check if the click is outside of the terminal area
-      if (
-        handexTermWrapperRef.current &&
-        (event.target as HTMLElement).id !== TerminalCssClasses.Terminal
-      ) {
-        event.stopPropagation();
-        handexTermWrapperRef.current.focusTerminal();
+      const currentRef = handexTermWrapperRef.current;
+      if (currentRef === null) return;
 
-        if (event instanceof MouseEvent || (event instanceof TouchEvent && event.touches.length === 1)) {
+      // Check if the click is outside of the terminal area
+      if ((event.target as HTMLElement).id !== TerminalCssClasses.Terminal) {
+        event.stopPropagation();
+        currentRef.focusTerminal();
+
+        if (
+          event instanceof MouseEvent ||
+          (event instanceof TouchEvent && event.touches.length === 1)
+        ) {
           setTimeout(() => {
-            handexTermWrapperRef.current?.focusTerminal();
+            if (handexTermWrapperRef.current !== null) {
+              handexTermWrapperRef.current.focusTerminal();
+            }
           }, 1000);
         }
       }
@@ -79,7 +84,7 @@ export default function App() {
             handTermRef={handexTermWrapperRef}
           >
             {parseLocation().activityKey !== ActivityType.EDIT
-              && <Output />
+              && <div />
             }
             {isBypassActive.value && (
               <div style={{ position: 'fixed', top: 0, right: 0, color: 'black', background: '#222', padding: '5px' }}>
@@ -89,7 +94,7 @@ export default function App() {
             <HandTermWrapper
               ref={handexTermWrapperRef}
               auth={auth}
-              terminalWidth={_containerWidth}
+              terminalWidth={containerWidth}
               onOutputUpdate={handleOutputUpdate}
             />
           </CommandProvider>

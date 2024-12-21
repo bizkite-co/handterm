@@ -1,7 +1,7 @@
 ---
 title: Implement ESLint Rules
 description: Implement and fix ESLint rules according to the documented standards
-date: 2024-12-18
+date: 2024-12-20
 ---
 
 ## Task List
@@ -12,12 +12,12 @@ The following files have linting issues that need to be fixed according to the d
 - [x] playwright.config.ts (4 errors)
 - [x] vite.config.ts (7 errors)
 - [x] vitest.config.ts (20 errors)
-- [ ] webpack.lambda.config.js (1 error)
-- [ ] scripts/clearLocalStorage.js (1 error)
+- [x] webpack.lambda.config.js (1 error)
+- [x] scripts/clearLocalStorage.js (1 error)
 
 ### Source Files
-- [ ] src/App.tsx (8 errors, 2 warnings)
-- [ ] src/main.tsx (14 errors)
+- [x] src/App.tsx (8 errors, 2 warnings)
+- [ ] src/main.tsx (15 errors)
 
 ### Components
 - [ ] src/components/HandTermWrapper.tsx (46 errors, 2 warnings)
@@ -85,7 +85,6 @@ The following files have linting issues that need to be fixed according to the d
 6. Update tests last, as they may need to be adjusted based on changes to the code they test
 
 For each file:
-1. Run `npm run lint -- <filepath>` to see specific errors
 2. Fix each error according to the documented rules
 3. Re-run linting to verify fixes
 4. Update checkboxes in this document as files are fixed
