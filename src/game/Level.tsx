@@ -1,5 +1,5 @@
 // Level.tsx
-import { IParallaxLayer } from './ParallaxLayer';
+import { type IParallaxLayer } from './ParallaxLayer';
 
 export const layers: IParallaxLayer[][] = [
   [

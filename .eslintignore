@@ -1,3 +1,4 @@
 @monaco-editor-react.js
 /tests-examples
 /tests/example.spec.ts
+scripts/clearLocalStorage.js

@@ -14,11 +14,13 @@ export default defineConfig({
         if (id.includes('monaco-editor/esm/vs/editor/editor.main.nls')) {
           return 'virtual:monaco-editor-nls';
         }
+        return null;
       },
       load(id) {
         if (id === 'virtual:monaco-editor-nls') {
           return `export default {};`;
         }
+        return null;
       },
     },
   ],
@@ -31,7 +33,7 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          'monaco-editor': ['@monaco-editor/react'],
+          monacoEditor: ['@monaco-editor/react'],
         },
       },
     },
@@ -39,7 +41,9 @@ export default defineConfig({
   resolve: {
     alias: {
       'src': path.resolve(__dirname, './src'),
+      // eslint-disable-next-line @typescript-eslint/naming-convention
       '@monaco-editor/react': path.resolve(__dirname, 'node_modules/@monaco-editor/react'),
+      // eslint-disable-next-line @typescript-eslint/naming-convention
       'monaco-editor': path.resolve(__dirname, 'node_modules/monaco-editor'),
     },
   },
@@ -54,6 +58,7 @@ export default defineConfig({
               if (args.path.includes('monaco-editor')) {
                 return { path: args.path, namespace: 'monaco-editor-css' };
               }
+              return null;
             });
             build.onLoad({ filter: /.*/, namespace: 'monaco-editor-css' }, () => {
               return { contents: '', loader: 'js' };
@@ -65,6 +70,7 @@ export default defineConfig({
   },
   server: {
     headers: {
+      // eslint-disable-next-line @typescript-eslint/naming-convention
       'Cache-Control': 'public, max-age=31536000',
     },
     fs: {

@@ -1,5 +1,6 @@
-import { renderHook } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
+
+import { renderHook } from '@testing-library/react';
 
 import { useActivityMediator } from 'src/hooks/useActivityMediator';
 

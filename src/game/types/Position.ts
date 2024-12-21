@@ -1,14 +1,14 @@
-export type SpritePosition = {
+export interface SpritePosition {
     leftX: number,
     topY: number
 }
 
-export type FramePostion = {
+export interface FramePostion {
     leftX: number,
     topY: number
 }
 
-export type Motion = {
+export interface Motion {
     dx: number,
     dy: number
 }

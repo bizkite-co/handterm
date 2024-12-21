@@ -1,14 +1,14 @@
 // SpriteTypes.ts
 
-import { ActionType } from "./ActionTypes";
-import { SpritePosition } from "./Position";
+import { type ActionType } from "./ActionTypes";
+import { type SpritePosition } from "./Position";
 
 
-export type SpriteAnimation = {
+export interface SpriteAnimation {
   name: ActionType;
   imagePath: string;
   frameCount: number;
   frameWidth: number;
   frameHeight: number;
   framePositions?: SpritePosition[];
-};
+}

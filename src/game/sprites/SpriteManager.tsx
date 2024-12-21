@@ -1,6 +1,6 @@
 import { createLogger, LogLevel } from 'src/utils/Logger';
 
-import { SpriteAnimation } from '../types/SpriteTypes';
+import { type SpriteAnimation } from '../types/SpriteTypes';
 
 import { Sprite } from './Sprite';
 

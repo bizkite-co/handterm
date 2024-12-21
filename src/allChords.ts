@@ -1,4 +1,4 @@
-import { IChord } from "./types/Types";
+import { type IChord } from "./types/Types";
 
 export const allChords: IChord[] = [
   {

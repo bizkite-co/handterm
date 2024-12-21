@@ -1,5 +1,9 @@
-import { renderHook } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
+
+import { renderHook } from '@testing-library/react';
+
+// Import the actual hook after mocking
+import { useActivityMediator } from 'src/hooks/useActivityMediator';
 
 // Mocking dependencies
 vi.mock('src/hooks/useActivityMediator', async () => {
@@ -76,9 +80,6 @@ vi.mock('src/signals/gameSignals', () => ({
   isInGameModeSignal: { value: false },
   gamePhraseSignal: { value: null }
 }));
-
-// Import the actual hook after mocking
-import { useActivityMediator } from 'src/hooks/useActivityMediator';
 
 describe('useActivityMediator', () => {
   it('should have initial state', () => {

@@ -1,2 +1,7 @@
+---
+date: 2024-12-20
+title: Cline Rules
+---
+
 1. Read `./CONVENTIONS.md` at the start of each chat.
-2. Read `./NEXT_PROMPT.md` for instructions on the current task.
+2. Read `./docs/linting/IMPLEMENT_LINTING_RULES_FROM_DOCS.md` for instructions on the current task.
