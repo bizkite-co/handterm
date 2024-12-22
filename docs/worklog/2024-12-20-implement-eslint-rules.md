@@ -8,6 +8,8 @@ date: 2024-12-20
 
 The following files have linting issues that need to be fixed according to the documented ESLint rules:
 
+NOTE: Checkbox completions are per-line, not per-group.
+
 ### Configuration Files
 - [x] playwright.config.ts (4 errors)
 - [x] vite.config.ts (7 errors)
@@ -17,10 +19,10 @@ The following files have linting issues that need to be fixed according to the d
 
 ### Source Files
 - [x] src/App.tsx (8 errors, 2 warnings)
-- [ ] src/main.tsx (15 errors)
+- [x] src/main.tsx (15 errors)
 
 ### Components
-- [ ] src/components/HandTermWrapper.tsx (46 errors, 2 warnings)
+- [x] src/components/HandTermWrapper.tsx (46 errors, 2 warnings)
 - [ ] src/components/MonacoEditor.tsx (15 errors)
 - [ ] src/components/NextCharsDisplay.tsx (35 errors, 1 warning)
 - [ ] src/components/CommandOutput.tsx (8 errors, 1 warning)
@@ -37,7 +39,7 @@ The following files have linting issues that need to be fixed according to the d
 - [ ] src/commands/SpecialCommand.tsx (9 errors, 1 warning)
 
 ### Game
-- [ ] src/game/Game.tsx (32 errors, 1 warning)
+- [x] src/game/Game.tsx (32 errors, 1 warning)
 - [ ] src/game/types/ActionTypes.ts (25 errors)
 - [ ] src/game/useBaseCharacter.tsx (14 errors)
 - [ ] src/game/sprites/Sprite.tsx (12 errors)

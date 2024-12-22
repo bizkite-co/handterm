@@ -1,13 +1,8 @@
 [
     {
-        "filePath": "/home/mstouffer/repos/handterm-proj/handterm/scripts/clearLocalStorage.js",
-        "errorCount": 1,
+        "filePath": "/home/mstouffer/repos/handterm-proj/handterm/e2e/example.spec.ts",
+        "errorCount": 2,
         "warningCount": 0
-    },
-    {
-        "filePath": "/home/mstouffer/repos/handterm-proj/handterm/src/App.tsx",
-        "errorCount": 5,
-        "warningCount": 2
     },
     {
         "filePath": "/home/mstouffer/repos/handterm-proj/handterm/src/__mocks__/@octokit/app.ts",
@@ -41,7 +36,7 @@
     },
     {
         "filePath": "/home/mstouffer/repos/handterm-proj/handterm/src/commands/HelpCommand.tsx",
-        "errorCount": 2,
+        "errorCount": 1,
         "warningCount": 1
     },
     {
@@ -56,7 +51,7 @@
     },
     {
         "filePath": "/home/mstouffer/repos/handterm-proj/handterm/src/commands/SpecialCommand.tsx",
-        "errorCount": 6,
+        "errorCount": 4,
         "warningCount": 1
     },
     {
@@ -76,7 +71,7 @@
     },
     {
         "filePath": "/home/mstouffer/repos/handterm-proj/handterm/src/commands/clearCommand.tsx",
-        "errorCount": 5,
+        "errorCount": 4,
         "warningCount": 0
     },
     {
@@ -101,17 +96,17 @@
     },
     {
         "filePath": "/home/mstouffer/repos/handterm-proj/handterm/src/commands/wrtCommand.tsx",
-        "errorCount": 14,
+        "errorCount": 13,
         "warningCount": 0
     },
     {
         "filePath": "/home/mstouffer/repos/handterm-proj/handterm/src/components/Chord.tsx",
-        "errorCount": 3,
+        "errorCount": 2,
         "warningCount": 0
     },
     {
         "filePath": "/home/mstouffer/repos/handterm-proj/handterm/src/components/CommandOutput.tsx",
-        "errorCount": 6,
+        "errorCount": 4,
         "warningCount": 1
     },
     {
@@ -120,13 +115,8 @@
         "warningCount": 0
     },
     {
-        "filePath": "/home/mstouffer/repos/handterm-proj/handterm/src/components/HandTermWrapper.tsx",
-        "errorCount": 27,
-        "warningCount": 2
-    },
-    {
         "filePath": "/home/mstouffer/repos/handterm-proj/handterm/src/components/MonacoEditor.tsx",
-        "errorCount": 12,
+        "errorCount": 11,
         "warningCount": 0
     },
     {
@@ -136,42 +126,42 @@
     },
     {
         "filePath": "/home/mstouffer/repos/handterm-proj/handterm/src/components/NextCharsDisplay.tsx",
-        "errorCount": 30,
+        "errorCount": 26,
         "warningCount": 1
     },
     {
         "filePath": "/home/mstouffer/repos/handterm-proj/handterm/src/components/Output.tsx",
-        "errorCount": 2,
+        "errorCount": 1,
         "warningCount": 0
     },
     {
         "filePath": "/home/mstouffer/repos/handterm-proj/handterm/src/components/Prompt.tsx",
-        "errorCount": 3,
+        "errorCount": 2,
         "warningCount": 0
     },
     {
         "filePath": "/home/mstouffer/repos/handterm-proj/handterm/src/components/SlowestCharactersDisplay.tsx",
-        "errorCount": 3,
+        "errorCount": 2,
         "warningCount": 0
     },
     {
         "filePath": "/home/mstouffer/repos/handterm-proj/handterm/src/components/TimeDisplay.tsx",
-        "errorCount": 3,
+        "errorCount": 2,
         "warningCount": 0
     },
     {
         "filePath": "/home/mstouffer/repos/handterm-proj/handterm/src/components/Timer.tsx",
-        "errorCount": 8,
+        "errorCount": 7,
         "warningCount": 0
     },
     {
         "filePath": "/home/mstouffer/repos/handterm-proj/handterm/src/components/TutorialManager.tsx",
-        "errorCount": 5,
+        "errorCount": 4,
         "warningCount": 0
     },
     {
         "filePath": "/home/mstouffer/repos/handterm-proj/handterm/src/components/WpmTable.tsx",
-        "errorCount": 4,
+        "errorCount": 3,
         "warningCount": 0
     },
     {
@@ -181,22 +171,22 @@
     },
     {
         "filePath": "/home/mstouffer/repos/handterm-proj/handterm/src/contexts/ActivityMediatorContext.tsx",
-        "errorCount": 5,
-        "warningCount": 0
-    },
-    {
-        "filePath": "/home/mstouffer/repos/handterm-proj/handterm/src/contexts/AppContext.tsx",
         "errorCount": 4,
         "warningCount": 0
     },
     {
-        "filePath": "/home/mstouffer/repos/handterm-proj/handterm/src/contexts/CommandContext.tsx",
+        "filePath": "/home/mstouffer/repos/handterm-proj/handterm/src/contexts/AppContext.tsx",
         "errorCount": 3,
         "warningCount": 0
     },
     {
+        "filePath": "/home/mstouffer/repos/handterm-proj/handterm/src/contexts/CommandContext.tsx",
+        "errorCount": 2,
+        "warningCount": 0
+    },
+    {
         "filePath": "/home/mstouffer/repos/handterm-proj/handterm/src/contexts/CommandProvider.tsx",
-        "errorCount": 3,
+        "errorCount": 2,
         "warningCount": 0
     },
     {
@@ -220,11 +210,6 @@
         "warningCount": 0
     },
     {
-        "filePath": "/home/mstouffer/repos/handterm-proj/handterm/src/game/Game.tsx",
-        "errorCount": 24,
-        "warningCount": 1
-    },
-    {
         "filePath": "/home/mstouffer/repos/handterm-proj/handterm/src/game/GameClock.ts",
         "errorCount": 4,
         "warningCount": 0
@@ -236,17 +221,17 @@
     },
     {
         "filePath": "/home/mstouffer/repos/handterm-proj/handterm/src/game/ParallaxLayer.tsx",
-        "errorCount": 2,
+        "errorCount": 1,
         "warningCount": 0
     },
     {
         "filePath": "/home/mstouffer/repos/handterm-proj/handterm/src/game/ScrollingTextLayer.tsx",
-        "errorCount": 3,
+        "errorCount": 2,
         "warningCount": 0
     },
     {
         "filePath": "/home/mstouffer/repos/handterm-proj/handterm/src/game/SpriteManagerContext.tsx",
-        "errorCount": 2,
+        "errorCount": 1,
         "warningCount": 1
     },
     {
@@ -261,8 +246,8 @@
     },
     {
         "filePath": "/home/mstouffer/repos/handterm-proj/handterm/src/game/__tests__/Game.test.tsx",
-        "errorCount": 5,
-        "warningCount": 0
+        "errorCount": 3,
+        "warningCount": 1
     },
     {
         "filePath": "/home/mstouffer/repos/handterm-proj/handterm/src/game/characters/hero/HeroAnimations.ts",
@@ -286,12 +271,12 @@
     },
     {
         "filePath": "/home/mstouffer/repos/handterm-proj/handterm/src/game/useBaseCharacter.tsx",
-        "errorCount": 9,
+        "errorCount": 8,
         "warningCount": 0
     },
     {
         "filePath": "/home/mstouffer/repos/handterm-proj/handterm/src/hooks/useAPI.ts",
-        "errorCount": 16,
+        "errorCount": 15,
         "warningCount": 0
     },
     {
@@ -301,7 +286,7 @@
     },
     {
         "filePath": "/home/mstouffer/repos/handterm-proj/handterm/src/hooks/useActivityMediator.ts",
-        "errorCount": 23,
+        "errorCount": 22,
         "warningCount": 0
     },
     {
@@ -316,7 +301,7 @@
     },
     {
         "filePath": "/home/mstouffer/repos/handterm-proj/handterm/src/hooks/useCommand.ts",
-        "errorCount": 9,
+        "errorCount": 8,
         "warningCount": 0
     },
     {
@@ -336,7 +321,7 @@
     },
     {
         "filePath": "/home/mstouffer/repos/handterm-proj/handterm/src/hooks/useTerminal.ts",
-        "errorCount": 19,
+        "errorCount": 18,
         "warningCount": 1
     },
     {
@@ -347,11 +332,6 @@
     {
         "filePath": "/home/mstouffer/repos/handterm-proj/handterm/src/hooks/useWPMCaculator.ts",
         "errorCount": 1,
-        "warningCount": 0
-    },
-    {
-        "filePath": "/home/mstouffer/repos/handterm-proj/handterm/src/main.tsx",
-        "errorCount": 13,
         "warningCount": 0
     },
     {
@@ -406,7 +386,7 @@
     },
     {
         "filePath": "/home/mstouffer/repos/handterm-proj/handterm/src/types/HandTerm.d.ts",
-        "errorCount": 6,
+        "errorCount": 5,
         "warningCount": 0
     },
     {
@@ -431,12 +411,12 @@
     },
     {
         "filePath": "/home/mstouffer/repos/handterm-proj/handterm/src/utils/WebCam.tsx",
-        "errorCount": 12,
+        "errorCount": 11,
         "warningCount": 0
     },
     {
         "filePath": "/home/mstouffer/repos/handterm-proj/handterm/src/utils/apiClient.ts",
-        "errorCount": 38,
+        "errorCount": 37,
         "warningCount": 0
     },
     {
@@ -446,7 +426,7 @@
     },
     {
         "filePath": "/home/mstouffer/repos/handterm-proj/handterm/src/utils/defaultUtils.ts",
-        "errorCount": 3,
+        "errorCount": 2,
         "warningCount": 0
     },
     {
@@ -478,15 +458,5 @@
         "filePath": "/home/mstouffer/repos/handterm-proj/handterm/vitest-setup.ts",
         "errorCount": 3,
         "warningCount": 3
-    },
-    {
-        "filePath": "/home/mstouffer/repos/handterm-proj/handterm/vitest.config.ts",
-        "errorCount": 20,
-        "warningCount": 0
-    },
-    {
-        "filePath": "/home/mstouffer/repos/handterm-proj/handterm/webpack.lambda.config.js",
-        "errorCount": 1,
-        "warningCount": 0
     }
 ]

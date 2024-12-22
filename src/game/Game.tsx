@@ -1,37 +1,27 @@
 // TerminalGame.ts
-import { useComputed, useSignalEffect } from "@preact/signals-react";
-import confetti from 'canvas-confetti';
-import React, { useState, useEffect, useRef, useImperativeHandle, useCallback, useMemo } from 'react';
+import { useState, useEffect, useRef, useImperativeHandle, useCallback, useMemo, forwardRef } from 'react';
 
-import { commandLineSignal } from "src/signals/commandLineSignals";
-import { isInGameModeSignal } from 'src/signals/gameSignals';
-import { createLogger, LogLevel } from 'src/utils/Logger';
+import confetti from 'canvas-confetti';
+
+import { useComputed, useSignalEffect } from "@preact/signals-react";
+
+import { commandLineSignal } from "../signals/commandLineSignals";
+import { isInGameModeSignal } from '../signals/gameSignals';
+import { createLogger, LogLevel } from '../utils/Logger';
 
 import { Hero } from './Hero';
 import { layers, getLevelCount } from './Level';
-import { IParallaxLayer, ParallaxLayer } from './ParallaxLayer';
+import { type IParallaxLayer, ParallaxLayer } from './ParallaxLayer';
 import ScrollingTextLayer from './ScrollingTextLayer';
-import { Sprite } from './sprites/Sprite';
-import { Action, ActionType } from './types/ActionTypes';
-import { SpritePosition } from './types/Position';
+import { type Sprite } from './sprites/Sprite';
+import { type Action, type ActionType } from './types/ActionTypes';
+import { type SpritePosition } from './types/Position';
 import { Zombie4 } from './Zombie4';
 
 const logger = createLogger({
   prefix: 'Game',
   level: LogLevel.DEBUG
 });
-
-export interface IGameProps {
-  canvasHeight: number
-  canvasWidth: number
-}
-
-export interface IGameHandle {
-  startGame: (tutorialGroup?: string) => void;
-  completeGame: () => void;
-  resetGame: () => void;
-  levelUp: (setLevelValue?: number | null) => void;
-}
 
 interface ICharacterRefMethods {
   getCurrentSprite: () => Sprite | null;
@@ -40,7 +30,19 @@ interface ICharacterRefMethods {
   draw: (context: CanvasRenderingContext2D, position: SpritePosition) => number;
 }
 
-const Game: React.ForwardRefRenderFunction<IGameHandle, IGameProps> = ((props, ref) => {
+interface IGameProps {
+  canvasHeight: number;
+  canvasWidth: number;
+}
+
+interface IGameHandle {
+  startGame: (tutorialGroup?: string) => void;
+  completeGame: () => void;
+  resetGame: () => void;
+  levelUp: (setLevelValue?: number | null) => void;
+}
+
+function GameFunction(props: IGameProps, ref: React.ForwardedRef<IGameHandle>): JSX.Element {
   const {
     canvasHeight,
     canvasWidth,
@@ -70,7 +72,7 @@ const Game: React.ForwardRefRenderFunction<IGameHandle, IGameProps> = ((props, r
   const [heroAction, setHeroAction] = useState<ActionType>('Idle');
   const [zombie4Action, setZombie4Action] = useState<ActionType>('Walk');
   const textToScroll = "TERMINAL VELOCITY!";
-  const [layersState, setLayersState] = useState<IParallaxLayer[]>(layers[0]);
+  const [layersState, setLayersState] = useState<IParallaxLayer[]>(layers[0] ?? []);
 
   const commandLine = useComputed(() => commandLineSignal.value);
   const isInGameMode = useComputed(() => isInGameModeSignal.value).value;
@@ -79,14 +81,15 @@ const Game: React.ForwardRefRenderFunction<IGameHandle, IGameProps> = ((props, r
   const getLevel = useCallback(() => currentLevel, [currentLevel]);
 
   const stopAnimationLoop = useCallback(() => {
-    if (animationFrameIndex.current) {
-      cancelAnimationFrame(animationFrameIndex.current);
+    const frameId = animationFrameIndex.current;
+    if (typeof frameId === 'number' && !Number.isNaN(frameId)) {
+      cancelAnimationFrame(frameId);
       animationFrameIndex.current = undefined;
     }
   }, []);
 
   const triggerConfettiCannon = useCallback(() => {
-    confetti({
+    void confetti({
       zIndex: 3,
       angle: 160,
       spread: 45,
@@ -97,8 +100,9 @@ const Game: React.ForwardRefRenderFunction<IGameHandle, IGameProps> = ((props, r
   }, []);
 
   const setZombie4ToDeathThenResetPosition = useCallback(() => {
-    if (zombie4DeathTimeout.current) {
-      clearTimeout(zombie4DeathTimeout.current);
+    const timeout = zombie4DeathTimeout.current;
+    if (timeout !== null) {
+      clearTimeout(timeout);
       zombie4DeathTimeout.current = null;
     }
 
@@ -111,19 +115,21 @@ const Game: React.ForwardRefRenderFunction<IGameHandle, IGameProps> = ((props, r
     }, 3000);
   }, [zombie4StartPosition]);
 
-  const updateCharacterAndBackgroundPostion = useCallback((_context: CanvasRenderingContext2D): number => {
+  const updateCharacterAndBackgroundPostion = useCallback((context: CanvasRenderingContext2D): number => {
     const canvasCenterX = canvasWidth * heroXPercent;
     const characterReachThreshold = canvasCenterX;
 
-    _context.clearRect(0, 0, canvasWidth, canvasHeight);
+    context.clearRect(0, 0, canvasWidth, canvasHeight);
 
     let heroDx = 0;
-    if (heroRef.current && _context) {
-      heroDx = heroRef.current.draw(_context, heroPosition);
+    const hero = heroRef.current;
+    if (hero !== null) {
+      heroDx = hero.draw(context, heroPosition);
     }
 
-    if (zombie4Ref.current && _context) {
-      const zombie4Dx = zombie4Ref.current.draw(_context, zombie4PositionRef.current);
+    const zombie = zombie4Ref.current;
+    if (zombie !== null) {
+      const zombie4Dx = zombie.draw(context, zombie4PositionRef.current);
       zombie4PositionRef.current = {
         ...zombie4PositionRef.current,
         leftX: zombie4PositionRef.current.leftX + zombie4Dx - heroDx
@@ -149,7 +155,6 @@ const Game: React.ForwardRefRenderFunction<IGameHandle, IGameProps> = ((props, r
   const checkProximityAndSetAction = useCallback(() => {
     const ATTACK_THRESHOLD = 100;
     const distance = heroPosition.leftX - zombie4PositionRef.current.leftX;
-    // console.log("Distance:", Math.round(distance / 5) * 5, heroAction, zombie4Action);
 
     if (-20 < distance && distance < ATTACK_THRESHOLD) {
       setZombie4Action('Attack');
@@ -186,7 +191,7 @@ const Game: React.ForwardRefRenderFunction<IGameHandle, IGameProps> = ((props, r
       const now = performance.now();
       const deltaTime = now - lastFrameTime;
 
-      if (deltaTime >= frameDelay) {
+      if (typeof deltaTime === 'number' && !Number.isNaN(deltaTime) && deltaTime >= frameDelay) {
         lastFrameTime = now - (deltaTime % frameDelay);
 
         if (isPhraseComplete) {
@@ -203,8 +208,9 @@ const Game: React.ForwardRefRenderFunction<IGameHandle, IGameProps> = ((props, r
   }, [isPhraseComplete, drawScrollingText, updateCharacterAndBackgroundPostion, checkProximityAndSetAction]);
 
   const setHeroRunAction = useCallback(() => {
-    if (heroRunTimeoutRef.current) {
-      clearTimeout(heroRunTimeoutRef.current);
+    const timeout = heroRunTimeoutRef.current;
+    if (timeout !== null) {
+      clearTimeout(timeout);
       heroRunTimeoutRef.current = null;
     }
 
@@ -220,12 +226,14 @@ const Game: React.ForwardRefRenderFunction<IGameHandle, IGameProps> = ((props, r
   }, [setHeroRunAction]);
 
   useSignalEffect(() => {
-    if (commandLine.value) handleCommandLineChange();
+    if (commandLine.value?.trim() !== '') {
+      handleCommandLineChange();
+    }
   });
 
   const setupCanvas = useCallback((canvas: HTMLCanvasElement) => {
     const canvasContext = canvas.getContext('2d');
-    if (canvasContext) {
+    if (canvasContext !== null) {
       setContext(canvasContext);
     } else {
       logger.error("Failed to get canvas context.");
@@ -233,27 +241,28 @@ const Game: React.ForwardRefRenderFunction<IGameHandle, IGameProps> = ((props, r
   }, []);
 
   const setLevel = useCallback((newLevel: number) => {
-    const newLayers = layers[newLevel - 1];
+    const levelIndex = Math.max(0, Math.min(newLevel - 1, layers.length - 1));
+    const newLayers = layers[levelIndex] ?? [];
     setCurrentLevel(newLevel);
     setLayersState(newLayers);
   }, []);
 
   const levelUp = useCallback((setLevelValue: number | null = null) => {
     const levelCount = getLevelCount();
-    if (setLevelValue && setLevelValue > levelCount) setLevelValue = levelCount;
-    let nextLevel = setLevelValue || getLevel() + 1;
+    if (setLevelValue !== null && setLevelValue > levelCount) {
+      setLevelValue = levelCount;
+    }
+    let nextLevel = setLevelValue !== null ? setLevelValue : getLevel() + 1;
     if (nextLevel > levelCount) nextLevel = 0;
     if (nextLevel < 1) nextLevel = 1;
     setLevel(nextLevel);
   }, [setLevel, getLevel]);
 
   const startGame = useCallback(() => {
-    if (context) {
+    if (context !== null) {
       startAnimationLoop(context);
     }
-    // Reset game state here if needed
     setIsPhraseComplete(false);
-    // Add any other necessary game start logic
   }, [context, startAnimationLoop]);
 
   const completeGame = useCallback(() => {
@@ -264,20 +273,21 @@ const Game: React.ForwardRefRenderFunction<IGameHandle, IGameProps> = ((props, r
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (canvas) {
+    if (canvas !== null) {
       setupCanvas(canvas);
     }
 
     return () => {
       stopAnimationLoop();
-      if (zombie4DeathTimeout.current) {
-        clearTimeout(zombie4DeathTimeout.current);
+      const timeout = zombie4DeathTimeout.current;
+      if (timeout !== null) {
+        clearTimeout(timeout);
       }
     };
   }, [setupCanvas, stopAnimationLoop]);
 
   useEffect(() => {
-    if (context) {
+    if (context !== null) {
       startAnimationLoop(context);
     }
   }, [context, startAnimationLoop]);
@@ -292,51 +302,52 @@ const Game: React.ForwardRefRenderFunction<IGameHandle, IGameProps> = ((props, r
     levelUp,
   }), [startGame, completeGame, levelUp, zombie4StartPosition]);
 
-  return (
-    <>
-      {isInGameMode && (
-        <div
-          id="terminal-game"
-          style={{ position: "relative", height: canvasHeight }}
-        >
-          <div className="parallax-background">
-            {isTextScrolling && (
-              <ScrollingTextLayer
-                text={textToScroll}
-                canvasHeight={canvasHeight}
-              />
-            )}
-            {layersState.map((layer, index) => (
-              <ParallaxLayer
-                key={index}
-                layer={layer}
-                offset={backgroundOffsetX}
-                canvasHeight={canvasHeight}
-              />
-            ))}
-          </div>
-          <canvas
-            style={{ position: "absolute", top: 0, left: 0, zIndex: 2 }}
-            ref={canvasRef}
-            width={canvasWidth}
-            height={canvasHeight}
-          />
-          <Hero
-            ref={heroRef}
-            positionRef={heroPositionRef}
-            currentActionType={heroAction}
-            scale={1.95}
-          />
-          <Zombie4
-            ref={zombie4Ref}
-            positionRef={zombie4PositionRef}
-            currentActionType={zombie4Action}
-            scale={1.90}
-          />
-        </div>
-      )}
-    </>
-  );
-});
+  if (!isInGameMode) {
+    return <div />;
+  }
 
-export default React.forwardRef(Game);
+  return (
+    <div
+      id="terminal-game"
+      style={{ position: "relative", height: canvasHeight }}
+    >
+      <div className="parallax-background">
+        {isTextScrolling && (
+          <ScrollingTextLayer
+            text={textToScroll}
+            canvasHeight={canvasHeight}
+          />
+        )}
+        {layersState.map((layer, index) => (
+          <ParallaxLayer
+            key={index}
+            layer={layer}
+            offset={backgroundOffsetX}
+            canvasHeight={canvasHeight}
+          />
+        ))}
+      </div>
+      <canvas
+        style={{ position: "absolute", top: 0, left: 0, zIndex: 2 }}
+        ref={canvasRef}
+        width={canvasWidth}
+        height={canvasHeight}
+      />
+      <Hero
+        ref={heroRef}
+        positionRef={heroPositionRef}
+        currentActionType={heroAction}
+        scale={1.95}
+      />
+      <Zombie4
+        ref={zombie4Ref}
+        positionRef={zombie4PositionRef}
+        currentActionType={zombie4Action}
+        scale={1.90}
+      />
+    </div>
+  );
+}
+
+export type { IGameHandle, IGameProps };
+export const Game = forwardRef(GameFunction);

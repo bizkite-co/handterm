@@ -1,30 +1,27 @@
-import { useComputed } from '@preact/signals-react';
-import React, { useEffect, useRef, useState, useCallback, useImperativeHandle } from 'react';
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 
-import { useActivityMediator } from 'src/hooks/useActivityMediator';
-import { useAuth, IAuthProps } from '../hooks/useAuth';
+import { useComputed } from '@preact/signals-react';
+
+import { Game, type IGameHandle } from '../game/Game';
+import { useActivityMediator } from '../hooks/useActivityMediator';
+import { type IAuthProps } from '../hooks/useAuth';
 import { useTerminal } from '../hooks/useTerminal';
 import { useWPMCalculator } from '../hooks/useWPMCaculator';
-import { activitySignal, isShowVideoSignal } from 'src/signals/appSignals';
-import { commandTimeSignal } from 'src/signals/commandLineSignals';
-import {
-  setGamePhrase,
-} from 'src/signals/gameSignals';
-import { tutorialSignal } from 'src/signals/tutorialSignals';
-import { createLogger, LogLevel } from 'src/utils/Logger';
-import { navigate, parseLocation } from 'src/utils/navigationUtils';
-import WebCam from 'src/utils/WebCam';
+import { activitySignal, isShowVideoSignal } from '../signals/appSignals';
+import { commandTimeSignal } from '../signals/commandLineSignals';
+import { setGamePhrase } from '../signals/gameSignals';
+import { tutorialSignal } from '../signals/tutorialSignals';
+import { ActivityType, type GamePhrase, type OutputElement } from '../types/Types';
 import { getFileContent } from '../utils/apiClient';
+import { createLogger, LogLevel } from '../utils/Logger';
+import { navigate, parseLocation } from '../utils/navigationUtils';
+import WebCam from '../utils/WebCam';
 
-import Game, { IGameHandle } from '../game/Game';
-
+import { Chord } from './Chord';
+import MonacoEditor from './MonacoEditor';
+import NextCharsDisplay, { type NextCharsDisplayHandle } from './NextCharsDisplay';
 import { Prompt } from './Prompt';
 import { TutorialManager } from './TutorialManager';
-import MonacoEditor from './MonacoEditor';
-import NextCharsDisplay, { NextCharsDisplayHandle } from './NextCharsDisplay';
-import { Chord } from './Chord';
-
-import { ActivityType, OutputElement, GamePhrase } from '../types/Types';
 
 const logger = createLogger({
   prefix: 'HandTermWrapper',
@@ -36,23 +33,22 @@ interface TreeItem {
   type: 'file' | 'directory';
 }
 
-export interface IHandTermWrapperProps {
+interface IHandTermWrapperProps {
   terminalWidth: number;
   auth: IAuthProps;
   onOutputUpdate: (output: OutputElement) => void;
 }
 
-export interface XtermMethods {
+interface XtermMethods {
   focusTerminal: () => void;
   terminalWrite: (data: string) => void;
   getCurrentCommand: () => string;
   getTerminalSize: () => { width: number; height: number } | undefined;
   prompt: () => void;
-  appendTempPassword: (password: string) => void;
   scrollBottom: () => void;
 }
 
-export interface IHandTermWrapperMethods {
+interface IHandTermWrapperMethods {
   writeOutput: (output: string) => void;
   prompt: () => void;
   saveCommandResponseHistory: (command: string, response: string, status: number) => string;
@@ -64,21 +60,19 @@ export interface IHandTermWrapperMethods {
   handleEditSave: (content: string) => void;
 }
 
-const getTimestamp = (date: Date) => {
-  return date.toTimeString().split(' ')[0];
-}
+const getTimestamp = (date: Date): string => date.toTimeString().split(' ')[0] ?? '';
 
-export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTermWrapperProps>((props, forwardedRef) => {
+const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProps>((props, forwardedRef) => {
   const { xtermRef, writeToTerminal, resetPrompt } = useTerminal();
   const targetWPM = 10;
   const wpmCalculator = useWPMCalculator();
   const gameHandleRef = useRef<IGameHandle>(null);
-  const nextCharsDisplayRef: React.RefObject<NextCharsDisplayHandle> = React.createRef();
+  const nextCharsDisplayRef = useRef<NextCharsDisplayHandle>(null);
   const activityMediator = useActivityMediator();
 
-  const [domain] = useState<string>('handterm.com');
-  const initialCanvasHeight = localStorage.getItem('canvasHeight') || '100';
-  const [canvasHeight] = useState(parseInt(initialCanvasHeight));
+  const [domain] = useState('handterm.com');
+  const initialCanvasHeight = localStorage.getItem('canvasHeight')?.trim() ?? '100';
+  const [canvasHeight] = useState<number>(() => parseInt(initialCanvasHeight, 10));
   const [lastTypedCharacter] = useState<string | null>(null);
   const [, setErrorCharIndex] = useState<number | undefined>(undefined);
   const [githubUsername] = useState<string | null>(null);
@@ -93,17 +87,27 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
   const handlePhraseComplete = useCallback(() => {
     localStorage.setItem('currentCommand', '');
     setGamePhrase(null);
-    if (nextCharsDisplayRef.current && nextCharsDisplayRef.current.cancelTimer) {
-      nextCharsDisplayRef.current.cancelTimer();
+    const timer = nextCharsDisplayRef.current?.cancelTimer;
+    if (typeof timer === 'function') {
+      timer();
     }
-    gameHandleRef.current?.completeGame();
+    const game = gameHandleRef.current;
+    if (game !== null) {
+      game.completeGame();
+    }
     resetPrompt();
   }, [nextCharsDisplayRef, gameHandleRef, resetPrompt]);
 
   // Then use it in handlePhraseSuccess
   const handlePhraseSuccess = useCallback((phrase: GamePhrase | null) => {
-    if (!phrase) return;
-    logger.debug(`handlePhraseSuccess called with phrase:`, phrase.key, "Activity:", ActivityType[activitySignal.value]);
+    if (phrase === null) return;
+
+    const key = phrase.key?.trim() ?? '';
+    const value = phrase.value?.trim() ?? '';
+    if (key === '' || value === '') {
+      return;
+    }
+    logger.debug('handlePhraseSuccess called with phrase:', key, 'Activity:', ActivityType[activitySignal.value]);
     const wpms = wpmCalculator.getWPMs();
     const wpmAverage = wpms.wpmAverage;
 
@@ -111,8 +115,11 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
       activityMediator.checkGameProgress(phrase);
     }
 
-    gameHandleRef.current?.completeGame();
-    gameHandleRef.current?.levelUp();
+    const game = gameHandleRef.current;
+    if (game !== null) {
+      game.completeGame();
+      game.levelUp();
+    }
     handlePhraseComplete();
   }, [wpmCalculator, activityMediator, handlePhraseComplete, gameHandleRef, targetWPM]);
 
@@ -120,22 +127,23 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
   useEffect(() => {
     if (currentActivity === ActivityType.TREE) {
       logger.info('Loading tree items in TREE mode');
-      const storedItems = localStorage.getItem('github_tree_items');
-      logger.debug('Stored items:', storedItems);
-      if (storedItems) {
-        try {
-          const items = JSON.parse(storedItems);
-          logger.debug('Parsed items:', items);
-          if (Array.isArray(items) && items.length > 0) {
-            setTreeItems(items);
-          } else {
-            logger.error('Tree items array is empty or invalid');
-          }
-        } catch (error) {
-          logger.error('Error parsing tree items:', error);
-        }
-      } else {
+      const storedItems = localStorage.getItem('github_tree_items')?.trim() ?? '';
+      if (storedItems === '') {
         logger.error('No tree items found in localStorage');
+        return;
+      }
+
+      logger.debug('Stored items:', storedItems);
+      try {
+        const items = JSON.parse(storedItems) as TreeItem[];
+        logger.debug('Parsed items:', items);
+        if (Array.isArray(items) && items.length > 0) {
+          setTreeItems(items);
+        } else {
+          logger.error('Tree items array is empty or invalid');
+        }
+      } catch (error) {
+        logger.error('Error parsing tree items:', error);
       }
     }
   }, [currentActivity]);
@@ -144,8 +152,9 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
   useEffect(() => {
     if (currentActivity === ActivityType.NORMAL) {
       logger.info('Resetting terminal in NORMAL mode');
-      if (xtermRef.current) {
-        xtermRef.current.focus();
+      const term = xtermRef.current;
+      if (term !== null) {
+        term.focus();
       }
       resetPrompt();
     }
@@ -154,8 +163,8 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
   const handleFileSelect = useCallback(async (path: string) => {
     try {
       // Get the current repository from localStorage (set by GitHubCommand)
-      const currentRepo = localStorage.getItem('current_github_repo');
-      if (!currentRepo) {
+      const currentRepo = localStorage.getItem('current_github_repo')?.trim() ?? '';
+      if (currentRepo === '') {
         logger.error('No repository selected');
         return;
       }
@@ -164,7 +173,7 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
       const response = await getFileContent(props.auth, currentRepo, path);
       logger.debug('File content response:', response);
 
-      if (response.status === 200 && response.data) {
+      if (response !== null && response.status === 200 && response.data !== undefined) {
         // Store content and file path
         localStorage.setItem('edit-content', response.data.content);
         setCurrentFile(path);
@@ -176,7 +185,7 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
           groupKey: null
         });
       } else {
-        logger.error('Failed to fetch file content:', response.error);
+        logger.error('Failed to fetch file content:', response?.error);
       }
     } catch (error) {
       logger.error('Failed to fetch file content:', error);
@@ -221,8 +230,9 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
     prompt: () => { },
     saveCommandResponseHistory: () => '',
     focusTerminal: () => {
-      if (xtermRef.current) {
-        xtermRef.current.focus();
+      const term = xtermRef.current;
+      if (term !== null && term !== undefined && typeof term.focus === 'function') {
+        term.focus();
       }
     },
     handleCharacter: () => { },
@@ -232,16 +242,25 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
     handleEditSave: () => { },
   }), [writeToTerminal, xtermRef]);
 
+  const handleFileSelectWrapper = useCallback((path: string) => {
+    void handleFileSelect(path);
+  }, [handleFileSelect]);
+
+  const getStoredContent = useCallback((): string => {
+    const content = localStorage.getItem('edit-content');
+    return content !== null ? content : '';
+  }, []);
+
   return (
     <div id='handterm-wrapper'>
-      {(parseLocation().activityKey === ActivityType.GAME) && (
+      {currentActivity === ActivityType.GAME && (
         <Game
           ref={gameHandleRef}
           canvasHeight={canvasHeight}
           canvasWidth={props.terminalWidth}
         />
       )}
-      {parseLocation().activityKey === ActivityType.GAME && (
+      {currentActivity === ActivityType.GAME && (
         <NextCharsDisplay
           ref={nextCharsDisplayRef}
           isInPhraseMode={true}
@@ -249,10 +268,10 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
           onError={handlePhraseErrorState}
         />
       )}
-      {lastTypedCharacter && (
+      {lastTypedCharacter !== null && (
         <Chord displayChar={lastTypedCharacter} />
       )}
-      {parseLocation().activityKey === ActivityType.TUTORIAL && tutorialSignal.value && (
+      {currentActivity === ActivityType.TUTORIAL && tutorialSignal.value !== null && (
         <TutorialManager
           tutorial={tutorialSignal.value}
         />
@@ -262,8 +281,8 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
       {currentActivity !== ActivityType.EDIT && currentActivity !== ActivityType.TREE && (
         <div id="prompt-and-terminal">
           <Prompt
-            username={userName || 'guest'}
-            domain={domain || 'handterm.com'}
+            username={userName ?? 'guest'}
+            domain={domain ?? 'handterm.com'}
             githubUsername={githubUsername}
             timestamp={getTimestamp(commandTime.value)}
           />
@@ -276,7 +295,7 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
 
       {currentActivity === ActivityType.EDIT && (
         <MonacoEditor
-          initialValue={localStorage.getItem('edit-content') || ''}
+          initialValue={getStoredContent()}
           language="markdown"
           onClose={handleEditorClose}
         />
@@ -287,11 +306,11 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
           language="plaintext"
           isTreeView={true}
           treeItems={treeItems}
-          onFileSelect={handleFileSelect}
+          onFileSelect={handleFileSelectWrapper}
           onClose={handleTreeClose}
         />
       )}
-      {isShowVideoSignal.value && (
+      {isShowVideoSignal.value !== null && (
         <WebCam
           setOn={isShowVideoSignal.value}
         />
@@ -300,4 +319,7 @@ export const HandTermWrapper = React.forwardRef<IHandTermWrapperMethods, IHandTe
   );
 });
 
-export default HandTermWrapper;
+HandTermWrapper.displayName = 'HandTermWrapper';
+
+export type { IHandTermWrapperMethods, IHandTermWrapperProps, XtermMethods };
+export { HandTermWrapper };
