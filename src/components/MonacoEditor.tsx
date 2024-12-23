@@ -1,14 +1,16 @@
-import { editor } from 'monaco-editor';
-import React, { useRef, useImperativeHandle, forwardRef, useCallback } from 'react';
+import {
+  useCallback,
+  useImperativeHandle,
+  useRef,
+} from 'react';
+
+import { type editor } from 'monaco-editor';
 
 import { createLogger, LogLevel } from 'src/utils/Logger';
 
-import { useAuth } from '../hooks/useAuth';
-
-
 const logger = createLogger({
   prefix: 'MonacoEditor',
-  level: LogLevel.DEBUG
+  level: LogLevel.DEBUG,
 });
 
 interface TreeItem {
@@ -26,85 +28,64 @@ interface MonacoEditorProps {
   onFileSelect?: (file: string) => void;
 }
 
-const MonacoEditor = forwardRef<editor.IStandaloneCodeEditor, MonacoEditorProps>(
-  ({
+function MonacoEditorComponent(
+  {
     onClose,
     height = '80vh',
-    isTreeView,
+    isTreeView = false,
     treeItems = [],
-    onFileSelect
-  }, ref) => {
-    const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
-    const auth = useAuth();
+    onFileSelect = () => {}
+  }: MonacoEditorProps
+): JSX.Element {
+  const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
 
-    const handleGitHubSave = useCallback(async (): Promise<void> => {
-      try {
-        const currentRepo = localStorage.getItem('current_github_repo');
-        const currentFile = localStorage.getItem('current_github_file');
-
-        if (!currentRepo || !currentFile) {
-          logger.error('No repository or file selected for saving');
-          return;
-        }
-
-        // Use a generic file save method from auth
-        const response = await auth.login(currentRepo, currentFile);
-
-        if (response.status === 200) {
-          logger.info('File saved to GitHub successfully');
-        } else {
-          logger.error('Failed to save file to GitHub:', response.message);
-          throw new Error(response.message);
-        }
-      } catch (error) {
-        logger.error('Error saving to GitHub:', error);
-      }
-    }, [auth]);
-
-    const handleEditorDidMount = useCallback((editor: editor.IStandaloneCodeEditor) => {
-      logger.info('Editor mounted, setting up...');
-      editorRef.current = editor;
-
-      if (isTreeView) {
-        logger.info('Setting up tree view mode');
-        editor.updateOptions({ readOnly: true });
-      }
-    }, [isTreeView]);
-
-    useImperativeHandle(ref, () => {
-      if (!editorRef.current) {
+  useImperativeHandle(
+    null,
+    () => {
+      if (editorRef.current === null) {
         throw new Error('Editor ref is not available');
       }
       return editorRef.current;
-    }, [editorRef]);
+    },
+    [editorRef],
+  );
 
-    const handleFileSelection = useCallback((item: TreeItem) => {
+  const handleFileSelection = useCallback(
+    (item: TreeItem) => {
       if (item.type === 'directory') {
         logger.debug('Toggling directory:', item.path);
         // Toggle directory expansion logic
-      } else if (onFileSelect) {
+      } else {
         logger.info('Opening file:', item.path);
         onFileSelect(item.path);
       }
-    }, [onFileSelect]);
+    },
+    [onFileSelect],
+  );
 
-    return (
-      <div style={{ height, width: '100%' }}>
-        {isTreeView && treeItems.length > 0 && (
-          <div>
-            {treeItems.map((item, index) => (
-              <button key={index} onClick={() => handleFileSelection(item)}>
-                {item.path}
-              </button>
-            ))}
-          </div>
-        )}
-        <button onClick={onClose}>Close</button>
-      </div>
-    );
-  }
-);
+  const handleClose = useCallback(() => {
+    onClose();
+  }, [onClose]);
 
-MonacoEditor.displayName = 'MonacoEditor';
+  return (
+    <div style={{ height, width: '100%' }}>
+      {isTreeView && treeItems.length > 0 && (
+        <div>
+          {treeItems.map((item) => (
+            <button
+              key={item.path}
+              onClick={() => handleFileSelection(item)}
+            >
+              {item.path}
+            </button>
+          ))}
+        </div>
+      )}
+      <button onClick={handleClose}>Close</button>
+    </div>
+  );
+}
 
-export default MonacoEditor;
+MonacoEditorComponent.displayName = 'MonacoEditor';
+
+export { MonacoEditorComponent as MonacoEditor };

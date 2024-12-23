@@ -6,38 +6,40 @@ date: 2024-12-20
 
 ## Task List
 
-The following files have linting issues that need to be fixed according to the documented ESLint rules:
+The following files have linting issues that need to be fixed according to the documented ESLint rules. You can find the rules in the `docs/linting` directory.
 
-NOTE: Checkbox completions are per-line, not per-group.
+**NOTE:** Checkbox completions are per-line, not per-group.
 
 ### Configuration Files
-- [x] playwright.config.ts (4 errors)
-- [x] vite.config.ts (7 errors)
-- [x] vitest.config.ts (20 errors)
-- [x] webpack.lambda.config.js (1 error)
-- [x] scripts/clearLocalStorage.js (1 error)
+
+- [x] `playwright.config.ts` (4 errors)
+- [x] `vite.config.ts` (7 errors)
+- [x] `vitest.config.ts` (20 errors)
+- [x] `webpack.lambda.config.js` (1 error)
+- [x] `scripts/clearLocalStorage.js` (1 error)
 
 ### Source Files
-- [x] src/App.tsx (8 errors, 2 warnings)
-- [x] src/main.tsx (15 errors)
+
+- [x] `src/App.tsx` (8 errors, 2 warnings)
+- [x] `src/main.tsx` (15 errors)
 
 ### Components
-- [x] src/components/HandTermWrapper.tsx (46 errors, 2 warnings)
-- [ ] src/components/MonacoEditor.tsx (15 errors)
-- [ ] src/components/NextCharsDisplay.tsx (35 errors, 1 warning)
-- [ ] src/components/CommandOutput.tsx (8 errors, 1 warning)
-- [ ] src/components/Timer.tsx (9 errors)
-- [ ] src/components/TutorialManager.tsx (7 errors)
-- [ ] src/components/WpmTable.tsx (6 errors)
+
+- [x] `src/components/HandTermWrapper.tsx` (46 errors, 2 warnings)
+- [x] `src/components/MonacoEditor.tsx` (15 errors)
+- [ ] `src/components/NextCharsDisplay.tsx` (35 errors, 1 warning)
+    - [ ] Read `docs/linting/refactoring/NextCharsDisplay.md` before refactoring.
+    - [ ] Update `docs/linting/refactoring/NextCharsDisplay.md` after refactoring.
+- [ ] `src/components/CommandOutput.tsx` (8 errors, 1 warning)
+- [ ] `src/components/Timer.tsx` (9 errors)
+- [ ] `src/components/TutorialManager.tsx` (7 errors)
+- [ ] `src/components/WpmTable.tsx` (6 errors)
 
 ### Commands
-- [ ] src/commands/GitHubCommand.ts (18 errors)
-- [ ] src/commands/wrtCommand.tsx (18 errors)
-- [ ] src/commands/cleanCommand.ts (16 errors)
-- [ ] src/commands/archiveCommand.ts (10 errors)
-- [ ] src/commands/clearCommand.tsx (9 errors)
-- [ ] src/commands/SpecialCommand.tsx (9 errors, 1 warning)
 
+- [ ] `src/commands/GitHubCommand.ts` (18 errors)
+- [ ] `src/commands/wrtCommand.tsx` (18 errors)
+- [ ] `src/commands/cleanCommand.ts` (16 errors)
 ### Game
 - [x] src/game/Game.tsx (32 errors, 1 warning)
 - [ ] src/game/types/ActionTypes.ts (25 errors)

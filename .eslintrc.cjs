@@ -1,3 +1,4 @@
+// Linting docs are in ./docs/linting/_index.md
 module.exports = {
   root: true,
   env: {
@@ -5,6 +6,9 @@ module.exports = {
     es2021: true,
     node: true,
     'vitest-globals/env': true,
+  },
+  globals: {
+    Buffer: 'readonly',
   },
   extends: [
     'eslint:recommended',
