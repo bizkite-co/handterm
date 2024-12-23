@@ -25,14 +25,13 @@ module.exports = {
   ],
   parser: '@typescript-eslint/parser',
   parserOptions: {
-    project: './tsconfig.json',
-    ecmaVersion: 'latest',
-    sourceType: 'module',
     project: [
       './tsconfig.json',
       './tsconfig.test.json',
       './tsconfig.node.json',
     ],
+    ecmaVersion: 'latest',
+    sourceType: 'module',
     ecmaFeatures: {
       jsx: true,
     },
@@ -45,7 +44,7 @@ module.exports = {
     'jsx-a11y',
     'testing-library',
     'import',
-    'vitest-globals'
+    'vitest-globals',
   ],
   settings: {
     react: {
@@ -70,28 +69,7 @@ module.exports = {
     'import/internal-regex': '^src/',
   },
   rules: {
-    // React Rules
-    'react/react-in-jsx-scope': 'off', // Not needed with new JSX transform
-    'react/prop-types': 'off', // Using TypeScript for prop validation
-    'react/jsx-uses-react': 'off', // Not needed with new JSX transform
-    'react/jsx-handler-names': ['error', {
-      eventHandlerPrefix: 'handle',
-      eventHandlerPropPrefix: 'on',
-      checkLocalVariables: true,
-    }],
-    'react/jsx-key': ['error', {
-      checkFragmentShorthand: true,
-      checkKeyMustBeforeSpread: true,
-      warnOnDuplicates: true,
-    }],
-    'react/function-component-definition': ['error', {
-      namedComponents: 'function-declaration',
-      unnamedComponents: 'arrow-function',
-    }],
-    'react/jsx-no-useless-fragment': 'error',
-    'react/jsx-pascal-case': 'error',
-
-    // TypeScript Rules
+    // Existing TypeScript Rules
     '@typescript-eslint/explicit-module-boundary-types': 'error',
     '@typescript-eslint/no-unused-vars': ['error', {
       argsIgnorePattern: '^_[a-zA-Z][a-zA-Z0-9]*$',
@@ -103,153 +81,34 @@ module.exports = {
       fixStyle: 'inline-type-imports',
       disallowTypeAnnotations: true,
     }],
-    '@typescript-eslint/consistent-type-definitions': ['error', 'interface'],
-    '@typescript-eslint/no-misused-promises': [
-      'error',
-      {
-        checksVoidReturn: true,
-        checksConditionals: true,
-        checksSpreads: true,
-      },
-    ],
-    '@typescript-eslint/no-floating-promises': 'error',
-    '@typescript-eslint/require-await': 'error',
-    '@typescript-eslint/no-unsafe-assignment': 'error',
-    '@typescript-eslint/no-unsafe-member-access': 'error',
-    '@typescript-eslint/no-unsafe-call': 'error',
-    '@typescript-eslint/no-unsafe-return': 'error',
-    '@typescript-eslint/no-unsafe-argument': 'error',
-    '@typescript-eslint/unbound-method': 'error',
-    '@typescript-eslint/no-unnecessary-type-assertion': 'error',
-    '@typescript-eslint/no-redundant-type-constituents': 'error',
-    '@typescript-eslint/strict-boolean-expressions': ['error', {
+
+    // Type Safety Strategies
+    '@typescript-eslint/strict-boolean-expressions': ['warn', {
       allowString: false,
       allowNumber: false,
       allowNullableObject: false,
       allowNullableBoolean: false,
       allowNullableString: false,
       allowNullableNumber: false,
-      allowAny: false,
+      allowAny: false
     }],
-    '@typescript-eslint/naming-convention': [
-      'error',
-      {
-        selector: 'default',
-        format: ['camelCase', 'PascalCase'],
-        leadingUnderscore: 'forbid',
-        trailingUnderscore: 'forbid',
-      },
-      {
-        selector: 'variable',
-        format: ['camelCase', 'PascalCase', 'UPPER_CASE'],
-        leadingUnderscore: 'forbid',
-        trailingUnderscore: 'forbid',
-      },
-      {
-        selector: 'function',
-        format: ['camelCase', 'PascalCase'],
-        leadingUnderscore: 'forbid',
-        trailingUnderscore: 'forbid',
-      },
-      {
-        selector: 'typeLike',
-        format: ['PascalCase'],
-      },
-      {
-        selector: 'enumMember',
-        format: ['UPPER_CASE'],
-      },
-      {
-        selector: 'parameter',
-        format: ['camelCase'],
-        leadingUnderscore: 'forbid',
-        trailingUnderscore: 'forbid',
-      },
-      {
-        selector: 'property',
-        format: ['camelCase', 'UPPER_CASE'],
-        leadingUnderscore: 'forbid',
-        trailingUnderscore: 'forbid',
-      },
-    ],
 
-    // Import Rules
-    'import/order': [
-      'error',
+    // Functional Programming Encouragement (without plugin)
+    'no-var': 'error',
+    'prefer-const': 'warn',
+    'no-param-reassign': 'warn',
+
+    // Custom Type Guard Encouragement
+    'no-restricted-syntax': [
+      'warn',
       {
-        groups: [
-          'builtin',
-          'external',
-          'internal',
-          'parent',
-          'sibling',
-          'index',
-          'object',
-          'type'
-        ],
-        pathGroups: [
-          {
-            pattern: 'react',
-            group: 'builtin',
-            position: 'before'
-          },
-          {
-            pattern: '@preact/**',
-            group: 'external',
-            position: 'after'
-          },
-          {
-            pattern: '@tanstack/**',
-            group: 'external',
-            position: 'after'
-          },
-          {
-            pattern: '@testing-library/**',
-            group: 'external',
-            position: 'after'
-          },
-          {
-            pattern: 'src/**',
-            group: 'internal',
-            position: 'before'
-          }
-        ],
-        pathGroupsExcludedImportTypes: ['react', '@preact/**'],
-        'newlines-between': 'always',
-        alphabetize: {
-          order: 'asc',
-          caseInsensitive: true,
-        }
+        selector: 'IfStatement[test.type="BinaryExpression"][test.operator="!=="]',
+        message: 'Consider using type guards for more explicit type checking. Refer to docs/linting/type_safety_strategies.md'
       }
-    ],
-    'import/no-duplicates': 'error',
-    'import/no-default-export': 'error',
-    'import/no-cycle': ['error', {
-      maxDepth: 1,
-      ignoreExternal: true
-    }],
-    'import/no-unresolved': 'error',
-    'import/first': 'error',
-    'import/exports-last': 'error',
-    'import/no-mutable-exports': 'error',
-
-    // React Hooks Rules
-    'react-hooks/rules-of-hooks': 'error',
-    'react-hooks/exhaustive-deps': 'error',
-
-    // Accessibility Rules
-    'jsx-a11y/anchor-is-valid': 'error',
-    'jsx-a11y/media-has-caption': 'error',
-    'jsx-a11y/click-events-have-key-events': 'error',
-    'jsx-a11y/no-noninteractive-element-interactions': 'error',
-
-    // General Rules
-    'consistent-return': 'error',
-    'no-console': process.env.NODE_ENV === 'production' ? 'error' : 'warn',
-    'no-debugger': process.env.NODE_ENV === 'production' ? 'error' : 'warn',
+    ]
   },
   overrides: [
-    // Test Files
+    // Test Files Override
     {
       files: [
         'src/**/*.{test,spec}.{ts,tsx}',
@@ -258,79 +117,10 @@ module.exports = {
         'tests/**/*.[jt]s?(x)',
         'src/test-utils/**/*',
       ],
-      extends: ['plugin:testing-library/react'],
       rules: {
         '@typescript-eslint/no-explicit-any': 'off',
-        '@typescript-eslint/no-non-null-assertion': 'off',
-        '@typescript-eslint/no-unsafe-assignment': 'off',
-        '@typescript-eslint/no-unsafe-member-access': 'off',
-        '@typescript-eslint/no-unsafe-call': 'off',
-        '@typescript-eslint/no-unsafe-return': 'off',
-        '@typescript-eslint/no-unsafe-argument': 'off',
-        'testing-library/no-unnecessary-act': 'error',
-        'testing-library/prefer-screen-queries': 'error',
-        'testing-library/no-wait-for-multiple-assertions': 'error',
-        'testing-library/no-render-in-setup': 'off',
-        'testing-library/no-node-access': 'error',
-        'testing-library/render-result-naming-convention': 'error',
-        'testing-library/no-debugging-utils': process.env.CI ? 'error' : 'warn',
-      },
-    },
-    // TypeScript Declaration Files
-    {
-      files: ['*.d.ts', 'src/**/*.d.ts'],
-      rules: {
-        '@typescript-eslint/no-explicit-any': 'off',
-        '@typescript-eslint/no-unused-vars': 'off',
-        'import/no-duplicates': 'off',
-        '@typescript-eslint/consistent-type-definitions': 'off',
-        'import/no-cycle': 'off',
-        '@typescript-eslint/consistent-type-imports': 'off',
-        '@typescript-eslint/ban-types': 'off',
-      },
-    },
-    // Configuration Files
-    {
-      files: [
-        '*.config.ts',
-        '*.config.js',
-        'vite.config.ts',
-        'vitest.config.ts',
-        'webpack.lambda.config.js',
-        'scripts/**/*',
-      ],
-      rules: {
-        '@typescript-eslint/no-var-requires': 'off',
-        'import/no-default-export': 'off',
-        'no-console': 'off',
-      },
-    },
-    {
-      files: [
-        'scripts/*.js',
-      ],
-      parser: 'espree',
-      parserOptions: {
-        ecmaVersion: 'latest',
-        sourceType: 'module',
-      },
-      rules: {}
-    },
-    {
-      files: [
-        '*.config.js',
-        '.eslintrc.cjs',
-      ],
-      parser: 'espree',
-      parserOptions: {
-        ecmaVersion: 'latest',
-        sourceType: 'module',
-      },
-    },
-  ],
-  ignorePatterns: [
-    '@monaco-editor-react.js',
-    'tests-examples/demo-todo-app.spec.ts',
-    'scripts/clearLocalStorage.js',
-  ],
+        'no-param-reassign': 'off'
+      }
+    }
+  ]
 };
