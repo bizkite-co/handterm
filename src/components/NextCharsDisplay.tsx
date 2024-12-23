@@ -66,7 +66,7 @@ const NextCharsDisplay = forwardRef<NextCharsDisplayHandle, INextCharsDisplayPro
         }
         let result = 0;
         for (let i = 0; i < stringBeingTested.length; i++) {
-            if (stringBeingTested[i] !== sourcePhrase[i]) {
+            if (typeof sourcePhrase === 'string' && stringBeingTested[i] !== sourcePhrase[i]) {
                 return i;
             }
             result++;
@@ -96,26 +96,35 @@ const NextCharsDisplay = forwardRef<NextCharsDisplayHandle, INextCharsDisplayPro
         setMismatchedChar('');
         setMismatchedIsVisible(false);
         setNextChars('');
-        if (_gamePhrase && _gamePhrase.key) setCompletedGamePhrase(_gamePhrase.key)
+        if (
+            _gamePhrase !== null &&
+            _gamePhrase !== undefined &&
+            _gamePhrase.key !== null &&
+            _gamePhrase.key !== undefined
+        ) {
+            setCompletedGamePhrase(_gamePhrase.key);
+        }
         onPhraseSuccess(_gamePhrase);
     }, [_gamePhrase, onPhraseSuccess]);
 
     const stopTimer = useCallback(() => {
         safeTimerCaller('stop');
-    }, []);
+    }, [safeTimerCaller]);
 
     const startOrContinueTimer = useCallback(() => {
         safeTimerCaller('start');
-    }, []);
+    }, [safeTimerCaller]);
 
     const resetTimer = useCallback(() => {
         safeTimerCaller('reset');
-    }, []);
+    }, [safeTimerCaller]);
 
     const cancelTimer = useCallback(() => {
         safeTimerCaller('reset');
-        if (nextCharsRef.current) nextCharsRef.current.innerText = _phrase.value.join('');
-    }, [_phrase.value]);
+        if (nextCharsRef.current !== null && nextCharsRef.current !== undefined) {
+            nextCharsRef.current.innerText = _phrase.value.join('');
+        }
+    }, [_phrase.value, safeTimerCaller]);
 
     const handleCommandLineChange = useCallback((stringBeingTested: string) => {
         startOrContinueTimer();
@@ -127,7 +136,7 @@ const NextCharsDisplay = forwardRef<NextCharsDisplayHandle, INextCharsDisplayPro
 
         const nextChordHTML = _phrase.chordsHTML[nextIndex];
 
-        if (nextChordHTML) {
+        if (nextChordHTML !== null && nextChordHTML !== undefined) {
             nextChordHTML.classList.remove("error");
         }
 
@@ -176,10 +185,10 @@ const NextCharsDisplay = forwardRef<NextCharsDisplayHandle, INextCharsDisplayPro
     // Optimize useEffect to only run when content key changes
     useEffect(() => {
         const { activityKey, contentKey } = currentLocation;
-        if (!activityKey || !contentKey) return;
+        if (activityKey === null || activityKey === undefined ||isNullOrEmptyString(contentKey)) return;
 
         const foundPhrase = GamePhrases.default.getGamePhraseByKey(contentKey);
-        if (!foundPhrase) return;
+        if (foundPhrase === null || foundPhrase === undefined) return;
 
         // Prevent unnecessary state updates
         setGamePhrase(prevPhrase =>
@@ -196,12 +205,12 @@ const NextCharsDisplay = forwardRef<NextCharsDisplayHandle, INextCharsDisplayPro
     });
 
     return (
-        (currentLocation.contentKey &&
+        (currentLocation !== null && currentLocation !== undefined && !isNullOrEmptyString(currentLocation.contentKey) &&
             <div
                 id={TerminalCssClasses.NextChars}
                 hidden={!isInPhraseMode}
             >
-                {_mismatchedChar && _mismatchedIsVisible && (
+                {_mismatchedChar !== null && _mismatchedChar !== '' && _mismatchedIsVisible && (
                     <ErrorDisplay
                         isVisible={_mismatchedIsVisible}
                         mismatchedChar={_mismatchedChar ?? ''}

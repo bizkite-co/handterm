@@ -18,7 +18,7 @@ import { navigate, parseLocation } from '../utils/navigationUtils';
 import WebCam from '../utils/WebCam';
 
 import { Chord } from './Chord';
-import MonacoEditor from './MonacoEditor';
+import { MonacoEditor } from './MonacoEditor';
 import NextCharsDisplay, { type NextCharsDisplayHandle } from './NextCharsDisplay';
 import { Prompt } from './Prompt';
 import { TutorialManager } from './TutorialManager';
@@ -92,8 +92,12 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
       timer();
     }
     const game = gameHandleRef.current;
-    if (game !== null) {
+    if (isGameHandle(game)) {
       game.completeGame();
+    }
+
+    function isGameHandle(game: IGameHandle | null): game is IGameHandle {
+      return game !== null;
     }
     resetPrompt();
   }, [nextCharsDisplayRef, gameHandleRef, resetPrompt]);
@@ -116,9 +120,13 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
     }
 
     const game = gameHandleRef.current;
-    if (game !== null) {
+    if (isGameHandle(game)) {
       game.completeGame();
       game.levelUp();
+    }
+
+    function isGameHandle(game: IGameHandle | null): game is IGameHandle {
+      return game !== null;
     }
     handlePhraseComplete();
   }, [wpmCalculator, activityMediator, handlePhraseComplete, gameHandleRef, targetWPM]);
@@ -153,7 +161,7 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
     if (currentActivity === ActivityType.NORMAL) {
       logger.info('Resetting terminal in NORMAL mode');
       const term = xtermRef.current;
-      if (term !== null) {
+      if (term !== null && typeof term.focus === 'function') {
         term.focus();
       }
       resetPrompt();
