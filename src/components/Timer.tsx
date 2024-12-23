@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useImperativeHandle, forwardRef, ForwardRefRenderFunction } from 'react';
+import React, { useState, useEffect, useImperativeHandle, forwardRef, type ForwardRefRenderFunction } from 'react';
 
 export interface TimerProps {}
 

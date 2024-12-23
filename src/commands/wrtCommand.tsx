@@ -1,8 +1,9 @@
-import React from 'react';
+import type React from 'react';
 
-import { ICommand, ICommandResponse, ICommandContext } from '../contexts/CommandContext';
-import { IAuthProps } from '../hooks/useAuth';
-import { ActivityType, OutputElement, ParsedCommand } from '../types/Types';
+import { type ICommand, type ICommandResponse, type ICommandContext } from '../contexts/CommandContext';
+import { type IAuthProps } from '../hooks/useAuth';
+import { ActivityType, type OutputElement, type ParsedCommand } from '../types/Types';
+import { isNotNullOrUndefined } from '../utils/typeSafetyUtils';
 
 // Extend the command context with optional methods
 interface ExtendedCommandContext extends ICommandContext {
@@ -48,7 +49,7 @@ export const wrtCommand: ICommand = {
     });
 
     try {
-      if (switches['file']) {
+      if (isNotNullOrUndefined(switches['file'])) {
         const fileName = getFileName('file');
         if (fileName && context.auth.getFile) {
           try {

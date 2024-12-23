@@ -5,7 +5,7 @@ const logger = createLogger({
   level: LogLevel.DEBUG
 });
 
-function openDatabase() {
+function openDatabase(): IDBOpenDBRequest {
   const request = indexedDB.open('HandTermDatabase', 1);
 
   request.onupgradeneeded = function() {
@@ -29,8 +29,8 @@ function openDatabase() {
   const openDb = request;
   openDb.onerror = function(event: Event) {
     const target = event.target as IDBOpenDBRequest | null;
-    if (target && 'error' in target) {
-      logger.error('IndexedDB error:', (target as IDBOpenDBRequest).error);
+    if (target !== null && 'error' in target) {
+      logger.error('IndexedDB error:', (target).error);
     } else {
       logger.error('Unknown IndexedDB error occurred');
     }

@@ -1,6 +1,7 @@
-import { ICommand, ICommandContext, ICommandResponse } from '../contexts/CommandContext';
+import { isNullOrEmptyString } from '../utils/typeSafetyUtils';
+import { type ICommand, type ICommandContext, type ICommandResponse } from '../contexts/CommandContext';
 import { LogKeys } from '../types/TerminalTypes';
-import { ParsedCommand , OutputElement } from '../types/Types';
+import { type ParsedCommand , type OutputElement } from '../types/Types';
 
 interface HandTermProps {
     auth: {
@@ -27,7 +28,7 @@ export const archiveCommand: ICommand = {
             if (index >= localStorage.length) return { status: 200, message: 'Command history archived.' }; // Stop if we've processed all items
 
             const key = localStorage.key(index);
-            if (!key) {
+            if (isNullOrEmptyString(key)) {
                 await archiveNext(index + 1); // Skip and move to the next item
                 return {
                     status: 500,
@@ -41,11 +42,16 @@ export const archiveCommand: ICommand = {
                 } else {
                     const logKey = key.substring(0, key.indexOf('_'));
                     const content = localStorage.getItem(key);
-                    if (content) {
+                    if (content !== null && content !== '') {
                         try {
-                            const _handTerm: HandTermCurrent = window._handTerm || { current: null };
+                            const _handTerm: HandTermCurrent = window._handTerm ?? { current: null };
 
-                            if (!_handTerm.current?.props.auth) {
+                            if (
+                                _handTerm.current === null
+                                || _handTerm.current === undefined
+                                || _handTerm.current.props === null
+                                || _handTerm.current.props.auth === null
+                            ) {
                                 const outputElement: OutputElement = {
                                     command: parsedCommand,
                                     response: 'Authentication not available.',
@@ -97,9 +103,21 @@ export const archiveCommand: ICommand = {
             // Use setTimeout to avoid blocking the main thread
             // and process the next item in the next event loop tick
             return new Promise((resolve) => {
-                setTimeout(async () => {
-                    const result = await archiveNext(index + 1);
-                    resolve(result);
+                setTimeout(() => {
+                    archiveNext(index + 1).then(resolve).catch((error: unknown) => {
+                        const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+                        const outputElement: OutputElement = {
+                            command: parsedCommand,
+                            response: `Archive error: ${errorMessage}`,
+                            status: 500,
+                            commandTime: new Date()
+                        };
+                        context.appendToOutput(outputElement);
+                        resolve({
+                            status: 500,
+                            message: `Archive error: ${errorMessage}`
+                        });
+                    });
                 }, 300);
             });
         };
