@@ -1,17 +1,26 @@
-import { useComputed, useSignalEffect } from "@preact/signals-react";
-import React, { useState, useRef, useImperativeHandle, useCallback, useEffect, useMemo } from 'react';
+import { useComputed, useSignalEffect } from '@preact/signals-react';
+import {
+  useState,
+  useRef,
+  useImperativeHandle,
+  useCallback,
+  useEffect,
+  useMemo,
+  forwardRef,
+} from 'react';
 
-import { commandLineSignal } from "src/signals/commandLineSignals";
-import { setCompletedGamePhrase } from "src/signals/gameSignals";
-import { GamePhrase } from "src/types/Types";
-import * as GamePhrases from "src/utils/GamePhrases";
-import { parseLocation } from "src/utils/navigationUtils";
+import { commandLineSignal } from 'src/signals/commandLineSignals';
+import { setCompletedGamePhrase } from 'src/signals/gameSignals';
+import { type GamePhrase } from 'src/types/Types';
+import * as GamePhrases from 'src/utils/GamePhrases';
+import { parseLocation } from 'src/utils/navigationUtils';
 
-import { TerminalCssClasses } from "../types/TerminalTypes";
-import { Phrase } from "../utils/Phrase";
+import { TerminalCssClasses } from '../types/TerminalTypes';
+import { Phrase } from '../utils/Phrase';
 
-import ErrorDisplay from "./ErrorDisplay";
-import Timer, { TimerHandle } from './Timer';
+import ErrorDisplay from './ErrorDisplay';
+import Timer, { type TimerHandle } from './Timer';
+import { createSafeCaller, isNullOrEmptyString } from 'src/utils/typeSafetyUtils';
 
 export interface INextCharsDisplayProps {
     isInPhraseMode: boolean;
@@ -24,7 +33,7 @@ export interface NextCharsDisplayHandle {
     cancelTimer: () => void;
 }
 
-const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, INextCharsDisplayProps>(({
+const NextCharsDisplay = forwardRef<NextCharsDisplayHandle, INextCharsDisplayProps>(({
     isInPhraseMode,
     onPhraseSuccess,
     onError
@@ -38,6 +47,9 @@ const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, INextCharsDisp
     const nextCharsRef = useRef<HTMLPreElement>(null);
     const nextCharsRateRef = useRef<HTMLDivElement>(null);
     const timerRef = useRef<TimerHandle>(null);
+
+    // Create a specialized caller for timerRef
+    const safeTimerCaller = createSafeCaller(timerRef);
     const wpmRef = useRef<HTMLSpanElement>(null);
     const commandLine = useComputed(() => commandLineSignal.value);
 
@@ -45,11 +57,11 @@ const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, INextCharsDisp
     const currentLocation = useMemo(() => parseLocation(), []);
 
     const getFirstNonMatchingChar = useCallback((stringBeingTested: string): number => {
-        if (!_phrase.value) return 0;
+        if (isNullOrEmptyString(_phrase.value)) return 0;
         const sourcePhrase = _phrase.value;
         const sourcePhraseString = sourcePhrase.join('');
         if (stringBeingTested === sourcePhraseString) return sourcePhraseString.length;
-        if (!stringBeingTested || stringBeingTested.length === 0) {
+        if (isNullOrEmptyString(stringBeingTested)) {
             return 0;
         }
         let result = 0;
@@ -89,27 +101,19 @@ const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, INextCharsDisp
     }, [_gamePhrase, onPhraseSuccess]);
 
     const stopTimer = useCallback(() => {
-        if (timerRef.current) {
-            timerRef.current.stop();
-        }
+        safeTimerCaller('stop');
     }, []);
 
     const startOrContinueTimer = useCallback(() => {
-        if (timerRef.current) {
-            timerRef.current.start();
-        }
+        safeTimerCaller('start');
     }, []);
 
     const resetTimer = useCallback(() => {
-        if (timerRef.current) {
-            timerRef.current.reset();
-        }
+        safeTimerCaller('reset');
     }, []);
 
     const cancelTimer = useCallback(() => {
-        if (timerRef.current) {
-            timerRef.current.reset();
-        }
+        safeTimerCaller('reset');
         if (nextCharsRef.current) nextCharsRef.current.innerText = _phrase.value.join('');
     }, [_phrase.value]);
 
@@ -121,7 +125,7 @@ const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, INextCharsDisp
             return null;
         }
 
-        const nextChordHTML = _phrase.chordsHTML[nextIndex] as HTMLElement | undefined;
+        const nextChordHTML = _phrase.chordsHTML[nextIndex];
 
         if (nextChordHTML) {
             nextChordHTML.classList.remove("error");
@@ -138,8 +142,8 @@ const NextCharsDisplay = React.forwardRef<NextCharsDisplayHandle, INextCharsDisp
             const firstNonMatchingChar = getFirstNonMatchingChar(stringBeingTested);
             const mismatchedChar = _phrase.value[firstNonMatchingChar];
             setMismatchedIsVisible(true);
-            setMismatchedChar(mismatchedChar);
-            showError(mismatchedChar, firstNonMatchingChar);
+            setMismatchedChar(mismatchedChar ?? null); // Provide default value of null
+            showError(mismatchedChar ?? '', firstNonMatchingChar); // Provide default value of empty string
         }
 
         if (stringBeingTested.trim() === _phrase.value.join('').trim()) {

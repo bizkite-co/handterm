@@ -34,6 +34,7 @@ export function App(): JSX.Element {
     return () => window.removeEventListener('resize', handleResize);
   }, [getContainerWidth]);
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleOutputUpdate = () => {
     // Placeholder for future implementation
   };
@@ -73,7 +74,7 @@ export function App(): JSX.Element {
       document.body.removeEventListener('click', handleClickOutsideTerminal);
       document.body.removeEventListener('touchstart', handleClickOutsideTerminal);
     };
-  }, [getContainerWidth, handexTermWrapperRef]);
+  }, [getContainerWidth]);
 
   return (
     <ActivityMediatorProvider>

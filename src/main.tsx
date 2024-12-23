@@ -10,7 +10,6 @@ import { createLogger, LogLevel } from './utils/Logger';
 
 window.Buffer = Buffer;
 
-
 // Define 'global' if it's undefined (for browser environments)
 if (typeof global === 'undefined') {
   window.global = window;
@@ -24,11 +23,10 @@ const logger = createLogger({
 // Expose signals for e2e testing in development/test environments
 if (import.meta.env.DEV !== undefined || import.meta.env.TEST !== undefined) {
   exposeSignals();
-  logger.error('Failed to load react-dom/client:');
 
   try {
     void (async () => {
-      const ReactDOM = await import('react-dom/client').catch(err => {
+      const ReactDOM = await import('react-dom/client').catch((err: unknown) => {
         logger.error('Failed to load react-dom/client:', err);
         throw err; // Re-throw the error to be caught by the outer catch block
       });
@@ -71,7 +69,7 @@ if (import.meta.env.DEV !== undefined || import.meta.env.TEST !== undefined) {
           </StrictMode>
         );
     })();
-  } catch (err) {
-    logger.error('Error during initialization:', err);
+  } catch (error) {
+    logger.error('Error during initialization:', error);
   }
 }
