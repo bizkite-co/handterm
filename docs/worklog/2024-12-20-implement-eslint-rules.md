@@ -8,7 +8,16 @@ date: 2024-12-20
 
 The following files have linting issues that need to be fixed according to the documented ESLint rules. You can find the rules in the `docs/linting` directory.
 
+Read the `./eslint-files.json` list of errors.
+
+Use `src/utils/typeSafetyUtils.ts` for type safety errors. Add new general use functions to apply type safety, when appropriate.
+
 **NOTE:** Checkbox completions are per-line, not per-group.
+
+After fixin the errors in a file:
+
+1. Mark it complete in this list.
+2. Add the file to staged changes in Git.
 
 ### Configuration Files
 
@@ -27,28 +36,26 @@ The following files have linting issues that need to be fixed according to the d
 
 - [x] `src/components/HandTermWrapper.tsx` (46 errors, 2 warnings)
 - [x] `src/components/MonacoEditor.tsx` (15 errors)
-- [ ] `src/components/NextCharsDisplay.tsx` (35 errors, 1 warning)
-    - [ ] Read `docs/linting/refactoring/NextCharsDisplay.md` before refactoring.
-    - [ ] Update `docs/linting/refactoring/NextCharsDisplay.md` after refactoring.
-- [ ] `src/components/CommandOutput.tsx` (8 errors, 1 warning)
-- [ ] `src/components/Timer.tsx` (9 errors)
-- [ ] `src/components/TutorialManager.tsx` (7 errors)
-- [ ] `src/components/WpmTable.tsx` (6 errors)
+- [x] `src/components/NextCharsDisplay.tsx` (35 errors, 1 warning)
+- [x] `src/components/CommandOutput.tsx` (0 errors, 3 warnings)
+- [x] `src/components/Timer.tsx` (0 errors, 2 warnings)
+- [x] `src/components/TutorialManager.tsx` (0 errors, 3 warnings)
+- [x] `src/components/WpmTable.tsx` (0 errors, 1 warning)
 
 ### Commands
 
-- [ ] `src/commands/GitHubCommand.ts` (18 errors)
-- [ ] `src/commands/wrtCommand.tsx` (18 errors)
-- [ ] `src/commands/cleanCommand.ts` (16 errors)
+- [x] `src/commands/GitHubCommand.ts` (0 errors, 14 warnings)
+- [x] `src/commands/wrtCommand.tsx` (0 errors, 13 warnings)
+- [x] `src/commands/cleanCommand.ts` (16 errors)
 ### Game
 - [x] src/game/Game.tsx (32 errors, 1 warning)
-- [ ] src/game/types/ActionTypes.ts (25 errors)
-- [ ] src/game/useBaseCharacter.tsx (14 errors)
-- [ ] src/game/sprites/Sprite.tsx (12 errors)
+- [x] src/game/types/ActionTypes.ts (25 errors)
+- [x] src/game/useBaseCharacter.tsx (14 errors)
+- [x] src/game/sprites/Sprite.tsx (12 errors)
 
 ### Hooks
-- [ ] src/hooks/useActivityMediator.ts (27 errors)
-- [ ] src/hooks/useAuth.ts (25 errors)
+- [x] src/hooks/useActivityMediator.ts (27 errors)
+- [x] src/hooks/useAuth.ts (25 errors)
 - [ ] src/hooks/useTerminal.ts (25 errors, 1 warning)
 - [ ] src/hooks/useAPI.ts (20 errors)
 - [ ] src/hooks/useCommand.ts (14 errors)

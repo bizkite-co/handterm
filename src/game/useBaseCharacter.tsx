@@ -1,12 +1,12 @@
 // useBaseCharacter.tsx
 
-import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
+import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 
-import { Sprite } from './sprites/Sprite';
+import { type Sprite } from './sprites/Sprite';
 import { SpriteManager } from './sprites/SpriteManager';
-import { Action, ActionType } from './types/ActionTypes';
-import { SpritePosition } from './types/Position';
-import { SpriteAnimation } from './types/SpriteTypes';
+import { type Action, type ActionType } from './types/ActionTypes';
+import { type SpritePosition } from './types/Position';
+import { type SpriteAnimation } from './types/SpriteTypes';
 
 interface BaseCharacterProps {
   currentActionType: ActionType;
@@ -17,7 +17,7 @@ interface BaseCharacterProps {
   positionRef: React.RefObject<SpritePosition>;
 }
 
-export const useBaseCharacter = (props: BaseCharacterProps) => {
+export const useBaseCharacter = (props: BaseCharacterProps): { draw: (context: CanvasRenderingContext2D, positionRef: React.RefObject<SpritePosition>, scale: number | null) => number; setCurrentActionType: (newActionType: ActionType) => void } => {
   const [, setSprite] = useState<Sprite | null>(null);
   const spriteManager = useMemo(() => new SpriteManager(), []);
   const frameIndexRef = useRef<number>(0);
@@ -55,7 +55,7 @@ export const useBaseCharacter = (props: BaseCharacterProps) => {
       setSprite(sprite);
     } else {
       // Try to load the sprite if it's missing
-      loadSprite(newActionType, actions[newActionType].animation);
+      loadSprite(newActionType, actions[newActionType].animation).catch(console.error);
     }
   }, [actions, loadSprite]);
 
@@ -86,7 +86,7 @@ export const useBaseCharacter = (props: BaseCharacterProps) => {
   // Load all sprites on mount
   useEffect(() => {
     Object.entries(actions).forEach(([actionKey, actionData]) => {
-      loadSprite(actionKey as ActionType, actionData.animation);
+      loadSprite(actionKey as ActionType, actionData.animation).catch(console.error);
     });
 
     return () => {
@@ -110,7 +110,7 @@ export const useBaseCharacter = (props: BaseCharacterProps) => {
   useEffect(() => {
     const currentSprite = spritesRef.current[currentActionRef.current];
     if (!currentSprite) {
-      loadSprite(currentActionRef.current, actions[currentActionRef.current].animation);
+      loadSprite(currentActionRef.current, actions[currentActionRef.current].animation).catch(console.error);
     }
   }, [actions, loadSprite]);
 

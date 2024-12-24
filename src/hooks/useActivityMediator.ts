@@ -15,8 +15,8 @@ import {
 import { createLogger } from 'src/utils/Logger';
 import { navigate, parseLocation } from 'src/utils/navigationUtils';
 
-import { ActionType } from '../game/types/ActionTypes';
-import { ActivityType, ParsedCommand, GamePhrase, Tutorial } from '../types/Types';
+import { type ActionType } from '../game/types/ActionTypes';
+import { ActivityType, type ParsedCommand, type GamePhrase, type Tutorial } from '../types/Types';
 import GamePhrases from '../utils/GamePhrases';
 
 import { useTutorial } from './useTutorials';
@@ -24,7 +24,19 @@ import { useTutorial } from './useTutorials';
 
 const logger = createLogger({ prefix: 'ActivityMediator' });
 
-export function useActivityMediator() {
+export function useActivityMediator(): {
+    isInGameMode: boolean;
+    isInTutorial: boolean;
+    isInEdit: boolean;
+    isInNormal: boolean;
+    checkTutorialProgress: (command: string | null) => void;
+    heroAction: ActionType;
+    zombie4Action: ActionType;
+    handleCommandExecuted: (parsedCommand: ParsedCommand) => boolean;
+    setHeroAction: React.Dispatch<React.SetStateAction<ActionType>>;
+    setZombie4Action: React.Dispatch<React.SetStateAction<ActionType>>;
+    checkGameProgress: (successPhrase: GamePhrase) => void;
+} {
     const [heroAction, setHeroAction] = useState<ActionType>('Idle');
     const [zombie4Action, setZombie4Action] = useState<ActionType>('Walk');
     const {
@@ -170,7 +182,7 @@ export function useActivityMediator() {
             navigate({
                 activityKey: resultActivity,
                 contentKey: nextTutorial.phrase,
-                groupKey: nextTutorial.tutorialGroup
+                groupKey: nextTutorial.tutorialGroup ?? null
             })
             return;
         }
@@ -208,8 +220,8 @@ export function useActivityMediator() {
                 const nextTutorial = getNextTutorial();
                 navigate({
                     activityKey: ActivityType.TUTORIAL,
-                    contentKey: nextTutorial?.phrase,
-                    groupKey: nextTutorial?.tutorialGroup
+                    contentKey: nextTutorial?.phrase ?? null,
+                    groupKey: nextTutorial?.tutorialGroup ?? null
                 })
                 result = true;
                 break;

@@ -1,4 +1,4 @@
-import { FramePostion } from "../types/Position";
+import { type FramePostion } from "../types/Position";
 
 function assert(condition: boolean, message: string): asserts condition {
   if (!condition) {
@@ -11,7 +11,7 @@ export class Sprite {
     public frameCount: number;
     private frameWidth: number;
     private frameHeight: number;
-    private frameSequence?: FramePostion[];
+    private frameSequence: FramePostion[] | undefined;
 
     constructor(
         imagePath: string,
@@ -23,24 +23,24 @@ export class Sprite {
         this.image = new Image();
         this.image.onload = () => {
             assert(this.image.complete, 'Image failed to load: ' + imagePath);
-            if (!this.frameWidth) {
+            if (this.frameWidth == null) {
                 this.frameWidth = this.image.width / this.frameCount;
             }
-            if (!this.frameHeight) {
+            if (this.frameHeight == null) {
                 this.frameHeight = this.image.height;
             }
         };
         this.image.onerror = () => {
             // Log error without using console.error
             const errorMessage = 'Image failed to load: ' + imagePath;
-            if (typeof window !== 'undefined' && window.console && window.console.error) {
+            if (window != null && window.console.error != null) {
                 window.console.error(errorMessage);
             }
         }
         this.image.src = imagePath;
         this.frameCount = frameCount;
-        this.frameWidth = frameWidth || 0; // Set when the image loads if not provided
-        this.frameHeight = frameHeight || 0; // Set when the image loads if not provided
+        this.frameWidth = frameWidth ?? 0; // Set when the image loads if not provided
+        this.frameHeight = frameHeight ?? 0; // Set when the image loads if not provided
         this.frameSequence = frameSequence;
     }
 
@@ -61,12 +61,12 @@ export class Sprite {
         leftX: number,
         topY: number,
         scale: number = 1.5
-    ) => {
+    ): void => {
         let frameLeftX = 0, frameTopY = 0;
-        if (this.frameSequence) {
+        if (this.frameSequence != null) {
             // Use the frame sequence if provided
             const frameCoords = this.frameSequence[frameIndex];
-            if(frameCoords){
+            if(frameCoords != null){
                 frameLeftX = frameCoords.leftX;
                 frameTopY = frameCoords.topY;
             } else {

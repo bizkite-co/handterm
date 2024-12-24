@@ -15,6 +15,7 @@ import {
   isLoggedInSignal
 } from '../signals/appSignals';
 import { type MyResponse } from '../types/Types';
+import { isNullOrEmptyString } from '../utils/typeSafetyUtils';
 
 const logger = createLogger({
   prefix: 'Auth',
@@ -68,7 +69,7 @@ export function useAuth(): IAuthProps {
         { refreshToken }
       );
 
-      if (response.data && typeof response.data === 'object' && 'accessToken' in response.data) {
+      if (response.data != null && typeof response.data === 'object' && 'accessToken' in response.data) {
         return {
           status: 200,
           data: response.data as AuthResponse,
@@ -80,12 +81,12 @@ export function useAuth(): IAuthProps {
       }
     },
     onSuccess: (data) => {
-      if (data.data) {
+      if (data.data != null && typeof data.data === 'object' && 'accessToken' in data.data) {
         setExpiresAtLocalStorage(data.data.expiresIn);
         setIsLoggedIn(true);
         isLoggedInSignal.value = true;
         localStorage.setItem('accessToken', data.data.accessToken);
-        queryClient.invalidateQueries({ queryKey: ['auth', 'session'] });
+        void queryClient.invalidateQueries({ queryKey: ['auth', 'session'] });
       }
     },
     retry: 3,
@@ -103,7 +104,7 @@ export function useAuth(): IAuthProps {
       const githubUsername = localStorage.getItem('githubUsername');
 
       // Exit early if any of these are missing
-      if (!accessToken || !refreshToken || !expiresAt || !expiresIn) {
+      if (accessToken == null || refreshToken == null || expiresAt == null || expiresIn == null) {
         setIsLoggedIn(false);
         isLoggedInSignal.value = false;
         return {
@@ -114,12 +115,12 @@ export function useAuth(): IAuthProps {
       }
 
       // Check if token is expired or will expire soon (within 5 minutes)
-      const isExpiringSoon = expiresAt ? parseInt(expiresAt) - Date.now() < 5 * 60 * 1000 : false;
+      const isExpiringSoon = expiresAt != null ? parseInt(expiresAt) - Date.now() < 5 * 60 * 1000 : false;
 
       if (isExpiringSoon) {
         // Attempt to refresh the token
         const response = await refreshMutation.mutateAsync();
-        if (response.data?.accessToken) {
+        if (response.data?.accessToken != null && typeof response.data.accessToken === 'string') {
           // Token refresh successful
           setIsLoggedIn(true);
           return {
@@ -136,7 +137,7 @@ export function useAuth(): IAuthProps {
             error: []
           };
         }
-      } else if (expiresAt && parseInt(expiresAt) > Date.now()) {
+      } else if (expiresAt != null && parseInt(expiresAt) > Date.now()) {
         // Token is still valid
         setIsLoggedIn(true);
         return {
@@ -145,9 +146,9 @@ export function useAuth(): IAuthProps {
             accessToken: accessToken,
             expiresAt: expiresAt,
             expiresIn: expiresIn,
-            idToken: idToken || '',
+            idToken: idToken ?? '',
             refreshToken: refreshToken,
-            githubUsername: githubUsername || ''
+            githubUsername: githubUsername ?? ''
           },
           message: "Token refreshed",
           error: []
@@ -184,7 +185,7 @@ export function useAuth(): IAuthProps {
     queryFn: async (): Promise<MyResponse<AuthResponse>> => {
       try {
         const isValid = await validateAndRefreshToken();
-        if (!isValid) {
+        if (isValid != null) {
           throw new Error('Token validation failed');
         }
 
@@ -198,7 +199,7 @@ export function useAuth(): IAuthProps {
         };
 
         const response = await axios.get(`${API_URL}${endpoints.api.GetUser}`, config);
-        if (response.data && typeof response.data === 'object' && 'accessToken' in response.data) {
+        if (response.data != null && typeof response.data === 'object' && 'accessToken' in response.data) {
           return {
             status: 200,
             data: response.data as AuthResponse,
@@ -243,7 +244,7 @@ export function useAuth(): IAuthProps {
         `${API_URL}${endpoints.api.SignIn}`,
         credentials
       );
-      if (response.data && typeof response.data === 'object' && 'accessToken' in response.data) {
+      if (response.data != null && typeof response.data === 'object' && 'accessToken' in response.data) {
         return {
           status: 200,
           data: response.data as AuthResponse,
@@ -255,7 +256,7 @@ export function useAuth(): IAuthProps {
       }
     },
     onSuccess: (data) => {
-      if (data.data && data.data.expiresIn && typeof data.data.expiresIn === 'string') {
+      if (data.data?.expiresIn != null && typeof data.data.expiresIn === 'string') {
         setExpiresAtLocalStorage(data.data.expiresIn);
         setIsLoggedIn(true);
         isLoggedInSignal.value = true;
@@ -268,19 +269,21 @@ export function useAuth(): IAuthProps {
         }
         setIsLoggedIn(true);
         setIsInLoginProcess(false);
-        queryClient.invalidateQueries({ queryKey: ['auth', 'session'] });
+        void queryClient.invalidateQueries({ queryKey: ['auth', 'session'] });
       }
     },
     onError: () => {
       setIsLoggedIn(false);
       setIsInLoginProcess(false);
-    }
+    },
+    onSettled: () => setIsInLoginProcess(false),
+
   });
 
   const setExpiresAtLocalStorage = (expiresIn: string) => {
     const expiresAt = Date.now() + parseInt(expiresIn) * 1000;
-    if (expiresIn && expiresIn !== "") localStorage.setItem('expiresIn', expiresIn);
-    if (expiresAt && !Number.isNaN(expiresAt)) {
+    if (!isNullOrEmptyString(expiresIn)) localStorage.setItem('expiresIn', expiresIn);
+    if (expiresAt != null && !Number.isNaN(expiresAt)) {
       localStorage.setItem('expiresAt', expiresAt.toString());
     }
   }
@@ -292,7 +295,7 @@ export function useAuth(): IAuthProps {
         `${API_URL}${endpoints.api.SignUp}`,
         credentials
       );
-      if (response.data && typeof response.data === 'object') {
+      if (response.data != null && typeof response.data === 'object') {
         return {
           status: 200,
           data: response.data,
@@ -304,11 +307,11 @@ export function useAuth(): IAuthProps {
       }
     },
     onSuccess: () => {
-      setIsInLoginProcess(false);
+      void setIsInLoginProcess(false);
     },
     onError: () => {
-      setIsInLoginProcess(false);
-    }
+      void setIsInLoginProcess(false);
+    },
   });
 
   // Verify email mutation
@@ -318,12 +321,14 @@ export function useAuth(): IAuthProps {
         `${API_URL}${endpoints.api.ConfirmSignUp}`,
         { username, code }
       );
-      if(response.data && typeof response.data === 'object') {
+      if (response.data != null && typeof response.data === 'object') {
         return response.data as unknown;
       } else {
         throw new Error('Invalid verify response');
       }
-    }
+    },
+    onSuccess: () => void setIsInLoginProcess(false),
+    onError: () => void setIsInLoginProcess(false),
   });
 
   // Add a side effect to synchronize login state and validate token
@@ -341,7 +346,7 @@ export function useAuth(): IAuthProps {
 
     // Sync on initial load and when storage changes
     void syncLoginState();
-    const onStorageChange = (): void => {void syncLoginState()};
+    const onStorageChange = (): void => { void syncLoginState() };
     window.addEventListener('storage', onStorageChange);
 
     return () => {
@@ -349,37 +354,35 @@ export function useAuth(): IAuthProps {
     };
   }, [validateAndRefreshToken]);
 
-  if (session && typeof session === 'object' && session.data !== undefined && session.data !== null) {
+  const isLoading = loginMutation.isPending || signupMutation.isPending || verifyMutation.isPending;
+  const isError = loginMutation.isError || signupMutation.isError || verifyMutation.isError;
+  const error = loginMutation.error ?? signupMutation.error ?? verifyMutation.error;
+
+  if (session?.data != null && typeof session.data === 'object' && 'accessToken' in session.data) {
     return {
       isLoggedIn: true,
       isPending,
-      login: async (username: string, password: string) =>
-        await loginMutation.mutateAsync({ username, password }),
-      signup: async (credentials: SignUpCredentials) =>
-        await signupMutation.mutateAsync(credentials),
-      verify: async (username: string, code: string) =>
-        await verifyMutation.mutateAsync({ username, code }),
+      login: async (username: string, password: string) => await loginMutation.mutateAsync({ username, password }),
+      signup: async (credentials: SignUpCredentials) => await signupMutation.mutateAsync(credentials),
+      verify: async (username: string, code: string) => await verifyMutation.mutateAsync({ username, code }),
       refreshToken: async () => await refreshMutation.mutateAsync(),
       validateAndRefreshToken,
-      isLoading: loginMutation.isPending || signupMutation.isPending,
-      isError: loginMutation.isError || signupMutation.isError,
-      error: loginMutation.error || signupMutation.error,
+      isLoading,
+      isError,
+      error,
     }
   } else {
     return {
       isLoggedIn: false,
       isPending,
-      login: async (username: string, password: string) =>
-        await loginMutation.mutateAsync({ username, password }),
-      signup: async (credentials: SignUpCredentials) =>
-        await signupMutation.mutateAsync(credentials),
-      verify: async (username: string, code: string) =>
-        await verifyMutation.mutateAsync({ username, code }),
+      login: async (username: string, password: string) => await loginMutation.mutateAsync({ username, password }),
+      signup: async (credentials: SignUpCredentials) => await signupMutation.mutateAsync(credentials),
+      verify: async (username: string, code: string) => await verifyMutation.mutateAsync({ username, code }),
       refreshToken: async () => await refreshMutation.mutateAsync(),
       validateAndRefreshToken,
-      isLoading: loginMutation.isPending || signupMutation.isPending,
-      isError: loginMutation.isError || signupMutation.isError,
-      error: loginMutation.error || signupMutation.error,
+      isLoading,
+      isError,
+      error,
     };
   }
 }
