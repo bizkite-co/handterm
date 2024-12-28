@@ -1,15 +1,16 @@
 // src/hooks/useCommand.ts
 import { useComputed } from '@preact/signals-react';
-import React, { useContext, useState, useCallback, useEffect } from 'react';
+import type React from 'react';
+import { useContext, useState, useCallback, useEffect } from 'react';
 
 import { activitySignal, appendToOutput } from 'src/signals/appSignals';
 import { setCommandTime } from 'src/signals/commandLineSignals';
 import { createLogger } from 'src/utils/Logger';
 
 import { commandRegistry } from '../commands/commandRegistry';
-import { CommandContext, ICommandResponse } from '../contexts/CommandContext';
+import { CommandContext, type ICommandResponse } from '../contexts/CommandContext';
 import { LogKeys } from '../types/TerminalTypes';
-import { ActivityType, OutputElement, ParsedCommand } from '../types/Types';
+import { ActivityType, type OutputElement, type ParsedCommand } from '../types/Types';
 import { parsedCommandToString, loadCommandHistory, saveCommandHistory } from '../utils/commandUtils';
 
 import { useActivityMediator } from './useActivityMediator';
@@ -18,7 +19,20 @@ import { useWPMCalculator } from './useWPMCaculator';
 
 const logger = createLogger({ prefix: 'useCommand' });
 
-export const useCommand = () => {
+export const useCommand = (): {
+  output: OutputElement[];
+  resetOutput: () => void;
+  commandHistory: string[];
+  addToCommandHistory: (command: ParsedCommand | string) => void;
+  getCommandResponseHistory: () => string[];
+  handleCommand: (parsedCommand: ParsedCommand) => Promise<void>;
+  commandHistoryIndex: number;
+  setCommandHistoryIndex: React.Dispatch<React.SetStateAction<number>>;
+  commandHistoryFilter: string | null;
+  setCommandHistoryFilter: React.Dispatch<React.SetStateAction<string | null>>;
+  appendToOutput: (outputElement: OutputElement) => void;
+  executeCommand: (parsedCommand: ParsedCommand) => Promise<void>;
+} => {
     const [output, setOutput] = useState<OutputElement[]>([]);
     const [commandHistory, setCommandHistory] = useState<string[]>([]);
     const [commandHistoryIndex, setCommandHistoryIndex] = useState(-1);
@@ -44,12 +58,12 @@ export const useCommand = () => {
         }
     }, []);
 
-    const resetOutput = useCallback(() => {
+    const resetOutput = useCallback((): void => {
         logger.debug('Resetting output');
         setOutput([]);
     }, []);
 
-    const addToCommandHistory = useCallback((command: ParsedCommand | string) => {
+    const addToCommandHistory = useCallback((command: ParsedCommand | string): void => {
         const commandString = typeof command === 'string'
             ? command
             : parsedCommandToString(command);
@@ -91,7 +105,7 @@ export const useCommand = () => {
         response: React.ReactNode,
         status: number,
         commandTime: Date,
-        sensitive?: boolean
+        sensitive: boolean
     ): OutputElement => {
         const wpms = wpmCalculator.getWPMs();
         logger.debug('Creating command record:', { command, response, status });
@@ -102,7 +116,7 @@ export const useCommand = () => {
             wpmAverage: wpms.wpmAverage,
             characterAverages: wpms.charWpms,
             commandTime,
-            sensitive
+            sensitive: sensitive || false
         };
     }, [wpmCalculator]);
 
@@ -117,7 +131,7 @@ export const useCommand = () => {
             response.message,
             response.status,
             commandTime,
-            response.sensitive
+            response.sensitive || false
         );
         appendToOutput(outputElement);
         addToCommandHistory(command);

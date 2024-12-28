@@ -1,5 +1,5 @@
-import { render, RenderOptions } from '@testing-library/react';
-import { ReactElement } from 'react';
+import { render, type RenderOptions } from '@testing-library/react';
+import { type ReactElement } from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import { vi } from 'vitest';
 
@@ -10,27 +10,39 @@ import { QueryProvider } from '../providers/QueryProvider';
 
 const logger = createLogger({ prefix: 'test-utils' });
 
-const mockAuth = {
+import type { IAuthProps } from '../hooks/useAuth';
+import type { MyResponse } from '../types/Types';
+import type { IHandTermWrapperMethods } from '../components/HandTermWrapper';
+
+interface MockAuth extends IAuthProps {
+  isAuthenticated: boolean;
+  user: null;
+  error: null;
+}
+
+interface HandTermRef {
+  current: IHandTermWrapperMethods;
+}
+
+const mockAuth: MockAuth = {
   isAuthenticated: false,
   isLoading: false,
   user: null,
   error: null,
-  login: vi.fn(),
-  logout: vi.fn(),
-  signup: vi.fn(),
-  refreshToken: vi.fn(),
-  getAccessToken: vi.fn(),
-  verify: vi.fn(),
-  validateAndRefreshToken: vi.fn(),
+  login: vi.fn().mockResolvedValue({} as MyResponse<unknown>),
+  signup: vi.fn().mockResolvedValue({} as MyResponse<unknown>),
+  refreshToken: vi.fn().mockResolvedValue({} as MyResponse<unknown>),
+  verify: vi.fn().mockResolvedValue({} as MyResponse<unknown>),
+  validateAndRefreshToken: vi.fn().mockResolvedValue({} as MyResponse<unknown>),
   isLoggedIn: false,
   isError: false,
   isPending: false
 };
 
-const AllTheProviders = ({ children }: { children: React.ReactNode }) => {
+const AllTheProviders = ({ children }: { children: React.ReactNode }): JSX.Element => {
   logger.debug('Setting up test providers');
 
-  const handTermRef = {
+  const handTermRef: HandTermRef = {
     current: {
       writeOutput: vi.fn((output: string) => {
         logger.debug('Mock writeOutput:', output);
@@ -64,13 +76,9 @@ const AllTheProviders = ({ children }: { children: React.ReactNode }) => {
 const customRender = (
   ui: ReactElement,
   options?: Omit<RenderOptions, 'wrapper'>,
-) => {
+): ReturnType<typeof render> => {
   logger.debug('Rendering component with test providers');
   return render(ui, { wrapper: AllTheProviders, ...options });
 };
 
-// re-export everything
-export * from '@testing-library/react';
-
-// override render method
 export { customRender as render };

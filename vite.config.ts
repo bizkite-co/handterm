@@ -46,9 +46,7 @@ export default defineConfig({
   resolve: {
     alias: {
       'src': path.resolve(__dirname, './src'),
-      // eslint-disable-next-line @typescript-eslint/naming-convention
       '@monaco-editor/react': path.resolve(__dirname, 'node_modules/@monaco-editor/react'),
-      // eslint-disable-next-line @typescript-eslint/naming-convention
       'monaco-editor': path.resolve(__dirname, 'node_modules/monaco-editor'),
     },
   },
@@ -75,7 +73,6 @@ export default defineConfig({
   },
   server: {
     headers: {
-      // eslint-disable-next-line @typescript-eslint/naming-convention
       'Cache-Control': 'public, max-age=31536000',
     },
     fs: {

@@ -9,16 +9,21 @@ import {
 import { createLogger } from 'src/utils/Logger';
 import { parseLocation } from 'src/utils/navigationUtils';
 
-import { Tutorial, Tutorials } from "../types/Types";
+import { type Tutorial, Tutorials } from "../types/Types";
 
 const logger = createLogger({ prefix: 'useTutorials' });
 
-export const useTutorial = () => {
+export const useTutorial = (): {
+    getTutorialByPhrasekey: (phraseKey: string) => Tutorial | undefined;
+    canUnlockTutorial: (command: string) => boolean;
+    getTutorialsInGroup: (groupName: string) => Tutorial[];
+    getIncompleteTutorialsInGroup: (groupName: string) => Tutorial[];
+} => {
     const [, setCurrentTutorial] = useState<Tutorial | null>(null);
     const completedTutorials = useComputed(() => completedTutorialsSignal.value);
 
     // Get all completed tutorials as an array if needed
-    const completedTutorialsArray = () => {
+    const completedTutorialsArray = (): string[] => {
         const completed = [...completedTutorialsSignal.value];
         logger.debug('Completed tutorials:', completed);
         return completed;
@@ -40,14 +45,14 @@ export const useTutorial = () => {
 
     const getTutorialByPhrasekey = (phraseKey: string) => {
         // Breakpoint 11: Getting tutorial by phrase key
-        const currentTutorial = Tutorials.find(t => t.phrase === phraseKey?.replace('_r', '\r'));
+        const foundTutorial = Tutorials.find(t => t.phrase === phraseKey?.replace('_r', '\r'));
         logger.debug('Getting tutorial by phrase key:', {
             phraseKey,
-            currentTutorial,
+            currentTutorial: foundTutorial,
             normalizedKey: phraseKey?.replace('_r', '\r'),
             allTutorials: Tutorials.map(t => ({ phrase: t.phrase, prompt: t.prompt }))
         });
-        return currentTutorial;
+        return foundTutorial;
     }
 
     const canUnlockTutorial = (command: string): boolean => {
@@ -81,7 +86,7 @@ export const useTutorial = () => {
         return false;
     };
 
-    const getIncompleteTutorialsInGroup = (groupName: string) => {
+    const getIncompleteTutorialsInGroup = (groupName: string): Tutorial[] => {
         // Breakpoint 14: Getting incomplete tutorials in group
         const incompleteTutorials = getIncompleteTutorials();
         const tutorialsInGroup = getTutorialsInGroup(groupName);

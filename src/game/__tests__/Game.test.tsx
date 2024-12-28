@@ -1,9 +1,8 @@
 import { render, screen } from '@testing-library/react';
-import React from 'react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-import { setupCanvasMock , CanvasMock } from '../../test-utils/canvasMock';
-import Game from '../Game';
+import { setupCanvasMock, type CanvasMock } from '../../test-utils/canvasMock';
+import { Game } from '../Game';
 
 // Mock dependencies
 vi.mock('src/hooks/useReactiveLocation', () => ({
@@ -21,35 +20,45 @@ vi.mock('src/signals/gameSignals', () => ({
   isInGameModeSignal: { value: true }
 }));
 
+/**
+ * Test suite for the Game component
+ */
 describe('Game Component', () => {
-  // Explicitly type canvasMock and use type assertion
   let canvasMock: CanvasMock;
 
+  /**
+   * Setup canvas mock before each test
+   */
   beforeEach(() => {
-    // Setup canvas mock before each test using the centralized utility
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    canvasMock = setupCanvasMock() as any;
+    canvasMock = setupCanvasMock();
   });
 
+  /**
+   * Clean up canvas mock after each test
+   */
   afterEach(() => {
-    // Clean up canvas mock after each test
     canvasMock.restoreOriginalGetContext();
     vi.restoreAllMocks();
   });
 
-  const defaultProps = {
+  const defaultProps: { canvasHeight: number; canvasWidth: number } = {
     canvasHeight: 600,
     canvasWidth: 800
   };
 
+  /**
+   * Tests that the Game component renders without canvas context errors
+   */
   it('renders without canvas context errors', () => {
     render(<Game {...defaultProps} />);
 
     expect(screen.getByRole('presentation')).toBeTruthy();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    expect((canvasMock as any).mockGetContext).toHaveBeenCalledWith('2d');
+    expect(canvasMock.mockGetContext).toHaveBeenCalledWith('2d');
   });
 
+  /**
+   * Tests that the Game component initializes canvas with correct dimensions
+   */
   it('initializes canvas with correct dimensions', () => {
     render(<Game {...defaultProps} />);
 

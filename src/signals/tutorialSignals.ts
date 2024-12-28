@@ -1,7 +1,7 @@
 // src/signals/tutorialSignals.ts
 import { computed, signal } from "@preact/signals-react";
 
-import { Tutorial, Tutorials } from "src/types/Types";
+import { type Tutorial, Tutorials } from "src/types/Types";
 import { createLogger } from "src/utils/Logger";
 
 import { createPersistentSignal } from "../utils/signalPersistence";
@@ -14,13 +14,17 @@ const { signal: completedTutorialsSignal, update: updateCompletedTutorials } = c
   key: completedTutorialsKey,
   signal: signal<Set<string>>(new Set()),
   serialize: (value) => JSON.stringify([...value]),
-  deserialize: (value) => new Set(JSON.parse(value)),
+  deserialize: (value) => new Set(JSON.parse(value) as string[]),
 });
 
 export { completedTutorialsSignal };
 
 export const tutorialSignal = signal<Tutorial | null>(null);
 
+/**
+ * Gets the next uncompleted tutorial
+ * @returns The next Tutorial or null if all are completed
+ */
 export const getNextTutorial = (): Tutorial | null => {
   const nextTutorial = Tutorials
     .find(t => !completedTutorialsSignal.value.has(t.phrase));
@@ -28,7 +32,11 @@ export const getNextTutorial = (): Tutorial | null => {
   return nextTutorial ?? null;
 };
 
-export const setNextTutorial = (nextTutorial: Tutorial | null) => {
+/**
+ * Sets the next tutorial
+ * @param nextTutorial - The tutorial to set as next
+ */
+export const setNextTutorial = (nextTutorial: Tutorial | null): void => {
   logger.debug('Setting next tutorial:', nextTutorial);
   tutorialSignal.value = nextTutorial;
 };
@@ -38,7 +46,7 @@ const loadInitialState = () => {
   const storedTutorials = localStorage.getItem(completedTutorialsKey);
   if (storedTutorials) {
     logger.debug('Loading stored tutorials:', storedTutorials);
-    completedTutorialsSignal.value = new Set(JSON.parse(storedTutorials));
+    completedTutorialsSignal.value = new Set(JSON.parse(storedTutorials) as string[]);
   }
   const nextTutorial = getNextTutorial();
   logger.debug('Initial tutorial:', nextTutorial);
@@ -51,7 +59,11 @@ loadInitialState();
 export const completedTutorialsArray = computed(() => [...completedTutorialsSignal.value]);
 
 // Exported functions
-export const setCompletedTutorial = (tutorialId: string) => {
+/**
+ * Marks a tutorial as completed and sets the next tutorial
+ * @param tutorialId - The ID of the completed tutorial
+ */
+export const setCompletedTutorial = (tutorialId: string): void => {
   logger.debug('Setting completed tutorial:', { tutorialId, currentTutorial: tutorialSignal.value });
   updateCompletedTutorials(prev => new Set(prev).add(tutorialId));
   // After marking a tutorial as complete, get and set the next one
@@ -60,7 +72,10 @@ export const setCompletedTutorial = (tutorialId: string) => {
   setNextTutorial(nextTutorial);
 };
 
-export const resetCompletedTutorials = () => {
+/**
+ * Resets all completed tutorials and sets the first tutorial
+ */
+export const resetCompletedTutorials = (): void => {
   logger.debug('Resetting completed tutorials');
   updateCompletedTutorials(new Set());
   const nextTutorial = getNextTutorial();

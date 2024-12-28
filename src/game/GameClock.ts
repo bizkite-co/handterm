@@ -3,32 +3,32 @@ export class GameClock {
   private currentTime: number;
   private running: boolean;
 
-  constructor() {
+  public constructor() {
     this.startTime = 0;
     this.currentTime = 0;
     this.running = false;
   }
 
-  start() {
+  public start(): void {
     if (!this.running) {
       this.startTime = Date.now();
       this.running = true;
     }
   }
 
-  stop() {
+  public stop(): void {
     if (this.running) {
       this.currentTime = this.getTime();
       this.running = false;
     }
   }
 
-  reset() {
+  public reset(): void {
     this.startTime = Date.now();
     this.currentTime = 0;
   }
 
-  getTime() {
+  public getTime(): number {
     if (this.running) {
       return Date.now() - this.startTime;
     }

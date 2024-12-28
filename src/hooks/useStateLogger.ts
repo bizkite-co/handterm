@@ -1,6 +1,6 @@
 import { useRef, useEffect } from 'react';
 
-export function useStateLogger<T>(state: T, name: string) {
+export function useStateLogger<T>(state: T, name: string): void {
   const prevStateRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -8,7 +8,7 @@ export function useStateLogger<T>(state: T, name: string) {
       const currentState = JSON.stringify(state);
 
       if (prevStateRef.current !== currentState) {
-        const prevState = prevStateRef.current ? JSON.parse(prevStateRef.current) : {};
+        const prevState = prevStateRef.current ? JSON.parse(prevStateRef.current) as T : {} as T;
         const stateChangeLog = {
           from: prevState,
           to: state

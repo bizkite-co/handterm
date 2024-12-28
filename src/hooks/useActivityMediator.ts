@@ -47,7 +47,7 @@ export function useActivityMediator(): {
     const bypassTutorial = useComputed(() => bypassTutorialSignal.value);
     const currentTutorialRef = useRef<Tutorial | null>(null);
 
-    const transitionToGame = useCallback((contentKey?: string | null, groupKey?: string | null) => {
+    const transitionToGame = useCallback((contentKey?: string | null, groupKey?: string | null): void => {
         // First initialize game if group key is provided
         if (groupKey) {
             initializeGame(groupKey);

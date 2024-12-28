@@ -2,8 +2,8 @@
 // gameSignals.ts
 import { signal } from "@preact/signals-react";
 
-import { ActionType } from "src/game/types/ActionTypes";
-import { GamePhrase, Phrases } from "src/types/Types";
+import { type ActionType } from "src/game/types/ActionTypes";
+import { type GamePhrase, Phrases } from "src/types/Types";
 import { createPersistentSignal } from "src/utils/signalPersistence";
 
 export const startGameSignal = signal<string | undefined>(undefined);
@@ -17,64 +17,73 @@ export const zombie4ActionSignal = signal<ActionType>('Walk');
 
 const completedGamePhrasesKey = 'completed-game-phrases';
 
-export const setHeroAction = (action: ActionType) => {
+export const setHeroAction = (action: ActionType): void => {
   heroActionSignal.value = action;
 };
 
-export const setZombie4Action = (action: ActionType) => {
+export const setZombie4Action = (action: ActionType): void => {
   zombie4ActionSignal.value = action;
 };
 
-export const setGameLevel = (level: number) => {
+export const setGameLevel = (level: number): void => {
   gameLevelSignal.value = level;
 };
 
-const { signal: completedGamePhrasesSignal, update: updateCompletedGamePhrases } = createPersistentSignal({
+const { signal: completedGamePhrasesSignal, update: updateCompletedGamePhrases } = createPersistentSignal<Set<string>>({
   key: completedGamePhrasesKey,
   signal: signal<Set<string>>(new Set()),
-  serialize: (value) => JSON.stringify([...value]),
-  deserialize: (value) => new Set(JSON.parse(value)),
+  serialize: (value: Set<string>) => JSON.stringify([...value]),
+  deserialize: (value: string) => new Set(JSON.parse(value) as string[]),
 });
 
 export { completedGamePhrasesSignal };
 
-export const setCompletedGamePhrase = (gamePhraseId:string) => {
-  updateCompletedGamePhrases(prev => prev.add(gamePhraseId))
+export const setCompletedGamePhrase = (gamePhraseId: string): void => {
+  updateCompletedGamePhrases(prev => prev.add(gamePhraseId));
 }
 
-export const getIncompletePhrasesByTutorialGroup = (tutorialGroup: string):GamePhrase[] => {
+export const getIncompletePhrasesByTutorialGroup = (tutorialGroup: string): GamePhrase[] => {
   const phrasesInGroup = Phrases.filter(p => p.tutorialGroup === tutorialGroup);
   const incompletePhrasesInGroup = phrasesInGroup
-    .filter(pig => !Array.from(completedGamePhrasesSignal.value).includes(pig.key) )
+    .filter(pig => !Array.from(completedGamePhrasesSignal.value).includes(pig.key))
   return incompletePhrasesInGroup;
 }
 
-export const getNextGamePhrase = ():GamePhrase | null => {
+export const getNextGamePhrase = (): GamePhrase | null => {
   const nextGamePhrase = Phrases
     .find(t => !completedGamePhrasesSignal.value.has(t.key));
-  return nextGamePhrase ?? null;
+  if (nextGamePhrase === undefined) {
+    return null;
+  }
+  return nextGamePhrase;
 };
 
-export const initializeGame = (tutorialGroup?: string) => {
+export const initializeGame = (tutorialGroup?: string): void => {
   gameInitSignal.value = true;
   isInGameModeSignal.value = true;
   if (tutorialGroup) {
     const tutorialGroupGamePhrase = getIncompletePhrasesByTutorialGroup(tutorialGroup);
     if (tutorialGroupGamePhrase.length > 0) {
-      gamePhraseSignal.value = tutorialGroupGamePhrase[0];
+      gamePhraseSignal.value = tutorialGroupGamePhrase[0] ?? null;
     }
   }
 };
 
-export const setGamePhrase = (phrase: GamePhrase | null) => {
+export const setGamePhrase = (phrase: GamePhrase | null): void => {
   gamePhraseSignal.value = phrase;
 };
 
 // Load initial state
-const loadInitialState = () => {
+const loadInitialState = (): void => {
   const storedTutorials = localStorage.getItem(completedGamePhrasesKey);
   if (storedTutorials) {
-    completedGamePhrasesSignal.value = new Set(JSON.parse(storedTutorials));
+    try {
+      const parsedTutorials = JSON.parse(storedTutorials) as string[];
+      completedGamePhrasesSignal.value = new Set(parsedTutorials);
+    } catch (error) {
+      console.error('Failed to parse stored tutorials:', error);
+      completedGamePhrasesSignal.value = new Set();
+    }
   }
   setGamePhrase(getNextGamePhrase());
 };
