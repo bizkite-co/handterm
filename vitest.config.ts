@@ -37,51 +37,19 @@ export default defineConfig({
         'tests/',
         'e2e/'
       ]
-    },
-    alias: {
-      // eslint-disable-next-line @typescript-eslint/naming-convention
-      '@': resolve(__dirname, './src'),
-      // eslint-disable-next-line @typescript-eslint/naming-convention
-      '@components': resolve(__dirname, './src/components'),
-      // eslint-disable-next-line @typescript-eslint/naming-convention
-      '@hooks': resolve(__dirname, './src/hooks'),
-      // eslint-disable-next-line @typescript-eslint/naming-convention
-      '@utils': resolve(__dirname, './src/utils'),
-      // eslint-disable-next-line @typescript-eslint/naming-convention
-      '@contexts': resolve(__dirname, './src/contexts'),
-      // eslint-disable-next-line @typescript-eslint/naming-convention
-      '@types': resolve(__dirname, './src/types'),
-      // eslint-disable-next-line @typescript-eslint/naming-convention
-      '@assets': resolve(__dirname, './src/assets'),
-      // eslint-disable-next-line @typescript-eslint/naming-convention
-      '@commands': resolve(__dirname, './src/commands'),
-      // eslint-disable-next-line @typescript-eslint/naming-convention
-      '@game': resolve(__dirname, './src/game'),
-      // eslint-disable-next-line @typescript-eslint/naming-convention
-      '@test-utils': resolve(__dirname, './src/test-utils')
     }
   },
   resolve: {
     alias: {
-      // eslint-disable-next-line @typescript-eslint/naming-convention
       '@': resolve(__dirname, './src'),
-      // eslint-disable-next-line @typescript-eslint/naming-convention
       '@components': resolve(__dirname, './src/components'),
-      // eslint-disable-next-line @typescript-eslint/naming-convention
       '@hooks': resolve(__dirname, './src/hooks'),
-      // eslint-disable-next-line @typescript-eslint/naming-convention
       '@utils': resolve(__dirname, './src/utils'),
-      // eslint-disable-next-line @typescript-eslint/naming-convention
       '@contexts': resolve(__dirname, './src/contexts'),
-      // eslint-disable-next-line @typescript-eslint/naming-convention
       '@types': resolve(__dirname, './src/types'),
-      // eslint-disable-next-line @typescript-eslint/naming-convention
       '@assets': resolve(__dirname, './src/assets'),
-      // eslint-disable-next-line @typescript-eslint/naming-convention
       '@commands': resolve(__dirname, './src/commands'),
-      // eslint-disable-next-line @typescript-eslint/naming-convention
       '@game': resolve(__dirname, './src/game'),
-      // eslint-disable-next-line @typescript-eslint/naming-convention
       '@test-utils': resolve(__dirname, './src/test-utils')
     }
   }

@@ -1,9 +1,9 @@
-import axios, { AxiosError } from 'axios';
+import axios, { type AxiosError } from 'axios';
 import { useCallback } from 'react';
 
 import ENDPOINTS from '../shared/endpoints.json';
 
-import { IAuthProps } from './useAuth';
+import { type IAuthProps } from './useAuth';
 
 interface APIResponse<T> {
     status: number;
@@ -36,7 +36,11 @@ interface APIError {
     message: string;
 }
 
-export function useAPI(auth: IAuthProps) {
+export function useAPI(auth: IAuthProps): {
+    getRepoTree: (repo: string, path?: string, sha?: string) => Promise<APIResponse<TreeItemResponse[]>>,
+    getFileContent: (repo: string, path: string) => Promise<APIResponse<FileContentResponse>>,
+    listRecentRepos: () => Promise<APIResponse<RepoResponse[]>>
+} {
     const makeAuthenticatedRequest = useCallback(async <T>(
         endpoint: string,
         params?: Record<string, string>,
@@ -44,7 +48,7 @@ export function useAPI(auth: IAuthProps) {
     ): Promise<APIResponse<T>> => {
         try {
             const authResponse = await auth.validateAndRefreshToken();
-            if (!authResponse || authResponse.status !== 200 || !authResponse.data) {
+            if (authResponse == null || authResponse.status !== 200 || authResponse.data == null) {
                 return {
                     status: 401,
                     error: 'Authentication failed'
@@ -55,7 +59,7 @@ export function useAPI(auth: IAuthProps) {
                 method,
                 url: `${ENDPOINTS.api.BaseUrl}${endpoint}`,
                 headers: {
-                    'Authorization': `Bearer ${authResponse.data.AccessToken}`,
+                    'Authorization': `Bearer ${authResponse.data.accessToken}`,
                     'Content-Type': 'application/json',
                     'Accept': 'application/json'
                 },
@@ -64,7 +68,7 @@ export function useAPI(auth: IAuthProps) {
 
             return {
                 status: response.status,
-                data: response.data
+                data: response.data as T
             };
         } catch (error) {
             const apiError = error as AxiosError<APIError>;

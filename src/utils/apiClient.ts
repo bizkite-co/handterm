@@ -1,9 +1,11 @@
 import axios from 'axios';
 
-import { IAuthProps } from '../hooks/useAuth';
+import { type IAuthProps } from '../hooks/useAuth';
 import ENDPOINTS from '../shared/endpoints.json';
 
-import { Logger } from './Logger';
+import { createLogger } from './Logger';
+
+const logger = createLogger();
 
 export interface APIResponse<T> {
     status: number;
@@ -60,6 +62,14 @@ export interface DevicePollResponse {
     error_description?: string;
 }
 
+interface ErrorResponse {
+    message?: string;
+}
+
+function isErrorResponse(obj: unknown): obj is ErrorResponse {
+    return typeof obj === 'object' && obj !== null && 'message' in obj;
+}
+
 // Create axios instance with base configuration
 const api = axios.create({
     baseURL: ENDPOINTS.api.BaseUrl,
@@ -86,7 +96,7 @@ export async function makeAuthenticatedRequest<T>(
         }
 
         // Get access token from auth response
-        const accessToken = authResponse.data.AccessToken;
+        const accessToken = authResponse.data.accessToken;
         if (!accessToken) {
             return {
                 status: 401,
@@ -106,31 +116,38 @@ export async function makeAuthenticatedRequest<T>(
 
         return {
             status: response.status,
-            data: response.data
+            data: response.data as T
         };
     } catch (error: unknown) {
-        Logger.error('API request failed:', error);
+        if (error instanceof Error) {
+            logger.error(`API request failed: ${error.message}`);
+        }
 
-        if (axios.isAxiosError(error) && error.response) {
-            return {
-                status: error.response.status,
-                error: error.response.data?.message || 'Request failed with status ' + error.response.status
-            };
-        } else if (error instanceof Error) {
+        if (axios.isAxiosError<ErrorResponse>(error)) {
+            if (error.response) {
+                const responseData = error.response.data;
+                const message = isErrorResponse(responseData) && typeof responseData.message === 'string'
+                    ? responseData.message
+                    : `Request failed with status ${error.response.status}`;
+                return {
+                    status: error.response.status,
+                    error: message
+                };
+            }
             return {
                 status: 500,
-                error: error.message || 'Request failed'
-            };
-        } else {
-            return {
-                status: 500,
-                error: 'An unknown error occurred'
+                error: typeof error.message === 'string' ? error.message : 'Request failed'
             };
         }
+
+        return {
+            status: 500,
+            error: 'An unknown error occurred'
+        };
     }
 }
 
-export async function getRepoTree(auth: IAuthProps, repo: string, path?: string, sha?: string) {
+export async function getRepoTree(auth: IAuthProps, repo: string, path?: string, sha?: string): Promise<APIResponse<TreeItemResponse[]>> {
     return makeAuthenticatedRequest<TreeItemResponse[]>(auth, ENDPOINTS.api.GetRepoTree, {
         repo,
         ...(path && { path }),
@@ -138,7 +155,7 @@ export async function getRepoTree(auth: IAuthProps, repo: string, path?: string,
     });
 }
 
-export async function getFileContent(auth: IAuthProps, repo: string, path: string) {
+export async function getFileContent(auth: IAuthProps, repo: string, path: string): Promise<APIResponse<FileContentResponse>> {
     // Use the same getRepoTree endpoint - it handles both tree and file content
     return makeAuthenticatedRequest<FileContentResponse>(auth, ENDPOINTS.api.GetRepoTree, {
         repo,
@@ -152,7 +169,7 @@ export async function saveRepoFile(
     path: string,
     content: string,
     message: string
-) {
+): Promise<APIResponse<SaveRepoFileResponse>> {
     return makeAuthenticatedRequest<SaveRepoFileResponse>(
         auth,
         ENDPOINTS.api.SaveRepoFile,
@@ -162,11 +179,11 @@ export async function saveRepoFile(
     );
 }
 
-export async function listRecentRepos(auth: IAuthProps) {
+export async function listRecentRepos(auth: IAuthProps): Promise<APIResponse<RepoResponse[]>> {
     return makeAuthenticatedRequest<RepoResponse[]>(auth, ENDPOINTS.api.ListRecentRepos);
 }
 
-export async function unlinkGitHub(auth: IAuthProps) {
+export async function unlinkGitHub(auth: IAuthProps): Promise<APIResponse<{ message: string }>> {
     return makeAuthenticatedRequest<{ message: string }>(
         auth,
         ENDPOINTS.api.UnlinkGitHub,

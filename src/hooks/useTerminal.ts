@@ -1,7 +1,7 @@
 // hooks/useTerminal.ts
 import { useComputed } from '@preact/signals-react';
 import { FitAddon } from '@xterm/addon-fit';
-import React, { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useXTerm } from 'react-xtermjs';
 
 import { TERMINAL_CONSTANTS } from 'src/constants/terminal';
@@ -31,13 +31,13 @@ import { useWPMCalculator } from './useWPMCaculator';
 
 const logger = createLogger({ prefix: 'useTerminal' });
 
-export const useTerminal = () => {
+export const useTerminal = (): { xtermRef: React.RefObject<HTMLDivElement>; writeToTerminal: (data: string) => void; resetPrompt: () => void } => {
   const { instance, ref: xtermRef } = useXTerm({ options: XtermAdapterConfig });
   const { handleCommand, commandHistory, commandHistoryIndex, setCommandHistoryIndex } = useCommand();
   const wpmCalculator = useWPMCalculator();
   const commandLine = useComputed(() => commandLineSignal.value);
 
-  const [_commandLineState, _setCommandLineState] = React.useState('');
+  const [_commandLineState, _setCommandLineState] = useState('');
 
   const fitAddon = useRef(new FitAddon());
 
@@ -94,7 +94,7 @@ export const useTerminal = () => {
   }, [instance]);
 
   const navigateHistory = useCallback((direction: 'up' | 'down') => {
-    if (!instance || !commandHistory.length) return;
+    if (!instance || (commandHistory.length === 0)) return;
 
     let newIndex = commandHistoryIndex;
 
@@ -140,14 +140,14 @@ export const useTerminal = () => {
   ]);
 
   useEffect(() => {
-    if (!instance) return;
+    if (instance == null) return;
     instance.loadAddon(fitAddon.current);
     fitAddon.current.fit();
     resetPrompt();
   }, [instance, resetPrompt]);
 
   useEffect(() => {
-    if (!instance) return;
+    if (instance == null) return;
 
     const handleControlCharacters = (data: string, cursorX: number) => {
       logger.debug('Handling control character:', { data, cursorX });
@@ -195,7 +195,7 @@ export const useTerminal = () => {
           tempUserNameSignal.value,
           tempPasswordSignal.value
         ].join(' '));
-        handleCommand(loginCommand);
+        handleCommand(loginCommand).catch(console.error);
         setIsInLoginProcess(false);
         setTempPassword('');
         setTempUserName('');
@@ -206,7 +206,7 @@ export const useTerminal = () => {
           tempEmailSignal.value,
           tempPasswordSignal.value
         ].join(' '));
-        handleCommand(signupCommand);
+        handleCommand(signupCommand).catch(console.error);
         setIsInSignUpProcess(false);
         setTempPassword('');
         setTempUserName('');
@@ -219,7 +219,7 @@ export const useTerminal = () => {
         instance?.write('\r\n');
         setCommandLine('');
         _setCommandLineState('');
-        handleCommand(parsedCommand);
+        handleCommand(parsedCommand).catch(console.error);
         wpmCalculator.clearKeystrokes();
       }
       setCommandHistoryIndex(-1); // Reset history index after command execution

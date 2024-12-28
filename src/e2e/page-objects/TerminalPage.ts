@@ -20,7 +20,7 @@ export class TerminalPage {
     this.nextChars = page.locator('pre#next-chars');
   }
 
-  async goto() {
+  public async goto(): Promise<void> {
     await this.page.goto('/');
     // Wait for the signal to be exposed
     await this.page.waitForFunction(() => 'commandLineSignal' in window);
@@ -32,7 +32,7 @@ export class TerminalPage {
    * Types a command into the terminal
    * @param command The command to type
    */
-  async typeCommand(command: string) {
+  public async typeCommand(command: string): Promise<void> {
     await this.waitForTerminal();
     await this.terminal.click();
     await this.page.keyboard.type(command);
@@ -42,7 +42,7 @@ export class TerminalPage {
    * Types a sequence of keys without executing a command
    * @param keys The keys to type
    */
-  async typeKeys(keys: string) {
+  public async typeKeys(keys: string): Promise<void> {
     await this.waitForTerminal();
     await this.terminal.click();
     await this.page.keyboard.type(keys);
@@ -51,7 +51,7 @@ export class TerminalPage {
   /**
    * Presses the Enter key
    */
-  async pressEnter() {
+  public async pressEnter(): Promise<void> {
     await this.waitForTerminal();
     await this.page.keyboard.press('Enter');
   }
@@ -60,7 +60,7 @@ export class TerminalPage {
    * Executes a command by typing it and pressing Enter
    * @param command The command to execute
    */
-  async executeCommand(command: string) {
+  public async executeCommand(command: string): Promise<void> {
     await this.waitForTerminal();
     await this.typeCommand(command);
     await this.pressEnter();
@@ -70,7 +70,7 @@ export class TerminalPage {
    * Gets the current terminal output
    * @returns The text content of the output container
    */
-  async getOutput(): Promise<string> {
+  public async getOutput(): Promise<string> {
     return await this.output.textContent() || '';
   }
 
@@ -78,7 +78,7 @@ export class TerminalPage {
    * Gets the current command line text (without the prompt)
    * @returns The current command line text
    */
-  async getCurrentCommand(): Promise<string> {
+  public async getCurrentCommand(): Promise<string> {
     // Wait for the signal to be available
     await this.page.waitForFunction(() => 'commandLineSignal' in window);
 
@@ -94,7 +94,7 @@ export class TerminalPage {
    * Waits for specific text to appear in the output
    * @param text The text to wait for
    */
-  async waitForOutput(text: string) {
+  public async waitForOutput(text: string): Promise<void> {
     await this.output.getByText(text, { exact: false }).waitFor();
   }
 
@@ -102,7 +102,7 @@ export class TerminalPage {
    * Waits for specific text to appear in the next chars display
    * @param text The text to wait for
    */
-  async waitForNextChars(text: string) {
+  public async waitForNextChars(text: string): Promise<void> {
     // First wait for the element to exist
     await this.nextChars.waitFor({ state: 'attached' });
 
@@ -114,14 +114,14 @@ export class TerminalPage {
   /**
    * Waits for the prompt to appear, indicating the terminal is ready
    */
-  async waitForPrompt() {
+  public async waitForPrompt(): Promise<void> {
     await this.terminal.getByText(this.prompt).last().waitFor();
   }
 
   /**
    * Waits for the terminal to be ready
    */
-  async waitForTerminal() {
+  public async waitForTerminal(): Promise<void> {
     await this.terminal.waitFor({ state: 'attached' });
     await this.terminal.waitFor({ state: 'visible' });
   }
@@ -129,14 +129,14 @@ export class TerminalPage {
   /**
    * Focuses the terminal
    */
-  async focus() {
+  public async focus(): Promise<void> {
     await this.terminal.click();
   }
 
   /**
    * Clears the current command line using Ctrl+C
    */
-  async clearLine() {
+  public async clearLine(): Promise<void> {
     await this.terminal.click();
     await this.page.keyboard.press('Control+C');
     await this.waitForPrompt();

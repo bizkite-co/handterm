@@ -56,8 +56,8 @@ After fixin the errors in a file:
 ### Hooks
 - [x] src/hooks/useActivityMediator.ts (27 errors)
 - [x] src/hooks/useAuth.ts (25 errors)
-- [ ] src/hooks/useTerminal.ts (25 errors, 1 warning)
-- [ ] src/hooks/useAPI.ts (20 errors)
+- [x] src/hooks/useTerminal.ts (25 errors, 1 warning)
+- [x] src/hooks/useAPI.ts (20 errors)
 - [ ] src/hooks/useCommand.ts (14 errors)
 
 ### Utils

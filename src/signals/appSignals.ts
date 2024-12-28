@@ -1,7 +1,7 @@
 // src/signals/appSignals.ts
 import { computed, signal } from '@preact/signals-react';
 
-import { ActivityType, OutputElement } from 'src/types/Types';
+import { ActivityType, type OutputElement } from 'src/types/Types';
 import { createLogger, LogLevel } from 'src/utils/Logger';
 import { createPersistentSignal } from 'src/utils/signalPersistence';
 
@@ -12,7 +12,7 @@ const logger = createLogger({
 
 const currentOutputKey = 'current-output';
 export const activitySignal = signal<ActivityType>(ActivityType.NORMAL);
-export const notificationSignal = signal<string | null>(null)
+export const notificationSignal = signal<string | null>(null);
 export const isEditModeSignal = signal<boolean>(false);
 export const isShowVideoSignal = signal<boolean>(false);
 export const isInLoginProcessSignal = signal<boolean>(false);
@@ -21,27 +21,28 @@ export const tempUserNameSignal = signal<string>('');
 export const tempPasswordSignal = signal<string>('');
 export const tempEmailSignal = signal<string>('');
 
-export const setIsInSignUpProcess = (value: boolean) => {
+export const setIsInSignUpProcess = (value: boolean): void => {
     isInSignUpProcessSignal.value = value;
-}
-export const setTempEmail = (value: string) => {
-    tempEmailSignal.value = value;
-}
+};
 
-export const toggleVideo = () => {
+export const setTempEmail = (value: string): void => {
+    tempEmailSignal.value = value;
+};
+
+export const toggleVideo = (): boolean => {
     isShowVideoSignal.value = !isShowVideoSignal.value;
     return isShowVideoSignal.value;
-}
+};
 
-export const setIsInLoginProcess = (value: boolean) => {
+export const setIsInLoginProcess = (value: boolean): void => {
     isInLoginProcessSignal.value = value;
 };
 
-export const setTempUserName = (value: string) => {
+export const setTempUserName = (value: string): void => {
     tempUserNameSignal.value = value;
 };
 
-export const setTempPassword = (value: string) => {
+export const setTempPassword = (value: string): void => {
     tempPasswordSignal.value = value;
 };
 
@@ -49,21 +50,21 @@ export const setTempPassword = (value: string) => {
 export const {
     signal: bypassTutorialSignal,
     update: setBypassTutorial
-} = createPersistentSignal({
+} = createPersistentSignal<boolean>({
     key: 'bypassTutorialKey', // Unique key for localStorage
     signal: signal<boolean>(false),
-    serialize: (value) => JSON.stringify(value),
-    deserialize: (value) => JSON.parse(value)
+    serialize: (value: boolean) => JSON.stringify(value),
+    deserialize: (value: string) => JSON.parse(value) as boolean
 });
 
 const {
     signal: outputElementsSignal,
     update: updateOutput
-} = createPersistentSignal({
+} = createPersistentSignal<OutputElement[]>({
     key: currentOutputKey,
     signal: signal<OutputElement[]>([]),
-    serialize: (value) => JSON.stringify(value),
-    deserialize: (value) => JSON.parse(value)
+    serialize: (value: OutputElement[]) => JSON.stringify(value),
+    deserialize: (value: string) => JSON.parse(value) as OutputElement[]
 });
 
 export { outputElementsSignal };
@@ -71,12 +72,12 @@ export { outputElementsSignal };
 export const isInGameModeSignal = computed(() => activitySignal.value === ActivityType.GAME);
 export const isInTutorialModeSignal = computed(() => activitySignal.value === ActivityType.TUTORIAL);
 
-export const setActivity = (activity: ActivityType) => {
+export const setActivity = (activity: ActivityType): void => {
     activitySignal.value = activity;
     logger.debug(ActivityType[activitySignal.value]);
 };
 
-export const appendToOutput = (element: OutputElement) => {
+export const appendToOutput = (element: OutputElement): void => {
     updateOutput(prevOutput => {
         // If the command is sensitive, mask the args except the first one (username)
         if (element.sensitive && element.command) {
@@ -93,17 +94,17 @@ export const appendToOutput = (element: OutputElement) => {
     });
 };
 
-export const setNotification = (notification: string) => {
+export const setNotification = (notification: string): void => {
     notificationSignal.value = notification;
-}
+};
 
 export const isLoggedInSignal = signal<boolean>(false);
 export const userNameSignal = signal<string | null>(null);
 
-export const setIsLoggedIn = (value: boolean) => {
+export const setIsLoggedIn = (value: boolean): void => {
     isLoggedInSignal.value = value;
 };
 
-export const setUserName = (name: string | null) => {
+export const setUserName = (name: string | null): void => {
     userNameSignal.value = name;
 };
