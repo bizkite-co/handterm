@@ -74,6 +74,60 @@ function getUserName(user: User | null | undefined) {
 }
 ```
 
+## Nullish Coalescing vs Logical OR
+
+### Key Differences
+
+```typescript
+// Nullish coalescing (??) only checks for null/undefined
+const value1 = null ?? 'default'; // 'default'
+const value2 = 0 ?? 'default';    // 0
+
+// Logical OR (||) checks for any falsy value
+const value3 = null || 'default'; // 'default'
+const value4 = 0 || 'default';    // 'default'
+```
+
+### When to Use Each
+
+- Use `??` when you only want to handle null/undefined cases
+- Use `||` when you want to handle all falsy values (null, undefined, 0, '', false, NaN)
+
+### Best Practices
+
+1. **Prefer `??` for Default Values**
+   ```typescript
+   // Good
+   const timeout = config.timeout ?? 3000;
+
+   // Bad (0 would be replaced)
+   const timeout = config.timeout || 3000;
+   ```
+
+2. **Use `||` for Boolean Logic**
+   ```typescript
+   // Good
+   const isEnabled = featureFlag || false;
+
+   // Bad (unnecessary null check)
+   const isEnabled = featureFlag ?? false;
+   ```
+
+3. **Combine with Optional Chaining**
+   ```typescript
+   // Safe property access with default
+   const name = user?.profile?.name ?? 'Anonymous';
+   ```
+
+4. **Avoid Mixing Operators**
+   ```typescript
+   // Confusing and potentially buggy
+   const value = a || b ?? c;
+
+   // Clear and explicit
+   const value = (a ?? b) || c;
+   ```
+
 ## Best Practices
 
 1. **Always Use Explicit Checks**

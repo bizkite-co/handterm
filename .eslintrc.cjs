@@ -29,7 +29,9 @@ module.exports = {
       './tsconfig.json',
       './tsconfig.test.json',
       './tsconfig.node.json',
+      './tsconfig.eslint-rules.json',
     ],
+    exclude: ['eslint-plugin-custom-rules/**'],
     ecmaVersion: 'latest',
     sourceType: 'module',
     ecmaFeatures: {
@@ -45,6 +47,7 @@ module.exports = {
     'testing-library',
     'import',
     'vitest-globals',
+    'custom-rules'
   ],
   settings: {
     react: {
@@ -92,6 +95,7 @@ module.exports = {
       allowNullableNumber: false,
       allowAny: false
     }],
+    'custom-rules/prefer-nullish-coalescing': 'error',
 
     // Functional Programming Encouragement (without plugin)
     'no-var': 'error',
