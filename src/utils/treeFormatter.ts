@@ -16,7 +16,6 @@ export function formatTreeContent(items: TreeItem[], treeState: TreeState): stri
     });
 
     const lines: string[] = ['Repository Files', ''];
-    const pathParts = new Map<string, number>();
 
     // First pass: collect all directories
     const directories = new Set<string>();
@@ -46,7 +45,7 @@ export function formatTreeContent(items: TreeItem[], treeState: TreeState): stri
         if (isVisible(dir)) {
             const depth = dir.split('/').length;
             const indent = '  '.repeat(depth - 1);
-            const name = dir.split('/').pop() || '';
+            const name = dir.split('/').pop() ?? '';
             const isExpanded = treeState.expandedFolders.has(dir);
             const arrow = isExpanded ? '▼' : '▶';
             lines.push(`${indent}${arrow} 📁 ${name}/`);
@@ -57,7 +56,7 @@ export function formatTreeContent(items: TreeItem[], treeState: TreeState): stri
     sortedItems.forEach(item => {
         if (item.type !== 'tree' && isVisible(item.path)) {
             const parts = item.path.split('/');
-            const fileName = parts.pop() || '';
+            const fileName = parts.pop() ?? '';
             const depth = parts.length;
             const indent = '  '.repeat(depth);
             const prefix = parts.length > 0 ? '  ' : '';

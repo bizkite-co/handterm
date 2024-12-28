@@ -31,11 +31,11 @@ class Logger {
     const timestamp = new Date().toISOString();
     const formattedMessage = `[${timestamp}] [${this.config.prefix}] [${LogLevel[level]}] ${message}`;
 
-    if (this.config.logToConsole) {
+    if (this.config.logToConsole === true) {
       this.safeConsoleLog(level, formattedMessage, ...args);
     }
 
-    if (this.config.logToFile) {
+    if (this.config.logToFile === true) {
       this.writeToLogFile(formattedMessage, ...args);
     }
   }
@@ -59,7 +59,7 @@ class Logger {
     }
   }
 
-  private writeToLogFile<T extends unknown[]>(message: string, ...args: T): void {
+  private writeToLogFile<T extends unknown[]>(_message: string, ..._args: T): void {
     // Implement file logging logic if needed
     // This could write to a log file in the application's data directory
     // Placeholder for future implementation

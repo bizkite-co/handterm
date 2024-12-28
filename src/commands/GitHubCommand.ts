@@ -49,15 +49,20 @@ export const GitHubCommand: ICommand = {
       if ('l' in parsedCommand.switches) {
         // Get device code from GitHub
         const deviceCodeResponse = await getGitHubDeviceCode(context.auth);
-        if (deviceCodeResponse.status !== 200 || !deviceCodeResponse.data) {
+        if (deviceCodeResponse.status !== 200 || deviceCodeResponse.data === null) {
           return {
             status: deviceCodeResponse.status,
-            message: deviceCodeResponse.error || 'Failed to get device code',
+            message: deviceCodeResponse.error ?? 'Failed to get device code',
           };
         }
 
-        const { verification_uri, user_code, device_code} =
-          deviceCodeResponse.data;
+        if (deviceCodeResponse.data === null || deviceCodeResponse.data === undefined) {
+          return {
+            status: 500,
+            message: 'Invalid device code response',
+          };
+        }
+        const { verification_uri, user_code, device_code } = deviceCodeResponse.data;
 
         // Copy code to clipboard
         await navigator.clipboard.writeText(user_code);
@@ -80,7 +85,9 @@ export const GitHubCommand: ICommand = {
 
           if (
             pollResponse.status === 200 &&
-            pollResponse.data?.status === 'complete'
+            pollResponse.data !== null &&
+            pollResponse.data !== undefined &&
+            pollResponse.data.status === 'complete'
           ) {
             return {
               status: 200,
@@ -88,11 +95,11 @@ export const GitHubCommand: ICommand = {
             };
           }
 
-          if (pollResponse.status !== 202) {
+          if (pollResponse.status !== undefined && pollResponse.status !== null && pollResponse.status !== 202) {
             return {
               status: pollResponse.status,
               message:
-                pollResponse.error || 'Failed to check authorization status',
+                pollResponse.error ?? 'Failed to check authorization status',
             };
           }
 
@@ -123,16 +130,16 @@ export const GitHubCommand: ICommand = {
 
         return {
           status: response.status,
-          message: response.error || 'Failed to unlink GitHub account.',
+          message: response.error ?? 'Failed to unlink GitHub account.',
         };
       }
 
       if ('r' in parsedCommand.switches) {
         const response = await listRecentRepos(context.auth);
 
-        if (response.status === 200 && response.data) {
+        if (response.status === 200 && response.data !== null && response.data !== undefined && typeof response.data === 'object') {
           const repoList = response.data
-            .map((repo) => `${repo.name}: ${repo.description || 'No description'}`)
+            .map((repo) => `${repo.name}: ${repo.description ?? 'No description'}`)
             .join('<br />');
 
           return {
@@ -143,16 +150,16 @@ export const GitHubCommand: ICommand = {
 
         return {
           status: response.status,
-          message: response.error || 'Failed to retrieve repositories.',
+          message: response.error ?? 'Failed to retrieve repositories.',
         };
       }
 
       if ('t' in parsedCommand.switches) {
-        const repoArg =
+        const repoArg: string =
           parsedCommand.switches.t === true
-            ? parsedCommand.args[0]
-            : parsedCommand.switches.t;
-        if (!repoArg) {
+            ? parsedCommand.args[0] as string
+            : parsedCommand.switches.t as string;
+        if (repoArg == null) {
           return {
             status: 400,
             message:
@@ -160,14 +167,14 @@ export const GitHubCommand: ICommand = {
           };
         }
 
-        const path = parsedCommand.args[1] || '';
-        const sha = parsedCommand.args[2] || '';
+        const path = parsedCommand.args[1] ?? '';
+        const sha = parsedCommand.args[2] ?? '';
 
         logger.info('Fetching tree for repo:', repoArg);
         const response = await getRepoTree(context.auth, repoArg, path, sha);
         logger.info('Tree response:', response);
 
-        if (response.status === 200 && response.data) {
+        if (response.status === 200 && response.data !== null) {
           // Store current repository for file fetching
           localStorage.setItem('current_github_repo', repoArg);
 
@@ -191,7 +198,7 @@ export const GitHubCommand: ICommand = {
 
         return {
           status: response.status,
-          message: response.error || 'Failed to retrieve repository tree.',
+          message: response.error ?? 'Failed to retrieve repository tree.',
         };
       }
 

@@ -354,8 +354,8 @@ export function useAuth(): IAuthProps {
     };
   }, [validateAndRefreshToken]);
 
-  const isLoading = loginMutation.isPending || signupMutation.isPending || verifyMutation.isPending;
-  const isError = loginMutation.isError || signupMutation.isError || verifyMutation.isError;
+  const isLoading = loginMutation.isPending ?? signupMutation.isPending ?? verifyMutation.isPending;
+  const isError = loginMutation.isError ?? signupMutation.isError ?? verifyMutation.isError;
   const error = loginMutation.error ?? signupMutation.error ?? verifyMutation.error;
 
   if (session?.data != null && typeof session.data === 'object' && 'accessToken' in session.data) {

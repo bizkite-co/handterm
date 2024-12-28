@@ -197,7 +197,7 @@ export function useActivityMediator(): {
             checkTutorialProgress(parsedCommand.command);
         }
         else if (parseLocation().activityKey === ActivityType.GAME && parseLocation().contentKey) {
-            const gamePhrase = GamePhrases.getGamePhraseByKey(parseLocation().contentKey || '')
+            const gamePhrase = GamePhrases.getGamePhraseByKey(parseLocation().contentKey ?? '')
             if (gamePhrase) checkGameProgress(gamePhrase);
         }
         switch (parsedCommand.command) {

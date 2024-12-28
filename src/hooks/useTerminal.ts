@@ -123,7 +123,7 @@ export const useTerminal = (): { xtermRef: React.RefObject<HTMLDivElement>; writ
     }
 
     clearCurrentLine();
-    const historicalCommand = commandHistory[newIndex] || '';
+    const historicalCommand = commandHistory[newIndex] ?? '';
     instance.write(historicalCommand);
     setCommandLine(historicalCommand);
     _setCommandLineState(historicalCommand);
@@ -219,7 +219,7 @@ export const useTerminal = (): { xtermRef: React.RefObject<HTMLDivElement>; writ
 
     const handleBackspace = (cursorX: number) => {
       logger.debug('Handling backspace:', { cursorX });
-      if (isInLoginProcessSignal.value || isInSignUpProcessSignal.value) {
+      if (isInLoginProcessSignal.value ?? isInSignUpProcessSignal.value) {
         if (tempPasswordSignal.value.length > 0) {
           tempPasswordSignal.value = tempPasswordSignal.value.slice(0, -1);
           instance?.write('\b \b');
@@ -242,7 +242,7 @@ export const useTerminal = (): { xtermRef: React.RefObject<HTMLDivElement>; writ
       }
 
       // Handle regular character input
-      if (isInLoginProcessSignal.value || isInSignUpProcessSignal.value) {
+      if (isInLoginProcessSignal.value ?? isInSignUpProcessSignal.value) {
         tempPasswordSignal.value += data;
         handleCharacter(data); // This will handle masking
       } else {

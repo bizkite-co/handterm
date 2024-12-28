@@ -15,7 +15,7 @@ export default class GamePhrases {
      */
     public static getGamePhraseByKey(key: string): GamePhrase | null {
         const phrase = Phrases.find(x => x.key == key);
-        if (phrase) {
+        if (phrase != null) {
             // Return specified phrase, if it exists.
             return phrase;
         }
@@ -29,7 +29,7 @@ export default class GamePhrases {
      * @returns Array of matching GamePhrases
      */
     public static getGamePhrasesByTutorialGroup(tutorialGroup: string): GamePhrase[] {
-        const phrases = Phrases.filter(p => tutorialGroup.includes(p.tutorialGroup || 'exclude'))
+        const phrases = Phrases.filter(p => tutorialGroup.includes(p.tutorialGroup ?? 'exclude'))
         return phrases;
     }
 
@@ -77,7 +77,7 @@ export default class GamePhrases {
      */
     public static getGamePhraseByValue(phrase: string): GamePhrase | null {
         const result = Phrases.find(p => p.value === phrase)
-        return result || null;
+        return result ?? null;
     }
 
     /**
@@ -98,7 +98,7 @@ export default class GamePhrases {
         if (phrasesLength === 0) throw new Error('No phrases available');
         const randomKey = Math.floor(Math.random() * phrasesLength);
         const phrase = Phrases[randomKey];
-        if (!phrase) throw new Error('Invalid phrase index');
+        if (phrase == null) throw new Error('Invalid phrase index');
         return phrase.value;
     }
 
@@ -114,8 +114,8 @@ export default class GamePhrases {
             return parsedPhrases.map((phrase: string) => {
                 const [wpm, phraseName] = phrase.split(':');
                 return {
-                    wpm: wpm || '',
-                    phraseName: phraseName || ''
+                    wpm: wpm ?? '',
+                    phraseName: phraseName ?? ''
                 };
             });
         } catch (error: unknown) {

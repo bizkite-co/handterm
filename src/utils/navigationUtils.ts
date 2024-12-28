@@ -30,15 +30,15 @@ export function parseLocation(location: string = window.location.toString()): Pa
 
 // Helper function to parse activity type
 export function parseActivityType(activityString: string): ActivityType {
-  const normalizedActivity = (activityString || '').toUpperCase();
-  return ActivityType[normalizedActivity as keyof typeof ActivityType] || ActivityType.NORMAL;
+  const normalizedActivity = (activityString ?? '').toUpperCase();
+  return ActivityType[normalizedActivity as keyof typeof ActivityType] ?? ActivityType.NORMAL;
 }
 
 // Global navigation function that can be used outside of React components
 export function navigate(options: ParsedLocation): void {
   const newActivity = options.activityKey ?? ActivityType.NORMAL;
   const newPhraseKey = options.contentKey ? options.contentKey.replace('\r', '_r') : '';
-  const newGroupKey = options.groupKey || '';
+  const newGroupKey = options.groupKey ?? '';
 
   const encodedPhraseKey = newPhraseKey ? encodeURIComponent(newPhraseKey) : '';
   const queryString = newGroupKey ? `?group=${encodeURIComponent(newGroupKey)}` : '';
