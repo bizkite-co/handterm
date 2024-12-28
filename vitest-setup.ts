@@ -1,25 +1,28 @@
 import '@testing-library/jest-dom/vitest';
 import { afterEach, vi } from 'vitest';
-
 import { cleanup } from '@testing-library/react';
-
-import type { Mock } from 'vitest';
 
 // Automatically cleanup after each test
 afterEach(() => {
   cleanup();
 });
 
+interface MockCanvasContext extends Omit<CanvasRenderingContext2D, 'canvas' | 'getContextAttributes'> {
+  canvas: HTMLCanvasElement;
+  getContextAttributes(): CanvasRenderingContext2DSettings;
+}
+
 // Create a type-safe mock of CanvasRenderingContext2D
-const createMockContext = () => {
+const createMockContext = (): MockCanvasContext => {
   const context = {
     canvas: document.createElement('canvas'),
-    getContextAttributes: vi.fn(() => ({
+    getContextAttributes: vi.fn().mockReturnValue({
       alpha: true,
       desynchronized: false,
       colorSpace: 'srgb',
       willReadFrequently: false,
-    })),
+    }),
+
     // Properties
     globalAlpha: 1,
     globalCompositeOperation: 'source-over',
@@ -41,6 +44,12 @@ const createMockContext = () => {
     font: '10px sans-serif',
     textAlign: 'start' as const,
     textBaseline: 'alphabetic' as const,
+    fontKerning: 'auto',
+    fontStretch: 'normal',
+    fontVariantCaps: 'normal',
+    textRendering: 'auto',
+    letterSpacing: '0px',
+    wordSpacing: '0px',
 
     // Methods
     arc: vi.fn(),
@@ -50,23 +59,25 @@ const createMockContext = () => {
     clearRect: vi.fn(),
     clip: vi.fn(),
     closePath: vi.fn(),
-    createConicGradient: vi.fn(),
-    createImageData: vi.fn(() => new ImageData(1, 1)),
-    createLinearGradient: vi.fn(),
-    createPattern: vi.fn(),
-    createRadialGradient: vi.fn(),
+    createConicGradient: vi.fn().mockReturnValue({} as CanvasGradient),
+    createImageData: vi.fn().mockImplementation((width: number, height: number) => new ImageData(width || 1, height || 1)),
+    createLinearGradient: vi.fn().mockReturnValue({} as CanvasGradient),
+    createPattern: vi.fn().mockReturnValue(null),
+    createRadialGradient: vi.fn().mockReturnValue({} as CanvasGradient),
+    drawFocusIfNeeded: vi.fn(),
     drawImage: vi.fn(),
     ellipse: vi.fn(),
     fill: vi.fn(),
     fillRect: vi.fn(),
     fillText: vi.fn(),
-    getImageData: vi.fn(() => new ImageData(1, 1)),
-    getLineDash: vi.fn(() => []),
-    getTransform: vi.fn(() => new DOMMatrix()),
-    isPointInPath: vi.fn(() => false),
-    isPointInStroke: vi.fn(() => false),
+    getImageData: vi.fn().mockReturnValue(new ImageData(1, 1)),
+    getLineDash: vi.fn().mockReturnValue([]),
+    getTransform: vi.fn().mockReturnValue(new DOMMatrix()),
+    isContextLost: vi.fn().mockReturnValue(false),
+    isPointInPath: vi.fn().mockReturnValue(false),
+    isPointInStroke: vi.fn().mockReturnValue(false),
     lineTo: vi.fn(),
-    measureText: vi.fn(() => ({
+    measureText: vi.fn().mockReturnValue({
       width: 0,
       actualBoundingBoxAscent: 0,
       actualBoundingBoxDescent: 0,
@@ -74,7 +85,12 @@ const createMockContext = () => {
       actualBoundingBoxRight: 0,
       fontBoundingBoxAscent: 0,
       fontBoundingBoxDescent: 0,
-    })),
+      alphabeticBaseline: 0,
+      emHeightAscent: 0,
+      emHeightDescent: 0,
+      hangingBaseline: 0,
+      ideographicBaseline: 0
+    }),
     moveTo: vi.fn(),
     putImageData: vi.fn(),
     quadraticCurveTo: vi.fn(),
@@ -93,38 +109,34 @@ const createMockContext = () => {
     strokeText: vi.fn(),
     transform: vi.fn(),
     translate: vi.fn(),
-    isContextLost: vi.fn(() => false),
   };
 
-  return context as unknown as CanvasRenderingContext2D;
+  return context as unknown as MockCanvasContext;
 };
 
 // Type-safe mock canvas
 const mockCanvasContext = createMockContext();
-const getContextMock = vi.fn((contextId: string, _options?: any) => {
-  if (contextId === '2d') {
-    return mockCanvasContext;
-  }
-  return null;
-}) as unknown as typeof HTMLCanvasElement.prototype.getContext;
+const getContextMock = vi.fn().mockImplementation((contextId: string) => {
+  return contextId === '2d' ? mockCanvasContext : null;
+});
 
 // Mock ResizeObserver
 class ResizeObserverMock implements ResizeObserver {
-  constructor(private callback: ResizeObserverCallback) {}
+  constructor(private callback: ResizeObserverCallback) { }
   observe = vi.fn();
   unobserve = vi.fn();
   disconnect = vi.fn();
 }
 
 // Setup global mocks
-global.ResizeObserver = ResizeObserverMock as unknown as typeof ResizeObserver;
+global.ResizeObserver = ResizeObserverMock;
 global.HTMLCanvasElement.prototype.getContext = getContextMock;
-global.HTMLCanvasElement.prototype.toDataURL = vi.fn(() => '');
+global.HTMLCanvasElement.prototype.toDataURL = vi.fn().mockReturnValue('');
 
 // Mock window properties commonly used in React components
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
-  value: vi.fn().mockImplementation(query => ({
+  value: vi.fn().mockImplementation((query: string) => ({
     matches: false,
     media: query,
     onchange: null,
@@ -139,22 +151,22 @@ Object.defineProperty(window, 'matchMedia', {
 // Mock IntersectionObserver
 class IntersectionObserverMock implements IntersectionObserver {
   readonly root: Element | null = null;
-  readonly rootMargin: string = '0px';
+  readonly rootMargin = '0px';
   readonly thresholds: ReadonlyArray<number> = [0];
 
-  constructor(private callback: IntersectionObserverCallback) {}
+  constructor(private callback: IntersectionObserverCallback) { }
 
   observe = vi.fn();
   unobserve = vi.fn();
   disconnect = vi.fn();
-  takeRecords = vi.fn(() => []);
+  takeRecords = vi.fn().mockReturnValue([]);
 }
 
-global.IntersectionObserver = IntersectionObserverMock as unknown as typeof IntersectionObserver;
+global.IntersectionObserver = IntersectionObserverMock;
 
 // Suppress console errors during tests but keep them available for inspection
 const originalConsoleError = console.error;
-console.error = vi.fn((...args) => {
+console.error = vi.fn((...args: unknown[]) => {
   if (process.env.NODE_ENV === 'test') {
     return;
   }
@@ -163,5 +175,5 @@ console.error = vi.fn((...args) => {
 
 // Cleanup function to restore console.error
 afterEach(() => {
-  (console.error as Mock).mockClear();
+  vi.mocked(console.error).mockClear();
 });

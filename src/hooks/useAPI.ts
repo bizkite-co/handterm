@@ -1,8 +1,7 @@
-import axios, { type AxiosError } from 'axios';
 import { useCallback } from 'react';
+import axios, { type AxiosError } from 'axios';
 
 import ENDPOINTS from '../shared/endpoints.json';
-
 import { type IAuthProps } from './useAuth';
 
 interface APIResponse<T> {
@@ -41,7 +40,7 @@ export function useAPI(auth: IAuthProps): {
     getFileContent: (repo: string, path: string) => Promise<APIResponse<FileContentResponse>>,
     listRecentRepos: () => Promise<APIResponse<RepoResponse[]>>
 } {
-    const makeAuthenticatedRequest = useCallback(async <T>(
+    const makeAuthenticatedRequest = useCallback(async <T,>(
         endpoint: string,
         params?: Record<string, string>,
         method: 'GET' | 'POST' = 'GET'
@@ -87,7 +86,7 @@ export function useAPI(auth: IAuthProps): {
                 error: errorMessage
             };
         }
-    }, [auth]);
+    }, [auth.validateAndRefreshToken]);
 
     const getRepoTree = useCallback(async (repo: string, path?: string, sha?: string) => {
         return makeAuthenticatedRequest<TreeItemResponse[]>(ENDPOINTS.api.GetRepoTree, {

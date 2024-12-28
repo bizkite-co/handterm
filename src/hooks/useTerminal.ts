@@ -1,7 +1,7 @@
 // hooks/useTerminal.ts
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useComputed } from '@preact/signals-react';
 import { FitAddon } from '@xterm/addon-fit';
-import { useCallback, useEffect, useRef, useState } from 'react';
 import { useXTerm } from 'react-xtermjs';
 
 import { TERMINAL_CONSTANTS } from 'src/constants/terminal';
@@ -41,12 +41,12 @@ export const useTerminal = (): { xtermRef: React.RefObject<HTMLDivElement>; writ
 
   const fitAddon = useRef(new FitAddon());
 
-  const writeToTerminal = useCallback((data: string) => {
+  const writeToTerminal = useCallback((data: string): void => {
     logger.debug('Writing to terminal:', data);
     instance?.write(data);
   }, [instance]);
 
-  const resetPrompt = useCallback(() => {
+  const resetPrompt = useCallback((): void => {
     if (!instance) return;
     logger.debug('Resetting prompt');
     instance.reset();
@@ -70,7 +70,7 @@ export const useTerminal = (): { xtermRef: React.RefObject<HTMLDivElement>; writ
     writeOutputInternal: writeToTerminal,
   });
 
-  const getCurrentCommand = useCallback(() => {
+  const getCurrentCommand = useCallback((): string => {
     if (!instance) return '';
     const buffer = instance.buffer.active;
     let command = '';
@@ -86,14 +86,14 @@ export const useTerminal = (): { xtermRef: React.RefObject<HTMLDivElement>; writ
     return currentCommand;
   }, [instance]);
 
-  const clearCurrentLine = useCallback(() => {
+  const clearCurrentLine = useCallback((): void => {
     if (!instance) return;
     logger.debug('Clearing current line');
     instance.write('\x1b[2K\r'); // Clear the current line
     instance.write(TERMINAL_CONSTANTS.PROMPT); // Rewrite prompt
   }, [instance]);
 
-  const navigateHistory = useCallback((direction: 'up' | 'down') => {
+  const navigateHistory = useCallback((direction: 'up' | 'down'): void => {
     if (!instance || (commandHistory.length === 0)) return;
 
     let newIndex = commandHistoryIndex;
@@ -128,16 +128,7 @@ export const useTerminal = (): { xtermRef: React.RefObject<HTMLDivElement>; writ
     setCommandLine(historicalCommand);
     _setCommandLineState(historicalCommand);
     setCommandHistoryIndex(newIndex);
-  }, [
-    instance,
-    commandHistory,
-    commandHistoryIndex,
-    getCurrentCommand,
-    clearCurrentLine,
-    setCommandHistoryIndex,
-    commandLine,
-    _setCommandLineState,
-  ]);
+  }, [instance, commandHistory, commandHistoryIndex, getCurrentCommand, clearCurrentLine, setCommandHistoryIndex, commandLine, _setCommandLineState]);
 
   useEffect(() => {
     if (instance == null) return;
@@ -276,18 +267,7 @@ export const useTerminal = (): { xtermRef: React.RefObject<HTMLDivElement>; writ
       window.removeEventListener('resize', resizeHandler);
       dataHandler.dispose();
     };
-  }, [
-    instance,
-    getCurrentCommand,
-    resetPrompt,
-    wpmCalculator,
-    commandLine,
-    navigateHistory,
-    handleCharacter,
-    _commandLineState,
-    handleCommand,
-    setCommandHistoryIndex,
-  ]);
+  }, [instance, getCurrentCommand, resetPrompt, wpmCalculator, commandLine, navigateHistory, handleCharacter, _commandLineState, handleCommand, setCommandHistoryIndex]);
 
   return {
     xtermRef,

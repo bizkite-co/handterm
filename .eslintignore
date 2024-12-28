@@ -2,3 +2,4 @@
 /tests-examples
 /tests/example.spec.ts
 webpack.lambda.config.js
+scripts/clearLocalStorage.js

@@ -1,7 +1,7 @@
-import { useComputed } from '@preact/signals-react';
 import { useState, useCallback, useEffect, useRef } from 'react';
+import { useComputed } from '@preact/signals-react';
 
-import { activitySignal, setNotification, bypassTutorialSignal } from 'src/signals/appSignals'
+import { activitySignal, setNotification, bypassTutorialSignal } from 'src/signals/appSignals';
 import {
     getIncompletePhrasesByTutorialGroup, initializeGame,
     setCompletedGamePhrase,
@@ -85,7 +85,7 @@ export function useActivityMediator(): {
         if (getNextTutorial()) commandActivity = ActivityType.TUTORIAL;
 
         return commandActivity ?? ActivityType.NORMAL;
-    }, [activity, bypassTutorial]);
+    }, [activity, bypassTutorial.value]);
 
     const checkGameProgress = useCallback((successPhrase: GamePhrase) => {
         logger.debug('Checking game progress:', successPhrase);
@@ -122,10 +122,7 @@ export function useActivityMediator(): {
         }
         activitySignal.value = ActivityType.NORMAL;
         navigate({ activityKey: ActivityType.NORMAL })
-    }, [
-        getIncompleteTutorialsInGroup,
-        transitionToGame
-    ]);
+    }, [getIncompleteTutorialsInGroup, transitionToGame]);
 
     const checkTutorialProgress = useCallback((command: string | null) => {
         logger.debug('Checking tutorial progress:', {
@@ -191,10 +188,7 @@ export function useActivityMediator(): {
             transitionToGame(nextGamePhrase?.key, groupKey);
         }
         return;
-    }, [
-        canUnlockTutorial,
-        transitionToGame
-    ]);
+    }, [canUnlockTutorial, transitionToGame]);
 
     const handleCommandExecuted = useCallback((parsedCommand: ParsedCommand): boolean => {
         logger.debug('Handling command:', parsedCommand);

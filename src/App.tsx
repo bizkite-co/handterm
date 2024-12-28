@@ -34,16 +34,11 @@ export function App(): JSX.Element {
     return () => window.removeEventListener('resize', handleResize);
   }, [getContainerWidth]);
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const handleOutputUpdate = () => {
-    // Placeholder for future implementation
-  };
-
   useEffect(() => {
     const w = getContainerWidth();
     setContainerWidth(w);
 
-    const handleClickOutsideTerminal = (event: UIEvent) => {
+    const handleOutsideTerminalClick = (event: MouseEvent | TouchEvent) => {
       const currentRef = handexTermWrapperRef.current;
       if (currentRef === null) return;
 
@@ -66,13 +61,13 @@ export function App(): JSX.Element {
     };
 
     // Attach the event listener to the document body
-    document.body.addEventListener('click', handleClickOutsideTerminal);
-    document.body.addEventListener('touchstart', handleClickOutsideTerminal);
+    document.body.addEventListener('click', handleOutsideTerminalClick);
+    document.body.addEventListener('touchstart', handleOutsideTerminalClick);
 
     // Clean up the event listener
     return () => {
-      document.body.removeEventListener('click', handleClickOutsideTerminal);
-      document.body.removeEventListener('touchstart', handleClickOutsideTerminal);
+      document.body.removeEventListener('click', handleOutsideTerminalClick);
+      document.body.removeEventListener('touchstart', handleOutsideTerminalClick);
     };
   }, [getContainerWidth]);
 
@@ -85,7 +80,7 @@ export function App(): JSX.Element {
             handTermRef={handexTermWrapperRef}
           >
             {parseLocation().activityKey !== ActivityType.EDIT
-              && <div />
+              && <div key="edit-activity-placeholder" />
             }
             {isBypassActive.value && (
               <div style={{ position: 'fixed', top: 0, right: 0, color: 'black', background: '#222', padding: '5px' }}>
@@ -96,7 +91,7 @@ export function App(): JSX.Element {
               ref={handexTermWrapperRef}
               auth={auth}
               terminalWidth={containerWidth}
-              onOutputUpdate={handleOutputUpdate}
+              onOutputUpdate={() => {}}
             />
           </CommandProvider>
         </AppProvider>

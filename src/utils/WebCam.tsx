@@ -1,10 +1,11 @@
-import React, { useRef, useEffect } from 'react';
+import type React from 'react';
+import { useRef, useEffect } from 'react';
 
 export interface WebCamProps {
     setOn: boolean;
 }
 
-const WebCam: React.FC<WebCamProps> = ({ setOn }) => {
+const WebCam: React.FC<WebCamProps> = ({ setOn }): JSX.Element => {
     const videoRef = useRef<HTMLVideoElement | null>(null);
 
     useEffect(() => {
@@ -25,10 +26,13 @@ const WebCam: React.FC<WebCamProps> = ({ setOn }) => {
                         facingMode: 'environment'
                     }
                 })
-                .then(stream => {
+                .then((stream: MediaStream) => {
                     if (videoElement) {
                         videoElement.srcObject = stream;
                     }
+                })
+                .catch((error: Error) => {
+                    console.error('Error accessing media devices:', error);
                 });
         } else {
             if (videoElement.srcObject) {
@@ -43,13 +47,20 @@ const WebCam: React.FC<WebCamProps> = ({ setOn }) => {
         return () => {
             if (videoElement && videoElement.srcObject) {
                 const tracks = (videoElement.srcObject as MediaStream).getTracks();
-                tracks.forEach(track => track.stop());
+                tracks.forEach(track => {
+                    track.stop();
+                    track.enabled = false;
+                });
                 videoElement.srcObject = null;
             }
         };
     }, [setOn]);
 
-    return <video ref={videoRef} style={{ width: '100%', height: 'auto' }} />;
+    return (
+      <video ref={videoRef} style={{ width: '100%', height: 'auto' }}>
+        <track kind="captions" src="" label="No captions available" />
+      </video>
+    );
 };
 
 export default WebCam;

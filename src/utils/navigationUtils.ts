@@ -1,5 +1,5 @@
 // src/utils/navigationUtils.ts
-import { ParsedLocation, ActivityType } from 'src/types/Types';
+import { ActivityType, type ParsedLocation } from 'src/types/Types';
 
 // Parse location from either pathname or ?p= parameter
 export function parseLocation(location: string = window.location.toString()): ParsedLocation {
@@ -13,18 +13,18 @@ export function parseLocation(location: string = window.location.toString()): Pa
     const [activityKey, phraseKey] = cleanPath.split('/');
 
     return {
-      activityKey: parseActivityType(activityKey),
-      contentKey: decodeURIComponent(phraseKey || ''),
-      groupKey: urlParams.searchParams.get('group') || undefined
+      activityKey: activityKey == null ? ActivityType.NORMAL : parseActivityType(activityKey),
+      contentKey: decodeURIComponent(phraseKey ?? ''),
+      groupKey: urlParams.searchParams.get('group') ?? null
     };
   }
 
   // Fallback to pathname parsing
   const [, activityKey, phraseKey] = window.location.pathname.split('/');
   return {
-    activityKey: parseActivityType(activityKey),
-    contentKey: decodeURIComponent(phraseKey || ''),
-    groupKey: urlParams.searchParams.get('group') || undefined
+    activityKey: activityKey == null ? ActivityType.NORMAL : parseActivityType(activityKey),
+    contentKey: decodeURIComponent(phraseKey ?? ''),
+    groupKey: urlParams.searchParams.get('group') ?? null
   };
 }
 
@@ -35,8 +35,8 @@ export function parseActivityType(activityString: string): ActivityType {
 }
 
 // Global navigation function that can be used outside of React components
-export function navigate(options: ParsedLocation) {
-  const newActivity = options.activityKey || ActivityType.NORMAL;
+export function navigate(options: ParsedLocation): void {
+  const newActivity = options.activityKey ?? ActivityType.NORMAL;
   const newPhraseKey = options.contentKey ? options.contentKey.replace('\r', '_r') : '';
   const newGroupKey = options.groupKey || '';
 
