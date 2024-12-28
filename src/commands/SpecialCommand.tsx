@@ -2,8 +2,8 @@ import React from 'react';
 import ReactDOMServer from 'react-dom/server';
 
 import { Chord } from '../components/Chord';
-import { ICommand, ICommandContext, ICommandResponse } from '../contexts/CommandContext';
-import { ParsedCommand } from '../types/Types';
+import { type ICommand, type ICommandContext, type ICommandResponse } from '../contexts/CommandContext';
+import { type ParsedCommand } from '../types/Types';
 
 export const SpecialCommand: ICommand = {
   name: 'special',

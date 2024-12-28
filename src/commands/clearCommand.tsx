@@ -1,10 +1,10 @@
 // src/commands/clearCommand.tsx
-import React from 'react';
+import type React from 'react';
 
-import { IHandTermWrapperMethods } from "../components/HandTermWrapper";
-import { ICommand, ICommandContext, ICommandResponse } from '../contexts/CommandContext';
+import { type IHandTermWrapperMethods } from "../components/HandTermWrapper";
+import { type ICommand, type ICommandContext, type ICommandResponse } from '../contexts/CommandContext';
 import { LogKeys } from '../types/TerminalTypes';
-import { ParsedCommand, OutputElement } from '../types/Types';
+import { type ParsedCommand, type OutputElement } from '../types/Types';
 
 interface HandTermState {
   commandHistory?: unknown[];

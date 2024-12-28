@@ -17,7 +17,7 @@ import { useActivityMediator } from './useActivityMediator';
 import { useWPMCalculator } from './useWPMCaculator';
 
 
-const logger = createLogger({ prefix: 'useCommand' });
+const logger: ReturnType<typeof createLogger> = createLogger({ prefix: 'useCommand' });
 
 export const useCommand = (): {
   output: OutputElement[];
@@ -36,7 +36,7 @@ export const useCommand = (): {
     const [output, setOutput] = useState<OutputElement[]>([]);
     const [commandHistory, setCommandHistory] = useState<string[]>([]);
     const [commandHistoryIndex, setCommandHistoryIndex] = useState(-1);
-    const [_commandHistoryFilter, _setCommandHistoryFilter] = useState<string | null>(null);
+    const [commandHistoryFilter, setCommandHistoryFilter] = useState<string | null>(null);
     const currentActivity = useComputed(() => activitySignal.value);
     const {
         handleCommandExecuted,
@@ -116,7 +116,7 @@ export const useCommand = (): {
             wpmAverage: wpms.wpmAverage,
             characterAverages: wpms.charWpms,
             commandTime,
-            sensitive: sensitive || false
+            sensitive: sensitive ?? false
         };
     }, [wpmCalculator]);
 
@@ -131,7 +131,7 @@ export const useCommand = (): {
             response.message,
             response.status,
             commandTime,
-            response.sensitive || false
+            response.sensitive ?? false
         );
         appendToOutput(outputElement);
         addToCommandHistory(command);
@@ -190,8 +190,8 @@ export const useCommand = (): {
         handleCommand,
         commandHistoryIndex,
         setCommandHistoryIndex,
-        commandHistoryFilter: _commandHistoryFilter,
-        setCommandHistoryFilter: _setCommandHistoryFilter,
+        commandHistoryFilter,
+        setCommandHistoryFilter,
         appendToOutput,
         executeCommand
     };

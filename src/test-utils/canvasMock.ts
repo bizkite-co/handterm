@@ -1,14 +1,14 @@
-import { vi } from 'vitest';
+import { vi, type Mock } from 'vitest';
 
 // Define an interface for the mock canvas context methods
 interface MockCanvasContext {
-  fillRect: ReturnType<typeof vi.fn>;
-  clearRect: ReturnType<typeof vi.fn>;
-  drawImage: ReturnType<typeof vi.fn>;
-  beginPath: ReturnType<typeof vi.fn>;
-  closePath: ReturnType<typeof vi.fn>;
-  stroke: ReturnType<typeof vi.fn>;
-  fill: ReturnType<typeof vi.fn>;
+  fillRect: Mock<any, any>;
+  clearRect: Mock<any, any>;
+  drawImage: Mock<any, any>;
+  beginPath: Mock<any, any>;
+  closePath: Mock<any, any>;
+  stroke: Mock<any, any>;
+  fill: Mock<any, any>;
 }
 
 // Create a reusable canvas context mock
@@ -27,7 +27,10 @@ export const createMockCanvasContext = (): MockCanvasContext => {
 };
 
 // Global mock for canvas context
-export const setupCanvasMock = () => {
+export const setupCanvasMock = (): {
+  mockGetContext: Mock<any, any>;
+  restoreOriginalGetContext: () => void;
+} => {
   const originalGetContext = HTMLCanvasElement.prototype.getContext;
   const mockGetContext = vi.fn(() => createMockCanvasContext());
 

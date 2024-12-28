@@ -1,4 +1,6 @@
-export const XtermAdapterConfig: import("@xterm/xterm").ITerminalOptions | import("@xterm/xterm").ITerminalInitOnlyOptions = {
+import type { ITerminalOptions, ITerminalInitOnlyOptions } from '@xterm/xterm';
+
+export const XtermAdapterConfig: ITerminalOptions & ITerminalInitOnlyOptions = {
       fontFamily: '"Fira Code", Menlo, "DejaVu Sans Mono", "Lucida Console", monospace',
       cursorBlink: true,
       cursorStyle: 'block',

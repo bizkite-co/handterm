@@ -5,19 +5,22 @@ import { isInLoginProcessSignal, isInSignUpProcessSignal } from 'src/signals/app
 interface IUseCharacterHandlerProps {
   setLastTypedCharacter: (value:string|null) => void;
   isInSvgMode: boolean;
-  isInLoginProcess: boolean;
   writeOutputInternal: (output: string) => void;
 }
 
 export type { IUseCharacterHandlerProps };
 
+interface UseCharacterHandlerReturn {
+  handleCharacter: (character: string) => void;
+}
+
 export const useCharacterHandler = ({
   setLastTypedCharacter,
   isInSvgMode,
   writeOutputInternal,
-}: IUseCharacterHandlerProps) => {
+}: IUseCharacterHandlerProps): UseCharacterHandlerReturn => {
 
-  const handleCharacter = useCallback((character: string) => {
+  const handleCharacter = useCallback((character: string): void => {
     localStorage.setItem('currentCharacter', character);
 
     if (isInSvgMode) {
@@ -26,16 +29,15 @@ export const useCharacterHandler = ({
       setLastTypedCharacter(null);
     }
 
-    if (isInSignUpProcessSignal.value || isInLoginProcessSignal.value) {
+    if (isInSignUpProcessSignal.value ?? isInLoginProcessSignal.value) {
       writeOutputInternal('*');
     }
 
-    return;
   }, [
     setLastTypedCharacter,
     isInSvgMode,
     writeOutputInternal,
   ]);
 
-  return { handleCharacter };
+  return { handleCharacter } satisfies UseCharacterHandlerReturn;
 };

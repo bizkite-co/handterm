@@ -15,7 +15,7 @@ if (typeof global === 'undefined') {
   window.global = window;
 }
 
-const logger = createLogger({
+const logger: ReturnType<typeof createLogger> = createLogger({
   prefix: 'main',
   level: LogLevel.DEBUG
 });

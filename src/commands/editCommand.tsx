@@ -1,5 +1,5 @@
-import { ICommand, ICommandResponse , ICommandContext } from '../contexts/CommandContext';
-import { ActivityType, ParsedCommand } from '../types/Types';
+import { type ICommand, type ICommandResponse , type ICommandContext } from '../contexts/CommandContext';
+import { ActivityType, type ParsedCommand } from '../types/Types';
 
 const EditCommand: ICommand = {
     name: 'edit',
