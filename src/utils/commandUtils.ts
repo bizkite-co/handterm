@@ -6,7 +6,7 @@ export const commandTextToHTML = (text: string): string => {
 };
 
 export const loadCommandHistory = (): string[] => {
-  const storedHistory = (localStorage.getItem(LogKeys.commandHistory ?? '') as string) ?? '[]';
+  const storedHistory = localStorage.getItem(LogKeys.commandHistory ?? '') ?? '[]';
   try {
     const parsedHistory = JSON.parse(storedHistory) as unknown;
     // If it's an array of strings, return it directly

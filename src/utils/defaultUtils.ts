@@ -4,11 +4,11 @@ import ENDPOINTS from '../shared/endpoints.json';
 
 interface Endpoints {
   api: {
-    BaseUrl: string;
+    baseUrl: string;
   };
 }
 
-const typedEndpoints = ENDPOINTS as Endpoints;
+const typedEndpoints = ENDPOINTS as unknown as Endpoints;
 
 interface DocumentResponse {
   success: boolean;
@@ -17,7 +17,7 @@ interface DocumentResponse {
 
 export const saveDocument = async (documentData: string): Promise<DocumentResponse> => {
   const response: AxiosResponse<DocumentResponse> = await axios.post(
-    `${typedEndpoints.api.BaseUrl}/saveDocument`,
+    `${typedEndpoints.api.baseUrl}/saveDocument`,
     documentData
   );
   return response.data;

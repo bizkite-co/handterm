@@ -1,8 +1,4 @@
 {
-  "extends": "./tsconfig.json",
-  "include": ["eslint-rules/**/*.js"],
-  "compilerOptions": {
-    "allowJs": true,
-    "checkJs": true
-  }
+  "extends": "./tsconfig.base.json",
+  "include": ["eslint-rules/**/*", "eslint-plugin-custom-rules/**/*"]
 }

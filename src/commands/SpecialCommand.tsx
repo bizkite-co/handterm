@@ -1,4 +1,3 @@
-import React from 'react';
 import ReactDOMServer from 'react-dom/server';
 
 import { Chord } from '../components/Chord';
@@ -12,6 +11,7 @@ export const SpecialCommand: ICommand = {
     _context: ICommandContext,
     _parsedCommand: ParsedCommand,
   ): Promise<ICommandResponse> => {
+    await Promise.resolve();
     const specialChars = ['~', '`', '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '-', '_', '+', '=', '{', '[', '}', ']', '|', '\\', ':', ';', '"', "'", '<', '>', ',', '.', '?', '/'];
     const chordElements = specialChars.map(char => (
       <Chord key={char} displayChar={char} />

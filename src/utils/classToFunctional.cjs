@@ -1,10 +1,9 @@
 /**
  * src/utils/classToFunctional.cjs
- * 
+ *
  * This is a basic jscodeshift script to start converting React class components
  * to functional components by transforming class method declarations.
  */
-const { parse } = require('recast');
 
 module.exports = function transformer(file, api) {
   const j = api.jscodeshift.withParser('tsx');
@@ -54,7 +53,7 @@ module.exports = function transformer(file, api) {
         reactImportDeclaration = j.importDeclaration([], j.literal('react'));
         root.get().node.program.body.unshift(reactImportDeclaration);
       }
-  
+
       const { specifiers } = reactImportDeclaration.paths()[0].value;
       hooksImportCheck.forEach(hookName => {
         if (!specifiers.some(specifier => specifier.imported.name === hookName)) {

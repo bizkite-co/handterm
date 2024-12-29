@@ -17,7 +17,7 @@ vi.mock('src/hooks/useActivityMediator', async () => {
       isInNormal: true,
       heroAction: 'Idle',
       zombie4Action: 'Walk',
-      handleCommandExecuted: vi.fn((command) => {
+      handleCommandExecuted: vi.fn((command: { command: string }) => {
         // Mimic the actual implementation's logic
         if (command.command === 'play' || command.command === 'tut') {
           return true;

@@ -8,7 +8,9 @@ import { exposeSignals } from './e2e/helpers/exposeSignals';
 import { QueryProvider } from './providers/QueryProvider';
 import { createLogger, LogLevel } from './utils/Logger';
 
-window.Buffer = Buffer;
+if (typeof window.Buffer === 'undefined') {
+  window.Buffer = Buffer;
+}
 
 // Define 'global' if it's undefined (for browser environments)
 if (typeof global === 'undefined') {
@@ -42,7 +44,6 @@ if (import.meta.env.DEV !== undefined || import.meta.env.TEST !== undefined) {
         }
       ],
         {
-          /* eslint-disable @typescript-eslint/naming-convention */
           future: {
             v7_fetcherPersist: true,
             v7_normalizeFormMethod: true,
@@ -50,7 +51,6 @@ if (import.meta.env.DEV !== undefined || import.meta.env.TEST !== undefined) {
             v7_relativeSplatPath: true,
             v7_skipActionErrorRevalidation: true,
           }
-          /* eslint-enable @typescript-eslint/naming-convention */
         }
       )
 
@@ -61,9 +61,7 @@ if (import.meta.env.DEV !== undefined || import.meta.env.TEST !== undefined) {
             <QueryProvider>
               <RouterProvider
                 router={router}
-                /* eslint-disable @typescript-eslint/naming-convention */
                 future={{ v7_startTransition: true }}
-              /* eslint-enable @typescript-eslint/naming-convention */
               />
             </QueryProvider>
           </StrictMode>

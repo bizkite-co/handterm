@@ -7,6 +7,10 @@ export function isNullOrEmptyString(value: unknown): value is null | undefined |
   return value === null || value === undefined || value === '';
 }
 
+export function isNotNullOrUndefined<T>(value: T | null | undefined):boolean {
+  return value != null;
+}
+
 // Safe value retrieval with default
 export function getValidatedValue<T>(
   value: T | null | undefined,

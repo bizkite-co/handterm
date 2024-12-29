@@ -1,4 +1,4 @@
-import { Signal } from "@preact/signals-react";
+import { type Signal } from "@preact/signals-react";
 
 export interface PersistenceConfig<T> {
   key: string;
@@ -7,12 +7,17 @@ export interface PersistenceConfig<T> {
   deserialize?: (value: string) => T;
 }
 
+interface PersistentSignal<T> {
+  signal: Signal<T>;
+  update: (newValue: T | ((prev: T) => T)) => void;
+}
+
 export function createPersistentSignal<T>({
   key,
   signal,
   serialize = JSON.stringify,
   deserialize = JSON.parse,
-}: PersistenceConfig<T>) {
+}: PersistenceConfig<T>): PersistentSignal<T> {
   const loadInitialState = () => {
     const storedValue = localStorage.getItem(key);
     if (storedValue) {

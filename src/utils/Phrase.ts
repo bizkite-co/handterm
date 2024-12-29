@@ -1,18 +1,18 @@
 import { allChords } from "../allChords";
-import { Chord } from "../types/Types";
+import { type Chord } from "../types/Types";
 
 import { createHTMLElementFromHTML } from "./dom";
 
 export class Phrase {
-    private _value: string[];
-    private _chords: Chord[] = [];
-    private _chordsHTML: HTMLElement[] = [];
+    private internalValue: string[];
+    private internalChords: Chord[] = [];
+    private internalChordsHTML: HTMLElement[] = [];
 
     constructor(value: string[]) {
         if(!value || !Array.isArray(value) || value.length == 0){
             throw new Error('Phrase value must be an array with at least one element');
         }
-        this._value = value;
+        this.internalValue = value;
         if(!value[0]) return;
         if (Array.isArray(value)) {
             this.setChords(value);
@@ -20,31 +20,32 @@ export class Phrase {
     }
 
     get value(): string[] {
-        return this._value;
+        return this.internalValue;
     }
 
     get chordsHTML(): HTMLElement[] {
-        return this._chordsHTML;
+        return this.internalChordsHTML;
     }
 
     get chords(): Chord[] {
-        return this._chords;
+        return this.internalChords;
     }
 
     private setChords(keys: string[]): void {
         keys.forEach((key) => {
             const foundChordHTML = Phrase.findChordHTML(key);
             if (foundChordHTML) {
-                this._chordsHTML.push(foundChordHTML);
+                this.internalChordsHTML.push(foundChordHTML);
             }
             const chord = allChords.find(x => x.key == key);
             if (chord) {
-                this._chords.push(chord);
+                this.internalChords.push(chord);
             }
         })
     }
 
-    public static createChordHTML(foundChord: Chord): HTMLElement {
+    public static createChordHTML(foundChord: Chord | undefined): HTMLElement | null {
+        if (!foundChord) return null;
         return createHTMLElementFromHTML(
             `<div class="col-sm-2 row generated" id="chord2">
                 <span id="char${foundChord.index}">${foundChord.key}</span>
@@ -67,8 +68,11 @@ export class Phrase {
         // Load the clone in Chord order into the wholePhraseChords div.
         if (foundChords.length > 0) {
             const foundChord = foundChords[0];
-            inChord = this.createChordHTML(foundChord);
-            inChord.setAttribute("name", foundChord.key.replace('(', '').replace(')', '').replace(' ', '-'));
+            const chordElement = this.createChordHTML(foundChord);
+            if (chordElement && foundChord) {
+                chordElement.setAttribute("name", foundChord.key.replace('(', '').replace(')', '').replace(' ', '-'));
+                inChord = chordElement;
+            }
         }
         // Removed console.error statement
         return inChord;
