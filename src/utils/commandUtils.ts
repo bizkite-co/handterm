@@ -28,12 +28,12 @@ export const loadCommandHistory = (): string[] => {
 
 export const saveCommandHistory = (commandHistory: string[]): void => {
   if (LogKeys.commandHistory != null)
-    localStorage.setItem(LogKeys.commandHistory, JSON.stringify(commandHistory));
+    localStorage.setItem(LogKeys.commandHistory ?? '', JSON.stringify(commandHistory));
 }
 
 export function parsedCommandToString(cmd: ParsedCommand): string {
-  const argsStr = cmd.args ? cmd.args.join(' ') : '';
-  const switchesStr = !cmd.switches ? '' : Object.entries(cmd.switches)
+  const argsStr = cmd.args != null ? cmd.args.join(' ') : '';
+  const switchesStr = cmd.switches == null ? '' : Object.entries(cmd.switches)
     .map(([key, value]) => {
       if (typeof value === 'boolean') {
         return value ? `-${key}` : '';
@@ -49,6 +49,10 @@ export function parsedCommandToString(cmd: ParsedCommand): string {
     .trim();
 }
 
+function isSwitch(part: string): boolean {
+  return part.substring(0, 1) === '--'  || (part.startsWith('-') && part.length === 2);
+}
+
 export const parseCommand = (input: string): ParsedCommand => {
   const parts = input.split(/\s+/).filter(Boolean); // Split by whitespace and remove empty strings
   const command = parts.shift() ?? ''; // The first element is the command
@@ -56,9 +60,10 @@ export const parseCommand = (input: string): ParsedCommand => {
   const switches: Record<string, boolean | string> = {};
 
   for (let i = 0; i < parts.length; i++) {
-    const part = parts[i];
-    if (!part) continue; // Skip if undefined (shouldn't happen due to filter)
-    if (part.startsWith('--') || (part.startsWith('-') && part.length === 2)) {
+    const part: string | undefined = parts[i];
+    if (part === undefined) continue;
+    if (part == null) continue; // Skip if undefined (shouldn't happen due to filter)
+    if (isSwitch(part)) {
       const switchAssignmentIndex = part.indexOf('=');
       if (switchAssignmentIndex > -1) {
         // It's a switch with an explicit value

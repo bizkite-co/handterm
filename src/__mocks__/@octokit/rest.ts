@@ -1,11 +1,66 @@
 import { vi } from 'vitest';
+import type { Mock } from 'vitest';
 
-export class Octokit {
-  constructor() {
-    return {
+export function createOctokit(): {
+  rest: {
+    repos: {
+      listForAuthenticatedUser: Mock<[], Promise<{
+        data: Array<{
+          id: number;
+          name: string;
+          owner: { login: string };
+          full_name: string;
+          description: string;
+          html_url: string;
+          updated_at: string;
+          url: string;
+          trees_url: string;
+        }>;
+      }>>;
+    };
+    git: {
+      getTree: Mock<[], Promise<{
+        data: {
+          tree: Array<{
+            path: string;
+            type: string;
+            sha: string;
+          }>;
+        };
+      }>>;
+      getBlob: Mock<[], Promise<{
+        data: {
+          content: string;
+          encoding: string;
+          sha: string;
+          size: number;
+        };
+      }>>;
+    };
+  };
+  auth: Mock<[], Promise<{
+    type: string;
+    tokenType: string;
+    token: string;
+    expiresAt: string;
+  }>>;
+} {
+  return {
       rest: {
         repos: {
-          listForAuthenticatedUser: vi.fn().mockResolvedValue({
+          listForAuthenticatedUser: vi.fn<[], Promise<{
+            data: Array<{
+              id: number;
+              name: string;
+              owner: { login: string };
+              full_name: string;
+              description: string;
+              html_url: string;
+              updated_at: string;
+              url: string;
+              trees_url: string;
+            }>;
+          }>>().mockResolvedValue({
             data: [
               {
                 id: 1,
@@ -22,7 +77,15 @@ export class Octokit {
           })
         },
         git: {
-          getTree: vi.fn().mockResolvedValue({
+          getTree: vi.fn<[], Promise<{
+            data: {
+              tree: Array<{
+                path: string;
+                type: string;
+                sha: string;
+              }>;
+            };
+          }>>().mockResolvedValue({
             data: {
               tree: [
                 {
@@ -38,7 +101,14 @@ export class Octokit {
               ]
             }
           }),
-          getBlob: vi.fn().mockResolvedValue({
+          getBlob: vi.fn<[], Promise<{
+            data: {
+              content: string;
+              encoding: string;
+              sha: string;
+              size: number;
+            };
+          }>>().mockResolvedValue({
             data: {
               content: Buffer.from('Hello, World!').toString('base64'),
               encoding: 'base64',
@@ -48,12 +118,16 @@ export class Octokit {
           })
         }
       },
-      auth: vi.fn().mockResolvedValue({
+      auth: vi.fn<[], Promise<{
+        type: string;
+        tokenType: string;
+        token: string;
+        expiresAt: string;
+      }>>().mockResolvedValue({
         type: 'token',
         tokenType: 'installation',
         token: 'test-token',
         expiresAt: new Date(Date.now() + 3600000).toISOString()
       })
-    };
-  }
+  };
 }

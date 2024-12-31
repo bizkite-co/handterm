@@ -88,14 +88,14 @@ const specialFiles: Record<string, string> = {
 
 export function getFileIcon(path: string): string {
     // Check for special filenames first
-    const filename = path.split('/').pop() || '';
+    const filename = path.split('/').pop() ?? '';
     if (filename in specialFiles) {
-        return specialFiles[filename];
+        return specialFiles[filename] ?? '';
     }
 
     // Get file extension
-    const ext = filename.split('.').pop()?.toLowerCase() || '';
-    return fileIconMap[ext] || '📄';
+    const ext = filename.split('.').pop()?.toLowerCase() ?? '';
+    return fileIconMap[ext] ?? '📄';
 }
 
 export function getFolderIcon(isExpanded: boolean): string {

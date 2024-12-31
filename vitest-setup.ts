@@ -14,15 +14,14 @@ interface MockCanvasContext extends Omit<CanvasRenderingContext2D, 'canvas' | 'g
 
 // Create a type-safe mock of CanvasRenderingContext2D
 const createMockContext = (): MockCanvasContext => {
-  const context = {
+  // First create a partial context with basic properties
+  const baseContext = {
     canvas: document.createElement('canvas'),
     getContextAttributes: vi.fn().mockReturnValue({
       alpha: true,
       desynchronized: false,
-      colorSpace: 'srgb',
-      willReadFrequently: false,
+      colorSpace: 'srgb'
     }),
-
     // Properties
     globalAlpha: 1,
     globalCompositeOperation: 'source-over',
@@ -50,7 +49,10 @@ const createMockContext = (): MockCanvasContext => {
     textRendering: 'auto',
     letterSpacing: '0px',
     wordSpacing: '0px',
+  };
 
+  // Create method mocks with proper overload signatures
+  const methodMocks = {
     // Methods
     arc: vi.fn(),
     arcTo: vi.fn(),
@@ -65,7 +67,29 @@ const createMockContext = (): MockCanvasContext => {
     createPattern: vi.fn().mockReturnValue(null),
     createRadialGradient: vi.fn().mockReturnValue({} as CanvasGradient),
     drawFocusIfNeeded: vi.fn(),
-    drawImage: vi.fn(),
+    drawImage: vi.fn().mockImplementation(
+      (
+        _image: CanvasImageSource,
+        _dx: number,
+        _dy: number,
+        _dw?: number,
+        _dh?: number,
+        _sx?: number,
+        _sy?: number,
+        _sw?: number,
+        _sh?: number
+      ): void => {
+        // Count non-undefined arguments to determine which overload was called
+        const argCount = [_image, _dx, _dy, _dw, _dh, _sx, _sy, _sw, _sh].filter(
+          (arg) => arg !== undefined
+        ).length;
+
+        if (argCount === 3 || argCount === 5 || argCount === 9) {
+          return;
+        }
+        throw new Error('Invalid number of arguments for drawImage');
+      }
+    ),
     ellipse: vi.fn(),
     fill: vi.fn(),
     fillRect: vi.fn(),
@@ -108,21 +132,22 @@ const createMockContext = (): MockCanvasContext => {
     strokeRect: vi.fn(),
     strokeText: vi.fn(),
     transform: vi.fn(),
-    translate: vi.fn(),
+    translate: vi.fn()
   };
 
-  return context as unknown as MockCanvasContext;
+  // Combine base context and method mocks, then cast to the required type
+  return { ...baseContext, ...methodMocks } as unknown as MockCanvasContext;
 };
 
 // Type-safe mock canvas
 const mockCanvasContext = createMockContext();
-const getContextMock = vi.fn().mockImplementation((contextId: string) => {
+const getContextMock = vi.fn().mockImplementation((contextId: string): CanvasRenderingContext2D | null => {
   return contextId === '2d' ? mockCanvasContext : null;
 });
 
 // Mock ResizeObserver
 class ResizeObserverMock implements ResizeObserver {
-  constructor(private callback: ResizeObserverCallback) { }
+  constructor(private callback: ResizeObserverCallback) {}
   observe = vi.fn();
   unobserve = vi.fn();
   disconnect = vi.fn();
@@ -144,8 +169,8 @@ Object.defineProperty(window, 'matchMedia', {
     removeListener: vi.fn(),
     addEventListener: vi.fn(),
     removeEventListener: vi.fn(),
-    dispatchEvent: vi.fn(),
-  })),
+    dispatchEvent: vi.fn()
+  }))
 });
 
 // Mock IntersectionObserver
@@ -154,7 +179,7 @@ class IntersectionObserverMock implements IntersectionObserver {
   readonly rootMargin = '0px';
   readonly thresholds: ReadonlyArray<number> = [0];
 
-  constructor(private callback: IntersectionObserverCallback) { }
+  constructor(private callback: IntersectionObserverCallback) {}
 
   observe = vi.fn();
   unobserve = vi.fn();

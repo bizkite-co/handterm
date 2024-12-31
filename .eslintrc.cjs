@@ -95,7 +95,6 @@ module.exports = {
       allowNullableNumber: false,
       allowAny: false
     }],
-    'custom-rules/prefer-nullish-coalescing': 'error',
 
     // Functional Programming Encouragement (without plugin)
     'no-var': 'error',
@@ -120,10 +119,18 @@ module.exports = {
         'e2e/**/*.[jt]s?(x)',
         'tests/**/*.[jt]s?(x)',
         'src/test-utils/**/*',
+        'vitest-setup.ts',
       ],
       rules: {
         '@typescript-eslint/no-explicit-any': 'off',
-        'no-param-reassign': 'off'
+        'no-param-reassign': 'off',
+        'no-restricted-globals': [
+          'error',
+          {
+            name: 'ImageData',
+            message: 'Import ImageData from the canvas package instead of using the global browser API'
+          }
+        ]
       }
     }
   ]
