@@ -25,6 +25,7 @@
     "vitest.config.ts",
     "src/**/*.d.ts",
     "src/hooks/**/*.d.ts",
+    "src/test-utils/canvasMock.d.ts",
     "src/test-utils/**/*.d.ts",
     "tests-examples/**/*"
   ],

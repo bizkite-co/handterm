@@ -25,12 +25,7 @@ module.exports = {
   ],
   parser: '@typescript-eslint/parser',
   parserOptions: {
-    project: [
-      './tsconfig.json',
-      './tsconfig.test.json',
-      './tsconfig.node.json',
-      './tsconfig.eslint-rules.json',
-    ],
+    project: './tsconfig.eslint.json',
     exclude: ['eslint-plugin-custom-rules/**'],
     ecmaVersion: 'latest',
     sourceType: 'module',
@@ -121,6 +116,9 @@ module.exports = {
         'src/test-utils/**/*',
         'vitest-setup.ts',
       ],
+      parserOptions: {
+        project: './tsconfig.eslint-test.json'
+      },
       rules: {
         '@typescript-eslint/no-explicit-any': 'off',
         'no-param-reassign': 'off',
@@ -131,6 +129,16 @@ module.exports = {
             message: 'Import ImageData from the canvas package instead of using the global browser API'
           }
         ]
+      }
+    },
+    // Type Declaration Files Override
+    {
+      files: [
+        'src/test-utils/**/*.d.ts',
+        'src/hooks/useActivityMediator.d.ts'
+      ],
+      parserOptions: {
+        project: './tsconfig.eslint-canvas.json'
       }
     }
   ]

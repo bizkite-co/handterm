@@ -1,0 +1,7 @@
+{
+  "extends": "./tsconfig.base.json",
+  "include": [
+    "src/test-utils/canvasMock.d.ts",
+    "src/hooks/useActivityMediator.d.ts"
+  ]
+}

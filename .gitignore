@@ -11,6 +11,9 @@ node_modules
 dist
 dist-ssr
 *.local
+eslint-files.csv
+eslint-files.json
+eslint-results.json
 
 # Editor directories and files
 .idea
