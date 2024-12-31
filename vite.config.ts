@@ -9,8 +9,10 @@ export default defineConfig({
   plugins: [
     react(),
     nodePolyfills({
-      // Whether to polyfill `node:` protocol imports.
-      protocolImports: true,
+      globals: {
+        Buffer: true,
+        process: true,
+      },
     }),
     {
       name: 'monaco-editor-nls',
@@ -51,7 +53,26 @@ export default defineConfig({
     },
   },
   optimizeDeps: {
-    include: ['@monaco-editor/react'],
+    include: [
+      '@monaco-editor/react',
+      '@preact_signals-react',
+      'hoist-non-react-statics'
+    ],
+    exclude: [
+      '@emotion/react/jsx-dev-runtime',
+      'vite-plugin-node-polyfills/shims/buffer',
+      'vite-plugin-node-polyfills/shims/global',
+      'vite-plugin-node-polyfills/shims/process',
+      'vite-plugin-node-polyfills_shims_buffer',
+      'vite-plugin-node-polyfills_shims_global',
+      'vite-plugin-node-polyfills_shims_process',
+      'chunk-2MKEI7ZQ',
+      'chunk-NS4ASZ7Z',
+      'chunk-NDUKVSJZ',
+      'chunk-3TFVT2CW',
+      'chunk-4MBMRILA',
+      'canvas-confetti'
+    ],
     esbuildOptions: {
       plugins: [
         {

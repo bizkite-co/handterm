@@ -1,9 +1,10 @@
 // src/contexts/CommandContext.tsx
-import React, { createContext, useContext } from 'react';
+import type React from 'react';
+import { createContext, useContext } from 'react';
 
-import { IHandTermWrapperMethods } from '../components/HandTermWrapper';
-import { IAuthProps } from '../hooks/useAuth';
-import { OutputElement, ParsedCommand, ParsedLocation } from '../types/Types';
+import { type IHandTermWrapperMethods } from '../components/HandTermWrapper';
+import { type IAuthProps } from '../hooks/useAuth';
+import { type OutputElement, type ParsedCommand, type ParsedLocation } from '../types/Types';
 
 export interface ICommandResponse {
   status: number;

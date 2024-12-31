@@ -1,5 +1,5 @@
-import { ICommand, ICommandContext, ICommandResponse } from '../contexts/CommandContext';
-import { Phrases, GamePhrase, ParsedCommand } from '../types/Types';
+import { type ICommand, type ICommandContext, type ICommandResponse } from '../contexts/CommandContext';
+import { Phrases, type GamePhrase, type ParsedCommand } from '../types/Types';
 
 export const ListPhrasesCommand: ICommand = {
   name: 'ls',

@@ -122,17 +122,58 @@ export class TerminalPage {
    * Waits for the terminal to be ready
    */
   public async waitForTerminal(): Promise<void> {
-    // Wait for terminal element to exist
-    await this.terminal.waitFor({ state: 'attached', timeout: 60000 });
-
-    // Wait for terminal to be visible
-    await this.terminal.waitFor({ state: 'visible', timeout: 60000 });
-
-    // Additional check for terminal initialization
-    await this.page.waitForFunction(() => {
+    // Debug: Check if terminal element exists in DOM
+    const terminalExists = await this.page.evaluate(() => {
       const term = document.querySelector('#xtermRef');
-      return term && term.childElementCount > 0;
-    }, { timeout: 60000 });
+      return !!term;
+    });
+    if (!terminalExists) {
+      throw new Error('Terminal element (#xtermRef) not found in DOM');
+    }
+
+    // Debug: Check if xterm.js is loaded
+    const xtermLoaded = await this.page.evaluate(() => {
+      return 'Terminal' in window && typeof window.Terminal === 'function';
+    });
+    if (!xtermLoaded) {
+      throw new Error('xterm.js library not loaded');
+    }
+
+    // Wait for terminal element to be visible
+    await this.terminal.waitFor({ state: 'visible', timeout: 10000 });
+
+    // Verify terminal is properly initialized
+    const initStatus = await this.page.waitForFunction(() => {
+      const term = document.querySelector('#xtermRef');
+      if (!term) return 'Terminal element not found';
+
+      // Check if xterm.js has initialized its viewport
+      const viewport = term.querySelector('.xterm-viewport');
+      if (!viewport) return 'Viewport not initialized';
+
+      // Check if terminal has content
+      const screen = term.querySelector('.xterm-screen');
+      if (!screen) return 'Screen element not found';
+      if (!screen.childElementCount) return 'Screen has no content';
+
+      return 'ready';
+    }, { timeout: 10000 });
+
+    const status = await initStatus.jsonValue();
+    if (status !== 'ready') {
+      throw new Error(`Terminal initialization failed: ${status}`);
+    }
+
+    // Ensure terminal is interactive
+    await this.terminal.click();
+    const focused = await this.page.waitForFunction(() => {
+      const term = document.querySelector('#xtermRef');
+      return term?.classList.contains('focus');
+    }, { timeout: 10000 });
+
+    if (!focused) {
+      throw new Error('Terminal failed to gain focus');
+    }
   }
 
   /**

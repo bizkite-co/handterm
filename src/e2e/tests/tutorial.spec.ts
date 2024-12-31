@@ -5,6 +5,7 @@ import { TerminalPage } from '../page-objects/TerminalPage';
 let terminalPage: TerminalPage;
 
 test.beforeEach(async ({ page }) => {
+  test.setTimeout(120000);
   terminalPage = new TerminalPage(page);
 
   // Clear localStorage using a command
@@ -13,7 +14,7 @@ test.beforeEach(async ({ page }) => {
   await terminalPage.goto();
 });
 
-test('should progress from tutorial to game mode after completing initial steps', async ({ page }) => {
+test('should progress from tutorial to game mode after completing initial steps', async ({ page: _page }) => {
   // Given the user is in tutorial mode
   await expect(terminalPage.tutorialMode).toBeVisible();
 

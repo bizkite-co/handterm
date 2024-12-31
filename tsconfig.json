@@ -46,7 +46,8 @@
   "include": [
     "src",
     "moduleResolver.ts",
-    "@monaco-editor-react.js"
+    "@monaco-editor-react.js",
+    ".eslintrc.cjs"
   ],
   "exclude": [
     "scripts"
