@@ -2,7 +2,13 @@ import { useSignal, useComputed } from '@preact/signals-react';
 import { useEffect } from 'react';
 import { useLocation, useSearchParams } from 'react-router-dom';
 
-export function useReactiveLocation() {
+interface ReactiveLocation {
+  pathname: ReturnType<typeof useSignal<string>>;
+  search: ReturnType<typeof useSignal<string>>;
+  isInitialized: ReturnType<typeof useComputed<boolean>>;
+}
+
+export function useReactiveLocation(): ReactiveLocation {
   const location = useLocation();
   useSearchParams();
 
@@ -22,7 +28,7 @@ export function useReactiveLocation() {
         searchSignal.value = location.search;
       }
     }
-  }, [location, pathSignal, searchSignal, isInitialized]);
+  }, [location]);
 
 
   return {

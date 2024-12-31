@@ -1,9 +1,11 @@
 import { Chord } from "./Chord";
 
-export function Nav() {
+export function Nav(): JSX.Element {
     return (
-        ['UpArrow', 'LeftArrow', 'DownArrow', 'RightArrow'].map(c => {
-            return <Chord key={c} displayChar={c} />
-        })
-    )
+        <>
+            {['UpArrow', 'LeftArrow', 'DownArrow', 'RightArrow'].map(c => (
+                <Chord key={c} displayChar={c} />
+            ))}
+        </>
+    );
 }

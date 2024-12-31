@@ -1,10 +1,27 @@
 # Tech Context
 
 ## Technologies Used
-[List the main technologies and frameworks]
+
+* React
+* TypeScript
+* Vite
+* Vitest
+* ESLint
+* @xterm/xterm
+* Monacaco editor
+* @preact/signals-react
+
 
 ## Development Setup
-[Describe the development environment and setup process]
+
+* VS Code
+* WSL2
+* NPM
+* Node.js
+* Git
+* GitHub
+* Deployed to GitHub Pages
+* GitHub Actions for CI/CD
 
 ## Technical Constraints
 [Document any technical limitations or constraints]

@@ -70,10 +70,8 @@ const mockTerminal = {
   loadAddon: vi.fn(),
   open: vi.fn(),
   write: vi.fn(),
-  onData: vi.fn((callback) => {
-    (window as WindowWithXtermCallback).__xtermDataCallback = (data: string) => {
-      callback(data);
-    };
+  onData: vi.fn((callback: (data: string) => void) => {
+    (window as WindowWithXtermCallback).__xtermDataCallback = callback;
     return { dispose: vi.fn() };
   }),
   onKey: vi.fn(),
@@ -110,7 +108,7 @@ vi.mock('@xterm/addon-fit', () => ({
 
 // Define types for window extensions
 interface WindowWithXtermCallback extends Window {
-  __xtermDataCallback?: (data: string) => void;
+  __xtermDataCallback?: ((data: string) => void) | undefined;
   mockTerminal?: typeof mockTerminal;
   triggerTerminalInput?: (data: string) => void;
 }
@@ -118,7 +116,7 @@ interface WindowWithXtermCallback extends Window {
 // Helper to trigger terminal input
 function createTriggerTerminalInput(data: string) {
   const xtermDataCallback = (window as WindowWithXtermCallback).__xtermDataCallback;
-  if (xtermDataCallback) {
+  if (xtermDataCallback != null) {
     // For Enter key, ensure we send just \r
     if (data === '\r\n') {
       xtermDataCallback('\r');
@@ -135,5 +133,8 @@ function createTriggerTerminalInput(data: string) {
 
 // Set up callback handler
 (window as WindowWithXtermCallback).__xtermDataCallback = (data: string) => {
-  (window as WindowWithXtermCallback).__xtermDataCallback?.(data);
+  const callback = (window as WindowWithXtermCallback).__xtermDataCallback;
+  if (callback != null) {
+    callback(data);
+  }
 };
