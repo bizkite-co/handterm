@@ -11,7 +11,7 @@ export interface IActivityMediatorContext {
 
 const ActivityMediatorContext = createContext<IActivityMediatorContext | null>(null);
 
-export const useActivityMediatorContext = () => {
+export const useActivityMediatorContext = (): IActivityMediatorContext => {
     const context = useContext(ActivityMediatorContext);
     if (!context) {
         throw new Error('useActivityMediatorContext must be used within an ActivityMediatorProvider');

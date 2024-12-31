@@ -5,15 +5,15 @@ import { type ParsedCommand } from '../types/Types';
 export const toggleVideoCommand: ICommand = {
     name: 'video',
     description: 'Toggle webcam video on/off',
-    execute: async (
+    execute: (
         _context: ICommandContext,
         _parsedCommand: ParsedCommand
     ): Promise<ICommandResponse> => {
         isShowVideoSignal.value = !isShowVideoSignal.value;
-        return {
+        return Promise.resolve({
             status: 200,
             message: `Video ${isShowVideoSignal.value ? 'enabled' : 'disabled'}`,
-        };
+        });
     }
 };
 

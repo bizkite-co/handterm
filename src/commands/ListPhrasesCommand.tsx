@@ -9,21 +9,21 @@ export const ListPhrasesCommand: ICommand = {
     'random': 'List a random phrase',
     'easy': 'List only easy phrases',
   },
-  execute: async (
+  execute: (
     context: ICommandContext,
     _parsedCommand: ParsedCommand
   ): Promise<ICommandResponse> => {
-    if (!context) {
-      return { status: 404, message: 'No command context available.' };
+    if (context === null || context === undefined) {
+      return Promise.resolve({ status: 404, message: 'No command context available.' });
     }
 
     const phrases: string = Phrases
       .map((phrase: GamePhrase) => phrase.key)
       .join('\n');
 
-    return {
+    return Promise.resolve({
       status: 200,
       message: phrases
-    };
+    });
   }
 };

@@ -36,7 +36,7 @@ export interface ICommandContext {
 
 export const CommandContext = createContext<ICommandContext | null>(null);
 
-export const useCommandContext = () => {
+export const useCommandContext = (): ICommandContext => {
   const context = useContext(CommandContext);
   if (!context) {
     throw new Error('useCommandContext must be used within a CommandProvider');
