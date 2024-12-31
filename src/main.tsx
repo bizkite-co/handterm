@@ -23,7 +23,7 @@ const logger: ReturnType<typeof createLogger> = createLogger({
 });
 
 // Expose signals for e2e testing in development/test environments
-if (import.meta.env.DEV !== undefined || import.meta.env.TEST !== undefined) {
+if (import.meta.env.DEV !== undefined || import.meta.env.TEST !== undefined || process.env.PLAYWRIGHT_TEST === '1') {
   exposeSignals();
 
   try {

@@ -1,6 +1,6 @@
 // src/commands/commandRegistry.ts
 
-import { ICommand } from '../contexts/CommandContext';
+import { type ICommand } from '../contexts/CommandContext';
 
 export type ICommandRegistryItems = Record<string, ICommand>;
 

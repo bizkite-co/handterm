@@ -52,7 +52,7 @@ describe('Game Component', () => {
   it('renders without canvas context errors', () => {
     render(<Game {...defaultProps} />);
 
-    expect(screen.getByRole('presentation')).toBeTruthy();
+    expect(screen.getByTestId('game-canvas')).toBeTruthy();
     expect(canvasMock.mockGetContext).toHaveBeenCalledWith('2d');
   });
 
@@ -62,7 +62,7 @@ describe('Game Component', () => {
   it('initializes canvas with correct dimensions', () => {
     render(<Game {...defaultProps} />);
 
-    const canvas = screen.getByRole('presentation');
+    const canvas = screen.getByTestId('game-canvas');
     expect(canvas).toBeTruthy();
     expect(canvas).toHaveAttribute('width', '800');
     expect(canvas).toHaveAttribute('height', '600');

@@ -72,7 +72,7 @@ export class Sprite {
             } else {
                 // Log error without using console.error
                 const errorMessage = `No frameCoords found for frameIndex: ${frameIndex}`;
-                if (typeof window !== 'undefined' && window.console && window.console.error) {
+                if (typeof window.console.error === 'function') {
                     window.console.error(errorMessage);
                 }
             }

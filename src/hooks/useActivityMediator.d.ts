@@ -1,5 +1,5 @@
-import { ActionType } from '../game/types/ActionTypes';
-import { ParsedCommand } from '../types/Types';
+import { type ActionType } from '../game/types/ActionTypes';
+import { type ParsedCommand } from '../types/Types';
 
 export declare const _ActivityType: null;
 

@@ -1,12 +1,12 @@
 // src/contexts/CommandProvider.tsx
-import React from 'react';
+import type React from 'react';
 
-import { ParsedCommand } from 'src/types/Types';
+import { type ParsedCommand } from 'src/types/Types';
 import { parseCommand } from 'src/utils/commandUtils';
 import { navigate } from 'src/utils/navigationUtils';
 
-import { IHandTermWrapperMethods } from '../components/HandTermWrapper';
-import { IAuthProps } from '../hooks/useAuth';
+import { type IHandTermWrapperMethods } from '../components/HandTermWrapper';
+import { type IAuthProps } from '../hooks/useAuth';
 import { useCommand } from '../hooks/useCommand';
 
 import { CommandContext } from './CommandContext';

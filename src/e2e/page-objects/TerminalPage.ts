@@ -122,8 +122,17 @@ export class TerminalPage {
    * Waits for the terminal to be ready
    */
   public async waitForTerminal(): Promise<void> {
-    await this.terminal.waitFor({ state: 'attached' });
-    await this.terminal.waitFor({ state: 'visible' });
+    // Wait for terminal element to exist
+    await this.terminal.waitFor({ state: 'attached', timeout: 60000 });
+
+    // Wait for terminal to be visible
+    await this.terminal.waitFor({ state: 'visible', timeout: 60000 });
+
+    // Additional check for terminal initialization
+    await this.page.waitForFunction(() => {
+      const term = document.querySelector('#xtermRef');
+      return term && term.childElementCount > 0;
+    }, { timeout: 60000 });
   }
 
   /**

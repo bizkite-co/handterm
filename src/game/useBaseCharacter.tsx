@@ -35,7 +35,7 @@ export const useBaseCharacter = (props: BaseCharacterProps): { draw: (context: C
 
   const loadSprite = useCallback(async (actionKey: ActionType, animationData: SpriteAnimation) => {
     const loadedSprite = await spriteManager.loadSprite(animationData);
-    if (loadedSprite) {
+    if (loadedSprite != null) {
       spritesRef.current[actionKey] = loadedSprite;
       if (actionKey === currentActionRef.current) {
         setSprite(loadedSprite);
@@ -51,7 +51,7 @@ export const useBaseCharacter = (props: BaseCharacterProps): { draw: (context: C
     frameIndexRef.current = 0;
 
     const sprite = spritesRef.current[newActionType];
-    if (sprite) {
+    if (sprite != null) {
       setSprite(sprite);
     } else {
       // Try to load the sprite if it's missing
@@ -68,7 +68,7 @@ export const useBaseCharacter = (props: BaseCharacterProps): { draw: (context: C
     const action = actions[currentActionRef.current];
     const newX = (positionRef?.current?.leftX ?? 0) + props.xOffset + action.dx;
 
-    if (sprite) {
+    if (sprite != null) {
       const nextFrameIndex = (frameIndexRef.current + 1) % sprite.frameCount;
       frameIndexRef.current = nextFrameIndex;
 
@@ -101,7 +101,7 @@ export const useBaseCharacter = (props: BaseCharacterProps): { draw: (context: C
 
   // Handle prop changes for currentActionType
   useEffect(() => {
-    if (currentActionType !== currentActionRef.current) {
+    if (typeof currentActionType === 'string' && currentActionType !== currentActionRef.current) {
       setCurrentActionType(currentActionType);
     }
   }, [currentActionType, setCurrentActionType]);
@@ -109,7 +109,7 @@ export const useBaseCharacter = (props: BaseCharacterProps): { draw: (context: C
   // Handle initial sprite loading for current action
   useEffect(() => {
     const currentSprite = spritesRef.current[currentActionRef.current];
-    if (!currentSprite) {
+    if (currentSprite == null) {
       loadSprite(currentActionRef.current, actions[currentActionRef.current].animation).catch(console.error);
     }
   }, [actions, loadSprite]);

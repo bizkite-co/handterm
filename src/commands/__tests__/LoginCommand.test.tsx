@@ -1,14 +1,14 @@
-import { describe, it, expect, vi, beforeEach, MockedFunction } from 'vitest';
+import { describe, it, expect, vi, beforeEach, type MockedFunction } from 'vitest';
 
 import * as appSignals from 'src/signals/appSignals';
 import {
-  ICommandContext,
-  ICommandResponse,
-  ParsedCommand,
-  IAuthProps,
-  IHandTermWrapperMethods,
-  MyResponse,
-  AuthResponse
+  type ICommandContext,
+  type ICommandResponse,
+  type ParsedCommand,
+  type IAuthProps,
+  type IHandTermWrapperMethods,
+  type MyResponse,
+  type AuthResponse
 } from 'src/types/HandTerm';
 
 import { LoginCommand } from '../LoginCommand';

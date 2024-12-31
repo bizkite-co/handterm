@@ -1,4 +1,4 @@
-import { SpriteAnimation } from "../../types/SpriteTypes";
+import { type SpriteAnimation } from "../../types/SpriteTypes";
 
 // * Idle - 5 frames
 // * Walk - 13 frames

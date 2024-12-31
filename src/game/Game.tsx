@@ -328,6 +328,7 @@ function GameFunction(props: IGameProps, ref: React.ForwardedRef<IGameHandle>): 
         ))}
       </div>
       <canvas
+        data-testid="game-canvas"
         style={{ position: "absolute", top: 0, left: 0, zIndex: 2 }}
         ref={canvasRef}
         width={canvasWidth}

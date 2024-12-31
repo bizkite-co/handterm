@@ -1,6 +1,4 @@
 // src/commands/clearCommand.tsx
-import type React from 'react';
-
 import { type IHandTermWrapperMethods } from "../components/HandTermWrapper";
 import { type ICommand, type ICommandContext, type ICommandResponse } from '../contexts/CommandContext';
 import { LogKeys } from '../types/TerminalTypes';
@@ -44,29 +42,23 @@ export const clearCommand: ICommand = {
     }
 
     // Logic to clear the command history from localStorage
-    const removeKeys: string[] = [];
-    for (let i = localStorage.length; i >= 0; i--) {
-      const key = localStorage.key(i);
-      if (!key) continue;
+    const removeKeys = Object.keys(localStorage).filter(key => {
+      const matchesDefaultKeys = key.includes(LogKeys.Command ?? '') ||
+        key.includes('terminalCommandHistory') ||
+        key.includes(LogKeys.CharTime ?? '');
 
-      if (
-        key.includes(LogKeys.Command)
-        || key.includes('terminalCommandHistory') // Remove after clearing legacy phone db.
-        || key.includes(LogKeys.CharTime)
-      ) {
-        removeKeys.push(key);
-      }
+      const matchesArg = parsedCommand.args.length > 0 &&
+        key.includes(parsedCommand.args[0] ?? '');
 
-      if (parsedCommand.args.length > 0) {
-        if (key.includes(parsedCommand.args[0])) {
-          removeKeys.push(key);
-        }
-      }
-    }
+      return matchesDefaultKeys ?? matchesArg;
+    });
 
-    for (const removeKey of removeKeys) {
-      localStorage.removeItem(removeKey); // Clear localStorage.length
-    }
+    await Promise.all(removeKeys.map(async (removeKey) => {
+      await new Promise<void>((resolve) => {
+        localStorage.removeItem(removeKey); // Clear localStorage.length
+        resolve();
+      });
+    }));
 
     const handTermInstance = handTerm.current;
     if (handTermInstance) {

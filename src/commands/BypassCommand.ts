@@ -2,14 +2,14 @@
 
 import { activitySignal , setBypassTutorial, bypassTutorialSignal } from 'src/signals/appSignals';
 
-import { ICommand, ICommandContext, ICommandResponse } from '../contexts/CommandContext';
-import { ParsedCommand , ActivityType } from '../types/Types';
+import { type ICommand, type ICommandContext, type ICommandResponse } from '../contexts/CommandContext';
+import { type ParsedCommand , ActivityType } from '../types/Types';
 import { navigate } from '../utils/navigationUtils';
 
 export const BypassCommand: ICommand = {
   name: 'bypass',
   description: 'Toggle tutorial bypass mode for testing',
-  execute: async (
+  execute: (
     _context: ICommandContext,
     _parsedCommand: ParsedCommand
   ): Promise<ICommandResponse> => {
@@ -27,8 +27,10 @@ export const BypassCommand: ICommand = {
     }
 
     return {
-      status: 200,
-      message: `Bypass mode ${newBypassState ? 'enabled' : 'disabled'}. ${newBypassState ? 'You are now in NORMAL mode.' : 'Tutorial mode will resume on next page load.'}`,
+      success: true,
+      message: `Bypass mode ${newBypassState ? 'enabled' : 'disabled'}. ${newBypassState ? 'You are now in NORMAL mode.' : 'Tutorial mode will resume on next page load.'}`
     };
   }
 };
+
+

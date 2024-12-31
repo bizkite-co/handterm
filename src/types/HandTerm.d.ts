@@ -1,4 +1,5 @@
-import React, { ReactNode } from 'react';
+import {type ReactNode} from 'react';
+import type React from 'react';
 
 // Existing types from Types.ts that are important for broader context
 export type ActivityType = 'NORMAL' | 'TUTORIAL' | 'GAME' | 'EDIT' | 'TREE';

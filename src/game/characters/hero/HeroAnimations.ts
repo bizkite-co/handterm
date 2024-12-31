@@ -1,5 +1,5 @@
 // HeroAnimations.ts
-import { SpriteAnimation } from '../../types/SpriteTypes';
+import { type SpriteAnimation } from '../../types/SpriteTypes';
 
 export const HeroAnimations = {
     Run: {

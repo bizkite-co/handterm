@@ -1,9 +1,10 @@
 // src/components/Output.tsx
 import { useSignalEffect } from '@preact/signals-react';
-import React, { useState } from 'react';
+import type React from 'react';
+import { useState } from 'react';
 
 import { outputElementsSignal } from 'src/signals/appSignals';
-import { OutputElement } from 'src/types/Types';
+import { type OutputElement } from 'src/types/Types';
 
 import { CommandOutput } from './CommandOutput';
 

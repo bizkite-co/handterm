@@ -1,5 +1,5 @@
 // src/commands/index.ts
-import { ICommand } from '../contexts/CommandContext';
+import { type ICommand } from '../contexts/CommandContext';
 
 import { commandRegistry } from './commandRegistry';
 

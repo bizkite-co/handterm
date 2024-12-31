@@ -1,18 +1,31 @@
 import { vi } from 'vitest';
+import type { Mock } from 'vitest';
 
-export class Octokit {
-  constructor() {
-    return {
-      request: vi.fn(),
-      graphql: vi.fn(),
-      auth: vi.fn().mockResolvedValue({
-        type: 'token',
-        tokenType: 'installation',
-        token: 'test-token',
-        expiresAt: new Date(Date.now() + 3600000).toISOString()
-      })
-    };
-  }
+export function createOctokit(): {
+  request: Mock<[string, Record<string, unknown>?], Promise<unknown>>;
+  graphql: Mock<[string, Record<string, unknown>?], Promise<unknown>>;
+  auth: Mock<[], Promise<{
+    type: string;
+    tokenType: string;
+    token: string;
+    expiresAt: string;
+  }>>;
+} {
+  return {
+    request: vi.fn(),
+    graphql: vi.fn(),
+    auth: vi.fn<[], Promise<{
+      type: string;
+      tokenType: string;
+      token: string;
+      expiresAt: string;
+    }>>().mockResolvedValue({
+      type: 'token',
+      tokenType: 'installation',
+      token: 'test-token',
+      expiresAt: new Date(Date.now() + 3600000).toISOString()
+    })
+  };
 }
 
 export interface OctokitOptions {

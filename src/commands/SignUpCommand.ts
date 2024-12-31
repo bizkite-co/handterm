@@ -1,14 +1,14 @@
 // src/commands/SignUpCommand.ts
 import { tempUserNameSignal, setTempEmail, tempEmailSignal, setTempUserName, tempPasswordSignal, isInSignUpProcessSignal, setIsInSignUpProcess } from 'src/signals/appSignals';
 
-import { ICommand, ICommandContext, ICommandResponse } from '../contexts/CommandContext';
-import { ParsedCommand } from '../types/Types';
+import { type ICommand, type ICommandContext, type ICommandResponse } from '../contexts/CommandContext';
+import { type ParsedCommand } from '../types/Types';
 
 export const SignUpCommand: ICommand = {
     name: 'signup',
     description: 'Create a new account',
     execute: async (
-        context: ICommandContext, 
+        context: ICommandContext,
         _parsedCommand: ParsedCommand
     ): Promise<ICommandResponse> => {
         const { auth } = context;
@@ -24,11 +24,11 @@ export const SignUpCommand: ICommand = {
             const username = tempUserNameSignal.value;
             const password = tempPasswordSignal.value;
             const email = tempEmailSignal.value;
-            
+
             try {
                 const result = await auth.signup({ username, password, email });
                 setIsInSignUpProcess(false);
-                
+
                 if (result.status === 200) {
                     return {
                         status: 200,

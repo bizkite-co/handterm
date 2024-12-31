@@ -2,7 +2,7 @@ export interface ChordProps {
     displayChar: string;
 }
 
-import React from 'react';
+import type React from 'react';
 
 import { allChords } from "../allChords";
 

@@ -1,6 +1,6 @@
 import { forwardRef, useImperativeHandle } from 'react';
 
-import { ICharacterProps } from './ICharacterProps';
+import { type ICharacterProps } from './ICharacterProps';
 import { Zombie4Actions } from './types/ActionTypes';
 import { useBaseCharacter } from './useBaseCharacter';
 
