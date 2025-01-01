@@ -19,9 +19,16 @@ export function createPersistentSignal<T>({
   deserialize = JSON.parse,
 }: PersistenceConfig<T>): PersistentSignal<T> {
   const loadInitialState = () => {
-    const storedValue = localStorage.getItem(key);
-    if (storedValue) {
-      signal.value = deserialize(storedValue);
+    if (typeof localStorage === 'undefined') {
+      return;
+    }
+    try {
+      const storedValue = localStorage.getItem(key);
+      if (storedValue != null) {
+        signal.value = deserialize(storedValue);
+      }
+    } catch (error) {
+      console.warn('Failed to access localStorage:', error);
     }
   };
 

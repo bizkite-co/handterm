@@ -55,8 +55,11 @@ export default defineConfig({
   optimizeDeps: {
     include: [
       '@monaco-editor/react',
-      '@preact_signals-react',
-      'hoist-non-react-statics'
+      '@preact/signals-react',
+      'hoist-non-react-statics',
+      '@xterm/xterm',
+      '@xterm/addon-fit',
+      'react-xtermjs'
     ],
     exclude: [
       '@emotion/react/jsx-dev-runtime',

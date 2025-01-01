@@ -13,6 +13,7 @@
     "src/game/__tests__/Game.test.tsx",
     "src/e2e/tests/tutorial.spec.ts",
     "src/e2e/scenarios/activitySwitchingScenarios.test.ts",
-    "src/commands/__tests__/LoginCommand.test.tsx"
+    "src/commands/__tests__/LoginCommand.test.tsx",
+    "src/e2e/tests/tutorial.spec.ts"
   ]
 }

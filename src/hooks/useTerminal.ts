@@ -5,6 +5,7 @@ import { FitAddon } from '@xterm/addon-fit';
 import { useXTerm } from 'react-xtermjs';
 
 import { TERMINAL_CONSTANTS } from 'src/constants/terminal';
+import { XtermAdapterConfig } from '../components/XtermAdapterConfig';
 import {
   isInLoginProcessSignal,
   isInSignUpProcessSignal,
@@ -18,13 +19,10 @@ import {
   tempPasswordSignal,
   tempUserNameSignal
 } from 'src/signals/appSignals';
-import { addKeystroke, commandLineSignal , setCommandLine } from 'src/signals/commandLineSignals';
+import { addKeystroke, commandLineSignal, setCommandLine } from 'src/signals/commandLineSignals';
 import { ActivityType } from 'src/types/Types';
 import { parseCommand } from 'src/utils/commandUtils';
 import { createLogger } from 'src/utils/Logger';
-
-import { XtermAdapterConfig } from '../components/XtermAdapterConfig';
-
 import { useCharacterHandler } from './useCharacterHandler';
 import { useCommand } from './useCommand';
 import { useWPMCalculator } from './useWPMCaculator';
@@ -66,7 +64,6 @@ export const useTerminal = (): { xtermRef: React.RefObject<HTMLDivElement>; writ
   } = useCharacterHandler({
     setLastTypedCharacter,
     isInSvgMode: false,
-    isInLoginProcess: isInLoginProcessSignal.value,
     writeOutputInternal: writeToTerminal,
   });
 

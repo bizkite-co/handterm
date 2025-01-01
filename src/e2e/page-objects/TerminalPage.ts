@@ -1,6 +1,7 @@
 import { type Page, type Locator, expect } from '@playwright/test';
 
 import { TERMINAL_CONSTANTS } from 'src/constants/terminal';
+import { TEST_CONFIG } from '../config';
 
 export class TerminalPage {
   readonly page: Page;
@@ -21,9 +22,9 @@ export class TerminalPage {
   }
 
   public async goto(): Promise<void> {
-    await this.page.goto('/');
+    await this.page.goto(`${TEST_CONFIG.baseUrl}/`);
     // Wait for the signal to be exposed
-    await this.page.waitForFunction(() => 'commandLineSignal' in window);
+    await this.page.waitForFunction(() => 'commandLineSignal' in window, { timeout: TEST_CONFIG.timeout.medium });
     await this.waitForTerminal();
     await this.waitForPrompt();
   }
@@ -71,7 +72,7 @@ export class TerminalPage {
    * @returns The text content of the output container
    */
   public async getOutput(): Promise<string> {
-    return await this.output.textContent() || '';
+    return await this.output.textContent() ?? '';
   }
 
   /**
@@ -87,7 +88,7 @@ export class TerminalPage {
       return (window as unknown as { commandLineSignal: { value: string } }).commandLineSignal.value;
     });
 
-    return commandLine || '';
+    return commandLine ?? '';
   }
 
   /**
@@ -122,58 +123,38 @@ export class TerminalPage {
    * Waits for the terminal to be ready
    */
   public async waitForTerminal(): Promise<void> {
-    // Debug: Check if terminal element exists in DOM
-    const terminalExists = await this.page.evaluate(() => {
+    // Wait for application to load
+    await this.page.waitForSelector('#handterm-wrapper', { state: 'attached', timeout: TEST_CONFIG.timeout.long });
+
+    // Wait for terminal element
+    await this.page.waitForSelector('#xtermRef', { state: 'attached', timeout: TEST_CONFIG.timeout.medium });
+
+    // Wait for xterm.js to be loaded and initialized
+    await this.page.waitForFunction(() => {
       const term = document.querySelector('#xtermRef');
-      return !!term;
-    });
-    if (!terminalExists) {
-      throw new Error('Terminal element (#xtermRef) not found in DOM');
-    }
-
-    // Debug: Check if xterm.js is loaded
-    const xtermLoaded = await this.page.evaluate(() => {
-      return 'Terminal' in window && typeof window.Terminal === 'function';
-    });
-    if (!xtermLoaded) {
-      throw new Error('xterm.js library not loaded');
-    }
-
-    // Wait for terminal element to be visible
-    await this.terminal.waitFor({ state: 'visible', timeout: 10000 });
-
-    // Verify terminal is properly initialized
-    const initStatus = await this.page.waitForFunction(() => {
-      const term = document.querySelector('#xtermRef');
-      if (!term) return 'Terminal element not found';
-
-      // Check if xterm.js has initialized its viewport
-      const viewport = term.querySelector('.xterm-viewport');
-      if (!viewport) return 'Viewport not initialized';
-
-      // Check if terminal has content
+      if (term == null) return false;
       const screen = term.querySelector('.xterm-screen');
-      if (!screen) return 'Screen element not found';
-      if (!screen.childElementCount) return 'Screen has no content';
+      return term.querySelector('.xterm-viewport') !== null &&
+             screen !== null &&
+             screen.childElementCount > 0;
+    }, { timeout: TEST_CONFIG.timeout.medium });
 
-      return 'ready';
-    }, { timeout: 10000 });
+    // Wait for terminal to be visible and interactive
+    await this.terminal.waitFor({ state: 'visible', timeout: TEST_CONFIG.timeout.medium });
 
-    const status = await initStatus.jsonValue();
-    if (status !== 'ready') {
-      throw new Error(`Terminal initialization failed: ${status}`);
-    }
-
-    // Ensure terminal is interactive
-    await this.terminal.click();
-    const focused = await this.page.waitForFunction(() => {
+    // Wait for terminal to be ready for interaction and focused
+    await this.page.waitForFunction(() => {
       const term = document.querySelector('#xtermRef');
-      return term?.classList.contains('focus');
-    }, { timeout: 10000 });
+      if (term == null) return false;
+      const screen = term.querySelector('.xterm-screen');
+      if (screen == null) return false;
+      const viewport = term.querySelector('.xterm-viewport');
+      if (viewport == null) return false;
+      return screen.childElementCount > 0;
+    }, { timeout: TEST_CONFIG.timeout.medium });
 
-    if (!focused) {
-      throw new Error('Terminal failed to gain focus');
-    }
+    // Focus the terminal
+    await this.terminal.click();
   }
 
   /**

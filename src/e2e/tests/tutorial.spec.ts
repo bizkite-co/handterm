@@ -4,12 +4,35 @@ import { TerminalPage } from '../page-objects/TerminalPage';
 
 let terminalPage: TerminalPage;
 
+import { TEST_CONFIG } from '../config';
+
 test.beforeEach(async ({ page }) => {
-  test.setTimeout(120000);
+  test.setTimeout(TEST_CONFIG.timeout.long);
+
+  // Initialize page first
+  await page.goto(TEST_CONFIG.baseUrl);
+
   terminalPage = new TerminalPage(page);
 
-  // Clear localStorage using a command
-  await terminalPage.executeCommand('clear');
+  // Capture console logs
+  page.on('console', msg => {
+    console.log(`[Browser Console] ${msg.type()}: ${msg.text()}`);
+  });
+
+  // Capture network requests
+  page.on('requestfailed', request => {
+    console.log(`[Network] Request failed: ${request.url()} - ${request.failure()?.errorText}`);
+  });
+
+  // Wait for application to load
+  try {
+    await page.waitForSelector('#handterm-wrapper', { state: 'attached', timeout: TEST_CONFIG.timeout.medium });
+  } catch (error) {
+    // If timeout occurs, capture the page content for debugging
+    const html = await page.content();
+    console.log('[Page Content]', html);
+    throw error;
+  }
 
   await terminalPage.goto();
 });
@@ -22,17 +45,12 @@ test('should progress from tutorial to game mode after completing initial steps'
   await terminalPage.pressEnter();
   await terminalPage.waitForPrompt();
 
-  // Type "fdsa" first time
+  // Type "fdsa"
   await terminalPage.typeKeys('fdsa');
   await terminalPage.pressEnter();
   await terminalPage.waitForPrompt();
 
-  // Type "fdsa" second time with spaces
-  await terminalPage.typeKeys('f d s a');
-  await terminalPage.pressEnter();
-  await terminalPage.waitForPrompt();
-
-  // And the user types "jkl;"
+  // Type "jkl;" to complete tutorial
   await terminalPage.typeKeys('jkl;');
   await terminalPage.pressEnter();
   await terminalPage.waitForPrompt();

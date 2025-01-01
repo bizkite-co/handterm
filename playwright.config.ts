@@ -1,4 +1,5 @@
 import { defineConfig, devices } from '@playwright/test';
+import { TEST_CONFIG } from './src/e2e/config';
 
 /**
  * See https://playwright.dev/docs/test-configuration.
@@ -15,22 +16,32 @@ export default defineConfig({
   workers: (process.env.CI ?? '') !== '' ? 1 : undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: 'list',
-  /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
-  use: {
-    /* Base URL to use in actions like `await page.goto('/')`. */
-    baseURL: 'http://localhost:5173',
+    /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
+    use: {
+      /* Base URL to use in actions like `await page.goto('/')`. */
+      baseURL: TEST_CONFIG.baseUrl,
+
+      /* Initialize localStorage for tests */
+      storageState: {
+        cookies: [],
+        origins: [
+          {
+            origin: TEST_CONFIG.baseUrl,
+            localStorage: []
+          }
+        ]
+      } as const,
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
-    trace: 'on-first-retry',
-    storageState: undefined
+    trace: 'on-first-retry'
   },
 
   /* Configure web server to run before tests */
   webServer: {
     command: 'npm run dev',
-    url: 'http://localhost:5173',
+    url: TEST_CONFIG.baseUrl,
     reuseExistingServer: (process.env.CI ?? '') === '',
-    timeout: 120 * 1000, // 2 minutes for dev server to start
+    timeout: 60 * 1000, // 2 minutes for dev server to start
   },
 
   /* Configure projects for major browsers */
