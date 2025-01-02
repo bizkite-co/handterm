@@ -43,8 +43,7 @@ export const setNextTutorial = (nextTutorial: Tutorial | null): void => {
 
 // Load initial state
 const loadInitialState = () => {
-  const storedTutorials = localStorage.getItem(completedTutorialsKey);
-  if (storedTutorials) {
+    if (storedTutorials != null) {
     logger.debug('Loading stored tutorials:', storedTutorials);
     completedTutorialsSignal.value = new Set(JSON.parse(storedTutorials) as string[]);
   }

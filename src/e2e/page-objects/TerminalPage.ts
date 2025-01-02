@@ -12,6 +12,22 @@ export class TerminalPage {
   readonly nextChars: Locator;
   private readonly prompt = TERMINAL_CONSTANTS.PROMPT;
 
+  async waitForActivityTransition(timeout = 10000): Promise<void> {
+    try {
+      await this.page.waitForSelector('#terminal-game', { state: 'visible', timeout });
+      await this.page.waitForSelector('.tutorial-component', { state: 'hidden', timeout });
+    } catch (error) {
+      const gameVisible = await this.gameMode.isVisible();
+      const tutorialVisible = await this.tutorialMode.isVisible();
+      console.log('Activity transition failed. Current state:', { gameVisible, tutorialVisible });
+      throw error;
+    }
+  }
+
+  async waitForTutorialMode(timeout = 10000): Promise<void> {
+    await this.page.waitForSelector('.tutorial-component', { state: 'attached', timeout });
+  }
+
   constructor(page: Page) {
     this.page = page;
     this.terminal = page.locator('#xtermRef');
@@ -135,8 +151,8 @@ export class TerminalPage {
       if (term == null) return false;
       const screen = term.querySelector('.xterm-screen');
       return term.querySelector('.xterm-viewport') !== null &&
-             screen !== null &&
-             screen.childElementCount > 0;
+        screen !== null &&
+        screen.childElementCount > 0;
     }, { timeout: TEST_CONFIG.timeout.medium });
 
     // Wait for terminal to be visible and interactive

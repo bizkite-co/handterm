@@ -80,7 +80,7 @@ export const setActivity = (activity: ActivityType): void => {
 export const appendToOutput = (element: OutputElement): void => {
     updateOutput(prevOutput => {
         // If the command is sensitive, mask the args except the first one (username)
-        if (element.sensitive && element.command) {
+        if (element.sensitive != null && element.command != null) {
             const maskedCommand = {
                 ...element.command,
                 args: element.command.args.map((arg, index) =>

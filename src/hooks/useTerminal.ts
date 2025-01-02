@@ -45,7 +45,7 @@ export const useTerminal = (): { xtermRef: React.RefObject<HTMLDivElement>; writ
   }, [instance]);
 
   const resetPrompt = useCallback((): void => {
-    if (!instance) return;
+    if (instance == null) return;
     logger.debug('Resetting prompt');
     instance.reset();
     setCommandLine('');
@@ -68,12 +68,12 @@ export const useTerminal = (): { xtermRef: React.RefObject<HTMLDivElement>; writ
   });
 
   const getCurrentCommand = useCallback((): string => {
-    if (!instance) return '';
+    if (instance == null) return '';
     const buffer = instance.buffer.active;
     let command = '';
     for (let i = 0; i <= buffer.cursorY; i++) {
       const line = buffer.getLine(i);
-      if (line) {
+      if (line != null) {
         command += line.translateToString(true);
       }
     }
@@ -84,21 +84,21 @@ export const useTerminal = (): { xtermRef: React.RefObject<HTMLDivElement>; writ
   }, [instance]);
 
   const clearCurrentLine = useCallback((): void => {
-    if (!instance) return;
+    if (instance == null) return;
     logger.debug('Clearing current line');
     instance.write('\x1b[2K\r'); // Clear the current line
     instance.write(TERMINAL_CONSTANTS.PROMPT); // Rewrite prompt
   }, [instance]);
 
   const navigateHistory = useCallback((direction: 'up' | 'down'): void => {
-    if (!instance || (commandHistory.length === 0)) return;
+    if (instance == null || (commandHistory.length === 0)) return;
 
     let newIndex = commandHistoryIndex;
 
     if (direction === 'up') {
       if (newIndex === -1) {
         const currentCommand = getCurrentCommand();
-        if (currentCommand) {
+        if (currentCommand != null) {
           setCommandLine(currentCommand);
           _setCommandLineState(currentCommand);
         }
@@ -109,7 +109,7 @@ export const useTerminal = (): { xtermRef: React.RefObject<HTMLDivElement>; writ
       if (newIndex === -1) {
         clearCurrentLine();
         const savedCommand = commandLine.value;
-        if (savedCommand) {
+        if (savedCommand != null) {
           instance.write(savedCommand);
           setCommandLine(savedCommand);
           _setCommandLineState(savedCommand);
@@ -230,7 +230,7 @@ export const useTerminal = (): { xtermRef: React.RefObject<HTMLDivElement>; writ
     };
 
     const handleData = (data: string) => {
-      if (!instance) return;
+      if (instance == null) return;
       logger.debug('Handling terminal data:', data);
       const cursorX = instance.buffer.active.cursorX;
 
