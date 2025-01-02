@@ -14,5 +14,4 @@ Some changes have been made to the `.eslintrc.cjs` to apply a better long range 
 
 ## Next Steps
 
-- [ ] Get the current e2e tests working again.
-- [ ] Fix the linting errors in any file that still has them.
+- [ ] Get the current `npm run test:e2e` tests working again.

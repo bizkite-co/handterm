@@ -1,0 +1,25 @@
+.tutorial-component {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.8);
+  padding: 20px;
+  border-radius: 8px;
+  color: white;
+  max-width: 600px;
+}
+
+.tutorial-prompt {
+  white-space: pre-wrap;
+  font-family: monospace;
+  font-size: 16px;
+  line-height: 1.5;
+  margin-bottom: 20px;
+}
+
+.chord-display-container {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}

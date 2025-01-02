@@ -1,4 +1,11 @@
 // src/signals/appSignals.ts
+declare global {
+  interface Window {
+    setActivity: typeof setActivity;
+    ActivityType: typeof ActivityType;
+  }
+}
+
 import { computed, signal } from '@preact/signals-react';
 
 import { ActivityType, type OutputElement } from 'src/types/Types';
@@ -72,9 +79,16 @@ export { outputElementsSignal };
 export const isInGameModeSignal = computed(() => activitySignal.value === ActivityType.GAME);
 export const isInTutorialModeSignal = computed(() => activitySignal.value === ActivityType.TUTORIAL);
 
+import { navigate } from 'src/utils/navigationUtils';
+
 export const setActivity = (activity: ActivityType): void => {
     activitySignal.value = activity;
     logger.debug(ActivityType[activitySignal.value]);
+    navigate({
+        activityKey: activity,
+        contentKey: null,
+        groupKey: null
+    });
 };
 
 export const appendToOutput = (element: OutputElement): void => {
@@ -108,3 +122,9 @@ export const setIsLoggedIn = (value: boolean): void => {
 export const setUserName = (name: string | null): void => {
     userNameSignal.value = name;
 };
+
+// Expose activity functions on window for testing
+if (typeof window !== 'undefined') {
+    window.setActivity = setActivity;
+    window.ActivityType = ActivityType;
+}

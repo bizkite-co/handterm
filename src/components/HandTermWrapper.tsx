@@ -1,6 +1,8 @@
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 
 import { useComputed } from '@preact/signals-react';
+import type { Tutorial, GamePhrase, OutputElement } from '../types/Types';
+import { ActivityType } from '../types/Types';
 
 import { Game, type IGameHandle } from '../game/Game';
 import { useActivityMediator } from '../hooks/useActivityMediator';
@@ -11,7 +13,6 @@ import { activitySignal, isShowVideoSignal } from '../signals/appSignals';
 import { commandTimeSignal } from '../signals/commandLineSignals';
 import { setGamePhrase } from '../signals/gameSignals';
 import { tutorialSignal } from '../signals/tutorialSignals';
-import { ActivityType, type GamePhrase, type OutputElement } from '../types/Types';
 import { getFileContent } from '../utils/apiClient';
 import { createLogger, LogLevel } from '../utils/Logger';
 import { navigate, parseLocation } from '../utils/navigationUtils';
@@ -81,7 +82,33 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
   const [treeItems, setTreeItems] = useState<TreeItem[]>([]);
   const [, setCurrentFile] = useState<string | null>(null);
 
-  const currentActivity = parseLocation().activityKey;
+  const [currentActivity, setCurrentActivity] = useState(parseLocation().activityKey);
+
+  // Update activity state when activitySignal changes
+  useEffect(() => {
+    const updateActivity = () => {
+      logger.debug('Activity signal changed:', ActivityType[activitySignal.value]);
+      setCurrentActivity(activitySignal.value);
+    };
+
+    // Initial sync
+    updateActivity();
+
+    // Subscribe to signal changes
+    const unsubscribe = activitySignal.subscribe(updateActivity);
+
+    return () => {
+      unsubscribe();
+    };
+  }, []);
+
+  useEffect(() => {
+    logger.debug('Current activity:', ActivityType[currentActivity]);
+  }, [currentActivity]);
+
+  useEffect(() => {
+    logger.debug('Tutorial signal:', tutorialSignal.value);
+  }, [tutorialSignal.value]);
 
   // Declare handlePhraseComplete with all its dependencies
   const handlePhraseComplete = useCallback(() => {
@@ -250,6 +277,19 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
     handleEditSave: () => { },
   }), [writeToTerminal, xtermRef]);
 
+  // Initialize window methods
+  useEffect(() => {
+    window.setActivity = (activity: ActivityType) => {
+      logger.debug('Setting activity:', ActivityType[activity]);
+      activitySignal.value = activity;
+    };
+    window.setNextTutorial = (tutorial: Tutorial | null) => {
+      logger.debug('Setting tutorial:', tutorial);
+      tutorialSignal.value = tutorial;
+    };
+    window.ActivityType = ActivityType;
+  }, []);
+
   const handleFileSelectWrapper = useCallback((path: string) => {
     void handleFileSelect(path);
   }, [handleFileSelect]);
@@ -279,7 +319,7 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
       {lastTypedCharacter !== null && (
         <Chord displayChar={lastTypedCharacter} />
       )}
-      {currentActivity === ActivityType.TUTORIAL && tutorialSignal.value !== null && (
+      {currentActivity === ActivityType.TUTORIAL && (
         <TutorialManager
           tutorial={tutorialSignal.value}
         />

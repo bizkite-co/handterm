@@ -17,9 +17,9 @@ const { signal: completedTutorialsSignal, update: updateCompletedTutorials } = c
   deserialize: (value) => new Set(JSON.parse(value) as string[]),
 });
 
-export { completedTutorialsSignal };
-
 export const tutorialSignal = signal<Tutorial | null>(null);
+
+export { completedTutorialsSignal };
 
 /**
  * Gets the next uncompleted tutorial
@@ -43,13 +43,20 @@ export const setNextTutorial = (nextTutorial: Tutorial | null): void => {
 
 // Load initial state
 const loadInitialState = () => {
+  try {
+    const storedTutorials = typeof localStorage !== 'undefined'
+      ? localStorage.getItem(completedTutorialsKey)
+      : null;
     if (storedTutorials != null) {
-    logger.debug('Loading stored tutorials:', storedTutorials);
-    completedTutorialsSignal.value = new Set(JSON.parse(storedTutorials) as string[]);
+      logger.debug('Loading stored tutorials:', storedTutorials);
+      completedTutorialsSignal.value = new Set(JSON.parse(storedTutorials) as string[]);
+    }
+    const nextTutorial = getNextTutorial();
+    logger.debug('Initial tutorial:', nextTutorial);
+    setNextTutorial(nextTutorial);
+  } catch (error) {
+    logger.warn('Failed to access localStorage:', error);
   }
-  const nextTutorial = getNextTutorial();
-  logger.debug('Initial tutorial:', nextTutorial);
-  setNextTutorial(nextTutorial);
 };
 
 loadInitialState();

@@ -1,9 +1,15 @@
 ---
-date: 2024-12-30
+date: 2025-01-01
 title: Cline Rules
 ---
 
-0. Read `/home/mstouffer/.config/cline/cline-memory-bank.md` at the start of each chat and confirm to the user that you have read the file.
 1. Read `./CONVENTIONS.md` at the start of each chat.
 2. Read `./docs/linting/_index.md` and linked files.
+1. Create a worklog file starting with todays date in the name in `./docs/worklog/`.
+    a. State the task you are working on.
+    b. State your understanding of the problem.
+    c. State your plan to solve the problem.
+    d. State your next steps.
+    
+
 3. Assume 'npm run dev' is already running and available at `http://localhost:5173/`.

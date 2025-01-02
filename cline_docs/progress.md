@@ -17,6 +17,4 @@
 
 ## Current Status
 
-* There are files with linting errors.
 * There are tests that are not working.
-* There are no tests for the new feature.
