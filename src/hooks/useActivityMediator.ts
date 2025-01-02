@@ -150,6 +150,8 @@ export function useActivityMediator(): {
             return;
         }
 
+        if(command == null) return;
+
         const groupKey = parseLocation().groupKey ?? null;
         // Normalize command for Enter key
         const commandOrReturn = command === '' ? '\r' : command;
@@ -184,6 +186,34 @@ export function useActivityMediator(): {
                 })}`);
                 setNotification(
                     `Tutorial ${tutorialSignal.value?.value} not unlocked with ${commandOrReturn}`
+                )
+                return;
+            }
+
+            logger.debug(`Checking if can unlock tutorial: ${JSON.stringify({
+                command,
+                currentPhrase: currentTutorialRef.current.value,
+                charCodesCommand: [...command].map(c => c.charCodeAt(0)),
+                charCodesPhrase: [...currentTutorialRef.current.value].map(c => c.charCodeAt(0))
+            })}`);
+
+            if (canUnlockTutorial(command)) {
+                logger.debug('Tutorial unlocked:', command);
+                if (groupKey != null) {
+                    const incompletePhrasesInGroup = getIncompletePhrasesByTutorialGroup(groupKey)[0];
+                    if (incompletePhrasesInGroup) {
+                        transitionToGame(incompletePhrasesInGroup.key, incompletePhrasesInGroup.tutorialGroup);
+                    }
+                    return;
+                }
+                setCompletedTutorial(currentTutorialRef.current.value);
+            } else {
+                logger.debug(`Tutorial not unlocked: ${JSON.stringify({
+                    expected: currentTutorialRef.current.value,
+                    received: command
+                })}`);
+                setNotification(
+                    `Tutorial ${tutorialSignal.value?.value} not unlocked with ${command}`
                 )
                 return;
             }

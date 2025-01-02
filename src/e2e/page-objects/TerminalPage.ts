@@ -35,6 +35,7 @@ export class TerminalPage {
     this.tutorialMode = page.locator('.tutorial-component');
     this.gameMode = page.locator('#terminal-game');
     this.nextChars = page.locator('pre#next-chars');
+    return this;
   }
 
   public async goto(): Promise<void> {

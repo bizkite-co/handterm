@@ -45,13 +45,13 @@ export const setNextTutorial = (nextTutorial: GamePhrase | null): void => {
 // Load initial state
 const loadInitialState = () => {
   const storedTutorials = localStorage.getItem(completedTutorialsKey);
-    if (storedTutorials != null) {
-      logger.debug('Loading stored tutorials:', storedTutorials);
-      completedTutorialsSignal.value = new Set(JSON.parse(storedTutorials) as string[]);
-    }
-    const nextTutorial = getNextTutorial();
-    logger.debug('Initial tutorial:', nextTutorial);
-    setNextTutorial(nextTutorial);
+  if (storedTutorials != null) {
+    logger.debug('Loading stored tutorials:', storedTutorials);
+    completedTutorialsSignal.value = new Set(JSON.parse(storedTutorials) as string[]);
+  }
+  const nextTutorial = getNextTutorial();
+  logger.debug('Initial tutorial:', nextTutorial);
+  setNextTutorial(nextTutorial);
 };
 
 loadInitialState();
