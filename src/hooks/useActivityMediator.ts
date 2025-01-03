@@ -193,27 +193,27 @@ export function useActivityMediator(): {
             logger.debug(`Checking if can unlock tutorial: ${JSON.stringify({
                 command,
                 currentPhrase: currentTutorialRef.current.value,
-                charCodesCommand: [...command].map(c => c.charCodeAt(0)),
+                charCodesCommand: [...commandOrReturn].map(c => c.charCodeAt(0)),
                 charCodesPhrase: [...currentTutorialRef.current.value].map(c => c.charCodeAt(0))
             })}`);
 
-            if (canUnlockTutorial(command)) {
-                logger.debug('Tutorial unlocked:', command);
+            if (canUnlockTutorial(commandOrReturn)) {
+                logger.debug('Tutorial unlocked:', commandOrReturn);
                 if (groupKey != null) {
                     const incompletePhrasesInGroup = getIncompletePhrasesByTutorialGroup(groupKey)[0];
-                    if (incompletePhrasesInGroup) {
+                    if (incompletePhrasesInGroup != null) {
                         transitionToGame(incompletePhrasesInGroup.key, incompletePhrasesInGroup.tutorialGroup);
                     }
                     return;
                 }
-                setCompletedTutorial(currentTutorialRef.current.value);
+                setCompletedTutorial(currentTutorialRef.current.key);
             } else {
                 logger.debug(`Tutorial not unlocked: ${JSON.stringify({
                     expected: currentTutorialRef.current.value,
-                    received: command
+                    received: commandOrReturn
                 })}`);
                 setNotification(
-                    `Tutorial ${tutorialSignal.value?.value} not unlocked with ${command}`
+                    `Tutorial ${tutorialSignal.value?.value} not unlocked with ${commandOrReturn}`
                 )
                 return;
             }
