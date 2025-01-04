@@ -1,33 +1,30 @@
-import { type Tutorial } from '../types/Types';
+import { memo } from 'react';
+import { type GamePhrase } from '../types/Types';
 
 import { Chord } from './Chord';
 import './TutorialManager.css';
 
 interface TutorialManagerProps {
-  tutorial: Tutorial | null;
+  tutorial: GamePhrase | null;
 }
 
-export const TutorialManager = ({
+export const TutorialManager = memo(({
   tutorial,
 }: TutorialManagerProps): JSX.Element => {
-  if (!tutorial) {
+  if (tutorial == null) {
     return <div className="tutorial-component" data-testid="tutorial-component" />;
   }
 
   return (
     <div className="tutorial-component" data-testid="tutorial-component">
-      <pre className="tutorial-prompt">{tutorial.prompt}</pre>
+      <pre className="tutorial-prompt">{tutorial.value}</pre>
       <div className="chord-display-container">
-        {tutorial.display && (
-          <Chord key={tutorial.phrase} displayChar={tutorial.display} />
-        )}
-        {!tutorial.display &&
-          tutorial.phrase.split('').map((character: string, index: number) => (
-            <Chord key={`${index}-${character}`} displayChar={character} />
+        {tutorial.key.split('').map((character: string, index: number) => (
+          <Chord key={`char-${index}-${character}`} displayChar={character} />
           ))}
       </div>
     </div>
   );
-};
+});
 
 TutorialManager.displayName = 'TutorialManager';

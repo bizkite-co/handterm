@@ -10,6 +10,9 @@ title: Cline Rules
     b. State your understanding of the problem.
     c. State your plan to solve the problem.
     d. State your next steps.
-    
+    e. Implement your next step in code while observing the linting rules and warnings.
+    e. Whenever you create a measurable improvement, commit the change with a multi-line commit message.
+    f. If you are stuck, state your current problem and ask for help.
+    g. Perioically review your last three comments to make sure you're not stuck in a non-productive loop.
 
 3. Assume 'npm run dev' is already running and available at `http://localhost:5173/`.

@@ -1,8 +1,6 @@
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 
 import { useComputed } from '@preact/signals-react';
-import type { Tutorial, GamePhrase, OutputElement } from '../types/Types';
-import { ActivityType } from '../types/Types';
 
 import { Game, type IGameHandle } from '../game/Game';
 import { useActivityMediator } from '../hooks/useActivityMediator';
@@ -13,6 +11,7 @@ import { activitySignal, isShowVideoSignal } from '../signals/appSignals';
 import { commandTimeSignal } from '../signals/commandLineSignals';
 import { setGamePhrase } from '../signals/gameSignals';
 import { tutorialSignal } from '../signals/tutorialSignals';
+import { ActivityType, type GamePhrase, type OutputElement } from '../types/Types';
 import { getFileContent } from '../utils/apiClient';
 import { createLogger, LogLevel } from '../utils/Logger';
 import { navigate, parseLocation } from '../utils/navigationUtils';
@@ -283,7 +282,7 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
       logger.debug('Setting activity:', ActivityType[activity]);
       activitySignal.value = activity;
     };
-    window.setNextTutorial = (tutorial: Tutorial | null) => {
+    window.setNextTutorial = (tutorial: GamePhrase | null) => {
       logger.debug('Setting tutorial:', tutorial);
       tutorialSignal.value = tutorial;
     };
@@ -319,7 +318,7 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
       {lastTypedCharacter !== null && (
         <Chord displayChar={lastTypedCharacter} />
       )}
-      {currentActivity === ActivityType.TUTORIAL && (
+      {currentActivity === ActivityType.TUTORIAL && tutorialSignal.value != null && (
         <TutorialManager
           tutorial={tutorialSignal.value}
         />

@@ -16,7 +16,7 @@ import { createLogger } from 'src/utils/Logger';
 import { navigate, parseLocation } from 'src/utils/navigationUtils';
 
 import { type ActionType } from '../game/types/ActionTypes';
-import { ActivityType, type ParsedCommand, type GamePhrase, type Tutorial } from '../types/Types';
+import { ActivityType, type ParsedCommand, type GamePhrase } from '../types/Types';
 import GamePhrases from '../utils/GamePhrases';
 
 import { useTutorial } from './useTutorials';
@@ -45,11 +45,11 @@ export function useActivityMediator(): {
     } = useTutorial();
     const activity = useComputed(() => activitySignal.value).value;
     const bypassTutorial = useComputed(() => bypassTutorialSignal.value);
-    const currentTutorialRef = useRef<Tutorial | null>(null);
+    const currentTutorialRef = useRef<GamePhrase | null>(null);
 
     const transitionToGame = useCallback((contentKey?: string | null, groupKey?: string | null): void => {
         // First initialize game if group key is provided
-        if (groupKey) {
+        if (groupKey != null) {
             initializeGame(groupKey);
         } else {
             initializeGame();
@@ -64,50 +64,50 @@ export function useActivityMediator(): {
     }, []);
 
     const decideActivityChange = useCallback((commandActivity: ActivityType | null = null): ActivityType => {
-        logger.debug('Deciding activity change:', {
-            commandActivity,
-            currentActivity: activity,
-            bypassTutorial: bypassTutorial.value,
-            currentTutorial: tutorialSignal.value
-        });
+        logger.debug(`Deciding activity change:
+            commandActivity: ${commandActivity},
+            currentActivity: ${activity},
+            bypassTutorial: ${bypassTutorial.value},
+            currentTutorial: ${JSON.stringify(tutorialSignal.value)}`);
 
         const bypassTutorialValue = bypassTutorial.value;
         if (bypassTutorialValue) {
             return ActivityType.NORMAL;
         }
-        if (tutorialSignal.value && !tutorialSignal.value?.tutorialGroup && activity !== ActivityType.GAME) {
+
+        const nextTutorial = getNextTutorial();
+        if (nextTutorial != null && nextTutorial.displayAs === "Tutorial" && activity !== ActivityType.GAME) {
             return ActivityType.TUTORIAL;
         }
 
-        if (currentTutorialRef.current && currentTutorialRef.current?.tutorialGroup && activity !== ActivityType.GAME) {
+        if (nextTutorial?.displayAs === "Game" && activity !== ActivityType.GAME) {
             return ActivityType.GAME;
         }
-        if (getNextTutorial()) commandActivity = ActivityType.TUTORIAL;
-
+        //TODO: SeCommandActivity at this point?
         return commandActivity ?? ActivityType.NORMAL;
     }, [activity, bypassTutorial.value]);
 
     const checkGameProgress = useCallback((successPhrase: GamePhrase) => {
-        logger.debug('Checking game progress:', successPhrase);
+        logger.debug(`Checking game progress: ${JSON.stringify(successPhrase)}`);
         const groupKey = parseLocation().groupKey ?? '';
         setCompletedGamePhrase(successPhrase.key);
-        if (groupKey) {
+        if (groupKey != null) {
             const nextPhraseInGroup = getIncompletePhrasesByTutorialGroup(groupKey)[0];
-            if (nextPhraseInGroup) {
+            if (nextPhraseInGroup != null) {
                 setGamePhrase(getNextGamePhrase());
                 transitionToGame(nextPhraseInGroup.key, nextPhraseInGroup.tutorialGroup);
                 return;
             }
             const incompleteTutorialInGroup = getIncompleteTutorialsInGroup(groupKey);
             incompleteTutorialInGroup.forEach(itig => {
-                setCompletedTutorial(itig.phrase);
+                setCompletedTutorial(itig.value);
             });
             const nextTutorial = getNextTutorial();
-            if (nextTutorial) {
+            if (nextTutorial != null) {
                 const resultActivity = decideActivityChange(ActivityType.TUTORIAL);
                 navigate({
                     activityKey: resultActivity,
-                    contentKey: nextTutorial.phrase ?? '',
+                    contentKey: nextTutorial.displayAs === 'Tutorial' ? nextTutorial.key : nextTutorial.value,
                     groupKey: nextTutorial.tutorialGroup ?? ''
                 })
                 return;
@@ -115,57 +115,63 @@ export function useActivityMediator(): {
         }
 
         const nextGamePhrase = getNextGamePhrase();
-        if (nextGamePhrase) {
+        if (nextGamePhrase != null) {
             setGamePhrase(nextGamePhrase);
             transitionToGame(nextGamePhrase.key, nextGamePhrase.tutorialGroup);
             return;
         }
         activitySignal.value = ActivityType.NORMAL;
         navigate({ activityKey: ActivityType.NORMAL })
-    }, [getIncompleteTutorialsInGroup, transitionToGame]);
+    }, [getIncompleteTutorialsInGroup, transitionToGame, decideActivityChange]);
 
     const checkTutorialProgress = useCallback((command: string | null) => {
-        logger.debug('Checking tutorial progress:', {
+        logger.debug(`Checking tutorial progress: ${JSON.stringify({
             command,
             currentTutorial: tutorialSignal.value,
             activity: activitySignal.value,
             location: parseLocation()
-        });
+        })}`);
 
         currentTutorialRef.current = getNextTutorial();
-        if (!currentTutorialRef.current) {
+        if (currentTutorialRef.current == null) {
             logger.debug('No current tutorial found');
             return;
         }
 
-        const groupKey = parseLocation().groupKey ?? '';
+        const groupKey = parseLocation().groupKey ?? null;
         // Normalize command for Enter key
-        command = command === '' ? '\r' : command;
-        if (command) {
-            logger.debug('Checking if can unlock tutorial:', {
-                command,
-                currentPhrase: currentTutorialRef.current.phrase,
-                charCodesCommand: [...command].map(c => c.charCodeAt(0)),
-                charCodesPhrase: [...currentTutorialRef.current.phrase].map(c => c.charCodeAt(0))
-            });
+        const commandOrReturn = command === '' ? '\r' : command;
+        if (commandOrReturn != null) {
+            if (currentTutorialRef.current?.value == null) {
+                const errorMessage = 'Current tutorial value is undefined: Undefined tutorial value';
+                logger.error(errorMessage);
+                return;
+            }
 
-            if (canUnlockTutorial(command)) {
-                logger.debug('Tutorial unlocked:', command);
-                if (groupKey) {
+            logger.debug(`Checking if can unlock tutorial: ${JSON.stringify({
+                commandOrReturn,
+                currentPhrase: currentTutorialRef.current.value,
+                charCodesCommand: [...commandOrReturn].map(c => c.charCodeAt(0)),
+                charCodesPhrase: [...currentTutorialRef.current.value].map(c => c.charCodeAt(0))
+            })}`);
+
+            if (canUnlockTutorial(commandOrReturn)) {
+                logger.debug('Tutorial unlocked:', commandOrReturn);
+                if (groupKey != null) {
                     const incompletePhrasesInGroup = getIncompletePhrasesByTutorialGroup(groupKey)[0];
-                    if (incompletePhrasesInGroup) {
+                    if (incompletePhrasesInGroup != null) {
                         transitionToGame(incompletePhrasesInGroup.key, incompletePhrasesInGroup.tutorialGroup);
                     }
                     return;
                 }
-                setCompletedTutorial(currentTutorialRef.current.phrase);
+                setCompletedTutorial(currentTutorialRef.current.key);
             } else {
-                logger.debug('Tutorial not unlocked:', {
-                    expected: currentTutorialRef.current.phrase,
-                    received: command
-                });
+                logger.debug(`Tutorial not unlocked: ${JSON.stringify({
+                    expected: currentTutorialRef.current.value,
+                    received: commandOrReturn
+                })}`);
                 setNotification(
-                    `Tutorial ${tutorialSignal.value?.phrase} not unlocked with ${command}`
+                    `Tutorial ${tutorialSignal.value?.value} not unlocked with ${commandOrReturn}`
                 )
                 return;
             }
@@ -173,22 +179,22 @@ export function useActivityMediator(): {
 
         const nextTutorial = getNextTutorial();
         logger.debug('Next tutorial:', nextTutorial);
-        if (nextTutorial?.phrase) {
+        if (nextTutorial?.value != null) {
             const resultActivity = decideActivityChange(ActivityType.TUTORIAL);
             setNextTutorial(nextTutorial);
             navigate({
                 activityKey: resultActivity,
-                contentKey: nextTutorial.phrase,
+                contentKey: nextTutorial.displayAs === 'Tutorial' ? nextTutorial.key : nextTutorial.value,
                 groupKey: nextTutorial.tutorialGroup ?? null
             })
             return;
         }
         const nextGamePhrase = getNextGamePhrase();
-        if (nextGamePhrase) {
+        if (nextGamePhrase != null) {
             transitionToGame(nextGamePhrase?.key, groupKey);
         }
         return;
-    }, [canUnlockTutorial, transitionToGame]);
+    }, [canUnlockTutorial, transitionToGame, decideActivityChange]);
 
     const handleCommandExecuted = useCallback((parsedCommand: ParsedCommand): boolean => {
         logger.debug('Handling command:', parsedCommand);
@@ -196,9 +202,9 @@ export function useActivityMediator(): {
         if (parseLocation().activityKey === ActivityType.TUTORIAL) {
             checkTutorialProgress(parsedCommand.command);
         }
-        else if (parseLocation().activityKey === ActivityType.GAME && parseLocation().contentKey) {
+        else if (parseLocation().activityKey === ActivityType.GAME && parseLocation().contentKey != null) {
             const gamePhrase = GamePhrases.getGamePhraseByKey(parseLocation().contentKey ?? '')
-            if (gamePhrase) checkGameProgress(gamePhrase);
+            if (gamePhrase != null) checkGameProgress(gamePhrase);
         }
         switch (parsedCommand.command) {
             case 'play': {
@@ -214,7 +220,7 @@ export function useActivityMediator(): {
                 const nextTutorial = getNextTutorial();
                 navigate({
                     activityKey: ActivityType.TUTORIAL,
-                    contentKey: nextTutorial?.phrase ?? null,
+                    contentKey: nextTutorial?.key ?? null,
                     groupKey: nextTutorial?.tutorialGroup ?? null
                 })
                 result = true;

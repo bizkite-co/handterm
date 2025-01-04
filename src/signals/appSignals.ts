@@ -124,7 +124,7 @@ export const setUserName = (name: string | null): void => {
 };
 
 // Expose activity functions on window for testing
-if (typeof window !== 'undefined') {
+if (typeof window != 'undefined') {
     window.setActivity = setActivity;
     window.ActivityType = ActivityType;
 }

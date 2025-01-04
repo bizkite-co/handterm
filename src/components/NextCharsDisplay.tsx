@@ -194,6 +194,8 @@ const NextCharsDisplay = forwardRef<NextCharsDisplayHandle, INextCharsDisplayPro
         setGamePhrase(prevPhrase =>
             prevPhrase?.key === foundPhrase.key ? prevPhrase : foundPhrase
         );
+        //TODO: Check if we can use the Chord.tsx here.
+        //INFO: This is the only place the Phrase.ts is still used.
         setPhrase(new Phrase(foundPhrase.value.split('')));
         setNextChars(foundPhrase.value);
     }, [currentLocation, currentLocation.contentKey]);

@@ -11,7 +11,7 @@ export const Chord: React.FC<ChordProps> = ({ displayChar }) => {
         return x.key.replace('&#x2581;', ' ') === displayChar;
     });
 
-    if (!foundChord) {
+    if (foundChord == null) {
         foundChord = Array.from(allChords).find(x => x.key === displayChar);
     }
 

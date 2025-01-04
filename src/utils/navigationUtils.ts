@@ -37,14 +37,14 @@ export function parseActivityType(activityString: string): ActivityType {
 // Global navigation function that can be used outside of React components
 export function navigate(options: ParsedLocation): void {
   const newActivity = options.activityKey ?? ActivityType.NORMAL;
-  const newPhraseKey = options.contentKey ? options.contentKey.replace('\r', '_r') : '';
-  const newGroupKey = options.groupKey ?? '';
+  const newPhraseKey = options.contentKey != null ? options.contentKey.replace('\r', '_r') : null;
+  const newGroupKey = options.groupKey ?? null;
 
-  const encodedPhraseKey = newPhraseKey ? encodeURIComponent(newPhraseKey) : '';
-  const queryString = newGroupKey ? `?group=${encodeURIComponent(newGroupKey)}` : '';
+  const encodedPhraseKey = newPhraseKey != null ? encodeURIComponent(newPhraseKey) : '';
+  const queryString = newGroupKey != null ? `?group=${encodeURIComponent(newGroupKey)}` : '';
 
   const activityPath = newActivity === ActivityType.NORMAL ? '' : ActivityType[newActivity].toLowerCase();
-  const path = `/${activityPath}${encodedPhraseKey ? `/${encodedPhraseKey}` : ''}${queryString}`;
+  const path = `/${activityPath}${newPhraseKey !== null ? `/${encodedPhraseKey}` : ''}${queryString}`;
 
   // Use browser's history API directly
   window.history.pushState(null, '', path);

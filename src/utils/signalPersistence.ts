@@ -20,7 +20,7 @@ export function createPersistentSignal<T>({
 }: PersistenceConfig<T>): PersistentSignal<T> {
   const loadInitialState = () => {
     try {
-      if (typeof localStorage !== 'undefined') {
+      if (typeof localStorage != 'undefined') {
         const storedValue = localStorage.getItem(key);
         if (storedValue != null) {
           signal.value = deserialize(storedValue);

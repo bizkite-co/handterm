@@ -362,7 +362,7 @@ export const allChords: IChord[] = [
     "index": 35
   },
   {
-    "key": "Return (ENTER)",
+    "key": "\r",
     "alias": "Enter",
     "chordCode": "0",
     "index": 36
@@ -380,11 +380,13 @@ export const allChords: IChord[] = [
   },
   {
     "key": "\\t",
+    "alias": "Tab",
     "chordCode": "14",
     "index": 39
   },
   {
     "key": "&#x2581;",
+    "alias": "Space",
     "chordCode": "5",
     "index": 40
   },
