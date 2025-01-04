@@ -70,21 +70,33 @@ export function useActivityMediator(): {
             bypassTutorial: ${bypassTutorial.value},
             currentTutorial: ${JSON.stringify(tutorialSignal.value)}`);
 
-        const bypassTutorialValue = bypassTutorial.value;
-        if (bypassTutorialValue) {
+        // If we're already in tutorial mode, stay there until explicitly completed
+        if (activity === ActivityType.TUTORIAL) {
+            const nextTutorial = getNextTutorial();
+            if (nextTutorial?.displayAs === "Tutorial") {
+                return ActivityType.TUTORIAL;
+            }
+        }
+
+        // Check bypass tutorial flag
+        if (bypassTutorial.value) {
             return ActivityType.NORMAL;
         }
 
+        // Check for pending tutorials
         const nextTutorial = getNextTutorial();
-        if (nextTutorial != null && nextTutorial.displayAs === "Tutorial" && activity !== ActivityType.GAME) {
-            return ActivityType.TUTORIAL;
+        if (nextTutorial != null) {
+            if (nextTutorial.displayAs === "Tutorial") {
+                return ActivityType.TUTORIAL;
+            }
+            if (nextTutorial.displayAs === "Game") {
+                return ActivityType.GAME;
+            }
         }
 
-        if (nextTutorial?.displayAs === "Game" && activity !== ActivityType.GAME) {
-            return ActivityType.GAME;
-        }
-        //TODO: SeCommandActivity at this point?
-        return commandActivity ?? ActivityType.NORMAL;
+        // Only transition to NORMAL if there are no pending tutorials
+        const hasPendingTutorials = getNextTutorial() !== null;
+        return hasPendingTutorials ? ActivityType.TUTORIAL : (commandActivity ?? ActivityType.NORMAL);
     }, [activity, bypassTutorial.value]);
 
     const checkGameProgress = useCallback((successPhrase: GamePhrase) => {

@@ -1,4 +1,10 @@
 import { test, expect } from '@playwright/test';
+import { TerminalPage } from '../page-objects/TerminalPage';
+import type { GamePhrase } from '../../types/Types';
+import { Phrases } from '../../types/Types';
+import { TEST_CONFIG } from '../config';
+
+let terminalPage: TerminalPage;
 
 // Initialize localStorage for all tests
 test.beforeEach(async ({ context }) => {
@@ -9,7 +15,7 @@ test.beforeEach(async ({ context }) => {
         let store: Record<string, string> = {};
         return {
           getItem(key: string) {
-            return store[key] || null;
+            return store[key] ?? null;
           },
           setItem(key: string, value: string) {
             store[key] = value;
@@ -23,7 +29,7 @@ test.beforeEach(async ({ context }) => {
             );
           },
           key(index: number) {
-            return Object.keys(store)[index] || null;
+            return Object.keys(store)[index] ?? null;
           },
           get length() {
             return Object.keys(store).length;
@@ -43,14 +49,6 @@ test.afterEach(async ({ context }) => {
   // Clear localStorage after each test
   await context.storageState();
 });
-
-import { TerminalPage } from '../page-objects/TerminalPage';
-import type { Tutorial } from '../../types/Types';
-import { Tutorials } from '../../types/Types';
-
-let terminalPage: TerminalPage;
-
-import { TEST_CONFIG } from '../config';
 
 test.beforeEach(async ({ page }) => {
   test.setTimeout(TEST_CONFIG.timeout.long);
@@ -104,7 +102,7 @@ test.beforeEach(async ({ page }) => {
     } else {
       throw new Error('Required window methods not found');
     }
-  }, [Tutorials[0] ?? null] as [Tutorial | null]);
+  }, [Phrases[0] ?? null] as [GamePhrase | null]);
 
   await terminalPage.goto();
 });

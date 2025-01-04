@@ -21,8 +21,6 @@ export default defineConfig({
       /* Base URL to use in actions like `await page.goto('/')`. */
       baseURL: TEST_CONFIG.baseUrl,
 
-      /* Load test setup file */
-      setupFiles: ['./setupTests.ts'],
 
       /* Initialize localStorage for tests */
       storageState: {
@@ -53,6 +51,7 @@ export default defineConfig({
       name: 'chromium',
       use: {
         ...devices['Desktop Chrome'],
+        headless: true,
         // Use a new context for each test
         contextOptions: {
           storageState: undefined

@@ -1,5 +1,14 @@
 import { vi, beforeAll } from 'vitest';
 import { test } from '@playwright/test';
+import type { GamePhrase, ActivityType } from './src/types/Types';
+
+declare global {
+  interface Window {
+    setNextTutorial: (tutorial: GamePhrase | null) => void;
+    setActivity: (activity: ActivityType) => void;
+    ActivityType: typeof ActivityType;
+  }
+}
 
 // Initialize localStorage before any tests run
 beforeAll(() => {
@@ -16,9 +25,10 @@ beforeAll(() => {
   }
 });
 
-// Initialize localStorage for all tests
+// Initialize localStorage and window methods for all tests
 test.beforeEach(async ({ context }) => {
   await context.addInitScript(() => {
+    // Initialize localStorage
     if (typeof window.localStorage === 'undefined') {
       const store: Record<string, string | undefined> = {};
       window.localStorage = {
@@ -29,6 +39,17 @@ test.beforeEach(async ({ context }) => {
         length: Object.keys(store).length,
         key: (index: number) => Object.keys(store)[index] || null
       };
+    }
+
+    // Initialize tutorial state
+    window.localStorage.setItem('tutorial-state', JSON.stringify({ currentStep: 0 }));
+
+    // Initialize window methods
+    if (typeof window.setActivity === 'undefined') {
+      window.setActivity = vi.fn();
+    }
+    if (typeof window.setNextTutorial === 'undefined') {
+      window.setNextTutorial = vi.fn();
     }
   });
 });

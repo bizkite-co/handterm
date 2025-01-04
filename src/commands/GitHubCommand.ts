@@ -1,3 +1,4 @@
+import { navigate } from "../utils/navigationUtils.js";
 import { type ICommand, type ICommandContext, type ICommandResponse } from "../contexts/CommandContext.js";
 import { type ParsedCommand, ActivityType } from "../types/Types.js";
 import {
@@ -183,7 +184,7 @@ export const GitHubCommand: ICommand = {
 
           // Switch to tree view mode
           logger.info('Switching to TREE mode');
-          context.updateLocation({
+          navigate({
             activityKey: ActivityType.TREE,
             contentKey: null,
             groupKey: null,
