@@ -20,18 +20,18 @@ import { useWPMCalculator } from './useWPMCaculator';
 const logger: ReturnType<typeof createLogger> = createLogger({ prefix: 'useCommand' });
 
 export const useCommand = (): {
-  output: OutputElement[];
-  resetOutput: () => void;
-  commandHistory: string[];
-  addToCommandHistory: (command: ParsedCommand | string) => void;
-  getCommandResponseHistory: () => string[];
-  handleCommand: (parsedCommand: ParsedCommand) => Promise<void>;
-  commandHistoryIndex: number;
-  setCommandHistoryIndex: React.Dispatch<React.SetStateAction<number>>;
-  commandHistoryFilter: string | null;
-  setCommandHistoryFilter: React.Dispatch<React.SetStateAction<string | null>>;
-  appendToOutput: (outputElement: OutputElement) => void;
-  executeCommand: (parsedCommand: ParsedCommand) => Promise<void>;
+    output: OutputElement[];
+    resetOutput: () => void;
+    commandHistory: string[];
+    addToCommandHistory: (command: ParsedCommand | string) => void;
+    getCommandResponseHistory: () => string[];
+    handleCommand: (parsedCommand: ParsedCommand) => Promise<void>;
+    commandHistoryIndex: number;
+    setCommandHistoryIndex: React.Dispatch<React.SetStateAction<number>>;
+    commandHistoryFilter: string | null;
+    setCommandHistoryFilter: React.Dispatch<React.SetStateAction<string | null>>;
+    appendToOutput: (outputElement: OutputElement) => void;
+    executeCommand: (parsedCommand: ParsedCommand) => Promise<void>;
 } => {
     const [output, setOutput] = useState<OutputElement[]>([]);
     const [commandHistory, setCommandHistory] = useState<string[]>([]);
@@ -170,15 +170,36 @@ export const useCommand = (): {
 
     const handleCommand = useCallback(async (parsedCommand: ParsedCommand) => {
         // Breakpoint 7: Start of command handling
-        logger.debug('Handling command:', { parsedCommand, activity: currentActivity.value });
-        setCommandTime(new Date());
-        if (currentActivity.value === ActivityType.TUTORIAL) {
-            // Breakpoint 8: Tutorial progress check
-            logger.debug('Processing tutorial command:', parsedCommand.command);
-            checkTutorialProgress(parsedCommand.command);
-        }
+        const currentActivityValue = currentActivity.value;
+        logger.debug('Handling command:', {
+            parsedCommand,
+            activity: currentActivityValue,
+            timestamp: new Date().toISOString()
+        });
 
+        setCommandTime(new Date());
+
+        // Only check tutorial progress if we're explicitly in tutorial mode
+        if (currentActivityValue === ActivityType.TUTORIAL) {
+            // Breakpoint 8: Tutorial progress check
+            logger.debug('Processing tutorial command:', {
+                command: parsedCommand.command,
+                activity: currentActivityValue
+            });
+            checkTutorialProgress(parsedCommand.command);
+        } else {
+            logger.debug('Processing non-tutorial command:', {
+                command: parsedCommand.command,
+                activity: currentActivityValue
+            });
+        }
         await executeCommand(parsedCommand);
+
+        logger.debug('Command handling complete:', {
+            parsedCommand,
+            activity: currentActivity.value,
+            timestamp: new Date().toISOString()
+        });
     }, [currentActivity.value, executeCommand, checkTutorialProgress]);
 
     return {

@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { useComputed } from '@preact/signals-react';
 
 import { activitySignal, setNotification, bypassTutorialSignal } from 'src/signals/appSignals';
@@ -171,7 +171,9 @@ export function useActivityMediator(): {
             })}`);
 
             if (canUnlockTutorial(commandOrReturn)) {
+                setCompletedTutorial(currentTutorialRef.current.key);
                 logger.debug('Tutorial unlocked:', commandOrReturn);
+
                 //TODO: Check if tutorial has related games.
                 if (groupKey != null) {
                     const firstIncompletePhraseInGroup = getIncompletePhrasesByTutorialGroup(groupKey)[0];
@@ -180,8 +182,6 @@ export function useActivityMediator(): {
                     }
                     return;
                 }
-
-                setCompletedTutorial(currentTutorialRef.current.key);
 
                 // Check if there are more tutorials in this group
                 const nextTutorial = getNextTutorial();
