@@ -86,8 +86,21 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
   // Update activity state when activitySignal changes
   useEffect(() => {
     const updateActivity = () => {
-      logger.debug('Activity signal changed:', ActivityType[activitySignal.value]);
+      logger.debug('Activity signal changed:', {
+        from: ActivityType[currentActivity],
+        to: ActivityType[activitySignal.value],
+        tutorialState: tutorialSignal.value,
+        isTutorialComplete: tutorialSignal.value === null
+      });
       setCurrentActivity(activitySignal.value);
+
+      // Log when transitioning from TUTORIAL to GAME
+      if (currentActivity === ActivityType.TUTORIAL && activitySignal.value === ActivityType.GAME) {
+        logger.debug('Transitioning from TUTORIAL to GAME', {
+          tutorialSignal: tutorialSignal.value,
+          activitySignal: activitySignal.value
+        });
+      }
     };
 
     // Initial sync
@@ -99,15 +112,37 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
     return () => {
       unsubscribe();
     };
-  }, []);
-
-  useEffect(() => {
-    logger.debug('Current activity:', ActivityType[currentActivity]);
   }, [currentActivity]);
 
   useEffect(() => {
-    logger.debug('Tutorial signal:', tutorialSignal.value);
-  }, [tutorialSignal.value]);
+    logger.debug('Current activity:', {
+      activity: ActivityType[currentActivity],
+      tutorialState: tutorialSignal.value,
+      isTutorialComplete: tutorialSignal.value === null
+    });
+  }, [currentActivity]);
+
+  useEffect(() => {
+    logger.debug('Tutorial signal:', {
+      current: tutorialSignal.value,
+      completed: localStorage.getItem('completed-tutorials'),
+      state: localStorage.getItem('tutorial-state')
+    });
+
+    // When tutorial signal changes to null, check if we should transition to GAME
+    if (tutorialSignal.value === null) {
+      logger.debug('Tutorial completed, checking for game transition', {
+        currentActivity,
+        activitySignal: activitySignal.value
+      });
+
+      // Only transition if we're currently in TUTORIAL mode
+      if (currentActivity === ActivityType.TUTORIAL) {
+        logger.debug('Transitioning from TUTORIAL to GAME');
+        activitySignal.value = ActivityType.GAME;
+      }
+    }
+  }, [tutorialSignal.value, currentActivity]);
 
   // Declare handlePhraseComplete with all its dependencies
   const handlePhraseComplete = useCallback(() => {

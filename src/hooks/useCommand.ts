@@ -141,7 +141,7 @@ export const useCommand = (): {
         // Breakpoint 5: Start of command execution
         logger.debug('Executing command:', parsedCommand);
         const command = commandRegistry.getCommand(parsedCommand.command);
-        if (command && context) {
+        if (command != null && context != null) {
             try {
                 const response = await command.execute(context, parsedCommand);
                 logger.debug('Command executed successfully:', response);

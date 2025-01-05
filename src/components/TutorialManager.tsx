@@ -1,7 +1,6 @@
 import { memo } from 'react';
 import { type GamePhrase } from '../types/Types';
 import { Chord } from './Chord';
-import './TutorialManager.css';
 
 interface TutorialManagerProps {
   tutorial: GamePhrase | null;

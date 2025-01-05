@@ -44,17 +44,39 @@ export const setNextTutorial = (nextTutorial: GamePhrase | null): void => {
 
 // Load initial state
 const loadInitialState = () => {
-  const storedTutorials = localStorage.getItem(completedTutorialsKey);
-  if (storedTutorials != null) {
-    logger.debug('Loading stored tutorials:', storedTutorials);
-    completedTutorialsSignal.value = new Set(JSON.parse(storedTutorials) as string[]);
+  try {
+    logger.debug('Loading initial tutorial state');
+    const storedTutorials = localStorage.getItem(completedTutorialsKey);
+
+    if (storedTutorials != null) {
+      logger.debug('Found stored tutorials:', storedTutorials);
+      completedTutorialsSignal.value = new Set(JSON.parse(storedTutorials) as string[]);
+    } else {
+      logger.debug('No stored tutorials found - initializing new state');
+      completedTutorialsSignal.value = new Set();
+    }
+
+    const nextTutorial = getNextTutorial();
+    logger.debug('Initial tutorial state:', {
+      nextTutorial,
+      completedTutorials: [...completedTutorialsSignal.value]
+    });
+
+    if (nextTutorial == null) {
+      logger.warn('No tutorials found - resetting state');
+      resetCompletedTutorials();
+    } else {
+      setNextTutorial(nextTutorial);
+    }
+  } catch (error) {
+    logger.error('Error loading tutorial state:', error);
+    // Reset state on error
+    resetCompletedTutorials();
   }
-  const nextTutorial = getNextTutorial();
-  logger.debug('Initial tutorial:', nextTutorial);
-  setNextTutorial(nextTutorial);
 };
 
-loadInitialState();
+// Delay initialization to ensure localStorage is ready
+setTimeout(loadInitialState, 100);
 
 // Computed signals
 export const completedTutorialsArray = computed(() => [...completedTutorialsSignal.value]);

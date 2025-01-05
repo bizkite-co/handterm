@@ -22,6 +22,8 @@ export const useTutorial = (): {
     const [, setCurrentTutorial] = useState<GamePhrase | null>(null);
     const completedTutorials = useComputed(() => completedTutorialsSignal.value);
 
+    const getTutorials = Phrases.filter(p => p.displayAs === 'Tutorial');
+
     // Get all completed tutorials as an array if needed
     const completedTutorialsArray = (): string[] => {
         const completed = [...completedTutorialsSignal.value];
@@ -31,26 +33,26 @@ export const useTutorial = (): {
 
     const getIncompleteTutorials = useCallback((): GamePhrase[] => {
         // Breakpoint 9: Getting incomplete tutorials
-        const incomplete = Phrases.filter(tut => !completedTutorialsArray().includes(tut.key));
+        const incomplete = getTutorials.filter(tut => !completedTutorialsArray().includes(tut.key));
         logger.debug('Incomplete tutorials:', incomplete);
         return incomplete;
-    }, [])
+    }, [getTutorials])
 
     const getTutorialsInGroup = (groupName: string) => {
         // Breakpoint 10: Getting tutorials in group
-        const result = Phrases.filter(t => t.tutorialGroup === groupName);
+        const result = getTutorials.filter(t => t.tutorialGroup === groupName);
         logger.debug('Tutorials in group:', { groupName, result });
         return result;
     }
 
     const getTutorialByPhrasekey = (phraseKey: string) => {
         // Breakpoint 11: Getting tutorial by phrase key
-        const foundTutorial = Phrases.find(t => t.key === phraseKey?.replace('_r', '\r'));
+        const foundTutorial = getTutorials.find(t => t.key === phraseKey?.replace('_r', '\r'));
         logger.debug('Getting tutorial by phrase key:', {
             phraseKey,
             currentTutorial: foundTutorial,
             normalizedKey: phraseKey?.replace('_r', '\r'),
-            allTutorials: Phrases.map(t => ({ key: t.key, value: t.value }))
+            allTutorials: getTutorials.map(t => ({ key: t.key, value: t.value }))
         });
         return foundTutorial;
     }

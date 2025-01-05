@@ -43,8 +43,8 @@ export const setCompletedGamePhrase = (gamePhraseId: string): void => {
 }
 
 export const getIncompletePhrasesByTutorialGroup = (tutorialGroup: string): GamePhrase[] => {
-  const phrasesInGroup = Phrases.filter(p => p.tutorialGroup === tutorialGroup);
-  const incompletePhrasesInGroup = phrasesInGroup
+  const gamePhrasesInGroup = Phrases.filter(p => p.tutorialGroup === tutorialGroup && p.displayAs === 'Game');
+  const incompletePhrasesInGroup = gamePhrasesInGroup
     .filter(pig => !Array.from(completedGamePhrasesSignal.value).includes(pig.key))
   return incompletePhrasesInGroup;
 }
@@ -58,11 +58,12 @@ export const getNextGamePhrase = (): GamePhrase | null => {
   return nextGamePhrase;
 };
 
-export const initializeGame = (tutorialGroup?: string): void => {
+export const initializeGame = (tutorialGroup?: string, contentKey?: string | null): void => {
   gameInitSignal.value = true;
   isInGameModeSignal.value = true;
-  if (tutorialGroup) {
-    const tutorialGroupGamePhrase = getIncompletePhrasesByTutorialGroup(tutorialGroup);
+  if (tutorialGroup != null) {
+    const tutorialGroupGamePhrase = contentKey != null ? Phrases.filter(p => p.key === contentKey) :
+      getIncompletePhrasesByTutorialGroup(tutorialGroup);
     if (tutorialGroupGamePhrase.length > 0) {
       gamePhraseSignal.value = tutorialGroupGamePhrase[0] ?? null;
     }

@@ -131,11 +131,14 @@ export const Phrases: GamePhrase[] = [
   {
     value: 'Type `jkl;`. Notice that it requires only a finger-grasp followed by a release.',
     displayAs: 'Tutorial',
-    key: 'jkl;', tutorialGroup: 'single-click'
+    key: 'jkl;',
+    tutorialGroup: 'single-click'
   },
   {
     key: "first-eight",
-    displayAs: "Game", value: "all sad lads ask dad; alas fads fall", tutorialGroup: "single-click"
+    displayAs: "Game",
+    value: "all sad lads ask dad; alas fads fall",
+    tutorialGroup: "single-click"
   },
   {
     value: 'Press the thumb tip followed by a finger tip to type numbers 0-4',
@@ -145,7 +148,8 @@ export const Phrases: GamePhrase[] = [
   {
     value: 'Press the thumb tip followed by a finger tip to type numbers 5-9',
     displayAs: 'Tutorial',
-    key: '56789', tutorialGroup: 'numbers'
+    key: '56789',
+    tutorialGroup: 'numbers'
   },
   {
     key: "numbers",
