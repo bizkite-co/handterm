@@ -63,45 +63,6 @@ export function useActivityMediator(): {
         });
     }, []);
 
-    const decideActivityChange = useCallback((commandActivity: ActivityType | null = null): ActivityType => {
-        logger.debug(`Deciding activity change:
-            commandActivity: ${commandActivity},
-            currentActivity: ${activity},
-            bypassTutorial: ${bypassTutorial.value},
-            currentTutorial: ${JSON.stringify(tutorialSignal.value)}`);
-
-        // Check bypass tutorial flag first
-        if (bypassTutorial.value) {
-            return ActivityType.NORMAL;
-        }
-
-        // Check for pending tutorials
-        const nextTutorial = getNextTutorial();
-        if (nextTutorial != null) {
-            if (nextTutorial.displayAs === "Tutorial") {
-                activitySignal.value = ActivityType.TUTORIAL;
-                return ActivityType.TUTORIAL;
-            }
-            if (nextTutorial.displayAs === "Game") {
-                activitySignal.value = ActivityType.GAME;
-                return ActivityType.GAME;
-            }
-        }
-
-        // If we're already in tutorial mode, stay there until explicitly completed
-        if (activity === ActivityType.TUTORIAL) {
-            return ActivityType.TUTORIAL;
-        }
-
-        if (currentTutorialRef.current != null && currentTutorialRef.current?.tutorialGroup != null && activity !== ActivityType.GAME) {
-            return ActivityType.GAME;
-        }
-        if (getNextTutorial() != null) commandActivity = ActivityType.TUTORIAL;
-
-        // Default to command activity or NORMAL
-        return commandActivity ?? ActivityType.NORMAL;
-    }, [activity, bypassTutorial.value]);
-
     const checkGameProgress = useCallback((successPhrase: GamePhrase) => {
         logger.debug(`Checking game progress: ${JSON.stringify(successPhrase)}`);
         const groupKey = parseLocation().groupKey ?? '';
@@ -119,9 +80,8 @@ export function useActivityMediator(): {
             });
             const nextTutorial = getNextTutorial();
             if (nextTutorial != null) {
-                const resultActivity = decideActivityChange(ActivityType.TUTORIAL);
                 navigate({
-                    activityKey: resultActivity,
+                    activityKey: nextTutorial.displayAs === 'Tutorial' ? ActivityType.TUTORIAL : ActivityType.GAME,
                     contentKey: nextTutorial.displayAs === 'Tutorial' ? nextTutorial.key : nextTutorial.value,
                     groupKey: nextTutorial.tutorialGroup ?? ''
                 })
@@ -137,7 +97,7 @@ export function useActivityMediator(): {
         }
         activitySignal.value = ActivityType.NORMAL;
         navigate({ activityKey: ActivityType.NORMAL })
-    }, [getIncompleteTutorialsInGroup, transitionToGame, decideActivityChange]);
+    }, [getIncompleteTutorialsInGroup, transitionToGame]);
 
     const checkTutorialProgress = useCallback((command: string | null) => {
         logger.debug(`Checking tutorial progress: ${JSON.stringify({
@@ -239,10 +199,9 @@ export function useActivityMediator(): {
         const nextTutorial = getNextTutorial();
         logger.debug('Next tutorial:', nextTutorial);
         if (nextTutorial?.value != null) {
-            const resultActivity = decideActivityChange(ActivityType.TUTORIAL);
             setNextTutorial(nextTutorial);
             navigate({
-                activityKey: resultActivity,
+                activityKey: nextTutorial.displayAs === 'Tutorial' ? ActivityType.TUTORIAL : ActivityType.GAME,
                 contentKey: nextTutorial.displayAs === 'Tutorial' ? nextTutorial.key : nextTutorial.value,
                 groupKey: nextTutorial.tutorialGroup ?? null
             })
@@ -253,7 +212,7 @@ export function useActivityMediator(): {
             transitionToGame(nextGamePhrase?.key, groupKey);
         }
         return;
-    }, [canUnlockTutorial, transitionToGame, decideActivityChange]);
+    }, [canUnlockTutorial, transitionToGame]);
 
     const handleCommandExecuted = useCallback((parsedCommand: ParsedCommand): boolean => {
         logger.debug('Handling command:', parsedCommand);
