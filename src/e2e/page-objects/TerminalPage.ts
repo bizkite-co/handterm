@@ -1,7 +1,17 @@
 import { type Page, type Locator, expect } from '@playwright/test';
 
 import { TERMINAL_CONSTANTS } from 'src/constants/terminal';
+import type { Signal } from '@preact/signals-react';
+import type { ActivityType, GamePhrase } from 'src/types/Types';
 import { TEST_CONFIG } from '../config';
+
+// Extend Window interface for our signals
+declare global {
+  interface Window {
+    tutorialSignal: Signal<GamePhrase | null>;
+    activitySignal: Signal<ActivityType>;
+  }
+}
 
 export class TerminalPage {
   readonly page: Page;
@@ -25,7 +35,34 @@ export class TerminalPage {
   }
 
   async waitForTutorialMode(timeout = 10000): Promise<void> {
-    await this.page.waitForSelector('.tutorial-component', { state: 'attached', timeout });
+    try {
+      // Wait for tutorial component to be attached
+      await this.page.waitForSelector('.tutorial-component', { state: 'attached', timeout });
+
+      // Wait for tutorial content to be loaded (tutorial-prompt only appears when content is set)
+      await this.page.waitForSelector('.tutorial-prompt', { state: 'visible', timeout });
+
+      // Get current tutorial state for debugging
+      const tutorialState = await this.page.evaluate(() => ({
+        tutorialSignal: window.tutorialSignal?.value,
+        activitySignal: window.activitySignal?.value,
+        completedTutorials: localStorage.getItem('completed-tutorials'),
+        tutorialState: localStorage.getItem('tutorial-state')
+      }));
+
+      console.log('[Tutorial State]', tutorialState);
+
+      // Verify tutorial content is actually set
+      const tutorialContent = await this.page.locator('.tutorial-prompt').textContent();
+      if (!tutorialContent) {
+        throw new Error('Tutorial content is empty');
+      }
+    } catch (error) {
+      // Log the current page state for debugging
+      const html = await this.page.content();
+      console.log('[Page Content]', html);
+      throw error;
+    }
   }
 
   constructor(page: Page) {
