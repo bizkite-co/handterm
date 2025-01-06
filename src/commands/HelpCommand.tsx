@@ -1,6 +1,8 @@
+import React from 'react';
 import ReactDOMServer from 'react-dom/server';
 
 import { Chord } from '../components/Chord';
+import { commandRegistry } from './commandRegistry';
 import { type ICommand, type ICommandResponse, type ICommandContext } from '../contexts/CommandContext';
 import { type ParsedCommand } from '../types/Types';
 
@@ -29,7 +31,14 @@ export const HelpCommand: ICommand = {
       const commandChordsHtml = commandChords.map(element => (
         ReactDOMServer.renderToStaticMarkup(element)
       )).join('');
-      const response = "<div class='chord-display-container'>" + commandChordsHtml + "</div>";
+      const commandList = commandRegistry.getHelp();
+      const response = `
+        <div class='chord-display-container'>${commandChordsHtml}</div>
+        <div class='command-list-container'>
+          <h3>Available Commands:</h3>
+          <pre>${commandList}</pre>
+        </div>
+      `;
       return Promise.resolve<ICommandResponse>({ status: 200, message: response });
     }
     return Promise.resolve<ICommandResponse>({ status: 404, message: "Help command not recognized" });

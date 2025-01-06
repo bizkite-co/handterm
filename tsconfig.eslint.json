@@ -12,6 +12,7 @@
     ".eslintrc.cjs",
     "src/test-utils/canvasMock.d.ts",
     "vite.config.ts",
-    "eslint-plugin-custom-rules/index.js"
+    "eslint-plugin-custom-rules/index.js",
+    "src/commands/HelpCommand.tsx"
   ]
 }
