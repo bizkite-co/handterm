@@ -252,11 +252,18 @@ export function useActivityMediator(): {
     }, [checkGameProgress, checkTutorialProgress, transitionToGame]);
 
     useEffect(() => {
-        const resultActivity = decideActivityChange(null);
-        if (resultActivity === ActivityType.TUTORIAL) {
+        if (activity === ActivityType.TUTORIAL) {
             checkTutorialProgress(null);
         }
-    }, [decideActivityChange, checkTutorialProgress]);
+    }, [activity, checkTutorialProgress]);
+
+
+    useEffect(() => {
+        const nextTutorial = getNextTutorial();
+        if (nextTutorial != null) {
+            activitySignal.value = ActivityType.TUTORIAL;
+        }
+    }, []);
 
     return {
         isInGameMode: activity === ActivityType.GAME,

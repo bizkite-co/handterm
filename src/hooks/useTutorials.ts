@@ -9,7 +9,7 @@ import {
 import { createLogger } from 'src/utils/Logger';
 import { parseLocation } from 'src/utils/navigationUtils';
 
-import { type GamePhrase, Phrases } from "../types/Types";
+import { type GamePhrase, ActivityType, Phrases } from "../types/Types";
 
 const logger = createLogger({ prefix: 'useTutorials' });
 
@@ -18,6 +18,7 @@ export const useTutorial = (): {
     canUnlockTutorial: (command: string) => boolean;
     getTutorialsInGroup: (groupName: string) => GamePhrase[];
     getIncompleteTutorialsInGroup: (groupName: string) => GamePhrase[];
+    getNextActivity: () => ActivityType;
 } => {
     const [, setCurrentTutorial] = useState<GamePhrase | null>(null);
     const completedTutorials = useComputed(() => completedTutorialsSignal.value);
@@ -104,6 +105,14 @@ export const useTutorial = (): {
         return result;
     }
 
+    const getNextActivity = (): ActivityType => {
+        const incomplete = getIncompleteTutorials();
+        if (incomplete.length > 0) {
+            return ActivityType.TUTORIAL;
+        }
+        return ActivityType.GAME;
+    };
+
     useEffect(() => {
         const nextTutorial = getNextTutorial();
         logger.debug('Setting current tutorial:', nextTutorial);
@@ -114,6 +123,7 @@ export const useTutorial = (): {
         getTutorialByPhrasekey,
         canUnlockTutorial,
         getTutorialsInGroup,
-        getIncompleteTutorialsInGroup
+        getIncompleteTutorialsInGroup,
+        getNextActivity
     };
 };

@@ -170,29 +170,36 @@ export const useCommand = (): {
 
     const handleCommand = useCallback(async (parsedCommand: ParsedCommand) => {
         // Breakpoint 7: Start of command handling
-        const currentActivityValue = currentActivity.value;
+        const initialActivity = currentActivity.value;
         logger.debug('Handling command:', {
             parsedCommand,
-            activity: currentActivityValue,
+            activity: initialActivity,
             timestamp: new Date().toISOString()
         });
 
         setCommandTime(new Date());
 
         // Only check tutorial progress if we're explicitly in tutorial mode
-        if (currentActivityValue === ActivityType.TUTORIAL) {
+        if (initialActivity === ActivityType.TUTORIAL) {
             // Breakpoint 8: Tutorial progress check
             logger.debug('Processing tutorial command:', {
                 command: parsedCommand.command,
-                activity: currentActivityValue
+                activity: initialActivity
             });
             checkTutorialProgress(parsedCommand.command);
+
+            // If activity changed during tutorial progress check, skip command execution
+            if (currentActivity.value !== initialActivity) {
+                logger.debug('Activity changed during tutorial progress - skipping command execution');
+                return;
+            }
         } else {
             logger.debug('Processing non-tutorial command:', {
                 command: parsedCommand.command,
-                activity: currentActivityValue
+                activity: initialActivity
             });
         }
+
         await executeCommand(parsedCommand);
 
         logger.debug('Command handling complete:', {

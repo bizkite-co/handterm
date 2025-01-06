@@ -1,31 +1,29 @@
----
-title: Tutorial Activity Transition Analysis
-date: 2024-12-18
----
+# Tutorial Activity Transition Analysis
 
-# Task
-Analyze and potentially refactor the activity mode transition logic between Tutorial and Game modes in useTutorial.ts
+## Current State
+- `useActivityMediator.decideActivityChange()` contains legacy logic for handling tutorial/game transitions
+- `getNextTutorial()` only returns tutorial items, making some logic redundant
+- Tutorial and game phrases are now combined in a single ordered list
 
-# Problem Understanding
-- The current implementation may be incorrectly flipping back to Tutorial mode after progressing to Game
-- Need to verify if the useEffect is necessary or if activity mediation should be handled by a parent component
-- Must align with the progression spec in tutorialProgression.feature
+## Issues Identified
+1. Unnecessary complexity in activity transition logic
+2. Redundant checks since `getNextTutorial()` only returns tutorials
+3. Potential for incorrect activity state transitions
 
-# Analysis
-- The useEffect in useTutorial.ts is necessary to keep the tutorial state in sync
-- The activity mediation logic in useActivityMediator.ts correctly implements the progression spec
-- Moving this logic to a parent component would add unnecessary complexity
-- The current implementation correctly handles the cyclical progression between tutorial and game modes
+## Proposed Solution
+1. Simplify activity management by:
+   - Removing `decideActivityChange()` function
+   - Moving tutorial/game progression logic to `useTutorials.ts`
+   - Handling returning users in the tutorial list query
 
-# Changes Implemented
-- Modified handleCommand in useCommand.ts to better handle activity state transitions
-- Added additional logging to track activity state during command execution
-- Ensured tutorial progress check only occurs when explicitly in tutorial mode
-- Added timestamp logging for better debugging of activity transitions
-- Improved activity state tracking
+2. Update activity transitions to:
+   - Progress through combined tutorial/game list in order
+   - Handle returning users by checking completion status
+   - Maintain proper activity state without redundant checks
 
-# Conclusion
-- The useEffect in useTutorial.ts is properly placed
-- The activity mediation logic is correctly handled in useActivityMediator.ts
-- Command handling now properly respects activity state transitions
-- Additional logging helps track activity state transitions
+## Next Steps
+1. Analyze and document current tutorial list management
+2. Plan migration of activity transition logic to `useTutorials.ts`
+3. Implement simplified activity state management
+4. Update related components and hooks
+5. Add tests for new progression behavior
