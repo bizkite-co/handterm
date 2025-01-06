@@ -2,11 +2,10 @@ export interface ChordProps {
     displayChar: string;
 }
 
-import type React from 'react';
-
+import { type FC } from "react";
 import { allChords } from "../allChords";
 
-export const Chord: React.FC<ChordProps> = ({ displayChar }) => {
+export const Chord: FC<ChordProps> = ({ displayChar }) => {
     let foundChord = Array.from(allChords).find(x => {
         return x.key.replace('&#x2581;', ' ') === displayChar;
     });
