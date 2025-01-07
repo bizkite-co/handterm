@@ -1,8 +1,15 @@
 import { test, expect, type Page } from '@playwright/test';
+import '../setup';
 import { TerminalPage } from '../page-objects/TerminalPage';
 import type { GamePhrase } from '../../types/Types';
 import { Phrases } from '../../types/Types';
 import { TEST_CONFIG } from '../config';
+
+//*
+//* This test suite is for the tutorial.
+//* Each tests sets the expected `localStorage` value that would be expected for that step.
+//* The `localStorage.getItem('completed-tutorials')`before the `\r` run would have to be `[]`. Before the `fdsa\r` run it would have to be `['\r']`. Before `jkl;\r`, it should be `['\r','fdsa`]`.
+//*
 
 // Constants for timeouts
 const TIMEOUTS = {
@@ -141,7 +148,11 @@ test.describe('Tutorial Mode', () => {
       completedTutorials = [];
     });
 
-    test.beforeEach(async ({ context, page }) => {
+    test.beforeEach(async ({ context, page }, testInfo) => {
+      // Special case: Initialize completedTutorials with '\r' before fdsa test
+      if (testInfo.title === 'should complete fdsa tutorial') {
+        completedTutorials = ['\r'];
+      }
       test.setTimeout(TIMEOUTS.long);
 
       // Initialize localStorage with test data and restore completed tutorials
@@ -241,7 +252,7 @@ test.describe('Tutorial Mode', () => {
       expect(tutorialState, 'Tutorial state missing or invalid').toEqual({ currentStep: 0 });
     });
 
-    test('should start with initial tutorial', async ({ page }) => {
+    test('should start with `\\r` tutorial', async ({ page }) => {
       // Wait for initial tutorial
       await terminalPage.waitForTutorialMode();
       await expect(terminalPage.tutorialMode).toBeVisible({ timeout: TIMEOUTS.short });
