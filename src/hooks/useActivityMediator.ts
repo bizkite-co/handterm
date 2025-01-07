@@ -63,6 +63,31 @@ export function useActivityMediator(): {
         });
     }, []);
 
+    const displayAsActivity = useCallback((nextTutorial: GamePhrase): ActivityType => {
+        if (bypassTutorial.value) return ActivityType.NORMAL;
+        switch (nextTutorial.displayAs) {
+            case 'Tutorial':
+                return ActivityType.TUTORIAL;
+            case 'Game':
+                return ActivityType.GAME;
+            default:
+                return ActivityType.NORMAL;
+        }
+    },[bypassTutorial.value])
+
+    const displayAsKey = useCallback((nextTutorial: GamePhrase): string | null => {
+        if (bypassTutorial.value) return null;
+        switch (nextTutorial.displayAs) {
+            case 'Tutorial':
+                return nextTutorial.key;
+            case 'Game':
+                return nextTutorial.value;
+            default:
+                return null;
+        }
+    },[bypassTutorial.value])
+
+
     const checkGameProgress = useCallback((successPhrase: GamePhrase) => {
         logger.debug(`Checking game progress: ${JSON.stringify(successPhrase)}`);
         const groupKey = parseLocation().groupKey ?? '';
@@ -81,8 +106,8 @@ export function useActivityMediator(): {
             const nextTutorial = getNextTutorial();
             if (nextTutorial != null) {
                 navigate({
-                    activityKey: nextTutorial.displayAs === 'Tutorial' ? ActivityType.TUTORIAL : ActivityType.GAME,
-                    contentKey: nextTutorial.displayAs === 'Tutorial' ? nextTutorial.key : nextTutorial.value,
+                    activityKey: displayAsActivity(nextTutorial),
+                    contentKey: displayAsKey(nextTutorial),
                     groupKey: nextTutorial.tutorialGroup ?? ''
                 })
                 return;
@@ -97,7 +122,7 @@ export function useActivityMediator(): {
         }
         activitySignal.value = ActivityType.NORMAL;
         navigate({ activityKey: ActivityType.NORMAL })
-    }, [getIncompleteTutorialsInGroup, transitionToGame]);
+    }, [displayAsActivity, displayAsKey, getIncompleteTutorialsInGroup, transitionToGame]);
 
     const checkTutorialProgress = useCallback((command: string | null) => {
         logger.debug(`Checking tutorial progress: ${JSON.stringify({
@@ -201,8 +226,8 @@ export function useActivityMediator(): {
         if (nextTutorial?.value != null) {
             setNextTutorial(nextTutorial);
             navigate({
-                activityKey: nextTutorial.displayAs === 'Tutorial' ? ActivityType.TUTORIAL : ActivityType.GAME,
-                contentKey: nextTutorial.displayAs === 'Tutorial' ? nextTutorial.key : nextTutorial.value,
+                activityKey: displayAsActivity(nextTutorial),
+                contentKey: displayAsKey(nextTutorial),
                 groupKey: nextTutorial.tutorialGroup ?? null
             })
             return;
@@ -212,7 +237,7 @@ export function useActivityMediator(): {
             transitionToGame(nextGamePhrase?.key, groupKey);
         }
         return;
-    }, [canUnlockTutorial, transitionToGame]);
+    }, [canUnlockTutorial, displayAsActivity, displayAsKey, transitionToGame]);
 
     const handleCommandExecuted = useCallback((parsedCommand: ParsedCommand): boolean => {
         logger.debug('Handling command:', parsedCommand);
