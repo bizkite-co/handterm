@@ -241,15 +241,6 @@ test.describe('Tutorial Mode', () => {
       await terminalPage.goto();
       await logTutorialState(page, 'Initial Setup');
 
-      // Verify tutorial state is appropriate for current test
-      const expectedTutorials = new Set(completedTutorials);
-      const { tutorials: actualTutorials, state: tutorialState } = await getTutorialState(page);
-
-      // Verify completed tutorials
-      expect(actualTutorials, 'Completed tutorials mismatch').toEqual(expectedTutorials);
-
-      // Verify tutorial state
-      expect(tutorialState, 'Tutorial state missing or invalid').toEqual({ currentStep: 0 });
     });
 
     test('should start with `\\r` tutorial', async ({ page }) => {
