@@ -1,4 +1,4 @@
-name: Build and Deploy to GitHub Pages
+name: Deploy to GitHub Pages
 
 on:
   push:
@@ -10,22 +10,24 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v2
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: '20'  # Set this to the node version you prefer
+          node-version: 20
+          cache: 'npm'
 
       - name: Install dependencies
-        run: npm install  # or use yarn
+        run: npm install --legacy-peer-deps
 
-      - name: Build
-        run: npm run build  # or use yarn
+      - name: Build project
+        run: npm run build
 
       - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
+        uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist  # Set this to the output directory of Vite build
+          publish_dir: ./dist
           cname: handterm.com
+          force_orphan: true

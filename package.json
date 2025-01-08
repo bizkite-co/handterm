@@ -26,7 +26,8 @@
     "test:ui": "vitest --ui",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "npx playwright test",
-    "validate": "npm run lint && npm run lint:types && npm run lint:style && npm run test"
+    "validate": "npm run lint && npm run lint:types && npm run lint:style && npm run test",
+    "deploy": "gh-pages -d dist"
   },
   "dependencies": {
     "@aws-sdk/client-apigatewayv2": "^3.x.x",
