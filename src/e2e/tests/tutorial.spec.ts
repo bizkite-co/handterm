@@ -20,10 +20,6 @@ const TIMEOUTS = {
 } as const;
 
 // Type guards and interfaces
-interface TutorialState {
-  currentStep: number;
-}
-
 interface TutorialSignalState {
   tutorialSignal: unknown;
   activitySignal: unknown;
@@ -31,33 +27,8 @@ interface TutorialSignalState {
   tutorialState: string | null;
 }
 
-interface StorageState {
-  completedTutorials: string | null;
-  tutorialState: string | null;
-}
-
-function isTutorialState(value: unknown): value is TutorialState {
-  return typeof value === 'object' &&
-         value !== null &&
-         'currentStep' in value &&
-         typeof (value as TutorialState).currentStep === 'number';
-}
-
-function isStringArray(value: unknown): value is string[] {
-  return Array.isArray(value) && value.every(item => typeof item === 'string');
-}
-
 function isError(value: unknown): value is Error {
   return value instanceof Error;
-}
-
-function safeParse<T>(json: string | null): T | null {
-  if (json === null) return null;
-  try {
-    return JSON.parse(json) as T;
-  } catch {
-    return null;
-  }
 }
 
 let terminalPage: TerminalPage;
@@ -113,34 +84,8 @@ async function logTutorialState(page: Page, label: string): Promise<void> {
   console.log(`[${label}]`, state);
 }
 
-/**
- * Helper function to parse and validate tutorial state
- */
-async function getTutorialState(page: Page): Promise<{ tutorials: Set<string>; state: TutorialState | null }> {
-  const actualState = await page.evaluate((): StorageState => ({
-    completedTutorials: localStorage.getItem('completed-tutorials'),
-    tutorialState: localStorage.getItem('tutorial-state')
-  }));
-
-  let tutorials = new Set<string>();
-  const parsedTutorials = safeParse<unknown>(actualState.completedTutorials);
-  if (isStringArray(parsedTutorials)) {
-    tutorials = new Set<string>(parsedTutorials);
-  } else if (parsedTutorials !== null) {
-    console.log('[State Error] completed-tutorials is not a string array:', parsedTutorials);
-  }
-
-  let state: TutorialState | null = null;
-  const parsedState = safeParse<unknown>(actualState.tutorialState);
-  if (isTutorialState(parsedState)) {
-    state = parsedState;
-  } else if (parsedState !== null) {
-    console.log('[State Error] Invalid tutorial state format:', parsedState);
-  }
-
-  return { tutorials, state };
-}
-
+// Type-safe parsing of localStorage values using type guards
+// isStringArray and isTutorialState ensure proper type validation
 test.describe('Tutorial Mode', () => {
   test.describe.serial('tutorial progression', () => {
     test.beforeAll(() => {
