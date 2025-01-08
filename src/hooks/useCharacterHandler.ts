@@ -29,7 +29,7 @@ export const useCharacterHandler = ({
       setLastTypedCharacter(null);
     }
 
-    if (isInSignUpProcessSignal.value ?? isInLoginProcessSignal.value) {
+    if (isInSignUpProcessSignal.value || isInLoginProcessSignal.value) {
       writeOutputInternal('*');
     }
 
