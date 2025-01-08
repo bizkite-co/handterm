@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useComputed } from '@preact/signals-react';
 
 import { HandTermWrapper, type IHandTermWrapperMethods } from './components/HandTermWrapper';
+import { Output } from './components/Output';
 import { ActivityMediatorProvider } from './contexts/ActivityMediatorContext';
 import { AppProvider } from './contexts/AppContext';
 import { CommandProvider } from './contexts/CommandProvider';
@@ -80,7 +81,7 @@ export function App(): JSX.Element {
             handTermRef={handexTermWrapperRef}
           >
             {parseLocation().activityKey !== ActivityType.EDIT
-              && <div key="edit-activity-placeholder" />
+              && <Output />
             }
             {isBypassActive.value && (
               <div style={{ position: 'fixed', top: 0, right: 0, color: 'black', background: '#222', padding: '5px' }}>
