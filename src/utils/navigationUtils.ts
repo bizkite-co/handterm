@@ -1,18 +1,13 @@
 // src/utils/navigationUtils.ts
 import { ActivityType, type ParsedLocation } from 'src/types/Types';
 
-// Parse location from ?p= parameter
+// Parse location from query parameters
 export function parseLocation(location: string = window.location.toString()): ParsedLocation {
   const urlParams = new URL(location);
-  const pParam = urlParams.searchParams.get('p') ?? '';
-
-  // Remove leading slash if present
-  const cleanPath = pParam.startsWith('/') ? pParam.slice(1) : pParam;
-  const [activityKey, phraseKey] = cleanPath.split('/');
 
   return {
-    activityKey: activityKey == null ? ActivityType.NORMAL : parseActivityType(activityKey),
-    contentKey: decodeURIComponent(phraseKey ?? ''),
+    activityKey: parseActivityType(urlParams.searchParams.get('activity') ?? ''),
+    contentKey: decodeURIComponent(urlParams.searchParams.get('key') ?? ''),
     groupKey: urlParams.searchParams.get('group') ?? null
   };
 }
@@ -29,12 +24,23 @@ export function navigate(options: ParsedLocation): void {
   const newPhraseKey = options.contentKey != null ? options.contentKey : null;
   const newGroupKey = options.groupKey ?? null;
 
-  const encodedPhraseKey = newPhraseKey != null ? encodeURIComponent(newPhraseKey) : '';
-  const path = newActivity === ActivityType.NORMAL ? '' : ActivityType[newActivity].toLowerCase();
-  const pParam = `${path}${newPhraseKey !== null ? `/${encodedPhraseKey}` : ''}`;
   const url = new URL(window.location.toString());
-  url.searchParams.set('p', pParam);
 
+  // Set activity parameter
+  if (newActivity !== ActivityType.NORMAL) {
+    url.searchParams.set('activity', ActivityType[newActivity].toLowerCase());
+  } else {
+    url.searchParams.delete('activity');
+  }
+
+  // Set key parameter
+  if (newPhraseKey != null) {
+    url.searchParams.set('key', encodeURIComponent(newPhraseKey));
+  } else {
+    url.searchParams.delete('key');
+  }
+
+  // Set group parameter
   if (newGroupKey != null) {
     url.searchParams.set('group', newGroupKey);
   } else {
@@ -45,5 +51,11 @@ export function navigate(options: ParsedLocation): void {
   window.history.pushState(null, '', url.toString());
 
   // Dispatch a custom event to notify React router or other components about the navigation
-  window.dispatchEvent(new CustomEvent('locationchange', { detail: { path } }));
+  window.dispatchEvent(new CustomEvent('locationchange', {
+    detail: {
+      activity: newActivity,
+      key: newPhraseKey,
+      group: newGroupKey
+    }
+  }));
 }

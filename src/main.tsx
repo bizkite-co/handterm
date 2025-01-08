@@ -1,7 +1,7 @@
 import { StrictMode } from 'react';
 import './commands';
 
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import { createHashRouter, RouterProvider } from 'react-router-dom';
 
 import { App } from './App'
 import { exposeSignals } from './e2e/helpers/exposeSignals';
@@ -32,7 +32,7 @@ if (import.meta.env.DEV !== undefined || import.meta.env.TEST !== undefined || p
         logger.error('Failed to load react-dom/client:', err);
         throw err; // Re-throw the error to be caught by the outer catch block
       });
-      const router = createBrowserRouter([
+      const router = createHashRouter([
         {
           path: '/*',
           element: <App />,
