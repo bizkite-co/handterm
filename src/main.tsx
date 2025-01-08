@@ -7,6 +7,7 @@ import { App } from './App'
 import { exposeSignals } from './e2e/helpers/exposeSignals';
 import { QueryProvider } from './providers/QueryProvider';
 import { createLogger, LogLevel } from './utils/Logger';
+import { initializeActivityState } from './utils/navigationUtils';
 
 if (typeof window.Buffer === 'undefined') {
   window.Buffer = Buffer;
@@ -53,6 +54,9 @@ if (import.meta.env.DEV !== undefined || import.meta.env.TEST !== undefined || p
           }
         }
       )
+
+      // Initialize activity state from URL parameters
+      initializeActivityState();
 
       ReactDOM
         .createRoot(document.getElementById('root') as HTMLElement)

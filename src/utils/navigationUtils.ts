@@ -18,6 +18,20 @@ export function parseActivityType(activityString: string): ActivityType {
   return ActivityType[normalizedActivity as keyof typeof ActivityType] ?? ActivityType.NORMAL;
 }
 
+// Initialize activity state from URL parameters
+export function initializeActivityState(): void {
+  const location = parseLocation();
+  if (location.activityKey !== ActivityType.NORMAL) {
+    window.dispatchEvent(new CustomEvent('locationchange', {
+      detail: {
+        activity: location.activityKey,
+        key: location.contentKey,
+        group: location.groupKey
+      }
+    }));
+  }
+}
+
 // Global navigation function that can be used outside of React components
 export function navigate(options: ParsedLocation): void {
   const newActivity = options.activityKey ?? ActivityType.NORMAL;
