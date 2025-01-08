@@ -26,7 +26,7 @@ export function parseActivityType(activityString: string): ActivityType {
 // Global navigation function that can be used outside of React components
 export function navigate(options: ParsedLocation): void {
   const newActivity = options.activityKey ?? ActivityType.NORMAL;
-  const newPhraseKey = options.contentKey != null ? options.contentKey.replace('\r', '_r') : null;
+  const newPhraseKey = options.contentKey != null ? options.contentKey : null;
   const newGroupKey = options.groupKey ?? null;
 
   const encodedPhraseKey = newPhraseKey != null ? encodeURIComponent(newPhraseKey) : '';
@@ -35,7 +35,7 @@ export function navigate(options: ParsedLocation): void {
   const url = new URL(window.location.toString());
   url.searchParams.set('p', pParam);
 
-  if (newGroupKey) {
+  if (newGroupKey != null) {
     url.searchParams.set('group', newGroupKey);
   } else {
     url.searchParams.delete('group');

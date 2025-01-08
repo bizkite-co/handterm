@@ -48,11 +48,11 @@ export const useTutorial = (): {
 
     const getTutorialByPhrasekey = (phraseKey: string) => {
         // Breakpoint 11: Getting tutorial by phrase key
-        const foundTutorial = getTutorials.find(t => t.key === phraseKey?.replace('_r', '\r'));
+        const foundTutorial = getTutorials.find(t => t.key === phraseKey);
         logger.debug('Getting tutorial by phrase key:', {
             phraseKey,
             currentTutorial: foundTutorial,
-            normalizedKey: phraseKey?.replace('_r', '\r'),
+            normalizedKey: phraseKey,
             allTutorials: getTutorials.map(t => ({ key: t.key, value: t.value }))
         });
         return foundTutorial;
