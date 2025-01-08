@@ -1,26 +1,15 @@
 // src/utils/navigationUtils.ts
 import { ActivityType, type ParsedLocation } from 'src/types/Types';
 
-// Parse location from either pathname or ?p= parameter
+// Parse location from ?p= parameter
 export function parseLocation(location: string = window.location.toString()): ParsedLocation {
-  // First, check for ?p= parameter
   const urlParams = new URL(location);
-  const pParam = urlParams.searchParams.get('p');
+  const pParam = urlParams.searchParams.get('p') ?? '';
 
-  if (pParam) {
-    // Remove leading slash if present
-    const cleanPath = pParam.startsWith('/') ? pParam.slice(1) : pParam;
-    const [activityKey, phraseKey] = cleanPath.split('/');
+  // Remove leading slash if present
+  const cleanPath = pParam.startsWith('/') ? pParam.slice(1) : pParam;
+  const [activityKey, phraseKey] = cleanPath.split('/');
 
-    return {
-      activityKey: activityKey == null ? ActivityType.NORMAL : parseActivityType(activityKey),
-      contentKey: decodeURIComponent(phraseKey ?? ''),
-      groupKey: urlParams.searchParams.get('group') ?? null
-    };
-  }
-
-  // Fallback to pathname parsing
-  const [, activityKey, phraseKey] = window.location.pathname.split('/');
   return {
     activityKey: activityKey == null ? ActivityType.NORMAL : parseActivityType(activityKey),
     contentKey: decodeURIComponent(phraseKey ?? ''),
@@ -41,13 +30,19 @@ export function navigate(options: ParsedLocation): void {
   const newGroupKey = options.groupKey ?? null;
 
   const encodedPhraseKey = newPhraseKey != null ? encodeURIComponent(newPhraseKey) : '';
-  const queryString = newGroupKey != null ? `?group=${encodeURIComponent(newGroupKey)}` : '';
+  const path = newActivity === ActivityType.NORMAL ? '' : ActivityType[newActivity].toLowerCase();
+  const pParam = `${path}${newPhraseKey !== null ? `/${encodedPhraseKey}` : ''}`;
+  const url = new URL(window.location.toString());
+  url.searchParams.set('p', pParam);
 
-  const activityPath = newActivity === ActivityType.NORMAL ? '' : ActivityType[newActivity].toLowerCase();
-  const path = `/${activityPath}${newPhraseKey !== null ? `/${encodedPhraseKey}` : ''}${queryString}`;
+  if (newGroupKey) {
+    url.searchParams.set('group', newGroupKey);
+  } else {
+    url.searchParams.delete('group');
+  }
 
   // Use browser's history API directly
-  window.history.pushState(null, '', path);
+  window.history.pushState(null, '', url.toString());
 
   // Dispatch a custom event to notify React router or other components about the navigation
   window.dispatchEvent(new CustomEvent('locationchange', { detail: { path } }));
