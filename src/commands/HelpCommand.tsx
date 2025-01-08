@@ -18,7 +18,7 @@ export const HelpCommand: ICommand = {
     ) {
       const commandChords = [
         'DELETE (Backspace)',
-        'Return (ENTER)',
+        '\r',
         'UpArrow',
         'LeftArrow',
         'DownArrow',
