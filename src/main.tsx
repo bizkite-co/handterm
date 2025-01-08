@@ -1,7 +1,7 @@
 import { StrictMode } from 'react';
 import './commands';
 
-import { createHashRouter, RouterProvider } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 
 import { App } from './App'
 import { exposeSignals } from './e2e/helpers/exposeSignals';
@@ -33,26 +33,12 @@ if (import.meta.env.DEV !== undefined || import.meta.env.TEST !== undefined || p
         logger.error('Failed to load react-dom/client:', err);
         throw err; // Re-throw the error to be caught by the outer catch block
       });
-      const router = createHashRouter([
-        {
-          path: '/*',
-          element: <App />,
-          children: [
-            { path: 'game/:phraseId', element: <App /> },
-            { path: 'tutorial/:tutorialId', element: <App /> },
-            { path: 'edit', element: <App /> },
-          ]
-        }
-      ],
-        {
-          future: {
-            v7_fetcherPersist: true,
-            v7_normalizeFormMethod: true,
-            v7_partialHydration: true,
-            v7_relativeSplatPath: true,
-            v7_skipActionErrorRevalidation: true,
-          }
-        }
+      const router = (
+        <BrowserRouter>
+          <Routes>
+            <Route path="/*" element={<App />} />
+          </Routes>
+        </BrowserRouter>
       )
 
       // Initialize activity state from URL parameters
@@ -63,10 +49,7 @@ if (import.meta.env.DEV !== undefined || import.meta.env.TEST !== undefined || p
         .render(
           <StrictMode>
             <QueryProvider>
-              <RouterProvider
-                router={router}
-                future={{ v7_startTransition: true }}
-              />
+              {router}
             </QueryProvider>
           </StrictMode>
         );
