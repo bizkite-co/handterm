@@ -1,7 +1,7 @@
 // src/hooks/useAuth.ts
 import { useEffect, useCallback } from 'react';
-
 import axios from 'axios';
+import { TokenKeys } from '../constants/tokens';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
@@ -34,11 +34,11 @@ interface SignUpCredentials extends LoginCredentials {
 }
 
 interface AuthResponse {
-  accessToken: string;
-  refreshToken: string;
-  idToken: string;
+  AccessToken: string;
+  RefreshToken: string;
+  IdToken: string;
   expiresAt: string;
-  expiresIn: string;
+  ExpiresIn: string;
   githubUsername?: string | undefined; // Explicitly define githubUsername as string | undefined
 }
 
@@ -61,7 +61,7 @@ export function useAuth(): IAuthProps {
   // Token refresh mutation
   const refreshMutation = useMutation({
     mutationFn: async (): Promise<MyResponse<AuthResponse>> => {
-      const refreshToken = localStorage.getItem('refreshToken');
+      const refreshToken = localStorage.getItem(TokenKeys.RefreshToken);
       if (typeof refreshToken !== 'string' || refreshToken === '') throw new Error('No refresh token');
 
       const response = await axios.post(
@@ -69,7 +69,7 @@ export function useAuth(): IAuthProps {
         { refreshToken }
       );
 
-      if (response.data != null && typeof response.data === 'object' && 'accessToken' in response.data) {
+      if (response.data != null && typeof response.data === 'object' && 'AccessToken' in response.data) {
         return {
           status: 200,
           data: response.data as AuthResponse,
@@ -81,11 +81,11 @@ export function useAuth(): IAuthProps {
       }
     },
     onSuccess: (data) => {
-      if (data.data != null && typeof data.data === 'object' && 'accessToken' in data.data) {
-        setExpiresAtLocalStorage(data.data.expiresIn);
+      if (data.data != null && typeof data.data === 'object' && 'AccessToken' in data.data) {
+        setExpiresAtLocalStorage(data.data.ExpiresIn);
         setIsLoggedIn(true);
         isLoggedInSignal.value = true;
-        localStorage.setItem('accessToken', data.data.accessToken);
+        localStorage.setItem(TokenKeys.AccessToken, data.data.AccessToken);
         void queryClient.invalidateQueries({ queryKey: ['auth', 'session'] });
       }
     },
@@ -96,12 +96,12 @@ export function useAuth(): IAuthProps {
   // Token validation and refresh function
   const validateAndRefreshToken = useCallback(async (): Promise<MyResponse<AuthResponse>> => {
     try {
-      const accessToken = localStorage.getItem('accessToken');
-      const expiresAt = localStorage.getItem('expiresAt');
-      const expiresIn = localStorage.getItem('expiresIn');
-      const refreshToken = localStorage.getItem('refreshToken');
-      const idToken = localStorage.getItem('idToken');
-      const githubUsername = localStorage.getItem('githubUsername');
+      const accessToken = localStorage.getItem(TokenKeys.AccessToken);
+      const expiresAt = localStorage.getItem(TokenKeys.ExpiresAt);
+      const expiresIn = localStorage.getItem(TokenKeys.ExpiresIn);
+      const refreshToken = localStorage.getItem(TokenKeys.RefreshToken);
+      const idToken = localStorage.getItem(TokenKeys.IdToken);
+      const githubUsername = localStorage.getItem(TokenKeys.GithubUsername);
 
       // Exit early if any of these are missing
       if (accessToken == null || refreshToken == null || expiresAt == null || expiresIn == null) {
@@ -120,17 +120,17 @@ export function useAuth(): IAuthProps {
       if (isExpiringSoon) {
         // Attempt to refresh the token
         const response = await refreshMutation.mutateAsync();
-        if (response.data?.accessToken != null && typeof response.data.accessToken === 'string') {
+        if (response.data?.AccessToken != null && typeof response.data.AccessToken === 'string') {
           // Token refresh successful
           setIsLoggedIn(true);
           return {
             status: 200,
             data: {
-              accessToken: response.data.accessToken,
+              AccessToken: response.data.AccessToken,
               expiresAt: response.data.expiresAt,
-              expiresIn: response.data.expiresIn,
-              idToken: response.data.idToken,
-              refreshToken: response.data.refreshToken,
+              ExpiresIn: response.data.ExpiresIn,
+              IdToken: response.data.IdToken,
+              RefreshToken: response.data.RefreshToken,
               githubUsername: response.data.githubUsername
             },
             message: "Token refreshed",
@@ -143,11 +143,11 @@ export function useAuth(): IAuthProps {
         return {
           status: 200,
           data: {
-            accessToken: accessToken,
+            AccessToken: accessToken,
             expiresAt: expiresAt,
-            expiresIn: expiresIn,
-            idToken: idToken ?? '',
-            refreshToken: refreshToken,
+            ExpiresIn: expiresIn,
+            IdToken: idToken ?? '',
+            RefreshToken: refreshToken,
             githubUsername: githubUsername ?? ''
           },
           message: "Token refreshed",
@@ -189,8 +189,8 @@ export function useAuth(): IAuthProps {
           throw new Error('Token validation failed');
         }
 
-        const accessToken = localStorage.getItem('accessToken');
-        if (typeof accessToken !== 'string' || accessToken === '') throw new Error('No access token');
+        const accessToken = localStorage.getItem(TokenKeys.AccessToken);
+        if (typeof accessToken !== 'string' || accessToken === '') throw new Error('No AccessToken');
         const config = {
           headers: {
             'AUTHORIZATION': `Bearer ${accessToken}`,
@@ -199,7 +199,7 @@ export function useAuth(): IAuthProps {
         };
 
         const response = await axios.get(`${API_URL}${endpoints.api.GetUser}`, config);
-        if (response.data != null && typeof response.data === 'object' && 'accessToken' in response.data) {
+        if (response.data != null && typeof response.data === 'object' && 'AccessToken' in response.data) {
           return {
             status: 200,
             data: response.data as AuthResponse,
@@ -215,12 +215,12 @@ export function useAuth(): IAuthProps {
         } else {
           logger.error('An unexpected error occurred during session validation');
         }
-        if (typeof localStorage.getItem('accessToken') === 'string') localStorage.removeItem('accessToken');
-        if (typeof localStorage.getItem('refreshToken') === 'string') localStorage.removeItem('refreshToken');
-        if (typeof localStorage.getItem('expiresAt') === 'string') localStorage.removeItem('expiresAt');
-        if (typeof localStorage.getItem('expiresIn') === 'string') localStorage.removeItem('expiresIn');
-        if (typeof localStorage.getItem('idToken') === 'string') localStorage.removeItem('idToken');
-        if (typeof localStorage.getItem('githubUsername') === 'string') localStorage.removeItem('githubUsername');
+        if (typeof localStorage.getItem(TokenKeys.AccessToken) === 'string') localStorage.removeItem(TokenKeys.AccessToken);
+        if (typeof localStorage.getItem(TokenKeys.RefreshToken) === 'string') localStorage.removeItem(TokenKeys.RefreshToken);
+        if (typeof localStorage.getItem(TokenKeys.ExpiresAt) === 'string') localStorage.removeItem(TokenKeys.ExpiresAt);
+        if (typeof localStorage.getItem(TokenKeys.ExpiresIn) === 'string') localStorage.removeItem(TokenKeys.ExpiresIn);
+        if (typeof localStorage.getItem(TokenKeys.IdToken) === 'string') localStorage.removeItem(TokenKeys.IdToken);
+        if (typeof localStorage.getItem(TokenKeys.GithubUsername) === 'string') localStorage.removeItem(TokenKeys.GithubUsername);
         setIsLoggedIn(false);
         isLoggedInSignal.value = false;
         setUserName(null);
@@ -232,7 +232,7 @@ export function useAuth(): IAuthProps {
         };
       }
     },
-    enabled: typeof localStorage.getItem('accessToken') === 'string',
+    enabled: typeof localStorage.getItem(TokenKeys.AccessToken) === 'string',
     retry: false,
     staleTime: 5 * 60 * 1000 // Consider session stale after 5 minutes
   });
@@ -244,7 +244,7 @@ export function useAuth(): IAuthProps {
         `${API_URL}${endpoints.api.SignIn}`,
         credentials
       );
-      if (response.data != null && typeof response.data === 'object' && 'accessToken' in response.data) {
+      if (response.data != null && typeof response.data === 'object' && 'AccessToken' in response.data) {
         return {
           status: 200,
           data: response.data as AuthResponse,
@@ -256,16 +256,16 @@ export function useAuth(): IAuthProps {
       }
     },
     onSuccess: (data) => {
-      if (data.data?.expiresIn != null && typeof data.data.expiresIn === 'string') {
-        setExpiresAtLocalStorage(data.data.expiresIn);
+      if (data.data?.ExpiresIn != null && typeof data.data.ExpiresIn === 'string') {
+        setExpiresAtLocalStorage(data.data.ExpiresIn);
         setIsLoggedIn(true);
         isLoggedInSignal.value = true;
-        localStorage.setItem('accessToken', data.data.accessToken);
-        localStorage.setItem('refreshToken', data.data.refreshToken);
-        localStorage.setItem('idToken', data.data.idToken);
+        localStorage.setItem(TokenKeys.AccessToken, data.data.AccessToken);
+        localStorage.setItem(TokenKeys.RefreshToken, data.data.RefreshToken);
+        localStorage.setItem(TokenKeys.IdToken, data.data.IdToken);
 
         if (typeof data.data.githubUsername === 'string') {
-          localStorage.setItem('githubUsername', data.data.githubUsername);
+          localStorage.setItem(TokenKeys.GithubUsername, data.data.githubUsername);
         }
         setIsLoggedIn(true);
         setIsInLoginProcess(false);
@@ -358,7 +358,7 @@ export function useAuth(): IAuthProps {
   const isError = loginMutation.isError ?? signupMutation.isError ?? verifyMutation.isError;
   const error = loginMutation.error ?? signupMutation.error ?? verifyMutation.error;
 
-  if (session?.data != null && typeof session.data === 'object' && 'accessToken' in session.data) {
+  if (session?.data != null && typeof session.data === 'object' && 'AccessToken' in session.data) {
     return {
       isLoggedIn: true,
       isPending,

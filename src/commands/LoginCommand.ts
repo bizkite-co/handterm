@@ -1,6 +1,7 @@
 // src/commands/LoginCommand.ts
 
 import { isInLoginProcessSignal, tempUserNameSignal, setTempUserName, setIsInLoginProcess } from 'src/signals/appSignals';
+import { type AuthResponse } from 'src/constants/tokens';
 
 import { type ICommand, type ICommandContext, type ICommandResponse } from '../contexts/CommandContext';
 import { type ParsedCommand } from '../types/Types';
@@ -22,7 +23,7 @@ export const LoginCommand: ICommand = {
         if (parsedCommand.args.length === 1) {
             // Start login process
             setIsInLoginProcess(true);
-            const username = parsedCommand.args[0];
+            const username = parsedCommand.args[0] ?? '';
             setTempUserName(username);
 
             // Demonstrate usage of tempUserNameSignal
@@ -33,17 +34,42 @@ export const LoginCommand: ICommand = {
             return { status: 200, message: 'Enter password:' };
         } else if (parsedCommand.args.length === 2 && isInLoginProcessSignal.value) {
             // Complete login process
-            const tempUsername = parsedCommand.args[0];
-            const password = parsedCommand.args[1];
+            const tempUsername = parsedCommand.args[0] ?? '';
+            const password = parsedCommand.args[1] ?? '';
 
             try {
                 const result = await auth.login(tempUsername, password);
+                if (result.data == null) {
+                    return {
+                        status: 500,
+                        message: 'Login failed: No response data',
+                        sensitive: true
+                    };
+                }
+                const authResponse = result.data as unknown as AuthResponse;
                 setIsInLoginProcess(false);
+
+                if (result.status === 200 && authResponse.AccessToken != null ) {
+                    try {
+                        localStorage.setItem('accessToken', authResponse.AccessToken);
+                        return {
+                            status: 200,
+                            message: 'Login successful!',
+                            sensitive: true
+                        };
+                    } catch (error) {
+                        return {
+                            status: 500,
+                            message: 'Login succeeded but failed to store token',
+                            sensitive: true
+                        };
+                    }
+                }
 
                 return {
                     status: result.status,
-                    message: result.status === 200 ? 'Login successful!' : `Login failed: ${result.message}`,
-                    sensitive: true // Mark as sensitive to mask password
+                    message: `Login failed: ${result.message}`,
+                    sensitive: true
                 };
             } catch (error) {
                 setIsInLoginProcess(false);
