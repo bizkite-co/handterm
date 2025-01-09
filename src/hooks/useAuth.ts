@@ -1,7 +1,6 @@
 // src/hooks/useAuth.ts
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
 import axios from 'axios';
-import { TokenKeys } from '../constants/tokens';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
@@ -33,12 +32,22 @@ interface SignUpCredentials extends LoginCredentials {
   email: string;
 }
 
-interface AuthResponse {
+export const TokenKeys = {
+  AccessToken: 'AccessToken',
+  RefreshToken: 'RefreshToken',
+  IdToken: 'IdToken',
+  ExpiresAt: 'ExpiresAt',
+  ExpiresIn: 'ExpiresIn',
+  GithubUsername: 'githubUsername'
+} as const;
+export type TokenKey = keyof typeof TokenKeys;
+
+export interface AuthResponse {
   AccessToken: string;
   RefreshToken: string;
   IdToken: string;
-  expiresAt: string;
-  ExpiresIn: string;
+  ExpiresAt: string;
+  ExpiresIn: number;
   githubUsername?: string | undefined; // Explicitly define githubUsername as string | undefined
 }
 
@@ -96,12 +105,12 @@ export function useAuth(): IAuthProps {
   // Token validation and refresh function
   const validateAndRefreshToken = useCallback(async (): Promise<MyResponse<AuthResponse>> => {
     try {
-      const accessToken = localStorage.getItem(TokenKeys.AccessToken);
-      const expiresAt = localStorage.getItem(TokenKeys.ExpiresAt);
-      const expiresIn = localStorage.getItem(TokenKeys.ExpiresIn);
-      const refreshToken = localStorage.getItem(TokenKeys.RefreshToken);
-      const idToken = localStorage.getItem(TokenKeys.IdToken);
-      const githubUsername = localStorage.getItem(TokenKeys.GithubUsername);
+      const accessToken: (string|null) = localStorage.getItem(TokenKeys.AccessToken);
+      const expiresAt: (string|null) = localStorage.getItem(TokenKeys.ExpiresAt);
+      const expiresIn:(string|null) = localStorage.getItem(TokenKeys.ExpiresIn);
+      const refreshToken:(string|null) = localStorage.getItem(TokenKeys.RefreshToken);
+      const idToken:(string|null) = localStorage.getItem(TokenKeys.IdToken);
+      const githubUsername: (string | null) = localStorage.getItem(TokenKeys.GithubUsername);
 
       // Exit early if any of these are missing
       if (accessToken == null || refreshToken == null || expiresAt == null || expiresIn == null) {
@@ -127,7 +136,7 @@ export function useAuth(): IAuthProps {
             status: 200,
             data: {
               AccessToken: response.data.AccessToken,
-              expiresAt: response.data.expiresAt,
+              ExpiresAt: response.data.ExpiresAt,
               ExpiresIn: response.data.ExpiresIn,
               IdToken: response.data.IdToken,
               RefreshToken: response.data.RefreshToken,
@@ -144,8 +153,8 @@ export function useAuth(): IAuthProps {
           status: 200,
           data: {
             AccessToken: accessToken,
-            expiresAt: expiresAt,
-            ExpiresIn: expiresIn,
+            ExpiresAt: expiresAt,
+            ExpiresIn: parseInt(expiresIn,10),
             IdToken: idToken ?? '',
             RefreshToken: refreshToken,
             githubUsername: githubUsername ?? ''
@@ -179,14 +188,35 @@ export function useAuth(): IAuthProps {
     }
   }, [refreshMutation]);
 
+  // Track if we just logged in to avoid redundant getUser call
+  const justLoggedIn = useRef(false);
+
   // Session management with automatic token validation
   const { data: session, isPending } = useQuery<MyResponse<AuthResponse>>({
     queryKey: ['auth', 'session'],
     queryFn: async (): Promise<MyResponse<AuthResponse>> => {
       try {
         const isValid = await validateAndRefreshToken();
-        if (isValid != null) {
+        if (isValid.status != 200) {
           throw new Error('Token validation failed');
+        }
+
+        // Skip getUser if we just logged in
+        if (justLoggedIn.current) {
+          justLoggedIn.current = false;
+          return {
+            status: 200,
+            data: {
+              AccessToken: localStorage.getItem(TokenKeys.AccessToken) ?? '',
+              RefreshToken: localStorage.getItem(TokenKeys.RefreshToken) ?? '',
+              IdToken: localStorage.getItem(TokenKeys.IdToken) || '',
+              ExpiresAt: localStorage.getItem(TokenKeys.ExpiresAt) || '',
+              ExpiresIn: parseInt(localStorage.getItem(TokenKeys.ExpiresIn) || '0', 10),
+              githubUsername: localStorage.getItem(TokenKeys.GithubUsername) || undefined
+            },
+            message: 'Login successful',
+            error: []
+          };
         }
 
         const accessToken = localStorage.getItem(TokenKeys.AccessToken);
@@ -256,7 +286,7 @@ export function useAuth(): IAuthProps {
       }
     },
     onSuccess: (data) => {
-      if (data.data?.ExpiresIn != null && typeof data.data.ExpiresIn === 'string') {
+      if (data.data?.ExpiresIn != null && typeof data.data.ExpiresIn === 'number') {
         setExpiresAtLocalStorage(data.data.ExpiresIn);
         setIsLoggedIn(true);
         isLoggedInSignal.value = true;
@@ -267,8 +297,8 @@ export function useAuth(): IAuthProps {
         if (typeof data.data.githubUsername === 'string') {
           localStorage.setItem(TokenKeys.GithubUsername, data.data.githubUsername);
         }
-        setIsLoggedIn(true);
         setIsInLoginProcess(false);
+        justLoggedIn.current = true;
         void queryClient.invalidateQueries({ queryKey: ['auth', 'session'] });
       }
     },
@@ -280,11 +310,11 @@ export function useAuth(): IAuthProps {
 
   });
 
-  const setExpiresAtLocalStorage = (expiresIn: string) => {
-    const expiresAt = Date.now() + parseInt(expiresIn) * 1000;
-    if (!isNullOrEmptyString(expiresIn)) localStorage.setItem('expiresIn', expiresIn);
+  const setExpiresAtLocalStorage = (expiresIn: number) => {
+    const expiresAt = Date.now() + expiresIn * 1000;
+    if (!isNullOrEmptyString(expiresIn)) localStorage.setItem(TokenKeys.ExpiresIn, expiresIn.toString());
     if (expiresAt != null && !Number.isNaN(expiresAt)) {
-      localStorage.setItem('expiresAt', expiresAt.toString());
+      localStorage.setItem(TokenKeys.ExpiresAt, expiresAt.toString());
     }
   }
 

@@ -1,18 +1,12 @@
 // src/commands/LoginCommand.ts
 
 import { isInLoginProcessSignal, tempUserNameSignal, setTempUserName, setIsInLoginProcess } from 'src/signals/appSignals';
-import { type AuthResponse } from 'src/constants/tokens';
-
 import { type ICommand, type ICommandContext, type ICommandResponse } from '../contexts/CommandContext';
-import { type ParsedCommand } from '../types/Types';
+import { type ParsedCommand, type MyResponse } from '../types/Types';
 import { createLogger } from '../utils/Logger';
+import { type AuthResponse } from '\'hooks/useAuth\'';
 
 const logger = createLogger();
-
-interface LoginErrorResponse {
-    status: number;
-    message: string;
-}
 
 export const LoginCommand: ICommand = {
     name: 'login',
@@ -27,63 +21,41 @@ export const LoginCommand: ICommand = {
             setTempUserName(username);
 
             // Demonstrate usage of tempUserNameSignal
-            if (tempUserNameSignal.value !== username) {
+            if (tempUserNameSignal.value != username) {
                 logger.error('Username mismatch');
             }
 
-            return { status: 200, message: 'Enter password:' };
+            return { status: 200, message: 'Enter password:', sensitive: true };
         } else if (parsedCommand.args.length === 2 && isInLoginProcessSignal.value) {
             // Complete login process
             const tempUsername = parsedCommand.args[0] ?? '';
             const password = parsedCommand.args[1] ?? '';
 
             try {
-                const result = await auth.login(tempUsername, password);
-                if (result.data == null) {
+                const result = await auth.login(tempUsername, password) as MyResponse<AuthResponse>;
+
+                if (result.status !== 200 || result.data == null) {
                     return {
-                        status: 500,
-                        message: 'Login failed: No response data',
+                        status: result.status,
+                        message: result.message ?? 'Login failed',
                         sensitive: true
                     };
                 }
-                const authResponse = result.data as unknown as AuthResponse;
+
+                // Tokens are stored automatically by the login mutation's onSuccess handler
                 setIsInLoginProcess(false);
-
-                if (result.status === 200 && authResponse.AccessToken != null ) {
-                    try {
-                        localStorage.setItem('accessToken', authResponse.AccessToken);
-                        return {
-                            status: 200,
-                            message: 'Login successful!',
-                            sensitive: true
-                        };
-                    } catch (error) {
-                        return {
-                            status: 500,
-                            message: 'Login succeeded but failed to store token',
-                            sensitive: true
-                        };
-                    }
-                }
-
                 return {
-                    status: result.status,
-                    message: `Login failed: ${result.message}`,
+                    status: 200,
+                    message: 'Login successful!',
                     sensitive: true
                 };
             } catch (error) {
                 setIsInLoginProcess(false);
-
-                // Type narrowing for error
-                const errorResponse: LoginErrorResponse =
-                    error instanceof Error
-                    ? { status: 500, message: error.message }
-                    : { status: 500, message: 'An unknown error occurred' };
-
+                const message = error instanceof Error ? error.message : String(error);
                 return {
-                    status: errorResponse.status,
-                    message: `Login error: ${errorResponse.message}`,
-                    sensitive: true // Mark as sensitive to mask password
+                    status: 500,
+                    message: `Login error: ${message}`,
+                    sensitive: true
                 };
             }
         } else {

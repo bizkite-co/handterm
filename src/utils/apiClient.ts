@@ -88,7 +88,7 @@ export async function makeAuthenticatedRequest<T>(
 ): Promise<APIResponse<T>> {
     try {
         const authResponse = await auth.validateAndRefreshToken();
-        if (!authResponse || authResponse.status !== 200 || !authResponse.data) {
+        if (authResponse == null || authResponse.status !== 200 || authResponse.data == null) {
             return {
                 status: 401,
                 error: 'Authentication failed'
@@ -96,8 +96,8 @@ export async function makeAuthenticatedRequest<T>(
         }
 
         // Get access token from auth response
-        const accessToken = authResponse.data.accessToken;
-        if (!accessToken) {
+        const accessToken = authResponse.data.AccessToken;
+        if (accessToken == null) {
             return {
                 status: 401,
                 error: 'Access token not found'
@@ -124,7 +124,7 @@ export async function makeAuthenticatedRequest<T>(
         }
 
         if (axios.isAxiosError<ErrorResponse>(error)) {
-            if (error.response) {
+            if (error.response != null) {
                 const responseData = error.response.data;
                 const message = isErrorResponse(responseData) && typeof responseData.message === 'string'
                     ? responseData.message
@@ -150,8 +150,8 @@ export async function makeAuthenticatedRequest<T>(
 export async function getRepoTree(auth: IAuthProps, repo: string, path?: string, sha?: string): Promise<APIResponse<TreeItemResponse[]>> {
     return makeAuthenticatedRequest<TreeItemResponse[]>(auth, ENDPOINTS.api.GetRepoTree, {
         repo,
-        ...(path && { path }),
-        ...(sha && { sha })
+        ...(path != null && { path }),
+        ...(sha != null && { sha })
     });
 }
 
