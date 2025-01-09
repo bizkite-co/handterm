@@ -5,11 +5,85 @@ import type { GamePhrase } from '../../types/Types';
 import { Phrases } from '../../types/Types';
 import { TEST_CONFIG } from '../config';
 
-//*
-//* This test suite is for the tutorial.
-//* Each tests sets the expected `localStorage` value that would be expected for that step.
-//* The `localStorage.getItem('completed-tutorials')`before the `\r` run would have to be `[]`. Before the `fdsa\r` run it would have to be `['\r']`. Before `jkl;\r`, it should be `['\r','fdsa`]`.
-//*
+// Constants for timeouts
+const TIMEOUTS = {
+  short: TEST_CONFIG.timeout.short,
+  medium: TEST_CONFIG.timeout.medium,
+  long: TEST_CONFIG.timeout.long,
+  transition: TEST_CONFIG.timeout.transition
+} as const;
+
+// Type guards and interfaces
+interface TutorialSignalState {
+  tutorialSignal: unknown;
+  activitySignal: unknown;
+  completedTutorials: string | null;
+  tutorialState: string | null;
+}
+
+function isError(value: unknown): value is Error {
+  return value instanceof Error;
+}
+
+let terminalPage: TerminalPage;
+
+/**
+ * Helper function to verify tutorial completion from localStorage
+ * @param page Playwright page object
+ * @param tutorialKey The tutorial key to check
+ * @returns Promise<boolean> True if tutorial is completed
+ */
+async function isTutorialCompleted(page: Page, tutorialKey: string): Promise<boolean> {
+  try {
+    return await page.evaluate((key: string): boolean => {
+      function safeParse<T>(json: string | null): T | null {
+        if (json === null) return null;
+        try {
+          const parsed = JSON.parse(json);
+          return typeof parsed === 'object' && parsed !== null ? parsed as T : null;
+        } catch {
+          return null;
+        }
+      }
+
+      function isStringArray(value: unknown): value is string[] {
+        if (!Array.isArray(value)) return false;
+        return value.every((item): item is string => typeof item === 'string');
+      }
+
+      const completedTutorials = localStorage.getItem('completed-tutorials');
+      const parsed = safeParse<unknown>(completedTutorials);
+      if (!isStringArray(parsed)) {
+        console.log('[Tutorial Parse Error] completed-tutorials is not a string array');
+        return false;
+      }
+      return parsed.includes(key);
+    }, tutorialKey);
+  } catch (error) {
+    const message = isError(error) ? error.message : 'Unknown error';
+    console.log('[Tutorial Check Error]', message);
+    return false;
+  }
+}
+
+/**
+ * Helper function to log tutorial state
+ */
+async function logTutorialState(page: Page, label: string): Promise<void> {
+  const state = await page.evaluate((): TutorialSignalState => ({
+    tutorialSignal: window.tutorialSignal?.value ?? null,
+    activitySignal: window.activitySignal?.value ?? null,
+    completedTutorials: localStorage.getItem('completed-tutorials'),
+    tutorialState: localStorage.getItem('tutorial-state')
+  }));
+  console.log(`[${label}]`, state);
+}
+import { test, expect, type Page } from '@playwright/test';
+import '../setup';
+import { TerminalPage } from '../page-objects/TerminalPage';
+import type { GamePhrase } from '../../types/Types';
+import { Phrases } from '../../types/Types';
+import { TEST_CONFIG } from '../config';
 
 // Constants for timeouts
 const TIMEOUTS = {
@@ -32,10 +106,250 @@ function isError(value: unknown): value is Error {
 }
 
 let terminalPage: TerminalPage;
-let completedTutorials: string[] = [];
 
 /**
- * Helper function to verify tutorial completion
+ * Helper function to verify tutorial completion from localStorage
+ * @param page Playwright page object
+ * @param tutorialKey The tutorial key to check
+ * @returns Promise<boolean> True if tutorial is completed
+ */
+async function isTutorialCompleted(page: Page, tutorialKey: string): Promise<boolean> {
+  try {
+    return await page.evaluate((key: string): boolean => {
+      function safeParse<T>(json: string | null): T | null {
+        if (json === null) return null;
+        try {
+          const parsed = JSON.parse(json);
+          return typeof parsed === 'object' && parsed !== null ? parsed as T : null;
+        } catch {
+          return null;
+        }
+      }
+
+      function isStringArray(value: unknown): value is string[] {
+        if (!Array.isArray(value)) return false;
+        return value.every((item): item is string => typeof item === 'string');
+      }
+
+      const completedTutorials = localStorage.getItem('completed-tutorials');
+      const parsed = safeParse<unknown>(completedTutorials);
+      if (!isStringArray(parsed)) {
+        console.log('[Tutorial Parse Error] completed-tutorials is not a string array');
+        return false;
+      }
+      return parsed.includes(key);
+    }, tutorialKey);
+  } catch (error) {
+    const message = isError(error) ? error.message : 'Unknown error';
+    console.log('[Tutorial Check Error]', message);
+    return false;
+  }
+}
+import { test, expect, type Page } from '@playwright/test';
+import '../setup';
+import { TerminalPage } from '../page-objects/TerminalPage';
+import type { GamePhrase } from '../../types/Types';
+import { Phrases } from '../../types/Types';
+import { TEST_CONFIG } from '../config';
+
+// Constants for timeouts
+const TIMEOUTS = {
+  short: TEST_CONFIG.timeout.short,
+  medium: TEST_CONFIG.timeout.medium,
+  long: TEST_CONFIG.timeout.long,
+  transition: TEST_CONFIG.timeout.transition
+} as const;
+
+// Type guards and interfaces
+interface TutorialSignalState {
+  tutorialSignal: unknown;
+  activitySignal: unknown;
+  completedTutorials: string | null;
+  tutorialState: string | null;
+}
+
+function isError(value: unknown): value is Error {
+  return value instanceof Error;
+}
+
+let terminalPage: TerminalPage;
+
+/**
+ * Helper function to verify tutorial completion from localStorage
+ * @param page Playwright page object
+ * @param tutorialKey The tutorial key to check
+ * @returns Promise<boolean> True if tutorial is completed
+ */
+async function isTutorialCompleted(page: Page, tutorialKey: string): Promise<boolean> {
+  try {
+    return await page.evaluate((key: string): boolean => {
+      function safeParse<T>(json: string | null): T | null {
+        if (json === null) return null;
+        try {
+          const parsed = JSON.parse(json);
+          return typeof parsed === 'object' && parsed !== null ? parsed as T : null;
+        } catch {
+          return null;
+        }
+      }
+
+      function isStringArray(value: unknown): value is string[] {
+        if (!Array.isArray(value)) return false;
+        return value.every((item): item is string => typeof item === 'string');
+      }
+
+      const completedTutorials = localStorage.getItem('completed-tutorials');
+      const parsed = safeParse<unknown>(completedTutorials);
+      if (!isStringArray(parsed)) {
+        console.log('[Tutorial Parse Error] completed-tutorials is not a string array');
+        return false;
+      }
+      return parsed.includes(key);
+    }, tutorialKey);
+import { test, expect, type Page } from '@playwright/test';
+import '../setup';
+import { TerminalPage } from '../page-objects/TerminalPage';
+import type { GamePhrase } from '../../types/Types';
+import { Phrases } from '../../types/Types';
+import { TEST_CONFIG } from '../config';
+
+// Constants for timeouts
+const TIMEOUTS = {
+  short: TEST_CONFIG.timeout.short,
+  medium: TEST_CONFIG.timeout.medium,
+  long: TEST_CONFIG.timeout.long,
+  transition: TEST_CONFIG.timeout.transition
+} as const;
+
+// Type guards and interfaces
+interface TutorialSignalState {
+  tutorialSignal: unknown;
+  activitySignal: unknown;
+  completedTutorials: string | null;
+  tutorialState: string | null;
+}
+
+function isError(value: unknown): value is Error {
+  return value instanceof Error;
+}
+
+let terminalPage: TerminalPage;
+
+/**
+ * Helper function to verify tutorial completion from localStorage
+ * @param page Playwright page object
+ * @param tutorialKey The tutorial key to check
+ * @returns Promise<boolean> True if tutorial is completed
+ */
+async function isTutorialCompleted(page: Page, tutorialKey: string): Promise<boolean> {
+  try {
+    return await page.evaluate((key: string): boolean => {
+      function safeParse<T>(json: string | null): T | null {
+        if (json === null) return null;
+        try {
+          const parsed = JSON.parse(json);
+          return typeof parsed === 'object' && parsed !== null ? parsed as T : null;
+        } catch {
+          return null;
+        }
+      }
+
+      function isStringArray(value: unknown): value is string[] {
+        if (!Array.isArray(value)) return false;
+        return value.every((item): item is string => typeof item === 'string');
+      }
+
+      const completedTutorials = localStorage.getItem('completed-tutorials');
+      const parsed = safeParse<unknown>(completedTutorials);
+      if (!isStringArray(parsed)) {
+        console.log('[Tutorial Parse Error] completed-tutorials is not a string array');
+        return false;
+      }
+      return parsed.includes(key);
+    }, tutorialKey);
+import { test, expect, type Page } from '@playwright/test';
+import '../setup';
+import { TerminalPage } from '../page-objects/TerminalPage';
+import type { GamePhrase } from '../../types/Types';
+import { Phrases } from '../../types/Types';
+import { TEST_CONFIG } from '../config';
+
+// Constants for timeouts
+const TIMEOUTS = {
+  short: TEST_CONFIG.timeout.short,
+  medium: TEST_CONFIG.timeout.medium,
+  long: TEST_CONFIG.timeout.long,
+  transition: TEST_CONFIG.timeout.transition
+} as const;
+
+// Type guards and interfaces
+interface TutorialSignalState {
+  tutorialSignal: unknown;
+  activitySignal: unknown;
+  completedTutorials: string | null;
+  tutorialState: string | null;
+}
+
+function isError(value: unknown): value is Error {
+  return value instanceof Error;
+}
+
+let terminalPage: TerminalPage;
+
+/**
+ * Helper function to verify tutorial completion from localStorage
+ * @param page Playwright page object
+ * @param tutorialKey The tutorial key to check
+ * @returns Promise<boolean> True if tutorial is completed
+ */
+async function isTutorialCompleted(page: Page, tutorialKey: string): Promise<boolean> {
+  try {
+    return await page.evaluate((key: string): boolean => {
+      function safeParse<T>(json: string | null): T | null {
+        if (json === null) return null;
+        try {
+          const parsed = JSON.parse(json);
+          return typeof parsed === 'object' && parsed !== null ? parsed as T : null;
+        } catch {
+          return null;
+        }
+      }
+
+      function isStringArray(value: unknown): value is string[] {
+        if (!Array.isArray(value)) return false;
+        return value.every((item): item is string => typeof item === 'string');
+      }
+import { test, expect, type Page } from '@playwright/test';
+import '../setup';
+import { TerminalPage } from '../page-objects/TerminalPage';
+import type { GamePhrase } from '../../types/Types';
+import { Phrases } from '../../types/Types';
+import { TEST_CONFIG } from '../config';
+
+// Constants for timeouts
+const TIMEOUTS = {
+  short: TEST_CONFIG.timeout.short,
+  medium: TEST_CONFIG.timeout.medium,
+  long: TEST_CONFIG.timeout.long,
+  transition: TEST_CONFIG.timeout.transition
+} as const;
+
+// Type guards and interfaces
+interface TutorialSignalState {
+  tutorialSignal: unknown;
+  activitySignal: unknown;
+  completedTutorials: string | null;
+  tutorialState: string | null;
+}
+
+function isError(value: unknown): value is Error {
+  return value instanceof Error;
+}
+
+let terminalPage: TerminalPage;
+
+/**
+ * Helper function to verify tutorial completion from localStorage
  * @param page Playwright page object
  * @param tutorialKey The tutorial key to check
  * @returns Promise<boolean> True if tutorial is completed
@@ -84,24 +398,17 @@ async function logTutorialState(page: Page, label: string): Promise<void> {
   console.log(`[${label}]`, state);
 }
 
-// Type-safe parsing of localStorage values using type guards
-// isStringArray and isTutorialState ensure proper type validation
 test.describe('Tutorial Mode', () => {
   test.describe.serial('tutorial progression', () => {
-    test.beforeAll(() => {
-      // Reset state at start of suite
-      completedTutorials = [];
-    });
-
     test.beforeEach(async ({ context, page }, testInfo) => {
-      // Special case: Initialize completedTutorials with '\r' before fdsa test
-      if (testInfo.title === 'should complete fdsa tutorial') {
-        completedTutorials = ['\r'];
-      }
       test.setTimeout(TIMEOUTS.long);
 
-      // Initialize localStorage with test data and restore completed tutorials
-      await context.addInitScript(tutorials => {
+      // Initialize localStorage with test data
+      await context.addInitScript(() => {
+        // Set initial tutorial state
+        const initialState = testInfo.title === 'should complete fdsa tutorial'
+          ? ['\r']
+          : [];
         if (typeof window.localStorage === 'undefined') {
           const localStorageMock = (() => {
             let store: Record<string, string> = {};
@@ -134,10 +441,8 @@ test.describe('Tutorial Mode', () => {
         }
 
         window.localStorage.setItem('tutorial-state', JSON.stringify({ currentStep: 0 }));
-        if (tutorials.length > 0) {
-          window.localStorage.setItem('completed-tutorials', JSON.stringify(tutorials));
-        }
-      }, [completedTutorials]);
+        window.localStorage.setItem('completed-tutorials', JSON.stringify(initialState));
+      });
 
       // Initialize page
       await page.goto(TEST_CONFIG.baseUrl);
@@ -185,7 +490,6 @@ test.describe('Tutorial Mode', () => {
 
       await terminalPage.goto();
       await logTutorialState(page, 'Initial Setup');
-
     });
 
     test('should start with `\\r` tutorial', async ({ page }) => {
@@ -204,7 +508,11 @@ test.describe('Tutorial Mode', () => {
 
     test('should complete fdsa tutorial', async ({ page }) => {
       // Verify we're at the right step
-      expect(completedTutorials, 'Unexpected completed tutorials before fdsa').toEqual([]);
+      const completed = await page.evaluate(() => {
+        const completed = localStorage.getItem('completed-tutorials');
+        return completed ? JSON.parse(completed) : [];
+      });
+      expect(completed, 'Unexpected completed tutorials before fdsa').toEqual([]);
 
       // Ensure terminal is focused
       await terminalPage.focus();
@@ -214,15 +522,16 @@ test.describe('Tutorial Mode', () => {
 
       // Verify completion
       expect(await isTutorialCompleted(page, 'fdsa'), 'fdsa tutorial not marked as completed').toBeTruthy();
-
-      // Save completion state
-      completedTutorials.push('fdsa');
       await logTutorialState(page, 'After fdsa');
     });
 
     test('should complete jkl; tutorial', async ({ page }) => {
       // Verify we're at the right step
-      expect(completedTutorials, 'Unexpected completed tutorials before jkl;').toEqual(['fdsa']);
+      const completed = await page.evaluate(() => {
+        const completed = localStorage.getItem('completed-tutorials');
+        return completed ? JSON.parse(completed) : [];
+      });
+      expect(completed, 'Unexpected completed tutorials before jkl;').toEqual(['\r']);
 
       // Ensure terminal is focused
       await terminalPage.focus();
@@ -232,15 +541,16 @@ test.describe('Tutorial Mode', () => {
 
       // Verify completion
       expect(await isTutorialCompleted(page, 'jkl;'), 'jkl; tutorial not marked as completed').toBeTruthy();
-
-      // Save completion state
-      completedTutorials.push('jkl;');
       await logTutorialState(page, 'After jkl;');
     });
 
     test('should transition to game mode', async ({ page }) => {
       // Verify we're at the right step
-      expect(completedTutorials, 'Unexpected completed tutorials before game transition').toEqual(['fdsa', 'jkl;']);
+      const completed = await page.evaluate(() => {
+        const completed = localStorage.getItem('completed-tutorials');
+        return completed ? JSON.parse(completed) : [];
+      });
+      expect(completed, 'Unexpected completed tutorials before game transition').toEqual(['\r', 'fdsa']);
 
       await terminalPage.waitForActivityTransition();
       await expect(terminalPage.tutorialMode, 'Tutorial mode still visible after transition').not.toBeVisible({ timeout: TIMEOUTS.transition });
@@ -250,7 +560,11 @@ test.describe('Tutorial Mode', () => {
 
     test('should complete game phrase and return to tutorial', async ({ page }) => {
       // Verify we're at the right step
-      expect(completedTutorials, 'Unexpected completed tutorials before game phrase').toEqual(['fdsa', 'jkl;']);
+      const completed = await page.evaluate(() => {
+        const completed = localStorage.getItem('completed-tutorials');
+        return completed ? JSON.parse(completed) : [];
+      });
+      expect(completed, 'Unexpected completed tutorials before game phrase').toEqual(['\r', 'fdsa', 'jkl;']);
 
       await terminalPage.waitForNextChars('all sad lads ask dad; alas fads fall');
 
