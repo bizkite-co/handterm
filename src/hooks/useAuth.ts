@@ -67,6 +67,17 @@ export interface IAuthProps {
 export function useAuth(): IAuthProps {
   const queryClient = useQueryClient();
 
+  const clearTokens = () => {
+    localStorage.removeItem(TokenKeys.AccessToken);
+    localStorage.removeItem(TokenKeys.RefreshToken);
+    localStorage.removeItem(TokenKeys.ExpiresAt);
+    localStorage.removeItem(TokenKeys.ExpiresIn);
+    localStorage.removeItem(TokenKeys.IdToken);
+    localStorage.removeItem(TokenKeys.GithubUsername);
+    setIsLoggedIn(false);
+    isLoggedInSignal.value = false;
+  };
+
   // Token refresh mutation
   const refreshMutation = useMutation({
     mutationFn: async (): Promise<MyResponse<AuthResponse>> => {
@@ -105,64 +116,86 @@ export function useAuth(): IAuthProps {
   // Token validation and refresh function
   const validateAndRefreshToken = useCallback(async (): Promise<MyResponse<AuthResponse>> => {
     try {
-      const accessToken: (string|null) = localStorage.getItem(TokenKeys.AccessToken);
-      const expiresAt: (string|null) = localStorage.getItem(TokenKeys.ExpiresAt);
-      const expiresIn:(string|null) = localStorage.getItem(TokenKeys.ExpiresIn);
-      const refreshToken:(string|null) = localStorage.getItem(TokenKeys.RefreshToken);
-      const idToken:(string|null) = localStorage.getItem(TokenKeys.IdToken);
-      const githubUsername: (string | null) = localStorage.getItem(TokenKeys.GithubUsername);
+      const accessToken = localStorage.getItem(TokenKeys.AccessToken);
+      const refreshToken = localStorage.getItem(TokenKeys.RefreshToken);
+      const expiresAt = localStorage.getItem(TokenKeys.ExpiresAt);
+      const expiresIn = localStorage.getItem(TokenKeys.ExpiresIn);
+      const idToken = localStorage.getItem(TokenKeys.IdToken);
+      const githubUsername = localStorage.getItem(TokenKeys.GithubUsername);
 
-      // Exit early if any of these are missing
-      if (accessToken == null || refreshToken == null || expiresAt == null || expiresIn == null) {
-        setIsLoggedIn(false);
-        isLoggedInSignal.value = false;
+      // If we have no refresh token, clear all tokens and return error
+      if (refreshToken == null || refreshToken === '') {
+        clearTokens();
         return {
           status: 401,
-          message: "You are not logged in.",
+          message: "No refresh token available",
           error: []
         };
       }
 
-      // Check if token is expired or will expire soon (within 5 minutes)
-      const isExpiringSoon = expiresAt != null ? parseInt(expiresAt) - Date.now() < 5 * 60 * 1000 : false;
+      // If we have a refresh token but no access token, attempt to refresh
+      if (accessToken == null || expiresAt == null || expiresIn == null) {
+        try {
+          const response = await refreshMutation.mutateAsync();
+          if (response.data?.AccessToken != null) {
+            setIsLoggedIn(true);
+            return {
+              status: 200,
+              data: response.data,
+              message: "Token refreshed",
+              error: []
+            };
+          }
+        } catch (error) {
+          clearTokens();
+          return {
+            status: 401,
+            message: "Token refresh failed",
+            error: []
+          };
+        }
+      }
 
-      if (isExpiringSoon) {
-        // Attempt to refresh the token
-        const response = await refreshMutation.mutateAsync();
-        if (response.data?.AccessToken != null && typeof response.data.AccessToken === 'string') {
-          // Token refresh successful
+      // If we have all required tokens
+      if (accessToken != null && refreshToken != null && expiresAt != null && expiresIn != null) {
+        const expirationTime = parseInt(expiresAt);
+        const currentTime = Date.now();
+        const bufferTime = 5 * 60 * 1000; // 5 minutes buffer
+
+        // If token is expired or will expire within buffer time
+        if (currentTime + bufferTime > expirationTime) {
+          const response = await refreshMutation.mutateAsync();
+          if ((response.data?.AccessToken) != null) {
+            setIsLoggedIn(true);
+            return {
+              status: 200,
+              data: response.data,
+              message: "Token refreshed",
+              error: []
+            };
+          }
+        }
+
+        // If token is still valid
+        if (currentTime < expirationTime) {
           setIsLoggedIn(true);
           return {
             status: 200,
             data: {
-              AccessToken: response.data.AccessToken,
-              ExpiresAt: response.data.ExpiresAt,
-              ExpiresIn: response.data.ExpiresIn,
-              IdToken: response.data.IdToken,
-              RefreshToken: response.data.RefreshToken,
-              githubUsername: response.data.githubUsername
+              AccessToken: accessToken,
+              ExpiresAt: expiresAt,
+              ExpiresIn: parseInt(expiresIn, 10),
+              IdToken: idToken ?? '',
+              RefreshToken: refreshToken,
+              githubUsername: githubUsername ?? ''
             },
-            message: "Token refreshed",
+            message: "Token valid",
             error: []
           };
         }
-      } else if (expiresAt != null && parseInt(expiresAt) > Date.now()) {
-        // Token is still valid
-        setIsLoggedIn(true);
-        return {
-          status: 200,
-          data: {
-            AccessToken: accessToken,
-            ExpiresAt: expiresAt,
-            ExpiresIn: parseInt(expiresIn,10),
-            IdToken: idToken ?? '',
-            RefreshToken: refreshToken,
-            githubUsername: githubUsername ?? ''
-          },
-          message: "Token refreshed",
-          error: []
-        };
       }
+
+      // If we get here, we're not logged in
 
       // If we get here, either token refresh failed or token is expired
       setIsLoggedIn(false);
@@ -209,7 +242,7 @@ export function useAuth(): IAuthProps {
             data: {
               AccessToken: localStorage.getItem(TokenKeys.AccessToken) ?? '',
               RefreshToken: localStorage.getItem(TokenKeys.RefreshToken) ?? '',
-              IdToken: localStorage.getItem(TokenKeys.IdToken) || '',
+              IdToken: localStorage.getItem(TokenKeys.IdToken) ?? '',
               ExpiresAt: localStorage.getItem(TokenKeys.ExpiresAt) || '',
               ExpiresIn: parseInt(localStorage.getItem(TokenKeys.ExpiresIn) || '0', 10),
               githubUsername: localStorage.getItem(TokenKeys.GithubUsername) || undefined
