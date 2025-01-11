@@ -10,7 +10,7 @@
         }
     },
     "api": {
-        "BaseUrl": "https://drypicnke5.execute-api.us-east-1.amazonaws.com",
+        "BaseUrl": "/api",
         "SignUp": "/signUp",
         "ConfirmSignUp": "/confirm-signup",
         "GetLog": "/getLog",

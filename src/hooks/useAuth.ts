@@ -262,10 +262,17 @@ export function useAuth(): IAuthProps {
         };
 
         const response = await axios.get(`${API_URL}${endpoints.api.GetUser}`, config);
-        if (response.data != null && typeof response.data === 'object' && 'AccessToken' in response.data) {
+        if (response.data != null && typeof response.data === 'object' && 'userId' in response.data) {
           return {
             status: 200,
-            data: response.data as AuthResponse,
+            data: {
+              AccessToken: localStorage.getItem(TokenKeys.AccessToken) ?? '',
+              RefreshToken: localStorage.getItem(TokenKeys.RefreshToken) ?? '',
+              IdToken: localStorage.getItem(TokenKeys.IdToken) ?? '',
+              ExpiresAt: localStorage.getItem(TokenKeys.ExpiresAt) || '',
+              ExpiresIn: parseInt(localStorage.getItem(TokenKeys.ExpiresIn) || '0', 10),
+              githubUsername: localStorage.getItem(TokenKeys.GithubUsername) || undefined
+            },
             message: 'Session valid',
             error: []
           };
