@@ -72,7 +72,9 @@ function isErrorResponse(obj: unknown): obj is ErrorResponse {
 
 // Create axios instance with base configuration
 const api = axios.create({
-    baseURL: ENDPOINTS.api.BaseUrl,
+    baseURL: import.meta.env.PROD
+        ? "https://drypicnke5.execute-api.us-east-1.amazonaws.com"
+        : ENDPOINTS.api.BaseUrl,
     headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json'
