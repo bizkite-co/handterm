@@ -1,13 +1,14 @@
 ---
 date: 2025-01-01
 title: Cline Rules
+version: 1.0.0
 ---
 
 1. Read `./CONVENTIONS.md` at the start of each chat.
 2. Read `./.eslintrc.cjs` and follow the rules. Avoid creating warnings.
     a. For instance, don't violate `eslint@typescript-eslint/strict-boolean-expressions` when writing code.
 1. Create a worklog file starting with todays date in the name in `./docs/worklog/`.
-    a. Use the `date-time` MCP server to get the current date.
+    a. Use the `date-server` MCP server to get the current date.
     a. State the task you are working on.
     b. State your understanding of the problem.
     c. State your plan to solve the problem.

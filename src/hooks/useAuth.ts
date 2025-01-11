@@ -256,8 +256,8 @@ export function useAuth(): IAuthProps {
         if (typeof accessToken !== 'string' || accessToken === '') throw new Error('No AccessToken');
         const config = {
           headers: {
-            'AUTHORIZATION': `Bearer ${accessToken}`,
-            'CONTENT_TYPE': 'application/json'
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json'
           }
         };
 
