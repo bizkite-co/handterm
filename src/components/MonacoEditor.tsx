@@ -1,11 +1,7 @@
-import {
-  useCallback,
-  useImperativeHandle,
-  useRef,
-} from 'react';
-
-import { type editor } from 'monaco-editor';
-
+import { useRef, useEffect, useImperativeHandle, useState, useCallback } from 'react';
+import loader from '@monaco-editor/loader';
+import type { editor } from 'monaco-editor';
+import monacoVim from 'monaco-vim';
 import { createLogger, LogLevel } from 'src/utils/Logger';
 
 const logger = createLogger({
@@ -30,20 +26,27 @@ interface MonacoEditorProps {
 
 function MonacoEditorComponent(
   {
+    initialValue = '',
+    language = 'javascript',
     onClose,
     height = '80vh',
     isTreeView = false,
     treeItems = [],
-    onFileSelect = () => {}
+    onFileSelect = () => { }
   }: MonacoEditorProps
 ): JSX.Element {
+  const [value, setValue] = useState(initialValue);
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
+  const vimModeRef = useRef<ReturnType<typeof monacoVim.initVimMode> | null>(null);
+  const vimStatusBarRef = useRef<HTMLDivElement | null>(null);
 
   useImperativeHandle(
     null,
     () => {
       if (editorRef.current === null) {
-        throw new Error('Editor ref is not available');
+        const errorMessage = 'Editor ref is not available';
+        logger.error(errorMessage);
+        throw new Error(errorMessage);
       }
       return editorRef.current;
     },
@@ -67,8 +70,75 @@ function MonacoEditorComponent(
     onClose();
   }, [onClose]);
 
+  const handleEditorDidMount = (
+    editor: editor.IStandaloneCodeEditor
+  ) => {
+    editorRef.current = editor;
+    // Initialize Vim mode
+    if (vimStatusBarRef.current) {
+      vimModeRef.current = monacoVim.initVimMode(editor, vimStatusBarRef.current);
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      // Cleanup editor instance and Vim mode
+      if (editorRef.current !== null) {
+        editorRef.current.dispose();
+        editorRef.current = null;
+      }
+      if (vimModeRef.current !== null) {
+        vimModeRef.current.dispose();
+        vimModeRef.current = null;
+      }
+    };
+  }, []);
+
+  const [editorContainer, setEditorContainer] = useState<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!editorContainer) return;
+
+    let editorInstance: editor.IStandaloneCodeEditor;
+    let vimInstance: ReturnType<typeof monacoVim.initVimMode>;
+
+    void loader.init().then(monaco => {
+      editorInstance = monaco.editor.create(editorContainer, {
+        value,
+        language,
+        minimap: { enabled: false },
+        scrollBeyondLastLine: false,
+        automaticLayout: true,
+      });
+
+      editorRef.current = editorInstance;
+      handleEditorDidMount(editorInstance);
+
+      if (vimStatusBarRef.current) {
+        vimInstance = monacoVim.initVimMode(editorInstance, vimStatusBarRef.current);
+        vimModeRef.current = vimInstance;
+      }
+
+      editorInstance.onDidChangeModelContent(() => {
+        setValue(editorInstance.getValue());
+      });
+    }).catch(error => {
+      logger.error('Failed to initialize Monaco editor:', error);
+    });
+
+    return () => {
+      if (editorInstance) {
+        editorInstance.dispose();
+      }
+      if (vimInstance) {
+        vimInstance.dispose();
+      }
+    };
+  }, [editorContainer, language]);
+
   return (
-    <div style={{ height, width: '100%' }}>
+    <div style={{ height, width: '100%', position: 'relative' }}>
+      <div ref={vimStatusBarRef} style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '20px', backgroundColor: '#1e1e1e', color: '#fff', padding: '2px 5px', fontFamily: 'monospace', fontSize: '12px' }} />
       {isTreeView && treeItems.length > 0 && (
         <div>
           {treeItems.map((item) => (
@@ -81,6 +151,10 @@ function MonacoEditorComponent(
           ))}
         </div>
       )}
+      <div
+        ref={setEditorContainer}
+        style={{ height: '100%', width: '100%' }}
+      />
       <button onClick={handleClose}>Close</button>
     </div>
   );

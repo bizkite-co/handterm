@@ -1,0 +1,13 @@
+- [x] Create git diff of older working MonacoEditor.tsx
+- [x] Analyze differences between old and new MonacoEditor implementations
+- [x] Update MonacoEditor imports to use Qovery library pattern
+- [ ] Remove remaining references to @monaco-editor/react
+- [ ] Consolidate all Monaco imports to use @monaco-editor/loader
+- [ ] Fix lint errors in MonacoEditor.tsx
+- [ ] Restore file editing functionality
+- [ ] Restore file navigation features
+- [ ] Restore file saving implementation
+- [ ] Verify MonacoEditor functionality matches github-save version
+- [ ] Update related files to match new implementation
+- [ ] Test MonacoEditor integration with other components
+- [ ] Document changes and update component documentation
