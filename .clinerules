@@ -4,10 +4,13 @@ title: Cline Rules
 version: 1.0.0
 ---
 
-1. Read `./CONVENTIONS.md` at the start of each chat.
-2. Read `./.eslintrc.cjs` and follow the rules. Avoid creating warnings.
+1. Make sure your commands return control of the terminl.
+2. Do not run commands that remain attached. If you're unsure, pipe the output to a `temp` file and grep the file.
+   1. For instance, you can run a command like this: `git diff 9a487aa3bc01e0981ee9d43151dcd5bcb9c389b3 HEAD -- src/components/MonacoEditor.tsx > temp/monaco_9a487aa3bc01e0981ee9d43151dcd5bcb9c389b3_HEAD.diff`, and then `grep` or `cat` or `tail` or `head` the file, depending on what you need from it.
+3. Read `./CONVENTIONS.md` at the start of each chat.
+4. Read `./.eslintrc.cjs` and follow the rules. Avoid creating warnings.
     a. For instance, don't violate `eslint@typescript-eslint/strict-boolean-expressions` when writing code.
-1. Create a worklog file starting with todays date in the name in `./docs/worklog/`.
+5. Create a worklog file starting with todays date in the name in `./docs/worklog/`.
     a. Use the `date-server` MCP server to get the current date.
     a. State the task you are working on.
     b. State your understanding of the problem.
@@ -18,5 +21,5 @@ version: 1.0.0
     f. If you are stuck, state your current problem and ask for help.
     g. Perioically review your last three comments to make sure you're not stuck in a non-productive loop.
 
-3. Assume 'npm run dev' is already running and available at `http://localhost:5173/`.
-* [ ] 4. DO NOT RUN `npm run dev` because you can assume it is already running.
+6. Assume 'npm run dev' is already running and available at `http://localhost:5173/`.
+7. DO NOT RUN `npm run dev`. You can assume it is already running.

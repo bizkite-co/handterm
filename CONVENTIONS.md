@@ -6,6 +6,8 @@ version: 1.0.0
 
 This is a React/TypeScript/Vite/Vitest/Palaywright website that is deployed to GitHub Pages.
 
+THIS APP IS A TUI (Text User Interface) and should not include _ANY BUTTONS_. HTML is used only for read-only ouput. All user actions should be keyboard driven.
+
 There is a server-side AWS API Gateway/Lambda backend defined in `/home/mstouffer/repos/handterm-proj/handterm-cdk` and a shared API endpoints in `src/shared/endpoints.json`.
 
 Check `pwd` to determine which project you're running CLI commands in.
