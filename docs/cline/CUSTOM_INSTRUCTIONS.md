@@ -9,7 +9,7 @@ version: 1.0.0
     2. Use the MCP date server to get the current date.
     3. Create a worklog document in `docs/worklog` prefixed with the current date.
     2. Create a new branch titled `cline-<task-name>` from the curret branch and comit the worklog document to it.
-    1. Use the sequential thinking MCP to create a checkboxed bulleted list of tasks and subtasks to carry out for the current conversation.
+    1. Use the `sequential-thinking` MCP to create a checkboxed bulleted list of tasks and subtasks to carry out for the current conversation.
     2. When work tasks or subtasks are completed, check them off.
     3. If you have to deviate from the plan, use the sequential thinking MCP to edit the worklog, and then start implementing the new plan.
 3. Don't create files that already exist.
