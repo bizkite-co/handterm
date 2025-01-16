@@ -3,7 +3,7 @@ import type { ActivityType, GamePhrase } from '../types/Types';
 import Editor, { type Monaco } from '@monaco-editor/react';
 import type { editor } from 'monaco-editor';
 import { initVimMode } from 'monaco-vim';
-import { createLogger, LogLevel } from 'src/utils/Logger';
+import { createLogger, LogLevel } from '../utils/Logger';
 
 const logger = createLogger({
   prefix: 'MonacoEditor',
@@ -35,7 +35,7 @@ function MonacoEditorComponent({
   height = '80vh',
   isTreeView = false,
   treeItems = [],
-  onFileSelect = () => { }
+  onFileSelect = () => undefined
 }: MonacoEditorProps): JSX.Element {
   const [value, setValue] = useState(initialValue);
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
@@ -106,7 +106,7 @@ function MonacoEditorComponent({
         width="100%"
         language={language}
         value={value}
-        onChange={(newValue) => setValue(newValue || '')}
+        onChange={(newValue) => setValue(newValue ?? '')}
         onMount={handleEditorDidMount}
         options={{
           minimap: { enabled: false },
@@ -118,7 +118,7 @@ function MonacoEditorComponent({
   );
 }
 
-MonacoEditorComponent.displayName = 'MonacoEditor';
+MonacoEditorComponent.displayName = 'MonacoEditor' as const;
 
 
 export { MonacoEditorComponent as MonacoEditor };

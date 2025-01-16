@@ -7,7 +7,7 @@
 - [x] Update MonacoEditor imports to use Qovery library pattern
 - [x] Restore @monaco-editor/react package
 - [x] Consolidate all Monaco imports to use @monaco-editor/react
-- [ ] Fix lint errors in MonacoEditor.tsx
+- [x] Fix lint errors in MonacoEditor.tsx
 - [ ] Restore file editing functionality
 - [ ] Restore file navigation features
   - [ ] Implement basic tree navigation
