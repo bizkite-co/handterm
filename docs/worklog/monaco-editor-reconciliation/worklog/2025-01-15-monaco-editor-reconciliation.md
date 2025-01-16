@@ -8,7 +8,7 @@
 - [ ] Restore file navigation features
   - [ ] Implement basic tree navigation
   - [ ] Add keyboard controls for tree navigation
-  - [ ] Creat a Playwright test that loads a mock file tree and verifies navigation. 
+  - [ ] Creat a Playwright test that loads a mock file tree and verifies navigation.
 - [ ] Restore file saving implementation
   - [ ] Restore GitHub save functionality
   - [ ] Verify save integration with GitHubCommand
@@ -40,3 +40,9 @@ The Monaco Editor component was previously working using @monaco-editor/react pa
 2. Read current MonacoEditor.tsx implementation
 3. Compare with previous working version
 4. Update implementation
+
+## Dependency Resolution
+- [x] Resolved jsdom/canvas version conflict
+  - Updated jsdom to 26.0.0
+  - Confirmed canvas@3.0.0 compatibility
+  - Verified successful npm install

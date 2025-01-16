@@ -12,7 +12,7 @@ There is a server-side AWS API Gateway/Lambda backend defined in `/home/mstouffe
 
 Check `pwd` to determine which project you're running CLI commands in.
 
-Create ONE work item description file per conversation in `docs/worklog/`. Use the MCP `date-server` to get the local system date to use along with a task title you creat in the file name.
+Use `docs/worklog/` for docmentation. Use the MCP `date-server` to get the local system date if you have to creat a new dated file.
 
 Use the VS Code linter after editing each file to ensure the changes you're making are _reducing_ the number of linting problems.
 
