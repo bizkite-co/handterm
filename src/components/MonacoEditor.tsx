@@ -1,6 +1,6 @@
 import { useRef, useEffect, useImperativeHandle, useState, useCallback } from 'react';
 import loader from '@monaco-editor/loader';
-import type { editor } from 'monaco-editor';
+import type * as Monaco from 'monaco-editor';
 import monacoVim from 'monaco-vim';
 import { createLogger, LogLevel } from 'src/utils/Logger';
 
@@ -36,7 +36,7 @@ function MonacoEditorComponent(
   }: MonacoEditorProps
 ): JSX.Element {
   const [value, setValue] = useState(initialValue);
-  const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
+  const editorRef = useRef<Monaco.editor.IStandaloneCodeEditor | null>(null);
   const vimModeRef = useRef<ReturnType<typeof monacoVim.initVimMode> | null>(null);
   const vimStatusBarRef = useRef<HTMLDivElement | null>(null);
 
@@ -71,11 +71,11 @@ function MonacoEditorComponent(
   }, [onClose]);
 
   const handleEditorDidMount = (
-    editor: editor.IStandaloneCodeEditor
+    editor: Monaco.editor.IStandaloneCodeEditor
   ) => {
     editorRef.current = editor;
     // Initialize Vim mode
-    if (vimStatusBarRef.current) {
+    if (vimStatusBarRef.current != null) {
       vimModeRef.current = monacoVim.initVimMode(editor, vimStatusBarRef.current);
     }
   };
@@ -97,9 +97,9 @@ function MonacoEditorComponent(
   const [editorContainer, setEditorContainer] = useState<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    if (!editorContainer) return;
+    if (editorContainer == null) return;
 
-    let editorInstance: editor.IStandaloneCodeEditor;
+    let editorInstance: Monaco.editor.IStandaloneCodeEditor | null = null;
     let vimInstance: ReturnType<typeof monacoVim.initVimMode>;
 
     void loader.init().then(monaco => {
@@ -114,27 +114,29 @@ function MonacoEditorComponent(
       editorRef.current = editorInstance;
       handleEditorDidMount(editorInstance);
 
-      if (vimStatusBarRef.current) {
+      if (vimStatusBarRef.current != null) {
         vimInstance = monacoVim.initVimMode(editorInstance, vimStatusBarRef.current);
         vimModeRef.current = vimInstance;
       }
 
       editorInstance.onDidChangeModelContent(() => {
-        setValue(editorInstance.getValue());
+        if (editorInstance != null) {
+          setValue(editorInstance.getValue());
+        }
       });
     }).catch(error => {
       logger.error('Failed to initialize Monaco editor:', error);
     });
 
     return () => {
-      if (editorInstance) {
+      if (editorInstance != null) {
         editorInstance.dispose();
       }
       if (vimInstance) {
         vimInstance.dispose();
       }
     };
-  }, [editorContainer, language]);
+  }, [editorContainer, language, value]);
 
   return (
     <div style={{ height, width: '100%', position: 'relative' }}>
