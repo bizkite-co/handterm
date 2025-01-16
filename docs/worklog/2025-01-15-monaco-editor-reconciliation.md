@@ -1,13 +1,23 @@
 - [x] Create git diff of older working MonacoEditor.tsx
 - [x] Analyze differences between old and new MonacoEditor implementations
 - [x] Update MonacoEditor imports to use Qovery library pattern
-- [ ] Remove remaining references to @monaco-editor/react
-- [ ] Consolidate all Monaco imports to use @monaco-editor/loader
+- [x] Remove remaining references to @monaco-editor/react
+- [x] Consolidate all Monaco imports to use @monaco-editor/loader
 - [ ] Fix lint errors in MonacoEditor.tsx
 - [ ] Restore file editing functionality
 - [ ] Restore file navigation features
+  - [ ] Implement basic tree navigation
+  - [ ] Add keyboard controls for tree navigation
 - [ ] Restore file saving implementation
+  - [ ] Restore GitHub save functionality
+  - [ ] Verify save integration with GitHubCommand
 - [ ] Verify MonacoEditor functionality matches github-save version
+  - [ ] Verify Vim mode integration
+  - [ ] Test all editor modes
 - [ ] Update related files to match new implementation
 - [ ] Test MonacoEditor integration with other components
+  - [ ] Test with GitHubCommand
+  - [ ] Test with CommandContext
 - [ ] Document changes and update component documentation
+  - [ ] Update MonacoEditor.md
+  - [ ] Add Vim mode documentation
