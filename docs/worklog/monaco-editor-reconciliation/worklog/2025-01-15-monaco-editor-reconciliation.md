@@ -1,5 +1,7 @@
 # Monaco Editor Reconciliation Worklog
 
+Checkboxes to indicate task completion.
+
 ## 2025-01-15
 
 - [x] Create git diff of older working MonacoEditor.tsx
@@ -8,11 +10,11 @@
 - [x] Restore @monaco-editor/react package
 - [x] Consolidate all Monaco imports to use @monaco-editor/react
 - [x] Fix lint errors in MonacoEditor.tsx
-- [ ] Restore file editing functionality
-- [ ] Restore file navigation features
-  - [ ] Implement basic tree navigation
+- [x] Restore file navigation features
+  - [x] Implement basic tree navigation
   - [ ] Add keyboard controls for tree navigation
-  - [ ] Creat a Playwright test that loads a mock file tree and verifies navigation.
+  - [x] Create a Playwright test that loads a mock file tree and verifies navigation.
+- [ ] Restore file editing functionality
 - [ ] Restore file saving implementation
   - [ ] Restore GitHub save functionality
   - [ ] Verify save integration with GitHubCommand
@@ -36,9 +38,10 @@
 - Fixed async/await ESLint errors in handleSave
 - Added proper error handling and content usage
 - Updated worklog to track progress
+- Resolved TypeScript errors in TreeView component
+- Implemented Playwright test for tree view functionality
 
 ### Next Steps
 1. Add file path validation
 2. Add error boundary handling
-3. Implement file tree navigation
-4. Add keyboard controls for tree navigation
+3. Add keyboard controls for tree navigation
