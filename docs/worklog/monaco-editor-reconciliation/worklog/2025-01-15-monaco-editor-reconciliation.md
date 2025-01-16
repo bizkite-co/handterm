@@ -8,6 +8,7 @@
 - [ ] Restore file navigation features
   - [ ] Implement basic tree navigation
   - [ ] Add keyboard controls for tree navigation
+  - [ ] Creat a Playwright test that loads a mock file tree and verifies navigation. 
 - [ ] Restore file saving implementation
   - [ ] Restore GitHub save functionality
   - [ ] Verify save integration with GitHubCommand

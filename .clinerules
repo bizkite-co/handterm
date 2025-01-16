@@ -10,16 +10,17 @@ version: 1.0.0
 3. Read `docs/cline/CUSTOM_INSTRUCTIONS.md` at the start of each chat.
 4. Read `./.eslintrc.cjs` and follow the rules. Avoid creating warnings.
     a. For instance, don't violate `eslint@typescript-eslint/strict-boolean-expressions` when writing code.
-5. Create a worklog file starting with todays date in the name in `./docs/worklog/`.
-    a. Use the `date-server` MCP server to get the current date.
-    a. State the task you are working on.
-    b. State your understanding of the problem.
-    c. State your plan to solve the problem.
-    d. State your next steps.
-    e. Implement your next step in code while observing the linting rules and warnings.
-    e. Whenever you create a measurable improvement, commit the change with a multi-line commit message.
-    f. If you are stuck, state your current problem and ask for help.
-    g. Perioically review your last three comments to make sure you're not stuck in a non-productive loop.
-
+5. Use a `./docs/worklog/` directory for all planning and worklog purposes.
+    5. If the user passes you a `./docs/worklog/` directory, use that directory for all planning and worklog purposes.
+    5. If the user does not pass you a `./docs/worklog/` directory, create a worklog file starting with todays date in the name in `./docs/worklog/`.
+    5. Use the `date-server` MCP server to get the current date.
+    1. State the task you are working on.
+    1. State your understanding of the problem.
+    1. State your plan to solve the problem.
+    1. State your next steps.
+    1. Implement your next step in code while observing the linting rules and warnings.
+    1. Whenever you create a measurable improvement, commit the change with a multi-line commit message.
+    1. If you are stuck, state your current problem and ask for help.
+    1. Perioically review your last three comments to make sure you're not stuck in a non-productive loop.
 6. Assume 'npm run dev' is already running and available at `http://localhost:5173/`.
 7. DO NOT RUN `npm run dev`. You can assume it is already running.
