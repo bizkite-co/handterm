@@ -1,75 +1,75 @@
 import { test, expect } from '@playwright/test';
-import type {} from '../src/types/window';
 
-test.describe('Monaco Editor Tree View', () => {
-  test.beforeEach(async ({ page }) => {
-    await page.goto('http://localhost:5173');
-  });
-
-  test('should display tree view from localStorage', async ({ page }) => {
-    // Setup mock tree data
-    const mockTreeData = [
+const mockTreeData = [
   { path: 'src/', type: 'directory' },
   { path: 'src/components/', type: 'directory' },
   { path: 'src/components/MonacoEditor.tsx', type: 'file' },
-      { path: 'src/commands/', type: 'directory' },
-      { path: 'src/commands/GitHubCommand.ts', type: 'file' }
+  { path: 'src/utils/', type: 'directory' },
+  { path: 'src/utils/treeFormatter.ts', type: 'file' }
 ];
 
-    // Set localStorage data
-    await page.evaluate((data) => {
-      localStorage.setItem('github_tree_items', JSON.stringify(data));
+test.beforeEach(async ({ page }) => {
+  // Set mock tree data in localStorage before each test
+  await page.addInitScript((data) => {
+    window.localStorage.setItem('github_tree_items', JSON.stringify(data));
   }, mockTreeData);
+});
 
-    // Debug: Verify localStorage was set
-    const storedItems = await page.evaluate(() => localStorage.getItem('github_tree_items'));
-    console.log('Stored items:', storedItems);
-
-    // Wait for editor to load
-    await page.waitForSelector('.monaco-editor', { state: 'visible', timeout: 30000 });
-    console.log('Editor loaded');
-
-    // Take screenshot for debugging
-    await page.screenshot({ path: 'temp/monaco-editor.png', fullPage: true });
-    console.log('Screenshot saved to temp/monaco-editor.png');
-
-    // Wait for component to process localStorage changes
-    await page.waitForTimeout(1000);
-
-    // Wait for and enable tree view
-    const toggleButton = page.locator('[data-testid="tree-view-toggle"]');
-    await toggleButton.waitFor({ state: 'visible', timeout: 30000 });
-    console.log('Toggle button found:', await toggleButton.isVisible());
-    await toggleButton.click();
-
-    // Wait for tree view to render
-    await page.waitForTimeout(1000);
-
-    // Take screenshot after toggling tree view
-    await page.screenshot({ path: 'temp/monaco-tree-view.png', fullPage: true });
-    console.log('Tree view screenshot saved to temp/monaco-tree-view.png');
-
-    // Verify tree view content
-    const editorContent = await page.evaluate((): string => {
-      const editor = window.monacoEditor;
-      if (!editor) {
-        console.error('monacoEditor not found on window');
-        return '';
-      }
-      try {
-        return editor.getValue();
-      } catch (error: unknown) {
-        if (error instanceof Error) {
-          console.error('Failed to get editor content:', error.message);
-        } else {
-          console.error('Failed to get editor content: Unknown error');
-        }
-        return '';
-      }
-    });
-
-    expect(editorContent).toContain('src/');
-    expect(editorContent).toContain('src/components/');
-    expect(editorContent).toContain('src/components/MonacoEditor.tsx');
+test.afterEach(async ({ page }) => {
+  // Clean up localStorage after each test
+  await page.evaluate(() => {
+    window.localStorage.removeItem('github_tree_items');
   });
+});
+
+test('should load and display tree view from localStorage', async ({ page }) => {
+  await page.goto('/');
+
+  // Wait for Monaco editor to load
+  await page.waitForSelector('.monaco-editor');
+
+  // Verify tree structure is displayed
+  const treeItems = await page.$$eval('.tree-item', items =>
+    items.map(el => el.textContent)
+  );
+
+  expect(treeItems).toEqual([
+    'src/',
+    'src/components/',
+    'src/components/MonacoEditor.tsx',
+    'src/utils/',
+    'src/utils/treeFormatter.ts'
+  ]);
+
+  // Verify localStorage was set correctly
+  const localStorageData = await page.evaluate(() =>
+    JSON.parse(window.localStorage.getItem('github_tree_items') || '[]')
+  );
+  expect(localStorageData).toEqual(mockTreeData);
+});
+
+test('should handle empty localStorage', async ({ page }) => {
+  // Clear localStorage for this test
+  await page.evaluate(() => {
+    window.localStorage.removeItem('github_tree_items');
+  });
+
+  await page.goto('/');
+
+  // Verify empty state is handled
+  const emptyState = await page.$('.empty-state');
+  expect(emptyState).toBeTruthy();
+});
+
+test('should handle malformed localStorage data', async ({ page }) => {
+  // Set invalid data in localStorage
+  await page.evaluate(() => {
+    window.localStorage.setItem('github_tree_items', 'invalid-json');
+  });
+
+  await page.goto('/');
+
+  // Verify error state is handled
+  const errorState = await page.$('.error-state');
+  expect(errorState).toBeTruthy();
 });
