@@ -1,6 +1,6 @@
 interface TreeItem {
     path: string;
-    type: string;
+    type: 'file' | 'directory' | 'blob' | 'tree';
 }
 
 interface TreeState {
@@ -8,10 +8,15 @@ interface TreeState {
 }
 
 export function formatTreeContent(items: TreeItem[], treeState: TreeState): string {
+    console.log('Formatting tree content with items:', items);
+    console.log('Expanded folders:', treeState.expandedFolders);
+
     const sortedItems = [...items].sort((a, b) => {
-        // Directories come first
-        if (a.type === 'tree' && b.type !== 'tree') return -1;
-        if (a.type !== 'tree' && b.type === 'tree') return 1;
+        // Directories come first (handle both 'tree' and 'directory' types)
+        const aIsDir = a.type === 'tree' || a.type === 'directory';
+        const bIsDir = b.type === 'tree' || b.type === 'directory';
+        if (aIsDir && !bIsDir) return -1;
+        if (!aIsDir && bIsDir) return 1;
         return a.path.localeCompare(b.path);
     });
 
@@ -54,7 +59,8 @@ export function formatTreeContent(items: TreeItem[], treeState: TreeState): stri
 
     // Add files under their directories
     sortedItems.forEach(item => {
-        if (item.type !== 'tree' && isVisible(item.path)) {
+        const isFile = item.type === 'blob' || item.type === 'file';
+        if (isFile && isVisible(item.path)) {
             const parts = item.path.split('/');
             const fileName = parts.pop() ?? '';
             const depth = parts.length;
@@ -105,9 +111,11 @@ export function getItemAtLine(
 
     for (let i = lineNumber - 2; i >= 0 && currentDepth < depth; i--) {
         const prevLine = lines[i];
+        if (!prevLine) continue;
+
         const prevMatch = prevLine.match(/[▼▶]?\s*[^\s]+\s+(.+?)\/\s*$/u);
-        if (prevMatch) {
-            const prevIndent = prevLine.match(/^\s*/)?.[0].length || 0;
+        if (prevMatch && prevMatch[1]) {
+            const prevIndent = prevLine.match(/^\s*/)?.[0]?.length || 0;
             const prevDepth = Math.floor(prevIndent / 2);
             if (prevDepth === currentDepth) {
                 pathParts.unshift(prevMatch[1]);
@@ -116,14 +124,16 @@ export function getItemAtLine(
         }
     }
 
-    pathParts.push(name);
+    if (name) {
+        pathParts.push(name);
+    }
     const fullPath = pathParts.join('/');
 
     const isDirectory = line.includes('📁');
     return {
         path: fullPath,
         type: isDirectory ? 'tree' : 'blob',
-        isDirectory
+        isDirectory: isDirectory
     };
 }
 

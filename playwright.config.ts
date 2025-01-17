@@ -5,7 +5,8 @@ import { TEST_CONFIG } from './src/e2e/config';
  * See https://playwright.dev/docs/test-configuration.
  */
 export default defineConfig({
-  testDir: './src/e2e/tests',
+  testDir: './e2e',
+  timeout: 120000,
   /* Run tests in files in parallel */
   fullyParallel: false,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
@@ -18,6 +19,8 @@ export default defineConfig({
   reporter: 'list',
     /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
     use: {
+      /* Force headless mode */
+      headless: true,
       /* Base URL to use in actions like `await page.goto('/')`. */
       baseURL: TEST_CONFIG.baseUrl,
 
