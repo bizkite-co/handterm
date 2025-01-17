@@ -3,16 +3,9 @@ interface TreeItem {
     type: 'file' | 'directory' | 'blob' | 'tree';
 }
 
-interface TreeState {
-    expandedFolders: Set<string>;
-}
-
-export function formatTreeContent(items: TreeItem[], treeState: TreeState): string {
-    console.log('Formatting tree content with items:', items);
-    console.log('Expanded folders:', treeState.expandedFolders);
-
+export function formatTreeContent(items: TreeItem[]): string {
     const sortedItems = [...items].sort((a, b) => {
-        // Directories come first (handle both 'tree' and 'directory' types)
+        // Directories come first
         const aIsDir = a.type === 'tree' || a.type === 'directory';
         const bIsDir = b.type === 'tree' || b.type === 'directory';
         if (aIsDir && !bIsDir) return -1;
@@ -22,166 +15,52 @@ export function formatTreeContent(items: TreeItem[], treeState: TreeState): stri
 
     const lines: string[] = ['Repository Files', ''];
 
-    // First pass: collect all directories
-    const directories = new Set<string>();
+    // Add items at current level
     sortedItems.forEach(item => {
-        const parts = item.path.split('/');
-        parts.pop(); // Remove the last part (file/dir name)
-        let currentPath = '';
-        parts.forEach(part => {
-            currentPath = currentPath ? `${currentPath}/${part}` : part;
-            directories.add(currentPath);
-        });
-    });
-
-    // Convert directories to array and sort
-    const sortedDirs = Array.from(directories).sort();
-
-    // Helper to check if path should be visible based on parent expansion state
-    const isVisible = (path: string): boolean => {
-        if (!path.includes('/')) return true;
-        const parentPath = path.split('/').slice(0, -1).join('/');
-        return treeState.expandedFolders.has(parentPath) &&
-               (parentPath.includes('/') ? isVisible(parentPath) : true);
-    };
-
-    // Build tree structure
-    sortedDirs.forEach(dir => {
-        if (isVisible(dir)) {
-            const depth = dir.split('/').length;
-            const indent = '  '.repeat(depth - 1);
-            const name = dir.split('/').pop() ?? '';
-            const isExpanded = treeState.expandedFolders.has(dir);
-            const arrow = isExpanded ? '▼' : '▶';
-            lines.push(`${indent}${arrow} 📁 ${name}/`);
-        }
-    });
-
-    // Add files under their directories
-    sortedItems.forEach(item => {
-        const isFile = item.type === 'blob' || item.type === 'file';
-        if (isFile && isVisible(item.path)) {
-            const parts = item.path.split('/');
-            const fileName = parts.pop() ?? '';
-            const depth = parts.length;
-            const indent = '  '.repeat(depth);
-            const prefix = parts.length > 0 ? '  ' : '';
-            const icon = getFileIcon(fileName);
-            lines.push(`${indent}${prefix}${icon} ${fileName}`);
+        const name = item.path.split('/').pop() ?? '';
+        if (item.type === 'tree' || item.type === 'directory') {
+            lines.push(`${name}/`);
+        } else {
+            lines.push(name);
         }
     });
 
     // Add navigation help
     lines.push('');
     lines.push('Navigation:');
-    lines.push('j: move down');
-    lines.push('k: move up');
-    lines.push('Enter: open file or toggle folder');
-    lines.push('e: close tree view');
+    lines.push('  j: move down');
+    lines.push('  k: move up');
+    lines.push('  Enter: navigate into directory');
+    lines.push('  e: close tree view');
     lines.push('');
 
     return lines.join('\n');
 }
 
-// Helper function to get the item at a specific line
 export function getItemAtLine(
     items: TreeItem[],
-    treeState: TreeState,
     lineNumber: number
 ): { path: string; type: string; isDirectory: boolean } | null {
-    const content = formatTreeContent(items, treeState);
+    const content = formatTreeContent(items);
     const lines = content.split('\n');
     const line = lines[lineNumber - 1];
 
-    if (!line || !line.match(/[▼▶]?\s*[📁📄]/u)) {
-        return null;
-    }
+    if (!line) return null;
 
-    // Extract path from the line
-    const match = line.match(/[▼▶]?\s*[^\s]+\s+(.+?)\/?\s*$/u);
-    if (!match) return null;
+    // Get the item name (remove trailing slash for directories)
+    const name = line.replace(/\/$/, '');
+    const isDirectory = line.endsWith('/');
 
-    const name = match[1];
-    const indent = line.match(/^\s*/)?.[0].length || 0;
-    const depth = Math.floor(indent / 2);
+    // Find matching item
+    const item = items.find(i => {
+        const itemName = i.path.split('/').pop() ?? '';
+        return itemName === name &&
+            (isDirectory ? (i.type === 'tree' || i.type === 'directory') : true);
+    });
 
-    // Reconstruct full path based on previous directory lines
-    const pathParts: string[] = [];
-    let currentDepth = 0;
-
-    for (let i = lineNumber - 2; i >= 0 && currentDepth < depth; i--) {
-        const prevLine = lines[i];
-        if (!prevLine) continue;
-
-        const prevMatch = prevLine.match(/[▼▶]?\s*[^\s]+\s+(.+?)\/\s*$/u);
-        if (prevMatch && prevMatch[1]) {
-            const prevIndent = prevLine.match(/^\s*/)?.[0]?.length || 0;
-            const prevDepth = Math.floor(prevIndent / 2);
-            if (prevDepth === currentDepth) {
-                pathParts.unshift(prevMatch[1]);
-                currentDepth++;
-            }
-        }
-    }
-
-    if (name) {
-        pathParts.push(name);
-    }
-    const fullPath = pathParts.join('/');
-
-    const isDirectory = line.includes('📁');
-    return {
-        path: fullPath,
-        type: isDirectory ? 'tree' : 'blob',
+    return item ? {
+        path: item.path,
+        type: item.type,
         isDirectory: isDirectory
-    };
-}
-
-// Helper function to get file icon based on extension
-function getFileIcon(fileName: string): string {
-    const ext = fileName.split('.').pop()?.toLowerCase();
-    switch (ext) {
-        case 'js':
-        case 'jsx':
-            return '📜';
-        case 'ts':
-        case 'tsx':
-            return '📘';
-        case 'json':
-            return '📋';
-        case 'md':
-            return '📝';
-        case 'html':
-            return '🌐';
-        case 'css':
-        case 'scss':
-        case 'sass':
-            return '🎨';
-        case 'py':
-            return '🐍';
-        case 'rb':
-            return '💎';
-        case 'java':
-            return '☕';
-        case 'go':
-            return '🐹';
-        case 'rs':
-            return '🦀';
-        case 'php':
-            return '🐘';
-        case 'sh':
-        case 'bash':
-            return '💻';
-        case 'yml':
-        case 'yaml':
-            return '⚙️';
-        case 'svg':
-        case 'png':
-        case 'jpg':
-        case 'jpeg':
-        case 'gif':
-            return '🖼️';
-        default:
-            return '📄';
-    }
+    } : null;
 }

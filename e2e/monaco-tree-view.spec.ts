@@ -2,59 +2,71 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Monaco Editor Tree View', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('http://localhost:5173');
+    await page.goto('http://localhost:5173/');
   });
 
-  test('should display tree view from localStorage', async ({ page }) => {
-    // Set mock tree data
+  test('should load tree view from localStorage', async ({ page }) => {
+    // Setup mock tree data
     const mockTreeData = [
-      { path: 'src/', type: 'tree' },
-      { path: 'src/components/', type: 'tree' },
-      { path: 'src/components/MonacoEditor.tsx', type: 'blob' },
-      { path: 'src/utils/', type: 'tree' },
-      { path: 'src/utils/treeFormatter.ts', type: 'blob' }
+      { path: 'src/main.ts', type: 'blob' },
+      { path: 'src/components', type: 'tree' }
     ];
-
     await page.evaluate((data) => {
       localStorage.setItem('github_tree_items', JSON.stringify(data));
     }, mockTreeData);
 
-    // Enable tree view
-    await page.getByTestId('tree-view-toggle').click();
+    // Reload page to trigger tree view initialization
+    await page.reload();
 
-    // Verify tree structure
+    // Wait for Monaco editor initialization
+    await page.waitForFunction(() => window.monacoEditor !== undefined);
+
+    // Verify tree view content
     const editorContent = await page.evaluate(() => {
-      return window.monacoEditor.getValue();
+      return window.monacoEditor?.getValue() || '';
     });
 
-    expect(editorContent).toContain('src/');
-    expect(editorContent).toContain('├── components/');
-    expect(editorContent).toContain('│   └── MonacoEditor.tsx');
-    expect(editorContent).toContain('└── utils/');
-    expect(editorContent).toContain('    └── treeFormatter.ts');
+    console.log('Editor content:', editorContent);
+    expect(editorContent).toContain('src/main.ts');
+    expect(editorContent).toContain('src/components');
+    expect(editorContent).toMatch(/src\/main\.ts\s+\[file\]/);
+    expect(editorContent).toMatch(/src\/components\s+\[directory\]/);
   });
 
-  test('should handle file selection', async ({ page }) => {
-    // Set mock tree data
-    const mockTreeData = [
-      { path: 'src/components/MonacoEditor.tsx', type: 'blob' }
-    ];
+  test('should update tree view when localStorage changes', async ({ page }) => {
+    // Initial empty state
+    const editorContent = await page.locator('.monaco-editor textarea').inputValue();
+    expect(editorContent).toContain('No files available');
 
+    // Update localStorage
+    const mockTreeData = [
+      { path: 'src/main.ts', type: 'blob' }
+    ];
     await page.evaluate((data) => {
       localStorage.setItem('github_tree_items', JSON.stringify(data));
     }, mockTreeData);
 
-    // Enable tree view
-    await page.getByTestId('tree-view-toggle').click();
-
-    // Select file
-    await page.keyboard.press('Enter');
-
-    // Verify file selection callback
-    const selectedFile = await page.evaluate(() => {
-      return window.selectedFilePath;
+    // Trigger storage event
+    await page.evaluate(() => {
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: 'github_tree_items',
+        newValue: JSON.stringify([{ path: 'src/main.ts', type: 'blob' }])
+      }));
     });
 
-    expect(selectedFile).toBe('src/components/MonacoEditor.tsx');
+    // Wait for Monaco editor update
+    await page.waitForFunction(() => {
+      const content = window.monacoEditor?.getValue() || '';
+      return content.includes('src/main.ts');
+    });
+
+    // Verify updated content
+    const updatedContent = await page.evaluate(() => {
+      return window.monacoEditor?.getValue() || '';
+    });
+
+    console.log('Updated editor content:', updatedContent);
+    expect(updatedContent).toContain('src/main.ts');
+    expect(updatedContent).toMatch(/src\/main\.ts\s+\[file\]/);
   });
 });

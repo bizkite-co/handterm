@@ -46,7 +46,7 @@ export default defineConfig({
           }
         ]
       } as const,
-      permissions: ['clipboard-read', 'clipboard-write', 'storage'],
+      permissions: ['clipboard-read', 'clipboard-write'],
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry'
