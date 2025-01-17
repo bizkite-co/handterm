@@ -23,6 +23,30 @@ export interface MonacoEditorHandle {
   focus: () => void;
 }
 
+interface GitHubTreeItem {
+  path: string;
+  type: 'blob' | 'tree';
+}
+
+const isGitHubTreeItem = (item: unknown): item is GitHubTreeItem => {
+  return (
+    typeof item === 'object' &&
+    item !== null &&
+    'path' in item &&
+    'type' in item &&
+    (item.type === 'blob' || item.type === 'tree')
+  );
+};
+
+const isGitHubTreeItems = (items: unknown): items is GitHubTreeItem[] => {
+  return Array.isArray(items) && items.every(isGitHubTreeItem);
+};
+
+const mapGitHubToLocalTreeItem = (item: GitHubTreeItem): TreeItem => ({
+  path: item.path,
+  type: item.type === 'blob' ? 'file' : 'directory'
+});
+
 const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(
   ({ initialValue, language = 'plaintext', height = '80vh', isTreeView, treeItems = [], onFileSelect }, ref) => {
     const editorRef = useRef<IStandaloneCodeEditor | null>(null);
@@ -106,6 +130,8 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(
                 editor.setPosition({ lineNumber: currentLine, column: 1 });
               } else if (onFileSelect != null) {
                 onFileSelect(item.path);
+                // Expose selected path for testing
+                window.selectedFilePath = item.path;
               }
             }
           }
@@ -142,35 +168,76 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(
     }, [disposables, isTreeView ]);
 
     // Initialize state with localStorage data if available
-    const [treeItemsState, setTreeItemsState] = useState<TreeItem[]>(() => {
-      console.log('Initializing tree items state');
-      if (isTreeView) {
-        try {
-          const storedItems = localStorage.getItem('github_tree_items');
-          console.log('Initial localStorage value:', storedItems);
+    const initialTreeItems = (() => {
+      try {
+        const storedItems = localStorage.getItem('github_tree_items');
+        if (!storedItems) return [];
+        const parsedItems: unknown = JSON.parse(storedItems);
+        if (isGitHubTreeItems(parsedItems)) {
+          return parsedItems.map(mapGitHubToLocalTreeItem);
+        }
+        return [];
+      } catch (error) {
+        console.error('Failed to initialize tree items:', error);
+        return [];
+      }
+    })();
 
-          if (storedItems) {
-            const parsedItems: unknown = JSON.parse(storedItems);
-            console.log('Parsed items:', parsedItems);
+    const [treeItemsState, setTreeItemsState] = useState<TreeItem[]>(initialTreeItems);
+    const [initialized, setInitialized] = useState(initialTreeItems.length > 0);
 
-            if (isGitHubTreeItems(parsedItems)) {
-              const mappedItems = parsedItems.map(mapGitHubToLocalTreeItem);
-              console.log('Mapped tree items:', mappedItems);
+    // Load and update tree data from localStorage
+    const updateTreeData = useCallback(() => {
+      if (!isTreeView) return;
 
-              // Format and log the tree content
-              const formattedContent = formatTreeContent(mappedItems, { expandedFolders });
-              console.log('Formatted tree content:', formattedContent);
+      const storedItems = localStorage.getItem('github_tree_items');
+      if (!storedItems) {
+        setTreeItemsState([]);
+        return;
+      }
 
-              return mappedItems;
-            }
-          }
-        } catch (error) {
-          console.error('Error loading initial tree items:', error);
+      try {
+        const parsedItems: unknown = JSON.parse(storedItems);
+        if (isGitHubTreeItems(parsedItems)) {
+          const mappedItems = parsedItems.map(mapGitHubToLocalTreeItem);
+          setTreeItemsState(mappedItems);
+          setInitialized(true);
+          setError(null);
+        }
+      } catch (error) {
+        if (error instanceof Error) {
+          console.error('Failed to parse github_tree_items:', error.message);
+          setError(error.message);
+          setTreeItemsState([]);
         }
       }
-      console.log('Using default tree items:', treeItems);
-      return treeItems ?? [];
-    });
+    }, [isTreeView]);
+
+    // Initial load of tree data
+    useEffect(() => {
+      if (isTreeView) {
+        updateTreeData();
+      }
+    }, [isTreeView, updateTreeData]);
+
+    // Force initial load when mounted
+    useEffect(() => {
+      if (isTreeView && !initialized) {
+        updateTreeData();
+      }
+    }, [isTreeView, initialized, updateTreeData]);
+
+    // Handle localStorage changes
+    useEffect(() => {
+      const handleStorageChange = (event: StorageEvent) => {
+        if (event.key === 'github_tree_items') {
+          updateTreeData();
+        }
+      };
+
+      window.addEventListener('storage', handleStorageChange);
+      return () => window.removeEventListener('storage', handleStorageChange);
+    }, [updateTreeData]);
 
     const [showTreeView, setShowTreeView] = useState(isTreeView);
     const [error, setError] = useState<string | null>(null);
@@ -178,150 +245,35 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(
     // Synchronize showTreeView with isTreeView prop
     useEffect(() => {
       setShowTreeView(isTreeView);
-    }, [isTreeView]);
-
-    // Handle localStorage changes
-    useEffect(() => {
-      if (!isTreeView) return;
-
-      const handleStorageChange = (event: StorageEvent) => {
-        if (event.key === 'github_tree_items') {
-          try {
-            const parsedItems: unknown = JSON.parse(event.newValue ?? '[]');
-            if (isGitHubTreeItems(parsedItems)) {
-              setTreeItemsState(parsedItems.map(mapGitHubToLocalTreeItem));
-            }
-          } catch (error) {
-            console.error('Failed to parse updated github_tree_items:', error);
-          }
-        }
-      };
-
-      window.addEventListener('storage', handleStorageChange);
-      return () => window.removeEventListener('storage', handleStorageChange);
-    }, [isTreeView]);
+      if (isTreeView) {
+        updateTreeData();
+      }
+    }, [isTreeView, updateTreeData]);
 
     const toggleTreeView = useCallback(() => {
       setShowTreeView(prev => {
         const newValue = !prev;
-        if (newValue && treeItemsState.length === 0) {
-          // Attempt to load items when enabling tree view
-          const storedItems = localStorage.getItem('github_tree_items');
-          if (storedItems != null) {
-            try {
-              const parsedItems: unknown = JSON.parse(storedItems);
-              if (isGitHubTreeItems(parsedItems)) {
-                setTreeItemsState(parsedItems.map(mapGitHubToLocalTreeItem));
-              }
-            } catch (err) {
-              setError('Failed to load tree items');
-              console.error('Error loading tree items:', err);
-            }
-          }
+        if (newValue) {
+          updateTreeData();
         }
         return newValue;
       });
-    }, [treeItemsState]);
-
-    interface GitHubTreeItem {
-      path: string;
-      type: 'blob' | 'tree';
-    }
-
-    const isGitHubTreeItem = (item: unknown): item is GitHubTreeItem => {
-      return (
-        typeof item === 'object' &&
-        item !== null &&
-        'path' in item &&
-        'type' in item &&
-        (item.type === 'blob' || item.type === 'tree')
-      );
-    };
-
-    const isGitHubTreeItems = (items: unknown): items is GitHubTreeItem[] => {
-      return Array.isArray(items) && items.every(isGitHubTreeItem);
-    };
-
-    const mapGitHubToLocalTreeItem = (item: GitHubTreeItem): TreeItem => ({
-      path: item.path,
-      type: item.type === 'blob' ? 'file' : 'directory'
-    });
-
-    // Load initial tree data on mount
-    useEffect(() => {
-      console.log('Loading initial tree data from localStorage');
-      const storedItems = localStorage.getItem('github_tree_items');
-      console.log('Raw localStorage value:', storedItems);
-
-      if (storedItems != null) {
-        try {
-          const parsedItems: unknown = JSON.parse(storedItems);
-          console.log('Parsed items:', parsedItems);
-
-          if (isGitHubTreeItems(parsedItems)) {
-            const mappedItems = parsedItems.map(mapGitHubToLocalTreeItem);
-            console.log('Mapped tree items:', mappedItems);
-
-            const formattedContent = formatTreeContent(mappedItems, { expandedFolders });
-            console.log('Formatted tree content:', formattedContent);
-
-            setTreeItemsState(mappedItems);
-          }
-        } catch (error) {
-          if (error instanceof Error) {
-            console.error('Failed to parse github_tree_items:', error.message);
-            setError(error.message);
-          }
-        }
-      }
-    }, []);
-
-    // Handle tree view changes and storage updates
-    useEffect(() => {
-      if (!isTreeView) return;
-
-      const updateTreeContent = () => {
-        const storedItems = localStorage.getItem('github_tree_items');
-        if (storedItems != null) {
-          try {
-            const parsedItems: unknown = JSON.parse(storedItems);
-            if (isGitHubTreeItems(parsedItems)) {
-              setTreeItemsState(parsedItems.map(mapGitHubToLocalTreeItem));
-            }
-          } catch (error) {
-            if (error instanceof Error) {
-              console.error('Failed to parse github_tree_items:', error.message);
-              setError(error.message);
-            }
-          }
-        }
-      };
-
-      // Initial load when tree view is enabled
-      updateTreeContent();
-
-      // Listen for storage changes
-      const handleStorageChange = (event: StorageEvent) => {
-        if (event.key === 'github_tree_items') {
-          updateTreeContent();
-        }
-      };
-
-      window.addEventListener('storage', handleStorageChange);
-      return () => window.removeEventListener('storage', handleStorageChange);
-    }, [isTreeView]);
+    }, [updateTreeData]);
 
     const editorContent = useMemo(() => {
       if (!showTreeView) return initialValue;
       if (error) return `Error: ${error}`;
+      if (!initialized) return 'Loading...';
       try {
-        return formatTreeContent(treeItemsState, { expandedFolders });
+        const content = formatTreeContent(treeItemsState, { expandedFolders });
+        console.log('Generated editor content:', content);
+        return content;
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Failed to format tree content';
         setError(message);
         return `Error: ${message}`;
       }
-    }, [showTreeView, initialValue, error, treeItemsState, expandedFolders]);
+    }, [showTreeView, initialValue, error, treeItemsState, expandedFolders, initialized]);
 
     // Show error state
     useEffect(() => {
@@ -337,6 +289,7 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(
         console.log('New content to set:', editorContent);
         console.log('Tree items state:', treeItemsState);
         console.log('Show tree view:', showTreeView);
+        console.log('Initialized:', initialized);
 
         editorRef.current.updateOptions({
           readOnly: showTreeView,
@@ -348,13 +301,17 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(
           console.log('Content differs, updating editor');
           editorRef.current.setValue(editorContent);
           console.log('Editor content after update:', editorRef.current.getValue());
+
+          // Reset cursor position
+          editorRef.current.setPosition({ lineNumber: 1, column: 1 });
+          editorRef.current.revealLine(1);
         } else {
           console.log('Content matches, skipping update');
         }
       } else {
         console.log('Editor ref is null, cannot update content');
       }
-    }, [editorContent, showTreeView, treeItemsState]);
+    }, [editorContent, showTreeView, treeItemsState, initialized]);
 
     return (
       <div style={{ height, width: '100%', position: 'relative' }}>

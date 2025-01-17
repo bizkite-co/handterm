@@ -31,10 +31,22 @@ export default defineConfig({
         origins: [
           {
             origin: TEST_CONFIG.baseUrl,
-            localStorage: []
+            localStorage: [
+              {
+                name: 'github_tree_items',
+                value: JSON.stringify([
+                  {
+                    path: 'test-file.txt',
+                    type: 'file',
+                    content: 'test content'
+                  }
+                ])
+              }
+            ]
           }
         ]
       } as const,
+      permissions: ['clipboard-read', 'clipboard-write', 'storage'],
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry'
@@ -55,10 +67,7 @@ export default defineConfig({
       use: {
         ...devices['Desktop Chrome'],
         headless: true,
-        // Use a new context for each test
-        contextOptions: {
-          storageState: undefined
-        }
+        // Use default storage state
       },
     },
 
