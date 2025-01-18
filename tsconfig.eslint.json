@@ -13,6 +13,7 @@
     "src/test-utils/canvasMock.d.ts",
     "vite.config.ts",
     "eslint-plugin-custom-rules/index.js",
-    "src/commands/HelpCommand.tsx"
+    "src/commands/HelpCommand.tsx",
+    "src/utils/navigationUtils.js"
   ]
 }

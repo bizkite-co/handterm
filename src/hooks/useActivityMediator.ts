@@ -182,32 +182,42 @@ export function useActivityMediator(): {
                     return;
                 }
 
-                // If no more tutorials, transition to game mode
-                logger.debug('No more tutorials - transitioning to game mode', {
-                    nextTutorial,
-                    activitySignal: activitySignal.value,
-                    groupKey
-                });
+                // If no more tutorials, check if tutorial is complete
+                const isTutorialComplete = getNextTutorial() === null;
 
-                const nextGamePhrase = getNextGamePhrase();
-                logger.debug('Next game phrase:', nextGamePhrase);
-
-                if (nextGamePhrase != null) {
-                    logger.debug('Transitioning to game with phrase:', nextGamePhrase.key, {
-                        currentActivity: activitySignal.value,
-                        nextActivity: ActivityType.GAME
-                    });
-                    activitySignal.value = ActivityType.GAME;
-                    logger.debug('Activity signal after transition:', activitySignal.value);
-                    transitionToGame(nextGamePhrase.key, groupKey);
-                } else {
-                    logger.debug('No game phrase found - transitioning to NORMAL mode', {
+                if (isTutorialComplete) {
+                    logger.debug('Tutorial complete - transitioning to NORMAL mode', {
                         currentActivity: activitySignal.value,
                         nextActivity: ActivityType.NORMAL
                     });
                     activitySignal.value = ActivityType.NORMAL;
-                    logger.debug('Activity signal after transition:', activitySignal.value);
                     navigate({ activityKey: ActivityType.NORMAL });
+                } else {
+                    // Only transition to game mode if tutorial is not complete
+                    logger.debug('Tutorial not complete - transitioning to game mode', {
+                        nextTutorial,
+                        activitySignal: activitySignal.value,
+                        groupKey
+                    });
+
+                    const nextGamePhrase = getNextGamePhrase();
+                    logger.debug('Next game phrase:', nextGamePhrase);
+
+                    if (nextGamePhrase != null) {
+                        logger.debug('Transitioning to game with phrase:', nextGamePhrase.key, {
+                            currentActivity: activitySignal.value,
+                            nextActivity: ActivityType.GAME
+                        });
+                        activitySignal.value = ActivityType.GAME;
+                        transitionToGame(nextGamePhrase.key, groupKey);
+                    } else {
+                        logger.debug('No game phrase found - transitioning to NORMAL mode', {
+                            currentActivity: activitySignal.value,
+                            nextActivity: ActivityType.NORMAL
+                        });
+                        activitySignal.value = ActivityType.NORMAL;
+                        navigate({ activityKey: ActivityType.NORMAL });
+                    }
                 }
             } else {
                 logger.debug(`Tutorial not unlocked: ${JSON.stringify({

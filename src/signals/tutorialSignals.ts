@@ -62,10 +62,7 @@ const loadInitialState = () => {
       completedTutorials: [...completedTutorialsSignal.value]
     });
 
-    if (nextTutorial == null) {
-      logger.warn('No tutorials found - resetting state');
-      resetCompletedTutorials();
-    } else {
+    if (nextTutorial != null) {
       setNextTutorial(nextTutorial);
     }
   } catch (error) {

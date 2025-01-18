@@ -1,6 +1,6 @@
 The GitHubCommand `github -t` loads one level of the github tree of a repo into the `localStorage`
 
-It then is supposed to use `navigationUtils` to navigate to a url with `activity=tree` in the querystring parameters.
+It then is supposed to use `navigationUtils.ts` to navigate to a url with `activity=tree` in the querystring parameters.
 
 That is not working. The `navigate` command does not seem to be working.
 

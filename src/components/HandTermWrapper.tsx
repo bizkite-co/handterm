@@ -263,31 +263,31 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
     }
   }, [props.auth]);
 
-  const handleEditorClose = useCallback((): void => {
-    logger.info('Closing editor, returning to NORMAL mode');
-    // Clear stored content and file path
-    localStorage.removeItem('edit-content');
-    setCurrentFile(null);
-    // Return to normal mode
-    navigate({
-      activityKey: ActivityType.NORMAL,
-      contentKey: null,
-      groupKey: null
-    });
-  }, []);
+  // const handleEditorClose = useCallback((): void => {
+  //   logger.info('Closing editor, returning to NORMAL mode');
+  //   // Clear stored content and file path
+  //   localStorage.removeItem('edit-content');
+  //   setCurrentFile(null);
+  //   // Return to normal mode
+  //   navigate({
+  //     activityKey: ActivityType.NORMAL,
+  //     contentKey: null,
+  //     groupKey: null
+  //   });
+  // }, []);
 
-  const handleTreeClose = useCallback((): void => {
-    logger.info('Closing tree view, returning to NORMAL mode');
-    // Clear tree items
-    setTreeItems([]);
-    localStorage.removeItem('github_tree_items');
-    // Return to normal mode
-    navigate({
-      activityKey: ActivityType.NORMAL,
-      contentKey: null,
-      groupKey: null
-    });
-  }, []);
+  // const handleTreeClose = useCallback((): void => {
+  //   logger.info('Closing tree view, returning to NORMAL mode');
+  //   // Clear tree items
+  //   setTreeItems([]);
+  //   localStorage.removeItem('github_tree_items');
+  //   // Return to normal mode
+  //   navigate({
+  //     activityKey: ActivityType.NORMAL,
+  //     contentKey: null,
+  //     groupKey: null
+  //   });
+  // }, []);
 
   const handlePhraseErrorState = useCallback((errorIndex: number | undefined) => {
     setErrorCharIndex(errorIndex);

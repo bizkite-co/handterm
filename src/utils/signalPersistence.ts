@@ -32,6 +32,9 @@ export function createPersistentSignal<T>({
   };
 
   const persistToLocalStorage = (value: T) => {
+    if (key == 'completed-tutorials') {
+      console.log('Completing tutorial', value);
+    }
     queueMicrotask(() => {
       localStorage.setItem(key, serialize(value));
     });

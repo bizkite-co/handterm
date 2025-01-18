@@ -1,5 +1,4 @@
 import { vi, beforeAll } from 'vitest';
-import { test } from '@playwright/test';
 import type { GamePhrase, ActivityType } from './src/types/Types';
 
 declare global {
@@ -23,35 +22,17 @@ beforeAll(() => {
       key: (index: number) => Object.keys(store)[index] ?? null
     };
   }
-});
 
-// Initialize localStorage and window methods for all tests
-test.beforeEach(async ({ context }) => {
-  await context.addInitScript(() => {
-    // Initialize localStorage
-    if (typeof window.localStorage === 'undefined') {
-      const store: Record<string, string | undefined> = {};
-      window.localStorage = {
-        getItem: (key: string) => store[key] || null,
-        setItem: (key: string, value: string) => { store[key] = value; },
-        removeItem: (key: string) => { store[key] = undefined; },
-        clear: () => { Object.keys(store).forEach(key => { store[key] = undefined; }); },
-        length: Object.keys(store).length,
-        key: (index: number) => Object.keys(store)[index] || null
-      };
-    }
+  // Initialize tutorial state
+  window.localStorage.setItem('tutorial-state', JSON.stringify({ currentStep: 0 }));
 
-    // Initialize tutorial state
-    window.localStorage.setItem('tutorial-state', JSON.stringify({ currentStep: 0 }));
-
-    // Initialize window methods
-    if (typeof window.setActivity === 'undefined') {
-      window.setActivity = vi.fn();
-    }
-    if (typeof window.setNextTutorial === 'undefined') {
-      window.setNextTutorial = vi.fn();
-    }
-  });
+  // Initialize window methods
+  if (typeof window.setActivity === 'undefined') {
+    window.setActivity = vi.fn();
+  }
+  if (typeof window.setNextTutorial === 'undefined') {
+    window.setNextTutorial = vi.fn();
+  }
 });
 
 // Suppress console warnings by mocking console methods

@@ -117,6 +117,8 @@ export type GamePhrase = {
   isComplete?: boolean
 };
 
+export const allTutorialPhraseNames = [ "\r", "fdsa", "jkl;", "01234", "56789", "FDSA", "gh", "nm,.", "uiop", "zxcv", "tut", "play" ];
+
 export const Phrases: GamePhrase[] = [
   {
     value: 'The most important key is the Return (ENTER) key. Press the thumb tip and release. You\'ll use this key to enter every command.\n\nNOTE: Press enter to reset and redo any tutorial steps.',

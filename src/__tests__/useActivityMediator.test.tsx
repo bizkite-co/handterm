@@ -35,7 +35,7 @@ vi.mock('src/hooks/useActivityMediator', async () => {
 vi.mock('src/hooks/useReactiveLocation', () => ({
   useReactiveLocation: () => ({
     reactiveLocation: {
-      activity: 'normal',
+      activity: 'NORMAL',
       phraseKey: '',
       groupKey: '',
       getPath: vi.fn(),

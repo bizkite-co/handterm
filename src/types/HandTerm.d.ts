@@ -1,8 +1,7 @@
-import {type ReactNode} from 'react';
+import { type ReactNode } from 'react';
 import type React from 'react';
 
 // Existing types from Types.ts that are important for broader context
-export type ActivityType = 'NORMAL' | 'TUTORIAL' | 'GAME' | 'EDIT' | 'TREE';
 
 export type MyResponse<T> = {
   status: 200 | 400 | 401 | 403 | 404 | 500;
