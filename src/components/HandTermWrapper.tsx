@@ -379,7 +379,7 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
         <MonacoEditor
           initialValue={getStoredContent()}
           language="markdown"
-          onClose={handleEditorClose}
+          isTreeView={false}
         />
       )}
       {currentActivity === ActivityType.TREE && treeItems.length > 0 && (
@@ -389,7 +389,6 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
           isTreeView={true}
           treeItems={treeItems}
           onFileSelect={handleFileSelectWrapper}
-          onClose={handleTreeClose}
         />
       )}
       {isShowVideoSignal.value !== null && (

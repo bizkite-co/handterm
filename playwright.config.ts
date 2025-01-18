@@ -6,7 +6,7 @@ import { TEST_CONFIG } from './src/e2e/config';
  */
 export default defineConfig({
   testDir: './e2e',
-  timeout: 120000,
+  timeout: 30 * 1000,
   /* Run tests in files in parallel */
   fullyParallel: false,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
@@ -57,7 +57,7 @@ export default defineConfig({
     command: 'npm run dev',
     url: TEST_CONFIG.baseUrl,
     reuseExistingServer: (process.env.CI ?? '') === '',
-    timeout: 60 * 1000, // 2 minutes for dev server to start
+    timeout: 30 * 1000, // 30 seconds for dev server to start
   },
 
   /* Configure projects for major browsers */
