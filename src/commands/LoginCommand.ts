@@ -2,9 +2,8 @@
 
 import { isInLoginProcessSignal, tempUserNameSignal, setTempUserName, setIsInLoginProcess } from 'src/signals/appSignals';
 import { type ICommand, type ICommandContext, type ICommandResponse } from '../contexts/CommandContext';
-import { type ParsedCommand, type MyResponse } from '../types/Types';
+import { type ParsedCommand } from '../types/Types';
 import { createLogger } from '../utils/Logger';
-import { type AuthResponse } from '\'hooks/useAuth\'';
 
 const logger = createLogger();
 
@@ -32,7 +31,7 @@ export const LoginCommand: ICommand = {
             const password = parsedCommand.args[1] ?? '';
 
             try {
-                const result = await auth.login(tempUsername, password) as MyResponse<AuthResponse>;
+                const result = await auth.login(tempUsername, password);
 
                 if (result.status !== 200 || result.data == null) {
                     return {
@@ -51,10 +50,21 @@ export const LoginCommand: ICommand = {
                 };
             } catch (error) {
                 setIsInLoginProcess(false);
-                const message = error instanceof Error ? error.message : String(error);
+                let message = 'An unknown error occurred';
+                if (error instanceof Error) {
+                    message = error.message;
+                } else if (typeof error === 'object' && error !== null && 'message' in error) {
+                    message = (error as { message: string }).message;
+                }
+
+                // Avoid duplicating "Login error:" prefix
+                const finalMessage = message.startsWith('Login error:')
+                    ? message
+                    : `Login error: ${message}`;
+
                 return {
                     status: 500,
-                    message: `Login error: ${message}`,
+                    message: finalMessage,
                     sensitive: true
                 };
             }

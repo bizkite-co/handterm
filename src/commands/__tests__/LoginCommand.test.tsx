@@ -1,15 +1,10 @@
 import { describe, it, expect, vi, beforeEach, type MockedFunction } from 'vitest';
 
 import * as appSignals from 'src/signals/appSignals';
-import {
-  type ICommandContext,
-  type ICommandResponse,
-  type ParsedCommand,
-  type IAuthProps,
-  type IHandTermWrapperMethods,
-  type MyResponse,
-  type AuthResponse
-} from 'src/types/HandTerm';
+import { type ICommandContext, type ICommandResponse } from 'src/contexts/CommandContext';
+import { type IAuthProps, type AuthResponse } from 'src/hooks/useAuth';
+import { type MyResponse } from 'src/types/Types';
+import { type IHandTermWrapperMethods } from 'src/types/HandTerm';
 
 import { LoginCommand } from '../LoginCommand';
 
@@ -70,11 +65,11 @@ describe('LoginCommand', () => {
 
   it('should initiate login process with username', async () => {
     const mockContext = createMockContext();
-    const parsedCommand: ParsedCommand = {
+    const parsedCommand = {
       command: 'login',
       args: ['testuser'],
       switches: {}
-    };
+    } as const;
 
     const response: ICommandResponse = await LoginCommand.execute(mockContext, parsedCommand);
 
@@ -94,7 +89,8 @@ describe('LoginCommand', () => {
         AccessToken: 'mock-access-token',
         RefreshToken: 'mock-refresh-token',
         IdToken: 'mock-id-token',
-        ExpiresIn: '3600'
+        ExpiresIn: 3600,
+        ExpiresAt: new Date(Date.now() + 3600 * 1000).toISOString()
       },
       message: 'Login successful',
       error: []
@@ -104,11 +100,11 @@ describe('LoginCommand', () => {
     // Simulate being in login process
     (appSignals.isInLoginProcessSignal as SignalMock).value = true;
 
-    const parsedCommand: ParsedCommand = {
+    const parsedCommand = {
       command: 'login',
       args: ['testuser', 'password123'],
       switches: {}
-    };
+    } as const;
 
     const response: ICommandResponse = await LoginCommand.execute(mockContext, parsedCommand);
 
@@ -134,11 +130,11 @@ describe('LoginCommand', () => {
     // Simulate being in login process
     (appSignals.isInLoginProcessSignal as SignalMock).value = true;
 
-    const parsedCommand: ParsedCommand = {
+    const parsedCommand = {
       command: 'login',
       args: ['testuser', 'wrongpassword'],
       switches: {}
-    };
+    } as const;
 
     const response: ICommandResponse = await LoginCommand.execute(mockContext, parsedCommand);
 
@@ -151,11 +147,11 @@ describe('LoginCommand', () => {
 
   it('should reject invalid command format', async () => {
     const mockContext = createMockContext();
-    const parsedCommand: ParsedCommand = {
+    const parsedCommand = {
       command: 'login',
       args: [],
       switches: {}
-    };
+    } as const;
 
     const response: ICommandResponse = await LoginCommand.execute(mockContext, parsedCommand);
 

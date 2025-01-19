@@ -1,12 +1,13 @@
 import { test, expect } from '@playwright/test';
-import { HandTermPage } from './page-objects/HandTermPage';
+import { TerminalPage } from './page-objects/TerminalPage';
+import type { IStandaloneCodeEditor } from '../types/monaco';
 
 test.describe('Edit Command', () => {
-  let handterm: HandTermPage;
+  let terminal: TerminalPage;
 
   test.beforeEach(async ({ page }) => {
-    handterm = new HandTermPage(page);
-    await handterm.goto();
+    terminal = new TerminalPage(page);
+    await terminal.goto();
   });
 
   test('should navigate to edit activity and load content', async ({ page }) => {
@@ -19,7 +20,7 @@ test.describe('Edit Command', () => {
     });
 
     // Execute edit command
-    await handterm.executeCommand('edit _index.md');
+    await terminal.executeCommand('edit _index.md');
 
     // Verify navigation
     await expect(page).toHaveURL(/activity=edit\?key=_index\.md/);
@@ -30,7 +31,7 @@ test.describe('Edit Command', () => {
 
     // Verify content loaded
     const editorContent = await page.evaluate(() => {
-      const editor = window.monacoEditor;
+      const editor = window.monacoEditor as IStandaloneCodeEditor | undefined;
       if (!editor) {
         throw new Error('Monaco editor not found');
       }
@@ -44,7 +45,7 @@ test.describe('Edit Command', () => {
   });
 
   test('should show error for invalid file', async ({ page }) => {
-    await handterm.executeCommand('edit invalid.md');
+    await terminal.executeCommand('edit invalid.md');
 
     // Verify error message
     const error = page.locator('.error-message');
