@@ -5,7 +5,7 @@ import { TEST_CONFIG } from './src/e2e/config';
  * See https://playwright.dev/docs/test-configuration.
  */
 export default defineConfig({
-  testDir: './e2e',
+  testDir: './src/e2e',
   timeout: 30 * 1000,
   /* Run tests in files in parallel */
   fullyParallel: false,

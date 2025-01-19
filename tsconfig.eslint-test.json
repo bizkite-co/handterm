@@ -4,6 +4,7 @@
     "src/test-utils/**/*",
     "src/__tests__/**/*",
     "e2e/**/*",
+    "src/e2e/**/*",
     "tests/**/*",
     "tests-examples/**/*",
     "vitest-setup.ts",

@@ -10,21 +10,51 @@
     "strict": true,
     "skipLibCheck": true,
     "paths": {
-      "'*'": ["./src/*"],
-      "@components/*": ["./src/components/*"],
-      "@utils/*": ["./src/utils/*"],
-      "@assets/*": ["./src/assets/*"],
-      "@game/*": ["./src/game/*"],
-      "@hooks/*": ["./src/hooks/*"],
-      "@contexts/*": ["./src/contexts/*"],
-      "@constants/*": ["./src/constants/*"],
-      "@providers/*": ["./src/providers/*"],
-      "@shared/*": ["./src/shared/*"],
-      "@e2e/*": ["./src/e2e/*"],
-      "@test-utils/*": ["./src/test-utils/*"],
-      "@commands/*": ["./src/commands/*"],
-      "@signals/*": ["./src/signals/*"],
-      "@types/*": ["./src/types/*"]
+      "'*'": [
+        "./src/*"
+      ],
+      "@components/*": [
+        "./src/components/*"
+      ],
+      "@utils/*": [
+        "./src/utils/*"
+      ],
+      "@assets/*": [
+        "./src/assets/*"
+      ],
+      "@game/*": [
+        "./src/game/*"
+      ],
+      "@hooks/*": [
+        "./src/hooks/*"
+      ],
+      "@contexts/*": [
+        "./src/contexts/*"
+      ],
+      "@constants/*": [
+        "./src/constants/*"
+      ],
+      "@providers/*": [
+        "./src/providers/*"
+      ],
+      "@shared/*": [
+        "./src/shared/*"
+      ],
+      "@e2e/*": [
+        "./src/e2e/*"
+      ],
+      "@test-utils/*": [
+        "./src/test-utils/*"
+      ],
+      "@commands/*": [
+        "./src/commands/*"
+      ],
+      "@signals/*": [
+        "./src/signals/*"
+      ],
+      "@types/*": [
+        "./src/types/*"
+      ]
     },
     "plugins": [
       {
@@ -32,20 +62,25 @@
         "options": {
           "rendererOptions": {
             "sass": {
-              "includePaths": ["./src/styles"]
+              "includePaths": [
+                "./src/styles"
+              ]
             }
           }
         }
       },
       {
         "transform": "@zerollup/ts-transform-paths",
-        "exclude": ["**/node_modules/**", "**/dist/**"]
+        "exclude": [
+          "**/node_modules/**",
+          "**/dist/**"
+        ]
       }
     ]
   },
   "include": [
     "src",
-    "e2e",
+    "src/e2e",
     "moduleResolver.ts",
     "@monaco-editor-react.js",
     ".eslintrc.cjs"
@@ -53,5 +88,9 @@
   "exclude": [
     "scripts"
   ],
-  "references": [{ "path": "./tsconfig.node.json" }]
+  "references": [
+    {
+      "path": "./tsconfig.node.json"
+    }
+  ]
 }

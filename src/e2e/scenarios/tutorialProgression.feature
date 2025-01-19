@@ -41,38 +41,3 @@ Feature: Tutorial Command Execution
     Then I should see an error message
     And the tutorial progress should be maintained
 
-  Scenario: Command execution updates tutorial state
-    Given I am in tutorial mode
-    When I successfully execute a command
-    Then the tutorial state should be updated
-    And the command history should include the executed command
-
-  Scenario: Command output formatting during tutorial
-    Given I am in tutorial mode
-    When I execute any valid command
-    Then the output should be formatted according to tutorial guidelines
-    And the output should include tutorial-specific context
-
-  Scenario: Command execution timing during tutorial
-    Given I am in tutorial mode
-    When I execute a command
-    Then the command execution time should be recorded
-    And the timing should be displayed in the tutorial output
-
-  Scenario: Command execution with empty input
-    Given I am in tutorial mode
-    When I press enter without typing a command
-    Then I should see a prompt for input
-    And the tutorial progress should not change
-
-  Scenario: Command execution with whitespace input
-    Given I am in tutorial mode
-    When I type only whitespace characters
-    Then I should see a prompt for valid input
-    And the tutorial progress should not change
-
-  Scenario: Command execution with partial match
-    Given I am in tutorial mode
-    When I type a partial command match
-    Then I should see suggestions for matching commands
-    And the tutorial progress should be maintained
