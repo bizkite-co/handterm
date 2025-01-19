@@ -58,7 +58,7 @@ export function useAPI(auth: IAuthProps): {
                 method,
                 url: `${ENDPOINTS.api.BaseUrl}${endpoint}`,
                 headers: {
-                    'Authorization': `Bearer ${authResponse.data.accessToken}`,
+                    'Authorization': `Bearer ${authResponse.data.AccessToken}`,
                     'Content-Type': 'application/json',
                     'Accept': 'application/json'
                 },

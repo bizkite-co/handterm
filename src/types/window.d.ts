@@ -24,17 +24,7 @@ declare global {
     ReactDOM: ReactDOMInstance & typeof ReactDOMTypes;
     MonacoEditor: ComponentType<MonacoEditorProps>;
     monaco: typeof MonacoTypes;
-    monacoEditor?: MonacoTypes.editor.IStandaloneCodeEditor & {
-      getValue(): string;
-      setValue(value: string): void;
-      focus(): void;
-      updateOptions(options: Record<string, unknown>): void;
-      onDidChangeModelContent(listener: (e: unknown) => void): void;
-      getModel(): {
-        getValue(): string;
-        setValue(value: string): void;
-      } | null;
-    };
+    monacoEditor: MonacoTypes.editor.IStandaloneCodeEditor;
   }
 }
 

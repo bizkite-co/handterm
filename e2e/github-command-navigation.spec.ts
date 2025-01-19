@@ -176,13 +176,23 @@ test.describe('GitHub Command Navigation', () => {
       }
     });
 
-    expect(tree?.tree).toBeDefined();
-    expect(Array.isArray(tree?.tree)).toBe(true);
-    expect(tree?.tree).toHaveLength(2);
+    const treeArray = tree?.tree;
+    if (!treeArray) {
+      throw new Error('Tree array is undefined');
+    }
 
-    if (tree?.tree && tree.tree.length >= 2) {
-      expect(tree.tree[0]?.path).toBe('src/main.ts');
-      expect(tree.tree[1]?.path).toBe('src/components');
+    expect(treeArray).toBeDefined();
+    expect(Array.isArray(treeArray)).toBe(true);
+    expect(treeArray).toHaveLength(2);
+
+    if (treeArray.length >= 2) {
+      const firstItem = treeArray[0];
+      const secondItem = treeArray[1];
+      if (!firstItem || !secondItem) {
+        throw new Error('Tree items are undefined');
+      }
+      expect(firstItem.path).toBe('src/main.ts');
+      expect(secondItem.path).toBe('src/components');
     } else {
       throw new Error('Tree structure is invalid');
     }
@@ -190,38 +200,15 @@ test.describe('GitHub Command Navigation', () => {
 
   test('should handle credential errors gracefully', async ({ page }) => {
     await page.evaluate(async () => {
-      if (!window) {
-        throw new Error('window is undefined');
-      }
-
-      if (!window) {
-        throw new Error('window is undefined');
-      }
-
-      if (!window) {
-        throw new Error('window is undefined');
-      }
+      if (!window) throw new Error('window is undefined');
 
       const { githubUtils } = window;
 
-      if (!githubUtils) {
-        throw new Error('githubUtils is undefined');
-      }
-
-      if (typeof githubUtils.getCredentials !== 'function') {
-        throw new Error('getCredentials is not a function');
-      }
-      if (typeof githubUtils.getTree !== 'function') {
-        throw new Error('getTree is not a function');
-      }
-      if (typeof githubUtils.getRepoInfo !== 'function') {
-        throw new Error('getRepoInfo is not a function');
-      }
-
-      // Create a new object with all existing methods
-      // Create a new object with proper type safety
-      if (!githubUtils) {
-        throw new Error('githubUtils is undefined');
+      if (!githubUtils ||
+          typeof githubUtils.getCredentials !== 'function' ||
+          typeof githubUtils.getTree !== 'function' ||
+          typeof githubUtils.getRepoInfo !== 'function') {
+        throw new Error('githubUtils is not properly defined');
       }
 
       const newGithubUtils = {
@@ -230,66 +217,61 @@ test.describe('GitHub Command Navigation', () => {
           throw new Error('Mock credential error');
         },
         getTree: async () => {
-          if (!githubUtils?.getTree) {
-            throw new Error('getTree not implemented');
-          }
-          await new Promise(resolve => setTimeout(resolve, 10));
-          return githubUtils.getTree();
+          if (!githubUtils) throw new Error('githubUtils is not defined');
+          return await githubUtils.getTree();
         },
         getRepoInfo: async () => {
-          if (!githubUtils?.getRepoInfo) {
-            throw new Error('getRepoInfo not implemented');
-          }
-          await new Promise(resolve => setTimeout(resolve, 10));
-          return githubUtils.getRepoInfo();
+          if (!githubUtils) throw new Error('githubUtils is not defined');
+          return await githubUtils.getRepoInfo();
         }
       };
+      await new Promise(resolve => setTimeout(resolve, 0)); // Ensure async operation
 
-      // Add a small delay to ensure async operations complete
-      await new Promise(resolve => setTimeout(resolve, 10));
-
-      // Assign the new object to window
       window.githubUtils = newGithubUtils;
+      await new Promise(resolve => setTimeout(resolve, 0)); // Ensure async operation
     });
 
-    await expect(page.evaluate(async () => {
-      // Early type checking and validation
-      if (!window) {
-        throw new Error('window is undefined');
+    // Setup mock credential error
+    await page.evaluate(async () => {
+      if (!window) throw new Error('window is undefined');
+
+      const { githubUtils } = window;
+
+      if (!githubUtils ||
+          typeof githubUtils.getCredentials !== 'function' ||
+          typeof githubUtils.getTree !== 'function' ||
+          typeof githubUtils.getRepoInfo !== 'function') {
+        throw new Error('githubUtils is not properly defined');
       }
 
-      const { executeCommand, githubUtils, setActivity } = window;
+      // Replace getCredentials with mock that throws error
+      if (!window.githubUtils) {
+        throw new Error('githubUtils is not defined');
+      }
+      window.githubUtils.getCredentials = async () => {
+        await new Promise(resolve => setTimeout(resolve, 0));
+        throw new Error('Mock credential error');
+      };
+      await new Promise(resolve => setTimeout(resolve, 0)); // Ensure async operation
+    });
+
+    // Execute command and verify error
+    const result = await page.evaluate(async () => {
+      if (!window) throw new Error('window is undefined');
+
+      const { executeCommand, githubUtils } = window;
 
       if (!executeCommand || typeof executeCommand !== 'function') {
         throw new Error('executeCommand is not properly defined');
       }
 
-      if (!githubUtils ||
-        typeof githubUtils.getCredentials !== 'function' ||
-        typeof githubUtils.getTree !== 'function' ||
-        typeof githubUtils.getRepoInfo !== 'function') {
-        throw new Error('githubUtils is not properly defined');
+      if (!githubUtils) {
+        throw new Error('githubUtils is not defined');
       }
 
-      if (!setActivity || typeof setActivity !== 'function') {
-        throw new Error('setActivity is not properly defined');
-      }
+      return await executeCommand('github');
+    });
 
-      // Simulate async operation
-      await new Promise(resolve => setTimeout(resolve, 0));
-
-      try {
-        // Execute the command with proper type safety
-        await executeCommand('github');
-      } catch (error: unknown) {
-        if (error instanceof Error) {
-          if (error.message === 'Mock credential error') {
-            throw error;
-          }
-          throw new Error(`Unexpected error: ${error.message}`);
-        }
-        throw new Error('Unknown error occurred');
-      }
-    })).rejects.toThrow('Mock credential error');
+    await expect(result).rejects.toThrow('Mock credential error');
   });
 });

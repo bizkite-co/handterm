@@ -16,7 +16,7 @@ export const CompleteCommand: ICommand = {
     try {
       // Store tutorial phrases in localStorage
       localStorage.setItem('completed-tutorials', JSON.stringify(allTutorialPhraseNames));
-
+      
       navigate({
         activityKey: ActivityType.NORMAL,
         contentKey: null,

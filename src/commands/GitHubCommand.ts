@@ -186,7 +186,7 @@ export const GitHubCommand: ICommand = {
           logger.info('Switching to TREE mode');
           navigate({
             activityKey: ActivityType.TREE,
-            contentKey: null,
+            contentKey: repoArg,
             groupKey: null,
           });
 

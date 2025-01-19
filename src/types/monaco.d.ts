@@ -16,11 +16,3 @@ export interface IPosition {
   lineNumber: number;
   column: number;
 }
-
-declare global {
-  interface Window {
-    monacoEditor: IStandaloneCodeEditor;
-    __fileSelectHandler?: jest.Mock;
-    selectedFilePath?: string;
-  }
-}
