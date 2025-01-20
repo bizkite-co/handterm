@@ -97,6 +97,8 @@ export type ParsedLocation = {
   activityKey: ActivityType;
   contentKey?: string | null;
   groupKey?: string | null;
+  clearParams?: boolean;
+  skipTutorial?: boolean;
 };
 
 export type GitHubRepository = {
@@ -219,4 +221,3 @@ export const Phrases: GamePhrase[] = [
   { key: "a=5", displayAs: "Game", value: "a=5; b=3; c=$((a / b)); d=$((a - b)); echo $c $d; [ $a -gt $b ] && echo \"$a>$b\" || echo \"$a<$b\"; e=$(($a % $b)); echo \"Result: $e\"" }
 
 ]
-

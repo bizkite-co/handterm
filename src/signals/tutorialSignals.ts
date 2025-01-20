@@ -1,10 +1,11 @@
 // src/signals/tutorialSignals.ts
 import { computed, signal } from "@preact/signals-react";
 
-import { type GamePhrase, Phrases } from "src/types/Types";
+import { ActivityType, type GamePhrase, Phrases } from "src/types/Types";
 import { createLogger } from "src/utils/Logger";
 
 import { createPersistentSignal } from "../utils/signalPersistence";
+import { activitySignal } from "./appSignals";
 
 const logger = createLogger({ prefix: 'tutorialSignals' });
 
@@ -101,4 +102,17 @@ export const resetCompletedTutorials = (): void => {
   const nextTutorial = getNextTutorial();
   logger.debug('First tutorial after reset:', nextTutorial);
   setNextTutorial(nextTutorial);
+};
+
+/**
+ * Marks all tutorials as completed
+ */
+export const completeAllTutorials = (): void => {
+  logger.debug('Completing all tutorials');
+  const allTutorialKeys = Phrases
+    .filter(t => t.displayAs === "Tutorial")
+    .map(t => t.key);
+  updateCompletedTutorials(new Set(allTutorialKeys));
+  setNextTutorial(null);
+  activitySignal.value = ActivityType.NORMAL;
 };

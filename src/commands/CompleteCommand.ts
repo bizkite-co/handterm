@@ -1,7 +1,8 @@
 import { navigate } from "src/utils/navigationUtils";
 import { type ICommand, type ICommandContext, type ICommandResponse } from "../contexts/CommandContext.js";
-import { ActivityType, allTutorialPhraseNames, type ParsedCommand } from "../types/Types";
+import { ActivityType, type ParsedCommand } from "../types/Types";
 import { createLogger } from "../utils/Logger.js";
+import { completeAllTutorials } from "src/signals/tutorialSignals.js";
 
 const logger = createLogger({ prefix: "CompleteCommand" });
 
@@ -14,9 +15,10 @@ export const CompleteCommand: ICommand = {
     _parsedCommand: ParsedCommand
   ): Promise<ICommandResponse> => {
     try {
-      // Store tutorial phrases in localStorage
-      localStorage.setItem('completed-tutorials', JSON.stringify(allTutorialPhraseNames));
-      
+
+      // Update tutorial signal state
+      completeAllTutorials();
+
       navigate({
         activityKey: ActivityType.NORMAL,
         contentKey: null,

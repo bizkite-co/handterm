@@ -83,11 +83,10 @@ describe('useActivityMediator Hook', () => {
 
     const { result } = renderHook(() => useActivityMediator());
 
-    console.log("Should skip tutorial when completed-tutorials exists in localStorage", result.current);
     expect(result.current.isInNormal).toBe(true);
     expect(result.current.isInTutorial).toBe(false);
     expect(result.current.isInGameMode).toBe(false);
     expect(result.current.isInEdit).toBe(false);
-    expect(window.location.search).not.toContain('activity=tutorial');
+    expect(window.location.search).toBe('');
   });
 });

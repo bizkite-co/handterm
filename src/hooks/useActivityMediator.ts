@@ -293,11 +293,55 @@ export function useActivityMediator(): {
     }, [activity, checkTutorialProgress]);
 
 
+    // Initial activity determination - runs once on mount
     useEffect(() => {
-        const nextTutorial = getNextTutorial();
-        if (nextTutorial != null) {
-            activitySignal.value = ActivityType.TUTORIAL;
+        logger.debug('Initial activity determination - starting');
+        const completedTutorials = localStorage.getItem('completed-tutorials');
+        logger.debug(`Found completed-tutorials in localStorage: ${completedTutorials}`);
+
+        if (completedTutorials) {
+            logger.debug('Found completed tutorials - transitioning to NORMAL mode');
+
+            // First clear tutorial state
+            resetCompletedTutorials();
+
+            // Then update state atomically
+            bypassTutorialSignal.value = true;
+            activitySignal.value = ActivityType.NORMAL;
+
+            // Finally clear URL params
+            logger.debug('Clearing URL params');
+            navigate({
+                activityKey: ActivityType.NORMAL,
+                contentKey: null,
+                groupKey: null
+            }, {
+                forceClear: true,
+                replace: true,
+                skipTutorial: true
+            });
+        } else {
+            logger.debug('No completed tutorials found - checking for next tutorial');
+            const nextTutorial = getNextTutorial();
+            logger.debug(`Next tutorial found: ${nextTutorial ? nextTutorial.key : 'none'}`);
+
+            const initialActivity = nextTutorial ? ActivityType.TUTORIAL : ActivityType.NORMAL;
+            activitySignal.value = initialActivity;
+
+            logger.debug(`Navigating to initial activity: ${initialActivity}`);
+            navigate({
+                activityKey: initialActivity,
+                contentKey: null,
+                groupKey: null
+            });
         }
+    }, []);
+
+    // Reset bypassTutorialSignal on unmount
+    useEffect(() => {
+        return () => {
+            bypassTutorialSignal.value = false;
+        };
     }, []);
 
     return {
