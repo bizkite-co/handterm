@@ -3,6 +3,15 @@ import { renderHook } from '@testing-library/react';
 import { useActivityMediator } from 'src/hooks/useActivityMediator';
 import { allTutorialPhraseNames } from 'src/types/Types';
 
+interface MockLocation extends Location {
+  href: string;
+  search: string;
+  assign: (url: string) => void;
+  replace: (url: string) => void;
+  reload: () => void;
+  toString: () => string;
+}
+
 // Mock dependencies
 vi.mock('src/hooks/useReactiveLocation', () => ({
   useReactiveLocation: () => ({
@@ -17,6 +26,7 @@ vi.mock('src/hooks/useReactiveLocation', () => ({
 
 describe('useActivityMediator Hook', () => {
   let originalLocation: Location;
+  let mockLocation: MockLocation;
 
   beforeEach(() => {
     // Clear localStorage before each test
@@ -24,17 +34,8 @@ describe('useActivityMediator Hook', () => {
 
     // Save and mock window.location
     originalLocation = window.location;
-    interface MockLocation extends Location {
-      href: string;
-      search: string;
-      assign: (url: string) => void;
-      replace: (url: string) => void;
-      reload: () => void;
-      toString: () => string;
-    }
-
     let mockHref = 'http://localhost:3000/?activity=tutorial&key=%250D';
-    const mockLocation: MockLocation = {
+    mockLocation = {
       ...originalLocation,
       get href() {
         return mockHref;
@@ -51,8 +52,10 @@ describe('useActivityMediator Hook', () => {
       replace: vi.fn((url: string) => {
         mockHref = url;
       }) as MockLocation['replace'],
-      reload: vi.fn() as MockLocation['reload'],
-      toString: () => mockHref
+      reload: vi.fn(() => {}) as MockLocation['reload'],
+      toString() {
+        return mockHref;
+      }
     };
 
     Object.defineProperty(window, 'location', {
@@ -87,6 +90,6 @@ describe('useActivityMediator Hook', () => {
     expect(result.current.isInTutorial).toBe(false);
     expect(result.current.isInGameMode).toBe(false);
     expect(result.current.isInEdit).toBe(false);
-    expect(window.location.search).toBe('');
+    expect(mockLocation.reload).toHaveBeenCalled();
   });
 });

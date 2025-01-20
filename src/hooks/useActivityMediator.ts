@@ -73,7 +73,7 @@ export function useActivityMediator(): {
             default:
                 return ActivityType.NORMAL;
         }
-    },[bypassTutorial.value])
+    }, [bypassTutorial.value])
 
     const displayAsKey = useCallback((nextTutorial: GamePhrase): string | null => {
         if (bypassTutorial.value) return null;
@@ -85,7 +85,7 @@ export function useActivityMediator(): {
             default:
                 return null;
         }
-    },[bypassTutorial.value])
+    }, [bypassTutorial.value])
 
 
     const checkGameProgress = useCallback((successPhrase: GamePhrase) => {
@@ -305,21 +305,22 @@ export function useActivityMediator(): {
             // First clear tutorial state
             resetCompletedTutorials();
 
-            // Then update state atomically
-            bypassTutorialSignal.value = true;
-            activitySignal.value = ActivityType.NORMAL;
-
-            // Finally clear URL params
-            logger.debug('Clearing URL params');
+            // Set NORMAL activity and clear all URL params
+            logger.debug('Setting NORMAL activity and clearing URL params');
             navigate({
                 activityKey: ActivityType.NORMAL,
                 contentKey: null,
-                groupKey: null
+                groupKey: null,
+                clearParams: true
             }, {
                 forceClear: true,
                 replace: true,
                 skipTutorial: true
             });
+
+            // Update state after navigation
+            bypassTutorialSignal.value = true;
+            activitySignal.value = ActivityType.NORMAL;
         } else {
             logger.debug('No completed tutorials found - checking for next tutorial');
             const nextTutorial = getNextTutorial();

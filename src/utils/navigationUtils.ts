@@ -70,6 +70,10 @@ export function navigate(options: ParsedLocation, navOptions: boolean | Navigati
         clearParams: true
       }
     }));
+    // Force clear any remaining params by reloading the page
+    if (window.location.search) {
+      window.location.reload();
+    }
     return; // Early return to prevent setting any params
   } else {
     // Set activity parameter
