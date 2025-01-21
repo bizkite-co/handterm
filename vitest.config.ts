@@ -21,7 +21,9 @@ export default defineConfig({
       '**/node_modules/**',
       '**/dist/**',
       '**/playwright/**',
-      'tests-examples/**'
+      'tests-examples/**',
+      '**/e2e/**', // Exclude Playwright tests
+      '**/*.spec.ts' // Exclude .spec files
     ],
     coverage: {
       provider: 'v8',

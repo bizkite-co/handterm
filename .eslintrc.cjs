@@ -106,6 +106,13 @@ module.exports = {
     ]
   },
   overrides: [
+    // Playwright Config Override
+    {
+      files: ['playwright.config.js'],
+      parserOptions: {
+        project: './tsconfig.eslint.json'
+      }
+    },
     // Test Files Override
     {
       files: [
