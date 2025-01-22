@@ -5,7 +5,7 @@ import {
   isInTutorialModeSignal,
   isInGameModeSignal
 } from '../../signals/appSignals';
-import { ActivityType } from '../../types/Types';
+import { ActivityType } from '@handterm/types';
 
 describe('TUI Activity Switching E2E Scenarios', () => {
   beforeEach(() => {

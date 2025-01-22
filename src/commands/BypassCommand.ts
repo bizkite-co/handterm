@@ -3,7 +3,8 @@
 import { activitySignal , setBypassTutorial, bypassTutorialSignal } from 'src/signals/appSignals';
 
 import { type ICommand, type ICommandContext, type ICommandResponse } from '../contexts/CommandContext';
-import { type ParsedCommand , ActivityType } from '../types/Types';
+import { ActivityType } from '@handterm/types';
+import type { ParsedCommand } from '../types/Types';
 import { navigate } from '../utils/navigationUtils';
 
 export const BypassCommand: ICommand = {

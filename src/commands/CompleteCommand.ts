@@ -1,6 +1,7 @@
 import { navigate } from "src/utils/navigationUtils";
 import { type ICommand, type ICommandContext, type ICommandResponse } from "../contexts/CommandContext.js";
-import { ActivityType, type ParsedCommand } from "../types/Types";
+import { ActivityType } from '@handterm/types';
+import type { ParsedCommand } from "../types/Types";
 import { createLogger } from "../utils/Logger.js";
 import { completeAllTutorials } from "src/signals/tutorialSignals.js";
 

@@ -1,5 +1,6 @@
 // src/utils/navigationUtils.ts
-import { ActivityType, type ParsedLocation } from 'src/types/Types';
+import { ActivityType } from '@handterm/types';
+import type { ParsedLocation } from 'src/types/Types';
 
 // Parse location from query parameters
 export function parseLocation(location: string = window.location.toString()): ParsedLocation {

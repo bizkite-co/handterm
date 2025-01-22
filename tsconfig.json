@@ -54,6 +54,9 @@
       ],
       "@types/*": [
         "./src/types/*"
+      ],
+      "@handterm/types": [
+        "./packages/types/src/index.ts"
       ]
     },
     "plugins": [
@@ -80,6 +83,7 @@
   },
   "include": [
     "src",
+    "test",
     "src/e2e",
     "moduleResolver.ts",
     "@monaco-editor-react.js",

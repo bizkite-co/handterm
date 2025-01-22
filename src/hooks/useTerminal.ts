@@ -20,7 +20,7 @@ import {
   tempUserNameSignal
 } from 'src/signals/appSignals';
 import { addKeystroke, commandLineSignal, setCommandLine } from 'src/signals/commandLineSignals';
-import { ActivityType } from 'src/types/Types';
+import { ActivityType } from '@handterm/types';
 import { parseCommand } from 'src/utils/commandUtils';
 import { createLogger } from 'src/utils/Logger';
 import { useCharacterHandler } from './useCharacterHandler';

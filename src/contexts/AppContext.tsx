@@ -2,7 +2,8 @@
 import type React from 'react';
 import { createContext, useContext, useState } from 'react';
 
-import { type ActivityType, type OutputElement } from '../types/Types';
+import { type ActivityType } from '@handterm/types';
+import { type OutputElement } from '../types/Types';
 
 import { useActivityMediatorContext } from './ActivityMediatorContext';
 

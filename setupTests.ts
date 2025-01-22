@@ -1,5 +1,6 @@
 import { vi, beforeAll } from 'vitest';
-import type { GamePhrase, ActivityType } from './src/types/Types';
+import { type ActivityType } from '@handterm/types';
+import type { GamePhrase } from './src/types/Types';
 
 declare global {
   interface Window {

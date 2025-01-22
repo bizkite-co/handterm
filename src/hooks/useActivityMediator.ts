@@ -16,7 +16,8 @@ import { createLogger } from 'src/utils/Logger';
 import { navigate, parseLocation } from 'src/utils/navigationUtils';
 
 import { type ActionType } from '../game/types/ActionTypes';
-import { ActivityType, type ParsedCommand, type GamePhrase } from '../types/Types';
+import { ActivityType } from '@handterm/types';
+import type { ParsedCommand, GamePhrase } from '../types/Types';
 import GamePhrases from '../utils/GamePhrases';
 
 import { useTutorial } from './useTutorials';

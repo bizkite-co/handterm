@@ -10,7 +10,8 @@ import { createLogger } from 'src/utils/Logger';
 import { commandRegistry } from '../commands/commandRegistry';
 import { CommandContext, type ICommandResponse } from '../contexts/CommandContext';
 import { LogKeys } from '../types/TerminalTypes';
-import { ActivityType, type OutputElement, type ParsedCommand } from '../types/Types';
+import { ActivityType } from '@handterm/types';
+import { type OutputElement, type ParsedCommand } from '../types/Types';
 import { parsedCommandToString, loadCommandHistory, saveCommandHistory } from '../utils/commandUtils';
 
 import { useActivityMediator } from './useActivityMediator';

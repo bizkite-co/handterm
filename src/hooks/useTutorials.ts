@@ -9,7 +9,8 @@ import {
 import { createLogger } from 'src/utils/Logger';
 import { parseLocation } from 'src/utils/navigationUtils';
 
-import { type GamePhrase, ActivityType, Phrases } from "../types/Types";
+import { type GamePhrase, Phrases } from "../types/Types";
+import { ActivityType } from '@handterm/types';
 
 const logger = createLogger({ prefix: 'useTutorials' });
 

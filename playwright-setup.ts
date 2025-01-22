@@ -1,5 +1,8 @@
 import { test as baseTest, type Page, expect as playwrightExpect } from '@playwright/test';
 import { exposeSignals } from './src/test-utils/exposeSignals';
+import { ActivityType } from '@handterm/types';
+
+const activitySignalBrand = Symbol('activitySignal');
 import { vi } from 'vitest';
 import type {} from './src/types/WindowExtensions';
 
@@ -9,12 +12,32 @@ export function initializeTestEnvironment(): void {
 
   // Initialize required window properties with proper typing
   window.activitySignal = {
-    value: 'tutorial',
-    set: vi.fn((value: string) => {
-      window.activitySignal.value = value;
-    }),
-    subscribe: vi.fn((callback: (value: string) => void) => {
+    // @ts-expect-error - Mock implementation satisfies Signal interface
+    value: {
+      current: ActivityType.NORMAL,
+      previous: null,
+      transitionInProgress: false,
+      tutorialCompleted: false
+    },
+    type: 'activitySignal',
+    props: {},
+    key: 'activitySignal',
+    brand: Symbol('activitySignal') as unknown as unique symbol,
+    peek: vi.fn(() => window.activitySignal.value),
+    toJSON: vi.fn(() => window.activitySignal.value),
+    toString: vi.fn(() => JSON.stringify(window.activitySignal.value)),
+    valueOf: vi.fn(() => window.activitySignal.value),
+    subscribe: vi.fn((callback: (value: typeof window.activitySignal.value) => void) => {
       callback(window.activitySignal.value);
+      return () => {};
+    }),
+    set: vi.fn((value: ActivityType) => {
+      window.activitySignal.value = {
+        current: value,
+        previous: window.activitySignal.value.current,
+        transitionInProgress: false,
+        tutorialCompleted: window.activitySignal.value.tutorialCompleted
+      };
     })
   };
 

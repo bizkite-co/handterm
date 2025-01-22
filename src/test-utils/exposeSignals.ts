@@ -14,25 +14,42 @@ import {
 import GamePhrases from '../utils/GamePhrases';
 
 interface SignalError extends Error {
-  code?: string;
-  signalName?: string;
+  code: string;
+  signalName: string;
 }
+
+function isSignalError(e: unknown): e is SignalError {
+  return typeof e === 'object' &&
+         e !== null &&
+         'code' in e &&
+         'signalName' in e;
+}
+
+let isInitialized = false;
 
 /**
  * Type guard for window with our extensions
  */
 function isWindowWithSignals(win: unknown): win is Window & WindowExtensions {
-  return typeof win === 'object' &&
-         win !== null &&
-         isWindowDefined() &&
-         'activitySignal' in win;
-}
+  // Enhanced type checking with runtime validation
+  const isValid = typeof win === 'object' &&
+    win !== null &&
+    isWindowDefined() &&
+    'activitySignal' in win &&
+    typeof (win as WindowExtensions).activitySignal?.get === 'function' &&
+    typeof (win as WindowExtensions).activitySignal?.set === 'function' &&
+    'commandLineSignal' in win &&
+    'tutorialSignals' in win;
 
-// Ensure window exists and has signal extensions
-if (!isWindowWithSignals(window)) {
-  const error = new Error('Window is not properly initialized') as SignalError;
-  error.code = 'WINDOW_NOT_INITIALIZED';
-  throw error;
+  if (!isValid) {
+    console.error('Window signals validation failed:', {
+      activitySignal: (win as WindowExtensions).activitySignal,
+      commandLineSignal: (win as WindowExtensions).commandLineSignal,
+      tutorialSignals: (win as WindowExtensions).tutorialSignals
+    });
+  }
+
+  return isValid;
 }
 
 /**
@@ -48,7 +65,7 @@ function createSafeSignal<T>(options: SignalOptions<T>): Signal<T> {
   if (typeof options.name !== 'string' || !options.name) {
     const error = new Error('Signal options must include a name') as SignalError;
     error.code = 'MISSING_NAME';
-    error.signalName = String(options.name);
+    error.signalName = options.name;
     throw error;
   }
 
@@ -62,9 +79,18 @@ function createSafeSignal<T>(options: SignalOptions<T>): Signal<T> {
     }
     return signal;
   } catch (error: unknown) {
-    const signalError = error as SignalError;
-    const errorMessage = signalError.message || 'Unknown error';
-    const errorCode = signalError.code || 'UNKNOWN_ERROR';
+    const isSignalError = (e: unknown): e is SignalError =>
+      typeof e === 'object' &&
+      e !== null &&
+      'code' in e &&
+      'signalName' in e;
+
+    const errorMessage = isSignalError(error)
+      ? error.message || 'Unknown error'
+      : 'Unknown error';
+    const errorCode = isSignalError(error)
+      ? error.code || 'UNKNOWN_ERROR'
+      : 'UNKNOWN_ERROR';
 
     console.error(`[exposeSignals] Failed to create signal ${options.name}:`, {
       message: errorMessage,
@@ -83,6 +109,10 @@ function createSafeSignal<T>(options: SignalOptions<T>): Signal<T> {
  * Initialize window signals and properties
  */
 function initializeWindow(): void {
+  if (isInitialized) {
+    return;
+  }
+
   try {
     // Create activity signal
     const activitySignal = createSafeSignal<ActivityType>({
@@ -153,6 +183,7 @@ function initializeWindow(): void {
       }
     });
 
+    isInitialized = true;
     console.log('[exposeSignals] Signals exposed');
   } catch (error) {
     console.error('[exposeSignals] Failed to initialize window:', error);
@@ -160,5 +191,15 @@ function initializeWindow(): void {
   }
 }
 
-// Initialize window
-initializeWindow();
+/**
+ * Verify window is properly initialized
+ */
+export function verifyWindowInitialization(): void {
+  if (!isWindowWithSignals(window)) {
+    const error = new Error('Window is not properly initialized') as SignalError;
+    error.code = 'WINDOW_NOT_INITIALIZED';
+    throw error;
+  }
+}
+
+export const exposeSignals = initializeWindow;

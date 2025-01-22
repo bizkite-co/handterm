@@ -8,7 +8,8 @@ declare global {
 
 import { computed, signal } from '@preact/signals-react';
 
-import { ActivityType, type OutputElement } from 'src/types/Types';
+import { ActivityType } from '@handterm/types';
+import type { OutputElement } from 'src/types/Types';
 import { createLogger, LogLevel } from 'src/utils/Logger';
 import { createPersistentSignal } from 'src/utils/signalPersistence';
 

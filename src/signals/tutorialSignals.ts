@@ -1,7 +1,9 @@
 // src/signals/tutorialSignals.ts
 import { computed, signal } from "@preact/signals-react";
 
-import { ActivityType, type GamePhrase, Phrases } from "src/types/Types";
+import { ActivityType } from '@handterm/types';
+import type { GamePhrase } from "src/types/Types";
+import { Phrases } from "src/types/Types";
 import { createLogger } from "src/utils/Logger";
 
 import { createPersistentSignal } from "../utils/signalPersistence";

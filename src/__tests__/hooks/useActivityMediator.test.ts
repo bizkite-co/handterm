@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { renderHook } from '@testing-library/react';
+import { renderHook, waitFor } from '@testing-library/react';
 import { useActivityMediator } from 'src/hooks/useActivityMediator';
 import { allTutorialPhraseNames } from 'src/types/Types';
 
@@ -50,7 +50,9 @@ describe('useActivityMediator Hook', () => {
         mockHref = url;
       }) as MockLocation['assign'],
       replace: vi.fn((url: string) => {
+        console.log('Mock location.replace called with:', url);
         mockHref = url;
+        return Promise.resolve();
       }) as MockLocation['replace'],
       reload: vi.fn(() => {}) as MockLocation['reload'],
       toString() {
@@ -80,18 +82,23 @@ describe('useActivityMediator Hook', () => {
     expect(window.location.search).toContain('activity=tutorial');
   });
 
-  it('should skip tutorial when completed-tutorials exists in localStorage', () => {
+  it('should skip tutorial when completed-tutorials exists in localStorage', async () => {
     // Setup completed tutorials in localStorage
     window.localStorage.setItem('completed-tutorials', JSON.stringify(allTutorialPhraseNames));
 
     const { result } = renderHook(() => useActivityMediator());
 
+    // Wait for useEffect to complete
+    await new Promise(resolve => setTimeout(resolve, 100));
+
     expect(result.current.isInNormal).toBe(true);
     expect(result.current.isInTutorial).toBe(false);
     expect(result.current.isInGameMode).toBe(false);
     expect(result.current.isInEdit).toBe(false);
-    expect(mockLocation.replace).toHaveBeenCalledWith(
-      expect.stringContaining('activity=NORMAL')
-    );
+    await waitFor(() => {
+      expect(mockLocation.replace).toHaveBeenCalledWith(
+        expect.stringContaining('activity=NORMAL')
+      );
+    });
   });
 });

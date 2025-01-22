@@ -1,4 +1,4 @@
-import { ActivityType } from 'src/types/Types';
+import { ActivityType } from '@handterm/types';
 import { test, expect } from '@playwright/test';
 import { signal, type Signal } from '@preact/signals-react';
 import type * as Monaco from 'monaco-editor';

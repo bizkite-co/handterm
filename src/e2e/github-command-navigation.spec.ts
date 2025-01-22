@@ -1,4 +1,4 @@
-import { ActivityType } from 'src/types/Types';
+import { ActivityType } from '@handterm/types';
 import { setActivity } from 'src/signals/appSignals';
 import type { Page } from '@playwright/test';
 import { test, expect } from '@playwright/test';
@@ -12,7 +12,7 @@ declare global {
       getTree: () => Promise<{ tree: Array<{ path: string; type: string }> }>;
       getRepoInfo: () => Promise<{ owner: string; repo: string }>;
     } | undefined;
-    activitySignal: Signal<ActivityType>;
+    activitySignal: Signal<typeof ActivityType[keyof typeof ActivityType]>;
     setActivity: typeof setActivity;
   }
 }

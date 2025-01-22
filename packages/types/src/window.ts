@@ -1,5 +1,5 @@
-import type { Signal } from './signal';
-import type { ActivityType } from './activity';
+import type { Signal } from './signal.js';
+import type { ActivityType } from './activity.js';
 
 /**
  * Tutorial-related signals interface

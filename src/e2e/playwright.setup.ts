@@ -22,7 +22,7 @@ async function globalSetup(_config: FullConfig): Promise<void> {
   // Initialize localStorage state with element checks
   console.log('Navigating to base URL:', TEST_CONFIG.baseUrl);
   await page.goto(TEST_CONFIG.baseUrl, {
-    waitUntil: 'domcontentloaded',
+    waitUntil: 'networkidle',
     timeout: TEST_CONFIG.timeout.long
   });
 
@@ -33,9 +33,26 @@ async function globalSetup(_config: FullConfig): Promise<void> {
   }
   console.log('Root element loaded in', Date.now() - startTime, 'ms');
 
-  // Check if terminal container is present
-  const terminalContainer = await page.$('#xtermRef');
+  // Check if terminal container is present with retries and debugging
+  let terminalContainer = null;
+  let retries = 5;
+  while (retries > 0 && !terminalContainer) {
+    terminalContainer = await page.$('#xtermRef');
+    if (!terminalContainer) {
+      retries--;
+      await page.waitForTimeout(2000);
+
+      // Debugging: Log page HTML if terminal not found
+      if (retries === 2) {
+        const html = await page.content();
+        console.log('Page HTML:', html);
+      }
+    }
+  }
+
   if (!terminalContainer) {
+    // Debugging: Take screenshot before failing
+    await page.screenshot({ path: 'playwright/setup-error.png' });
     throw new Error('Terminal container not found after page load');
   }
   console.log('Terminal container loaded in', Date.now() - startTime, 'ms');
