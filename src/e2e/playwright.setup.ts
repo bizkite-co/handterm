@@ -1,6 +1,7 @@
 // Playwright-specific setup without Vitest dependencies
 import { chromium, type FullConfig } from '@playwright/test';
 import { exposeSignals } from '../test-utils/exposeSignals';
+import type { WindowExtensions } from '@handterm/types';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { TEST_CONFIG } from '../e2e/config';
 
@@ -57,12 +58,65 @@ async function globalSetup(_config: FullConfig): Promise<void> {
   }
   console.log('Terminal container loaded in', Date.now() - startTime, 'ms');
 
-  // Verify signals are properly exposed with detailed logging
+  // Verify DOM hierarchy first
+  console.log('Checking DOM parent chain...');
+  await page.waitForSelector('body');
+  await page.waitForSelector('#handterm-wrapper');
+  await page.waitForSelector('#prompt-and-terminal');
+
+  // Verify signals with enhanced diagnostics
+  // Check for specific signal properties with retries
+  const requiredSignals = ['activitySignal', 'commandLineSignal', 'tutorialSignals'];
+  console.log('Checking for required window signals:', requiredSignals);
+
+  let attempts = 0;
+  const maxAttempts = 5;
+
+  while (attempts < maxAttempts) {
+    const signalStatus = await page.evaluate((signals: string[]) => {
+      return signals.map(signal => {
+        // Use project's official WindowExtensions type with proper Signal typing
+        const win = window as unknown as Window & WindowExtensions;
+        const value = signal === 'activitySignal' ? win.activitySignal :
+                      signal === 'commandLineSignal' ? win.commandLineSignal :
+                      win.tutorialSignals;
+        return {
+          name: signal,
+          exists: signal in win,
+          type: value?.constructor?.name ?? 'undefined'
+        };
+      });
+    }, requiredSignals);
+
+    console.log(`Signal check attempt ${attempts + 1}:`, signalStatus);
+
+    if (signalStatus.every(s => s.exists)) {
+      break;
+    }
+
+    attempts++;
+    await page.waitForTimeout(2000);
+  }
+
   console.log('Verifying window signals...');
   const signalsPresent = await page.waitForFunction(() => {
     try {
-      const windowKeys = Object.keys(window);
-      console.log('Current window properties:', windowKeys);
+      // Check only for the signals we care about
+      const signalCheck = {
+        activitySignal: {
+          exists: 'activitySignal' in window,
+          type: typeof window.activitySignal?.constructor?.name
+        },
+        commandLineSignal: {
+          exists: 'commandLineSignal' in window,
+          type: typeof window.commandLineSignal?.constructor?.name
+        },
+        tutorialSignals: {
+          exists: 'tutorialSignals' in window,
+          type: typeof window.tutorialSignals?.constructor?.name
+        }
+      };
+      console.log('Signal status:', signalCheck);
 
       const hasCommandLine = 'commandLineSignal' in window;
       const hasActivity = 'activitySignal' in window;

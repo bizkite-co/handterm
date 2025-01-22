@@ -39,6 +39,9 @@ NOTE: Never remove a checkbox. If you find a checkbox we no longer need, mark it
 - [ ] Verify no regressions
   - [ ] Add integration tests
   - [ ] Run full test suite
+  - [x] Add DOM parent chain validation steps (playwright.setup.ts:62-64)
+  - [x] Implement initialization sequence checks (HandTermWrapper.tsx:338)
+  - [ ] Document element dependency chain
 - [x] Update exposeSignals.ts to match Signal interface
 - [x] Implement proper error handling in executeCommand
 - [x] Fix type safety issues in tutorial signals
@@ -90,7 +93,9 @@ NOTE: Never remove a checkbox. If you find a checkbox we no longer need, mark it
 - [ ] Add process documentation
   - [ ] Error investigation workflow
   - [ ] Module resolution troubleshooting
-  - [ ] Test environment setup guide
+  - [x] Test environment setup guide
+  - [x] Critical chain verification process
+  - [ ] Signal timing analysis
 
 ## Instructions
 1. Check each box when the task is completed and verified
