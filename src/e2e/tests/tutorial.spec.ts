@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
-import '../setup';
+import '../playwright.setup';
 import { TerminalPage } from '../page-objects/TerminalPage';
 import type { GamePhrase } from '../../types/Types';
 import { Phrases } from '../../types/Types';
@@ -42,26 +42,20 @@ let terminalPage: TerminalPage;
 async function isTutorialCompleted(page: Page, tutorialKey: string): Promise<boolean> {
   try {
     return await page.evaluate((key: string): boolean => {
-      function safeParse<T>(json: string | null): T | null {
-        if (json === null) return null;
-        try {
-          return JSON.parse(json) as T;
-        } catch {
-          return null;
-        }
-      }
-
-      function isStringArray(value: unknown): value is string[] {
-        return Array.isArray(value) && value.every(item => typeof item === 'string');
-      }
 
       const completedTutorials = localStorage.getItem('completed-tutorials');
-      const parsed = safeParse<unknown>(completedTutorials);
-      if (!isStringArray(parsed)) {
-        console.log('[Tutorial Parse Error] completed-tutorials is not a string array');
+      if (!completedTutorials) return false;
+      try {
+        const parsed: unknown = JSON.parse(completedTutorials);
+        if (!Array.isArray(parsed) || !parsed.every(item => typeof item === 'string')) {
+          console.log('[Tutorial Parse Error] completed-tutorials is not a string array');
+          return false;
+        }
+        return parsed.includes(key);
+      } catch {
+        console.log('[Tutorial Parse Error] Failed to parse completed-tutorials');
         return false;
       }
-      return parsed.includes(key);
     }, tutorialKey);
   } catch (error) {
     const message = isError(error) ? error.message : 'Unknown error';
@@ -74,12 +68,19 @@ async function isTutorialCompleted(page: Page, tutorialKey: string): Promise<boo
  * Helper function to log tutorial state
  */
 async function logTutorialState(page: Page, label: string): Promise<void> {
-  const state = await page.evaluate((): TutorialSignalState => ({
-    tutorialSignal: window.tutorialSignal?.value ?? null,
-    activitySignal: window.activitySignal?.value ?? null,
-    completedTutorials: localStorage.getItem('completed-tutorials'),
-    tutorialState: localStorage.getItem('tutorial-state')
-  }));
+  const state = await page.evaluate((): TutorialSignalState => {
+    const tutorialSignal = window.tutorialSignal?.value;
+    const activitySignal = window.activitySignal?.value;
+    const completedTutorials = localStorage.getItem('completed-tutorials');
+    const tutorialState = localStorage.getItem('tutorial-state');
+
+    return {
+      tutorialSignal: typeof tutorialSignal !== 'undefined' ? tutorialSignal : null,
+      activitySignal: typeof activitySignal !== 'undefined' ? activitySignal : null,
+      completedTutorials,
+      tutorialState
+    };
+  });
   console.log(`[${label}]`, state);
 }
 
@@ -193,9 +194,17 @@ test.describe('Tutorial Mode', () => {
 
     test('should complete fdsa tutorial', async ({ page }) => {
       // Verify we're at the right step
-      const completed = await page.evaluate(() => {
+      const completed = await page.evaluate((): string[] => {
         const completed = localStorage.getItem('completed-tutorials');
-        return completed ? JSON.parse(completed) : [];
+        if (!completed) return [];
+        try {
+          const parsed = JSON.parse(completed) as unknown;
+          return (Array.isArray(parsed) && parsed.every(item => typeof item === 'string'))
+            ? parsed as string[]
+            : [];
+        } catch {
+          return [];
+        }
       });
       expect(completed, 'Unexpected completed tutorials before fdsa').toEqual([]);
 
@@ -212,9 +221,17 @@ test.describe('Tutorial Mode', () => {
 
     test('should complete jkl; tutorial', async ({ page }) => {
       // Verify we're at the right step
-      const completed = await page.evaluate(() => {
+      const completed = await page.evaluate((): string[] => {
         const completed = localStorage.getItem('completed-tutorials');
-        return completed ? JSON.parse(completed) : [];
+        if (!completed) return [];
+        try {
+          const parsed: unknown = JSON.parse(completed);
+          return (Array.isArray(parsed) && parsed.every(item => typeof item === 'string'))
+            ? parsed as string[]
+            : [];
+        } catch {
+          return [];
+        }
       });
       expect(completed, 'Unexpected completed tutorials before jkl;').toEqual(['\r']);
 
@@ -231,9 +248,17 @@ test.describe('Tutorial Mode', () => {
 
     test('should transition to game mode', async ({ page }) => {
       // Verify we're at the right step
-      const completed = await page.evaluate(() => {
+      const completed = await page.evaluate((): string[] => {
         const completed = localStorage.getItem('completed-tutorials');
-        return completed ? JSON.parse(completed) : [];
+        if (!completed) return [];
+        try {
+          const parsed = JSON.parse(completed) as unknown;
+          return (Array.isArray(parsed) && parsed.every(item => typeof item === 'string'))
+            ? parsed as string[]
+            : [] as string[];
+        } catch {
+          return [];
+        }
       });
       expect(completed, 'Unexpected completed tutorials before game transition').toEqual(['\r', 'fdsa']);
 
@@ -247,7 +272,15 @@ test.describe('Tutorial Mode', () => {
       // Verify we're at the right step
       const completed = await page.evaluate(() => {
         const completed = localStorage.getItem('completed-tutorials');
-        return completed ? JSON.parse(completed) : [];
+        if (!completed) return [] as string[];
+        try {
+          const parsed = JSON.parse(completed) as unknown;
+          return (Array.isArray(parsed) && parsed.every(item => typeof item === 'string'))
+            ? parsed as string[]
+            : [] as string[];
+        } catch {
+          return [] as string[];
+        }
       });
       expect(completed, 'Unexpected completed tutorials before game phrase').toEqual(['\r', 'fdsa', 'jkl;']);
 

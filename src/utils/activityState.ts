@@ -1,5 +1,6 @@
 import { signal } from '@preact/signals-react';
-import { ActivityType, allTutorialPhraseNames } from '../types/Types';
+import { ActivityType } from '@handterm/types';
+import { allTutorialPhraseNames } from '../types/Types';
 
 // Unified activity state
 export const activityState = signal<{

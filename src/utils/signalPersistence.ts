@@ -20,14 +20,17 @@ export function createPersistentSignal<T>({
 }: PersistenceConfig<T>): PersistentSignal<T> {
   const loadInitialState = () => {
     try {
-      if (typeof localStorage != 'undefined') {
-        const storedValue = localStorage.getItem(key);
-        if (storedValue != null) {
-          signal.value = deserialize(storedValue);
-        }
+      // Use test storage if available
+      const storage = typeof localStorage !== 'undefined' ? localStorage :
+        typeof window !== 'undefined' && window.localStorage ? window.localStorage :
+        { getItem: () => null, setItem: () => {} };
+
+      const storedValue = storage.getItem(key);
+      if (storedValue != null) {
+        signal.value = deserialize(storedValue);
       }
     } catch (error) {
-      console.warn('Failed to access localStorage:', error);
+      console.warn('Failed to access storage:', error);
     }
   };
 
@@ -36,7 +39,11 @@ export function createPersistentSignal<T>({
       console.log('Completing tutorial', value);
     }
     queueMicrotask(() => {
-      localStorage.setItem(key, serialize(value));
+      const storage = typeof localStorage !== 'undefined' ? localStorage :
+        typeof window !== 'undefined' && window.localStorage ? window.localStorage :
+        { getItem: () => null, setItem: () => {} };
+
+      storage.setItem(key, serialize(value));
     });
   };
 

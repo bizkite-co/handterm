@@ -1,0 +1,20 @@
+{
+  "name": "@handterm/types",
+  "version": "1.0.0",
+  "description": "Shared types package for Handterm project",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest",
+    "lint": "eslint src/**/*.ts"
+  },
+  "dependencies": {
+    "typescript": "^5.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "eslint": "^8.0.0",
+    "vitest": "^1.0.0"
+  }
+}

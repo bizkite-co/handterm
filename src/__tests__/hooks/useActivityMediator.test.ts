@@ -90,6 +90,8 @@ describe('useActivityMediator Hook', () => {
     expect(result.current.isInTutorial).toBe(false);
     expect(result.current.isInGameMode).toBe(false);
     expect(result.current.isInEdit).toBe(false);
-    expect(mockLocation.reload).toHaveBeenCalled();
+    expect(mockLocation.replace).toHaveBeenCalledWith(
+      expect.stringContaining('activity=NORMAL')
+    );
   });
 });

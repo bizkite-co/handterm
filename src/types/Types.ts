@@ -13,15 +13,15 @@ export interface Keystroke {
   timestamp: number;
 }
 
-export const ActivityType = {
+import type { ActivityType } from '@handterm/types';
+
+export const ACTIVITY_TYPES = {
   NORMAL: 'NORMAL',
   TUTORIAL: 'TUTORIAL',
   GAME: 'GAME',
   EDIT: 'EDIT',
   TREE: 'TREE'
-} as const;
-
-export type ActivityType = typeof ActivityType[keyof typeof ActivityType];
+} as const satisfies Record<string, ActivityType>;
 
 export type ParsedCommand = Readonly<{
   command: string;
