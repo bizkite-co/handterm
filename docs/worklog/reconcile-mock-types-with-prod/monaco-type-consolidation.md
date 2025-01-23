@@ -57,10 +57,14 @@ const getValidMonaco = () => {
 - [ ] Document type usage patterns
 
 ### Phase 2: Test Migration
-- [ ] Update monaco-tree-view.spec.ts
+- [x] Update monaco-tree-view.spec.ts
+  - [x] Removed duplicate interface definitions
+  - [x] Added proper type safety
+  - [x] Implemented withTempEditor helper
+  - [x] Fixed error handling patterns
 - [ ] Update other test files using Monaco
-- [ ] Remove duplicate definitions
-- [ ] Add type safety checks
+- [x] Remove duplicate definitions
+- [x] Add type safety checks
 
 ### Phase 3: Verification
 - [ ] Add test coverage for validation utilities

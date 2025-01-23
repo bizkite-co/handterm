@@ -14,10 +14,10 @@ NOTE: Never remove a checkbox. If you find a checkbox we no longer need, mark it
 * [x] Phase 3: [Define Initial Types](.define-initial-types.md)
 * [ ] Phase 4: [Migration Plan](.migration-plan.md)
 * [ ] Phase 5: [Module Resolution and Test Environment](.module-resolution-and-test-environment.md)
-* [ ] Phase 6: Type System Cleanup
+* [~] Phase 6: Type System Cleanup
   - [ ] [Core Type Unification](type-system-cleanup.md)
   - [~] [Signal Interface Alignment](signal-type-unification.md) (partial - brand symbols added)
-  - [ ] [Monaco Type Consolidation](monaco-type-consolidation.md)
+  - [~] [Monaco Type Consolidation](monaco-type-consolidation.md) (partial - monaco-tree-view.spec.ts completed)
   - [x] Document 2025-01-22 session progress - Added simplified validation pattern
   - [x] Implemented runtime validation for external libraries
   - [ ] Update remaining signal docs with new pattern

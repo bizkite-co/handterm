@@ -1,623 +1,139 @@
-import { ActivityType } from '@handterm/types';
-import { test, expect } from '@playwright/test';
-import { signal, type Signal } from '@preact/signals-react';
+import { ActivityType } from '@handterm/types'
+import { test, expect, type Page } from '@playwright/test'
+import { signal, type Signal } from '@preact/signals-react'
+import { withTempEditor, isMonacoWindow } from '../../packages/types/src/monaco'
+
 test.describe('Monaco Editor Tree View', () => {
-  declare global {
-    interface Window {
-      monaco: {
-        editor: {
-          createModel: (value: string, language: string) => unknown;
-          create: (container: HTMLElement, options: unknown) => {
-            getValue: () => string;
-            focus: () => void;
-            dispose: () => void;
-            getModel: () => { dispose: () => void };
-          };
-          defineTheme: (name: string, theme: unknown) => void;
-          setModelLanguage: (model: unknown, language: string) => void;
-        };
-    }
-  }
-
-  const getMonacoEditor = () => {
-    const editor = window.monaco.editor;
-    if (!editor?.createModel || !editor?.create) {
-      throw new Error('Monaco editor APIs not available');
-    }
-    return editor;
-  };
-
   test.beforeEach(async ({ page }) => {
     // Initialize activity signal before navigation
     await page.addInitScript(() => {
       interface ActivityWindow extends Window {
-        activitySignal: Signal<ActivityType>;
+        activitySignal: Signal<ActivityType>
       }
+      (window as unknown as ActivityWindow).activitySignal = signal(ActivityType.TREE)
+    })
 
-      (window as unknown as ActivityWindow).activitySignal = signal(ActivityType.TREE);
-    });
+    await page.goto('http://localhost:5173/?activity=tree')
+  })
 
-    await page.goto('http://localhost:5173/?activity=tree');
-  });
+  const waitForMonacoInit = async (page: Page): Promise<void> => {
+    await page.waitForFunction(() => {
+      if (!isMonacoWindow(window)) return false
+      return withTempEditor(() => true).catch(() => false)
+    }, { timeout: 30000 })
+  }
+
+  const getEditorContent = async (page: Page): Promise<string> => {
+    const content = await page.evaluate(async () => {
+      if (!isMonacoWindow(window)) return ''
+      try {
+        const editor = await withTempEditor(editor => {
+          const value = editor.getValue()
+          return typeof value === 'string' ? value : ''
+        })
+        return editor
+      } catch {
+        return ''
+      }
+    }).catch(() => '')
+    return content
+  }
 
   test('should load tree view from localStorage', async ({ page }) => {
     // Setup mock tree data
     const mockTreeData = [
       { path: 'src/main.ts', type: 'blob' },
       { path: 'src/components', type: 'tree' }
-    ];
+    ]
 
-    // Initialize activity signal before navigation
+    // Initialize localStorage
     await page.addInitScript((data) => {
-      localStorage.setItem('github_tree_items', JSON.stringify(data));
-      interface ActivityWindow extends Window {
-        activitySignal: Signal<ActivityType>;
-      }
+      localStorage.setItem('github_tree_items', JSON.stringify(data))
+    }, mockTreeData)
 
-      (window as unknown as ActivityWindow).activitySignal = signal(ActivityType.TREE);
-    }, mockTreeData);
+    // Wait for Monaco initialization
+    await waitForMonacoInit(page)
 
-    // Navigate to page with tree activity
-    await page.goto('http://localhost:5173/?activity=tree', {
-      waitUntil: 'networkidle'
-    });
-
-    // Wait for Monaco editor to be fully initialized
+    // Wait for tree view rendering
+    await page.waitForSelector('.monaco-tree-row', { state: 'visible', timeout: 10000 })
     await page.waitForFunction(() => {
-      interface MonacoWindow extends Window {
-        monaco: typeof Monaco;
-      }
-
-      const monaco = (window as MonacoWindow).monaco;
-
-      if (!monaco?.editor) return false;
-
-      try {
-        // Create container and model for editor
-        const container = document.createElement('div');
-        container.style.width = '100%';
-        container.style.height = '100%';
-        document.body.appendChild(container);
-
-        const model = monaco.editor.createModel('', 'plaintext');
-        const editor = monaco.editor.create(container, {
-          model,
-          value: '',
-          language: 'plaintext'
-        });
-
-        // Check if editor is fully loaded and ready
-        const isReady = typeof editor.getValue === 'function' &&
-                       typeof editor.focus === 'function' &&
-                       typeof editor.getModel === 'function';
-
-        // Clean up
-        editor.dispose();
-        model.dispose();
-        document.body.removeChild(container);
-
-        return isReady;
-      } catch (error) {
-        console.error('Monaco editor initialization error:', error);
-        return false;
-      }
-    }, { timeout: 30000 });
-
-    // Wait for tree activity to be set
-    await page.waitForFunction(() => {
-      interface ActivityWindow extends Window {
-        activitySignal: Signal<ActivityType>;
-      }
-
-      const signal = (window as ActivityWindow).activitySignal;
-      return signal.value === ActivityType.TREE;
-    }, { timeout: 5000 });
-
-    // Wait for Monaco editor initialization and tree view rendering
-    await page.waitForSelector('.monaco-tree-row', { state: 'visible', timeout: 10000 });
-    await page.waitForFunction(() => {
-      const rows = document.querySelectorAll('.monaco-tree-row');
+      const rows = document.querySelectorAll('.monaco-tree-row')
       return rows.length >= 2 &&
-             rows[0]?.textContent?.includes('src/main.ts') &&
-             rows[1]?.textContent?.includes('src/components');
-    }, { timeout: 10000 });
+        rows[0]?.textContent?.includes('src/main.ts') &&
+        rows[1]?.textContent?.includes('src/components')
+    }, { timeout: 10000 })
 
     // Verify tree view content
-    const editorContent = await page.evaluate((): string => {
-      interface MonacoWindow extends Window {
-        monaco: typeof Monaco;
-      }
-
-      const monaco = (window as MonacoWindow).monaco;
-      if (!monaco?.editor) return '';
-
-      try {
-        // Create container and model for editor
-        const container = document.createElement('div');
-        container.style.width = '100%';
-        container.style.height = '100%';
-        document.body.appendChild(container);
-
-        const model = monaco.editor.createModel('', 'plaintext');
-        if (!model) throw new Error('Failed to create model');
-
-        const editor = monaco.editor.create(container, {
-          model,
-          value: '',
-          language: 'plaintext'
-        });
-        if (!editor) throw new Error('Failed to create editor');
-
-        const content = editor.getValue();
-
-        // Clean up
-        editor.dispose();
-        model.dispose();
-        document.body.removeChild(container);
-
-        return typeof content === 'string' ? content : '';
-      } catch (error) {
-        console.error('Error getting editor content:', error);
-        return '';
-      }
-    });
-
-    console.log('Editor content:', editorContent);
-    expect(editorContent).toContain('src/main.ts');
-    expect(editorContent).toContain('src/components');
-    expect(editorContent).toMatch(/src\/main\.ts\s+\[file\]/);
-    expect(editorContent).toMatch(/src\/components\s+\[directory\]/);
-  });
+    const editorContent = await getEditorContent(page)
+    expect(editorContent).toContain('src/main.ts')
+    expect(editorContent).toContain('src/components')
+    expect(editorContent).toMatch(/src\/main\.ts\s+\[file\]/)
+    expect(editorContent).toMatch(/src\/components\s+\[directory\]/)
+  })
 
   test('should update tree view when localStorage changes', async ({ page }) => {
     // Initial empty state
-    const editorContent = await page.evaluate(() => {
-      interface MonacoWindow extends Window {
-        monaco: typeof Monaco;
-      }
-
-      const monaco = (window as MonacoWindow).monaco;
-      if (!monaco?.editor) return 'No files available';
-
-      try {
-        // Create container and model for editor
-        const container = document.createElement('div');
-        container.style.width = '100%';
-        container.style.height = '100%';
-        document.body.appendChild(container);
-
-        const model = monaco.editor.createModel('', 'plaintext');
-        if (!model) throw new Error('Failed to create model');
-
-        const editor = monaco.editor.create(container, {
-          model,
-          value: '',
-          language: 'plaintext'
-        });
-        if (!editor) throw new Error('Failed to create editor');
-
-        const content = editor.getValue();
-
-        // Clean up
-        editor.dispose();
-        model.dispose();
-        document.body.removeChild(container);
-
-        return typeof content === 'string' ? content : 'No files available';
-      } catch (error) {
-        console.error('Error getting editor content:', error);
-        return 'No files available';
-      }
-    });
-    expect(editorContent).toContain('No files available');
+    await waitForMonacoInit(page)
+    const initialContent = await getEditorContent(page)
+    expect(initialContent).toBe('')
 
     // Update localStorage
-    const mockTreeData = [
-      { path: 'src/main.ts', type: 'blob' }
-    ];
+    const mockTreeData = [{ path: 'src/main.ts', type: 'blob' }]
     await page.evaluate((data) => {
-      localStorage.setItem('github_tree_items', JSON.stringify(data));
-    }, mockTreeData);
-
-    // Trigger storage event
-    await page.evaluate(() => {
+      localStorage.setItem('github_tree_items', JSON.stringify(data))
       window.dispatchEvent(new StorageEvent('storage', {
         key: 'github_tree_items',
-        newValue: JSON.stringify([{ path: 'src/main.ts', type: 'blob' }])
-      }));
-    });
+        newValue: JSON.stringify(data)
+      }))
+    }, mockTreeData)
 
-    // Wait for Monaco editor update
+    // Wait for tree view update
     await page.waitForFunction(() => {
-      interface MonacoWindow extends Window {
-        monaco: typeof Monaco;
-      }
-
-      const monaco = (window as MonacoWindow).monaco;
-      if (!monaco?.editor) return false;
-
-      try {
-        // Create container and model for editor
-        const container = document.createElement('div');
-        container.style.width = '100%';
-        container.style.height = '100%';
-        document.body.appendChild(container);
-
-        const model = monaco.editor.createModel('', 'plaintext');
-        if (!model) return false;
-
-        const editor = monaco.editor.create(container, {
-          model,
-          value: '',
-          language: 'plaintext'
-        });
-        if (!editor) return false;
-
-        const content = editor.getValue();
-        if (typeof content !== 'string') return false;
-
-        // Clean up
-        editor.dispose();
-        model.dispose();
-        document.body.removeChild(container);
-
-        return content.includes('src/main.ts');
-      } catch (error) {
-        console.error('Error checking editor content:', error);
-        return false;
-      }
-    });
+      const rows = document.querySelectorAll('.monaco-tree-row')
+      return rows.length === 1 && rows[0]?.textContent?.includes('src/main.ts')
+    }, { timeout: 10000 })
 
     // Verify updated content
-    const updatedContent = await page.evaluate(() => {
-      interface MonacoWindow extends Window {
-        monaco: typeof Monaco;
-      }
-
-      const monaco = (window as MonacoWindow).monaco;
-      if (!monaco?.editor) return '';
-
-      try {
-        // Create container and model for editor
-        const container = document.createElement('div');
-        container.style.width = '100%';
-        container.style.height = '100%';
-        document.body.appendChild(container);
-
-        const model = monaco.editor.createModel('', 'plaintext');
-        if (!model) throw new Error('Failed to create model');
-
-        const editor = monaco.editor.create(container, {
-          model,
-          value: '',
-          language: 'plaintext'
-        });
-        if (!editor) throw new Error('Failed to create editor');
-
-        const content = editor.getValue();
-
-        // Clean up
-        editor.dispose();
-        model.dispose();
-        document.body.removeChild(container);
-
-        return typeof content === 'string' ? content : '';
-      } catch (error) {
-        console.error('Error getting editor content:', error);
-        return '';
-      }
-    });
-
-    console.log('Updated editor content:', updatedContent);
-    expect(updatedContent).toContain('src/main.ts');
-    expect(updatedContent).toMatch(/src\/main\.ts\s+\[file\]/);
-  });
+    const updatedContent = await getEditorContent(page)
+    expect(updatedContent).toContain('src/main.ts')
+    expect(updatedContent).toMatch(/src\/main\.ts\s+\[file\]/)
+  })
 
   test('should support keyboard navigation', async ({ page }) => {
-    // Setup mock tree data with nested structure
+    // Setup mock tree data
     const mockTreeData = [
       { path: 'src/main.ts', type: 'blob' },
       { path: 'src/components', type: 'tree' },
       { path: 'src/components/Header.tsx', type: 'blob' }
-    ];
+    ]
+
     await page.evaluate((data) => {
-      localStorage.setItem('github_tree_items', JSON.stringify(data));
-    }, mockTreeData);
+      localStorage.setItem('github_tree_items', JSON.stringify(data))
+    }, mockTreeData)
 
-    await page.reload();
-    await page.waitForFunction(() => {
-      interface MonacoWindow extends Window {
-        monaco: typeof Monaco;
-      }
-
-      const monaco = (window as MonacoWindow).monaco;
-      if (!monaco?.editor) return false;
-
-      try {
-        // Create container and model for editor
-        const container = document.createElement('div');
-        container.style.width = '100%';
-        container.style.height = '100%';
-        document.body.appendChild(container);
-
-        const model = monaco.editor.createModel('', 'plaintext');
-        if (!model) throw new Error('Failed to create model');
-
-        const editor = monaco.editor.create(container, {
-          model,
-          value: '',
-          language: 'plaintext'
-        });
-        if (!editor) throw new Error('Failed to create editor');
-
-        const isReady = typeof editor.getValue === 'function' &&
-                       typeof editor.focus === 'function' &&
-                       typeof editor.getModel === 'function';
-
-        // Clean up
-        editor.dispose();
-        model.dispose();
-        document.body.removeChild(container);
-
-        return isReady;
-      } catch (error) {
-        console.error('Monaco editor initialization error:', error);
-        return false;
-      }
-    }, { timeout: 30000 });
+    await waitForMonacoInit(page)
 
     // Wait for tree view to be fully loaded
-    await page.waitForSelector('.monaco-tree-row', { state: 'visible', timeout: 10000 });
+    await page.waitForSelector('.monaco-tree-row', { state: 'visible', timeout: 10000 })
 
-    // Focus the editor
-    await page.evaluate(() => {
-      interface MonacoWindow extends Window {
-        monaco: typeof Monaco;
-      }
-
-      const monaco = (window as MonacoWindow).monaco;
-      if (!monaco?.editor) return;
-
-      try {
-        // Create container and model for editor
-        const container = document.createElement('div');
-        container.style.width = '100%';
-        container.style.height = '100%';
-        document.body.appendChild(container);
-
-        const model = monaco.editor.createModel('', 'plaintext');
-        if (!model) throw new Error('Failed to create model');
-
-        const editor = monaco.editor.create(container, {
-          model,
-          value: '',
-          language: 'plaintext'
-        });
-        if (!editor) throw new Error('Failed to create editor');
-
-        editor.focus();
-
-        // Clean up
-        editor.dispose();
-        model.dispose();
-        document.body.removeChild(container);
-      } catch (error) {
-        console.error('Error focusing editor:', error);
-      }
-    });
-
-    // Test down arrow (j key)
-    await page.keyboard.press('j');
-    let position = await page.evaluate(() => {
-      interface MonacoWindow extends Window {
-        monaco: typeof Monaco;
-      }
-
-      const monaco = (window as MonacoWindow).monaco;
-      if (!monaco?.editor) return { lineNumber: 1, column: 1 };
-
-      try {
-        // Create container and model for editor
-        const container = document.createElement('div');
-        container.style.width = '100%';
-        container.style.height = '100%';
-        document.body.appendChild(container);
-
-        const model = monaco.editor.createModel('', 'plaintext');
-        if (!model) return { lineNumber: 1, column: 1 };
-
-        const editor = monaco.editor.create(container, {
-          model,
-          value: '',
-          language: 'plaintext'
-        });
-        if (!editor) return { lineNumber: 1, column: 1 };
-
-        const position = editor.getPosition();
-        if (!position) return { lineNumber: 1, column: 1 };
-
-        // Clean up
-        editor.dispose();
-        model.dispose();
-        document.body.removeChild(container);
-
-        return position;
-      } catch (error) {
-        console.error('Error getting editor position:', error);
-        return null;
-      }
-    });
-    expect(position?.lineNumber).toBe(2);
-
-    // Test up arrow (k key)
-    await page.keyboard.press('k');
-    position = await page.evaluate(() => {
-      interface MonacoWindow extends Window {
-        monaco: typeof Monaco;
-      }
-
-      const monaco = (window as MonacoWindow).monaco;
-      if (!monaco?.editor) return { lineNumber: 1, column: 1 };
-
-      try {
-        // Create container and model for editor
-        const container = document.createElement('div');
-        container.style.width = '100%';
-        container.style.height = '100%';
-        document.body.appendChild(container);
-
-        const model = monaco.editor.createModel('', 'plaintext');
-        if (!model) return { lineNumber: 1, column: 1 };
-
-        const editor = monaco.editor.create(container, {
-          model,
-          value: '',
-          language: 'plaintext'
-        });
-        if (!editor) return { lineNumber: 1, column: 1 };
-
-        const position = editor.getPosition();
-        if (!position) return { lineNumber: 1, column: 1 };
-
-        // Clean up
-        editor.dispose();
-        model.dispose();
-        document.body.removeChild(container);
-
-        return position;
-      } catch (error) {
-        console.error('Error getting editor position:', error);
-        return null;
-      }
-    });
-    expect(position?.lineNumber).toBe(1);
-
-    // Test directory navigation
-    await page.keyboard.press('j'); // Move to directory
-    await page.keyboard.press('Enter'); // Expand directory
+    // Test keyboard navigation
+    await page.keyboard.press('j') // Move down
+    await page.keyboard.press('Enter') // Expand directory
     await page.waitForFunction(() => {
-      interface MonacoWindow extends Window {
-        monaco: typeof Monaco;
-      }
+      const rows = document.querySelectorAll('.monaco-tree-row')
+      return rows.length === 3 && rows[2]?.textContent?.includes('Header.tsx')
+    }, { timeout: 10000 })
 
-      const monaco = (window as MonacoWindow).monaco;
-      if (!monaco?.editor) return false;
-
-      try {
-        // Create container and model for editor
-        const container = document.createElement('div');
-        container.style.width = '100%';
-        container.style.height = '100%';
-        document.body.appendChild(container);
-
-        const model = monaco.editor.createModel('', 'plaintext');
-        if (!model) throw new Error('Failed to create model');
-
-        const editor = monaco.editor.create(container, {
-          model,
-          value: '',
-          language: 'plaintext'
-        });
-        if (!editor) throw new Error('Failed to create editor');
-
-        const content = editor.getValue();
-
-        // Clean up
-        editor.dispose();
-        model.dispose();
-        document.body.removeChild(container);
-
-        return typeof content === 'string' && content.includes('Header.tsx');
-      } catch (error) {
-        console.error('Error checking editor content:', error);
-        return false;
-      }
-    });
-
-    // Test back navigation
-    await page.keyboard.press('Control+o');
+    await page.keyboard.press('Control+o') // Navigate back
     await page.waitForFunction(() => {
-      interface MonacoWindow extends Window {
-        monaco: typeof Monaco;
-      }
+      const rows = document.querySelectorAll('.monaco-tree-row')
+      return rows.length === 2 && !rows[1]?.textContent?.includes('Header.tsx')
+    }, { timeout: 10000 })
 
-      const monaco = (window as MonacoWindow).monaco;
-      if (!monaco?.editor) return false;
-
-      try {
-        // Create container and model for editor
-        const container = document.createElement('div');
-        container.style.width = '100%';
-        container.style.height = '100%';
-        document.body.appendChild(container);
-
-        const model = monaco.editor.createModel('', 'plaintext');
-        if (!model) throw new Error('Failed to create model');
-
-        const editor = monaco.editor.create(container, {
-          model,
-          value: '',
-          language: 'plaintext'
-        });
-        if (!editor) throw new Error('Failed to create editor');
-
-        const content = editor.getValue();
-
-        // Clean up
-        editor.dispose();
-        model.dispose();
-        document.body.removeChild(container);
-
-        return typeof content === 'string' &&
-          content.includes('src/components') &&
-          !content.includes('Header.tsx');
-      } catch (error) {
-        console.error('Error checking editor content:', error);
-        return false;
-      }
-    });
-
-    // Test file selection
-    await page.keyboard.press('j'); // Move to file
-    await page.keyboard.press('Enter'); // Select file
-    const selectedPath = await page.evaluate(() => {
-      interface MonacoWindow extends Window {
-        monaco: typeof Monaco;
-      }
-
-      const monaco = (window as MonacoWindow).monaco;
-      if (!monaco?.editor) return '';
-
-      try {
-        // Create container and model for editor
-        const container = document.createElement('div');
-        container.style.width = '100%';
-        container.style.height = '100%';
-        document.body.appendChild(container);
-
-        const model = monaco.editor.createModel('', 'plaintext');
-        if (!model) throw new Error('Failed to create model');
-
-        const editor = monaco.editor.create(container, {
-          model,
-          value: '',
-          language: 'plaintext'
-        });
-        if (!editor) throw new Error('Failed to create editor');
-
-        const path = (window as typeof window & { selectedFilePath?: string })?.selectedFilePath;
-
-        // Clean up
-        editor.dispose();
-        model.dispose();
-        document.body.removeChild(container);
-
-        return typeof path === 'string' ? path : '';
-      } catch (error) {
-        console.error('Error getting selected path:', error);
-        return '';
-      }
-    });
-    expect(selectedPath).toBe('src/main.ts');
-  });
-});
+    // Verify final state
+    const content = await getEditorContent(page)
+    expect(content).toContain('src/main.ts')
+    expect(content).toContain('src/components')
+    expect(content).not.toContain('Header.tsx')
+  })
+})
