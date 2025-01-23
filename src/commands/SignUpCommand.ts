@@ -16,8 +16,8 @@ export const SignUpCommand: ICommand = {
         if (_parsedCommand.args.length === 2) {
             // Start signup process
             setIsInSignUpProcess(true);
-            setTempUserName(_parsedCommand.args[0]);
-            setTempEmail(_parsedCommand.args[1])
+            setTempUserName(_parsedCommand.args?.[0] ?? '');
+            setTempEmail(_parsedCommand.args?.[1] ?? '')
             return { status: 200, message: 'Enter password:' };
         } else if (_parsedCommand.args.length === 3 && isInSignUpProcessSignal.value) {
             // Complete signup process

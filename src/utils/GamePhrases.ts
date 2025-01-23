@@ -60,7 +60,7 @@ export default class GamePhrases {
      */
     public static getGamePhraseByIndex(index: number): GamePhrase | null {
         if (index >= 0 && index < Phrases.length && Phrases[index] != null) {
-            return Phrases[index];
+            return Phrases[index] ?? null;
         }
         if (index < 0 && Phrases[0] != null) return Phrases[0];
         if (index >= Phrases.length && Phrases[Phrases.length - 1] != null){

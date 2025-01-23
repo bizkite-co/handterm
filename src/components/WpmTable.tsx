@@ -17,8 +17,8 @@ export const WpmTable: React.FC<WpmTableProps> = ({ wpms, name = "slowest-charac
       if (!acc[char]) {
         acc[char] = { character: char, wpm: curr.wpm, count: 1 };
       } else {
-        acc[char].wpm += curr.wpm;
-        acc[char].count += 1;
+        (acc[char] ??= { character: char, wpm: 0, count: 0 }).wpm += curr.wpm;
+        (acc[char] ??= { character: char, wpm: 0, count: 0 }).count += 1;
       }
       return acc;
     }, {} as Record<string, { character: string, wpm: number, count: number }>);

@@ -9,7 +9,7 @@ export const HelpCommand: ICommand = {
   name: 'help',
   description: 'Display help information',
   execute: (
-    context: ICommandContext,
+    _context: ICommandContext,
     parsedCommand: ParsedCommand,
   ): Promise<ICommandResponse> => {
     if (

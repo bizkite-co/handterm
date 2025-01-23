@@ -18,8 +18,8 @@ const averageWpmByCharacter = (charWpms: CharWPM[]) => {
         if (!charGroups[character]) {
             charGroups[character] = { totalWpm: 0, count: 0 };
         }
-        charGroups[character].totalWpm += wpm;
-        charGroups[character].count++;
+        (charGroups[character] ??= { totalWpm: 0, count: 0 }).totalWpm += wpm;
+        (charGroups[character] ??= { totalWpm: 0, count: 0 }).count++;
     });
 
     // Calculate average WPM for each character

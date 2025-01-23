@@ -27,10 +27,10 @@ export const BypassCommand: ICommand = {
       });
     }
 
-    return {
-      success: true,
+    return Promise.resolve({
+      status: 200,
       message: `Bypass mode ${newBypassState ? 'enabled' : 'disabled'}. ${newBypassState ? 'You are now in NORMAL mode.' : 'Tutorial mode will resume on next page load.'}`
-    };
+    });
   }
 };
 
