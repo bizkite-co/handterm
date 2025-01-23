@@ -1,0 +1,24 @@
+## Phase 6: Type System Cleanup
+- [x] Fix duplicate property declarations in activitySignal
+  - [x] Create separate interface for window extensions (Updated WindowExtensions in window.ts)
+  - [x] Make executeCommand optional in window interface (Added ? to property)
+  - [x] Ensure consistent property types across declarations (Added ActivityType)
+  - [x] Add proper window existence checks (Added isWindowDefined helper)
+- [ ] Make executeCommand declaration consistent
+- [x] Properly handle symbol type casting
+  - [x] Simplify Signal interface to use basic symbol type (Changed to use symbol instead of unique symbol)
+  - [x] Remove custom brand types and use CoreSignal's brand (Using Omit<CoreSignal<T>, 'brand'>)
+  - [x] Create helper function for symbol creation (Using Symbol.for consistently)
+  - [x] Update all signal implementations to use consistent brand handling (Standardized in createSignal)
+- [x] Add comprehensive type validation for Signal implementations (Added in createSignal)
+- [x] Verify Window extension types are properly declared (Updated WindowExtensions interface)
+- [ ] Ensure type safety across the entire codebase
+- [x] Review all type assertions and casting (Removed unnecessary assertions)
+- [x] Align window checks with `window != null` pattern (Using isWindowDefined helper)
+- [x] Refine unique symbol handling (Simplified to use basic symbol type)
+- [x] Ensure compatibility with both signal implementations
+  - [x] Create base signal factory function (Implemented createSignal)
+  - [x] Implement proper value getters/setters (Added getValue with proper type handling)
+  - [x] Add comprehensive type validation (Added in createSignal)
+  - [x] Ensure consistent error handling (Using optional chaining and defaults)
+

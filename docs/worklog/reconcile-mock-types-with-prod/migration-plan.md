@@ -1,0 +1,14 @@
+## Phase 4: Migration Plan
+- [x] Update production code to use shared types
+- [x] Update tests to use shared types
+- [x] Remove duplicate type definitions
+- [ ] Verify no regressions
+  - [ ] Add integration tests
+  - [ ] Run full test suite
+  - [x] Add DOM parent chain validation steps (playwright.setup.ts:62-64)
+  - [x] Implement initialization sequence checks (HandTermWrapper.tsx:338)
+  - [ ] Document element dependency chain
+- [x] Update exposeSignals.ts to match Signal interface
+- [x] Implement proper error handling in executeCommand
+- [x] Fix type safety issues in tutorial signals
+- [x] Add type validation for all signal implementations

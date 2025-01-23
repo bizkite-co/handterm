@@ -18,13 +18,6 @@ interface SignalError extends Error {
   signalName: string;
 }
 
-function isSignalError(e: unknown): e is SignalError {
-  return typeof e === 'object' &&
-         e !== null &&
-         'code' in e &&
-         'signalName' in e;
-}
-
 let isInitialized = false;
 
 /**
@@ -36,8 +29,8 @@ function isWindowWithSignals(win: unknown): win is Window & WindowExtensions {
     win !== null &&
     isWindowDefined() &&
     'activitySignal' in win &&
-    typeof (win as WindowExtensions).activitySignal?.get === 'function' &&
-    typeof (win as WindowExtensions).activitySignal?.set === 'function' &&
+    typeof (win as WindowExtensions).activitySignal?.peek === 'function' &&
+    typeof (win as WindowExtensions).activitySignal?.subscribe === 'function' &&
     'commandLineSignal' in win &&
     'tutorialSignals' in win;
 
@@ -115,21 +108,60 @@ function initializeWindow(): void {
 
   try {
     // Create activity signal
-    const activitySignal = createSafeSignal<ActivityType>({
-      name: 'activitySignal',
-      value: () => activityState.value.current,
-      setValue: (v: ActivityType) => {
-        activityState.value = { ...activityState.value, current: v };
-      },
-      subscribe: (callback: (value: ActivityType) => void) => {
-        console.log('[exposeSignals] Subscribing to activitySignal');
-        return activityState.subscribe((state) => callback(state.current));
+    const activitySignal = new class extends SignalBase<ActivityType> {
+      type = 'activity';
+      get value(): ActivityType {
+        return activityState.value.current;
       }
-    });
+      set value(v: ActivityType) {
+        activityState.value = { ...activityState.value, current: v };
+        this.notifySubscribers();
+      }
+
+      subscribe(callback: (value: ActivityType) => void): () => void {
+        this.subscribers.add(callback);
+        return () => this.subscribers.delete(callback);
+      }
+    };
 
     // Create tutorial signals
-    const tutorialSignals: TutorialSignals = {
-      currentStep: createSafeSignal<string>({
+    const tutorialSignals = new class extends SignalBase<unknown> implements TutorialSignals {
+      type = 'tutorial';
+      value = null;
+
+      currentStep = new class extends SignalBase<string> {
+        type = 'tutorialStep';
+        value = '0';
+
+        subscribe(callback: (value: string) => void): () => void {
+          this.subscribers.add(callback);
+          return () => this.subscribers.delete(callback);
+        }
+      };
+
+      totalSteps = new class extends SignalBase<number> {
+        type = 'tutorialTotalSteps';
+        value = GamePhrases.getGamePhrasesByTutorialGroup('tutorial').length;
+
+        subscribe(callback: (value: number) => void): () => void {
+          this.subscribers.add(callback);
+          return () => this.subscribers.delete(callback);
+        }
+      };
+
+      isCompleted = new class extends SignalBase<boolean> {
+        type = 'tutorialCompleted';
+        value = false;
+
+        subscribe(callback: (value: boolean) => void): () => void {
+          this.subscribers.add(callback);
+          return () => this.subscribers.delete(callback);
+        }
+      };
+
+      subscribe(): () => void {
+        throw new Error('Method not implemented.');
+      }
         name: 'tutorialSignal.currentStep',
         value: '0',
         setValue: (value: string) => {
@@ -170,8 +202,8 @@ function initializeWindow(): void {
       })
     };
 
-    // Initialize window properties
-    Object.assign(window, {
+    // Initialize window properties with proper descriptors
+    const signalsToAttach = {
       activitySignal,
       commandLineSignal,
       ActivityType,
@@ -181,6 +213,21 @@ function initializeWindow(): void {
         commandLineSignal.value = command;
         await new Promise((resolve) => setTimeout(resolve, 500));
       }
+    };
+
+    console.log('[exposeSignals] Attaching signals:', {
+      activitySignal: !!signalsToAttach.activitySignal,
+      commandLineSignal: !!signalsToAttach.commandLineSignal,
+      tutorialSignals: !!signalsToAttach.tutorialSignals
+    });
+
+    // Use defineProperty to ensure writability
+    Object.keys(signalsToAttach).forEach(key => {
+      Object.defineProperty(window, key, {
+        value: signalsToAttach[key as keyof typeof signalsToAttach],
+        writable: true,
+        configurable: true
+      });
     });
 
     isInitialized = true;
