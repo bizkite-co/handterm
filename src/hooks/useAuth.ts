@@ -82,35 +82,58 @@ export function useAuth(): IAuthProps {
   const refreshMutation = useMutation({
     mutationFn: async (): Promise<MyResponse<AuthResponse>> => {
       const refreshToken = localStorage.getItem(TokenKeys.RefreshToken);
-      if (typeof refreshToken !== 'string' || refreshToken === '') throw new Error('No refresh token');
+      if (typeof refreshToken !== 'string' || refreshToken === '') {
+        clearTokens();
+        throw new Error('No refresh token');
+      }
 
-      const response = await axios.post(
-        `${API_URL}${endpoints.api.RefreshToken}`,
-        { refreshToken }
-      );
+      try {
+        const response = await axios.post(
+          `${API_URL}${endpoints.api.RefreshToken}`,
+          { refreshToken }
+        );
 
-      if (response.data != null && typeof response.data === 'object' && 'AccessToken' in response.data) {
-        return {
-          status: 200,
-          data: response.data as AuthResponse,
-          message: 'Token refreshed',
-          error: []
-        };
-      } else {
-        throw new Error('Invalid refresh token response');
+        if (response.status === 500) {
+          logger.error('Server error during token refresh');
+          clearTokens();
+          throw new Error('Server error during token refresh');
+        }
+
+        if (response.data != null && typeof response.data === 'object' && 'AccessToken' in response.data) {
+          return {
+            status: 200,
+            data: response.data as AuthResponse,
+            message: 'Token refreshed',
+            error: []
+          };
+        } else {
+          throw new Error('Invalid refresh token response');
+        }
+      } catch (error) {
+        if (axios.isAxiosError(error) && error.response?.status === 500) {
+          clearTokens();
+          throw new Error('Server error during token refresh');
+        }
+        throw error;
       }
     },
-    onSuccess: (data) => {
-      if (data.data != null && typeof data.data === 'object' && 'AccessToken' in data.data) {
-        setExpiresAtLocalStorage(data.data.ExpiresIn);
+    onSuccess: (response: MyResponse<AuthResponse>) => {
+      if (response.data != null && typeof response.data === 'object' && 'AccessToken' in response.data) {
+        setExpiresAtLocalStorage(response.data.ExpiresIn);
         setIsLoggedIn(true);
         isLoggedInSignal.value = true;
-        localStorage.setItem(TokenKeys.AccessToken, data.data.AccessToken);
+        localStorage.setItem(TokenKeys.AccessToken, response.data.AccessToken);
         void queryClient.invalidateQueries({ queryKey: ['auth', 'session'] });
       }
     },
-    retry: 3,
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    retry: (failureCount: number, error: unknown): boolean => {
+      if (axios.isAxiosError(error) && error.response?.status === 500) {
+        clearTokens();
+        return false;
+      }
+      return failureCount < 3;
+    },
+    retryDelay: (attemptIndex: number): number => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 
   // Token validation and refresh function
@@ -229,8 +252,17 @@ export function useAuth(): IAuthProps {
     queryKey: ['auth', 'session'],
     queryFn: async (): Promise<MyResponse<AuthResponse>> => {
       try {
+        // First check if we have the necessary tokens before attempting validation
+        const accessToken = localStorage.getItem(TokenKeys.AccessToken);
+        const refreshToken = localStorage.getItem(TokenKeys.RefreshToken);
+
+        if (!accessToken || !refreshToken) {
+          throw new Error('Missing required tokens');
+        }
+
         const isValid = await validateAndRefreshToken();
-        if (isValid.status != 200) {
+        if (isValid.status !== 200) {
+          clearTokens(); // Ensure tokens are cleared on validation failure
           throw new Error('Token validation failed');
         }
 
@@ -252,11 +284,11 @@ export function useAuth(): IAuthProps {
           };
         }
 
-        const accessToken = localStorage.getItem(TokenKeys.AccessToken);
-        if (typeof accessToken !== 'string' || accessToken === '') throw new Error('No AccessToken');
+        const currentAccessToken = localStorage.getItem(TokenKeys.AccessToken);
+        if (typeof currentAccessToken !== 'string' || currentAccessToken === '') throw new Error('No AccessToken');
         const config = {
           headers: {
-            'Authorization': `Bearer ${accessToken}`,
+            'Authorization': `Bearer ${currentAccessToken}`,
             'Content-Type': 'application/json'
           }
         };
