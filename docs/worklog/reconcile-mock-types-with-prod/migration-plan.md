@@ -9,6 +9,11 @@
   - [x] Implement initialization sequence checks (HandTermWrapper.tsx:338)
   - [ ] Document element dependency chain
   - [ ] Add test environment type requirements documentation
+  - [ ] Implement Monaco type consolidation ([monaco-type-consolidation.md](./monaco-type-consolidation.md))
+    - [ ] Create shared type definitions
+    - [ ] Add runtime validation
+    - [ ] Update test files
+    - [ ] Verify type safety
 - [x] Update exposeSignals.ts to match Signal interface
 - [x] Implement proper error handling in executeCommand
 - [x] Fix type safety issues in tutorial signals

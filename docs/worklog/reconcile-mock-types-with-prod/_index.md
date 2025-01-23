@@ -9,7 +9,6 @@
 NOTE: Never remove a checkbox. If you find a checkbox we no longer need, mark it complete and add a comment explaining why.
 
 
-
 * [x] Phase 1: [Create Package Structure](.create-package-structure.md)
 * [x] Phase 2: [Configure Package](configure-package.md)
 * [x] Phase 3: [Define Initial Types](.define-initial-types.md)
@@ -18,6 +17,7 @@ NOTE: Never remove a checkbox. If you find a checkbox we no longer need, mark it
 * [ ] Phase 6: Type System Cleanup
   - [ ] [Core Type Unification](type-system-cleanup.md)
   - [~] [Signal Interface Alignment](signal-type-unification.md) (partial - brand symbols added)
+  - [ ] [Monaco Type Consolidation](monaco-type-consolidation.md)
   - [x] Document 2025-01-22 session progress - Added simplified validation pattern
   - [x] Implemented runtime validation for external libraries
   - [ ] Update remaining signal docs with new pattern
