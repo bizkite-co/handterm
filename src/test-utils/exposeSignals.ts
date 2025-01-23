@@ -1,11 +1,7 @@
 import { commandLineSignal } from '../signals/commandLineSignals';
+import { SignalBase } from '../signals/base/SignalBase';
 import { activityState } from '../utils/activityState';
-import { tutorialSignal } from '../signals/tutorialSignals';
 import {
-  type Signal,
-  type SignalOptions,
-  createSignal,
-  isSignal,
   type WindowExtensions,
   type TutorialSignals,
   ActivityType,
@@ -45,58 +41,6 @@ function isWindowWithSignals(win: unknown): win is Window & WindowExtensions {
   return isValid;
 }
 
-/**
- * Create a signal with proper error handling and type safety
- */
-function createSafeSignal<T>(options: SignalOptions<T>): Signal<T> {
-  if (!options || typeof options !== 'object') {
-    const error = new Error('Invalid signal options') as SignalError;
-    error.code = 'INVALID_OPTIONS';
-    throw error;
-  }
-
-  if (typeof options.name !== 'string' || !options.name) {
-    const error = new Error('Signal options must include a name') as SignalError;
-    error.code = 'MISSING_NAME';
-    error.signalName = options.name;
-    throw error;
-  }
-
-  try {
-    const signal = createSignal<T>(options);
-    if (!isSignal<T>(signal)) {
-      const error = new Error(`Invalid signal created for ${options.name}`) as SignalError;
-      error.code = 'INVALID_SIGNAL';
-      error.signalName = options.name;
-      throw error;
-    }
-    return signal;
-  } catch (error: unknown) {
-    const isSignalError = (e: unknown): e is SignalError =>
-      typeof e === 'object' &&
-      e !== null &&
-      'code' in e &&
-      'signalName' in e;
-
-    const errorMessage = isSignalError(error)
-      ? error.message || 'Unknown error'
-      : 'Unknown error';
-    const errorCode = isSignalError(error)
-      ? error.code || 'UNKNOWN_ERROR'
-      : 'UNKNOWN_ERROR';
-
-    console.error(`[exposeSignals] Failed to create signal ${options.name}:`, {
-      message: errorMessage,
-      code: errorCode,
-      name: options.name
-    });
-
-    const wrappedError = new Error(`Failed to create signal ${options.name}: ${errorMessage}`) as SignalError;
-    wrappedError.code = errorCode;
-    wrappedError.signalName = options.name;
-    throw wrappedError;
-  }
-}
 
 /**
  * Initialize window signals and properties
@@ -110,6 +54,7 @@ function initializeWindow(): void {
     // Create activity signal
     const activitySignal = new class extends SignalBase<ActivityType> {
       type = 'activity';
+      brand = Symbol('activitySignal');
       get value(): ActivityType {
         return activityState.value.current;
       }
@@ -127,10 +72,12 @@ function initializeWindow(): void {
     // Create tutorial signals
     const tutorialSignals = new class extends SignalBase<unknown> implements TutorialSignals {
       type = 'tutorial';
+      brand = Symbol('tutorialSignals');
       value = null;
 
       currentStep = new class extends SignalBase<string> {
         type = 'tutorialStep';
+        brand = Symbol('tutorialStep');
         value = '0';
 
         subscribe(callback: (value: string) => void): () => void {
@@ -141,6 +88,7 @@ function initializeWindow(): void {
 
       totalSteps = new class extends SignalBase<number> {
         type = 'tutorialTotalSteps';
+        brand = Symbol('tutorialTotalSteps');
         value = GamePhrases.getGamePhrasesByTutorialGroup('tutorial').length;
 
         subscribe(callback: (value: number) => void): () => void {
@@ -151,6 +99,7 @@ function initializeWindow(): void {
 
       isCompleted = new class extends SignalBase<boolean> {
         type = 'tutorialCompleted';
+        brand = Symbol('tutorialCompleted');
         value = false;
 
         subscribe(callback: (value: boolean) => void): () => void {
@@ -162,44 +111,6 @@ function initializeWindow(): void {
       subscribe(): () => void {
         throw new Error('Method not implemented.');
       }
-        name: 'tutorialSignal.currentStep',
-        value: '0',
-        setValue: (value: string) => {
-          try {
-            const phrase = GamePhrases.getGamePhraseByKey(value);
-            if (phrase) {
-              tutorialSignal.value = phrase;
-            }
-          } catch (error) {
-            console.error('[exposeSignals] Failed to set tutorial step:', error);
-          }
-        },
-        subscribe: (callback: (value: string) => void) => tutorialSignal.subscribe((phrase) => {
-          if (phrase) {
-            callback(phrase.key);
-          }
-        })
-      }),
-      totalSteps: createSafeSignal<number>({
-        name: 'tutorialSignal.totalSteps',
-        value: () => GamePhrases.getGamePhrasesByTutorialGroup('tutorial').length,
-        setValue: () => {
-          console.warn('[exposeSignals] Attempted to set read-only totalSteps signal');
-        }
-      }),
-      isCompleted: createSafeSignal<boolean>({
-        name: 'tutorialSignal.isCompleted',
-        value: () => tutorialSignal.peek() === null,
-        setValue: (value: boolean) => {
-          try {
-            if (value) {
-              tutorialSignal.value = null;
-            }
-          } catch (error) {
-            console.error('[exposeSignals] Failed to set tutorial completion:', error);
-          }
-        }
-      })
     };
 
     // Initialize window properties with proper descriptors

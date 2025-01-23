@@ -23,7 +23,7 @@ interface SignalExtensions<T> {
 /**
  * Extended Signal interface that combines CoreSignal with additional properties
  */
-interface Signal<T> extends Omit<CoreSignal<T>, 'brand'>, SignalExtensions<T> {
+interface Signal<T> extends Omit<CoreSignal<T>, 'brand'|'key'|'type'|'props'> {
   /** Signal brand */
   readonly brand: symbol;
   /** Get current value */
@@ -32,6 +32,20 @@ interface Signal<T> extends Omit<CoreSignal<T>, 'brand'>, SignalExtensions<T> {
   subscribe: (callback: (value: T) => void) => () => void;
   /** Peek at current value without subscribing */
   peek: () => T;
+  /** Signal type identifier */
+  readonly type: string;
+  /** Additional properties for the signal */
+  readonly props: Record<string, unknown>;
+  /** Unique key for the signal */
+  readonly key: string;
+  /** Convert signal value to JSON */
+  toJSON: () => T;
+  /** String representation of signal value */
+  toString: () => string;
+  /** Get raw signal value */
+  valueOf: () => T;
+  /** Set signal value */
+  set: ((value: T) => void) | undefined;
 }
 
 /**
@@ -73,7 +87,7 @@ function createSignalImpl<T>(options: SignalOptions<T>): Signal<T> {
     toString: () => String(getValue()),
     valueOf: getValue,
     brand: Symbol.for(options.name),
-    set: options.setValue
+    set: options.setValue ? options.setValue : undefined
   };
 
   return signal;

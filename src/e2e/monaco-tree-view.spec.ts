@@ -1,9 +1,32 @@
 import { ActivityType } from '@handterm/types';
 import { test, expect } from '@playwright/test';
 import { signal, type Signal } from '@preact/signals-react';
-import type * as Monaco from 'monaco-editor';
-
 test.describe('Monaco Editor Tree View', () => {
+  declare global {
+    interface Window {
+      monaco: {
+        editor: {
+          createModel: (value: string, language: string) => unknown;
+          create: (container: HTMLElement, options: unknown) => {
+            getValue: () => string;
+            focus: () => void;
+            dispose: () => void;
+            getModel: () => { dispose: () => void };
+          };
+          defineTheme: (name: string, theme: unknown) => void;
+          setModelLanguage: (model: unknown, language: string) => void;
+        };
+    }
+  }
+
+  const getMonacoEditor = () => {
+    const editor = window.monaco.editor;
+    if (!editor?.createModel || !editor?.create) {
+      throw new Error('Monaco editor APIs not available');
+    }
+    return editor;
+  };
+
   test.beforeEach(async ({ page }) => {
     // Initialize activity signal before navigation
     await page.addInitScript(() => {

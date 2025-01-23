@@ -1,4 +1,10 @@
 import { useRef, useEffect, useImperativeHandle, forwardRef, useState, useCallback, useMemo } from 'react';
+
+declare global {
+  interface Window {
+    selectedFilePath?: string;
+  }
+}
 import Editor, { type Monaco } from '@monaco-editor/react';
 import type { IStandaloneCodeEditor } from '../types/monaco';
 import { KeyCode } from 'monaco-editor';

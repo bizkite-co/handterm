@@ -1,18 +1,24 @@
-import type * as monaco from 'monaco-editor';
+declare module 'monaco-editor' {
+  export interface IStandaloneCodeEditor {
+    getValue(): string;
+    focus(): void;
+    getModel(): ITextModel | null;
+    getPosition(): Position | null;
+    dispose(): void;
+  }
 
-export interface IStandaloneCodeEditor extends monaco.editor.IStandaloneCodeEditor {
-  onFileSelect?: (path: string) => void;
+  export interface ITextModel {
+    dispose(): void;
+  }
 }
 
-export interface IDisposable {
-  dispose(): void;
-}
-
-export interface ITextModel {
-  getLineCount(): number;
-}
-
-export interface IPosition {
-  lineNumber: number;
-  column: number;
+declare global {
+  interface Window {
+    monaco: {
+      editor: {
+        createModel(value: string, language: string): import('monaco-editor').ITextModel;
+        create(container: HTMLElement, options: unknown): import('monaco-editor').IStandaloneCodeEditor;
+      };
+    };
+  }
 }
