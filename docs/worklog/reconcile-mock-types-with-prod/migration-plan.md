@@ -8,6 +8,7 @@
   - [x] Add DOM parent chain validation steps (playwright.setup.ts:62-64)
   - [x] Implement initialization sequence checks (HandTermWrapper.tsx:338)
   - [ ] Document element dependency chain
+  - [ ] Add test environment type requirements documentation
 - [x] Update exposeSignals.ts to match Signal interface
 - [x] Implement proper error handling in executeCommand
 - [x] Fix type safety issues in tutorial signals

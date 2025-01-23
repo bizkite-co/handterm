@@ -10,17 +10,20 @@
 ### New Validation Pattern for External Libraries
 ```typescript
 interface MonacoWindow extends Window {
-  monaco: {
-    editor: {
-      createModel: (value: string, language: string) => unknown;
-      create: (container: HTMLElement, options: unknown) => {
-        getValue: () => string;
-        focus: () => void;
-        dispose: () => void;
-      };
-    };
-  };
+  monaco: typeof import('monaco-editor');
 }
+
+const getMonaco = () => (window as MonacoWindow).monaco;
+
+// Runtime validation for critical path only
+if (!getMonaco()?.editor?.create) {
+  throw new Error('Monaco editor failed initialization');
+}
+
+// Test environment setup
+beforeAll(() => {
+  (window as MonacoWindow).monaco = require('monaco-editor');
+});
 
 const getValidMonaco = () => {
   const m = (window as MonacoWindow).monaco.editor;
