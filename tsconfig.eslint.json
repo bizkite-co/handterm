@@ -16,6 +16,7 @@
     "eslint-plugin-custom-rules/index.js",
     "src/commands/HelpCommand.tsx",
     "src/utils/navigationUtils.js",
-    "playwright-setup.ts"
+    "playwright-setup.ts",
+    "scripts/**/*.js"
   ]
 }

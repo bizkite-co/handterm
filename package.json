@@ -21,6 +21,10 @@
     "lint:style": "prettier --check \"src/**/*.{ts,tsx,js,jsx}\"",
     "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx}\"",
     "preview": "vite preview",
+    "type-check": "tsc --noEmit",
+    "restart-status": "concurrently -n 'TYPES,LINT,CHECKLIST' -c 'bgBlue.bold,bgMagenta.bold,bgGreen.bold' \"npm run type-check\" \"npm run lint\" \"node scripts/checklist-status.js\"",
+    "type-check": "tsc --noEmit",
+    "restart-status": "concurrently -n 'TYPES,LINT,CHECKLIST' -c 'bgBlue.bold,bgMagenta.bold,bgGreen.bold' \"npm run type-check\" \"npm run lint\" \"node scripts/checklist-status.js\"",
     "build-shared": "vite build --ssr",
     "test:unit": "vitest",
     "test": "vitest --run && npm run test:e2e",
@@ -81,6 +85,7 @@
     "@vitest/ui": "^1.2.2",
     "buffer": "^6.0.3",
     "canvas": "^3.0.0",
+    "concurrently": "^9.1.2",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-import-resolver-typescript": "^3.7.0",
@@ -118,3 +123,7 @@
     "react-dom": "^18.2.0"
   }
 }
+  }
+}
+}
+
