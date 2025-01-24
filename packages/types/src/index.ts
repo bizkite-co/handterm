@@ -1,10 +1,20 @@
-// Re-export signal types and functions
-export type { Signal, SignalOptions, SignalExtensions } from './signal.js';
-export { createSignal, isSignal } from './signal.js';
+export * from './monaco.js';
+export * from './signal.js';
 
-// Re-export activity types
-export { ActivityType } from './activity.js';
+// Re-export Monaco types
+export type {
+  IDisposable,
+  IStandaloneCodeEditor,
+  ITextModel,
+  IActionDescriptor,
+  KeyCode,
+  KeyMod
+} from './monaco.js';
 
-// Re-export window types and functions
-export type { WindowExtensions, TutorialSignals } from './window.js';
-export { isWindowDefined } from './window.js';
+// Re-export signal types
+export type {
+  Signal,
+  SignalOptions,
+  CoreSignal,
+  SignalExtensions
+} from './signal.js';

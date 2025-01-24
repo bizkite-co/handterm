@@ -70,7 +70,7 @@ async function globalSetup(_config: FullConfig): Promise<void> {
   console.log('Checking for required window signals:', requiredSignals);
 
   let attempts = 0;
-  const maxAttempts = 5;
+  const maxAttempts = 3;
 
   while (attempts < maxAttempts) {
     const signalStatus = await page.evaluate((signals: string[]) => {
@@ -95,7 +95,7 @@ async function globalSetup(_config: FullConfig): Promise<void> {
     }
 
     attempts++;
-    await page.waitForTimeout(2000);
+    await page.waitForTimeout(1000 * attempts);
   }
 
   console.log('Verifying window signals...');

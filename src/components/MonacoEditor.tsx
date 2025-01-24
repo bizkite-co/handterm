@@ -1,16 +1,33 @@
 import { useRef, useEffect, useImperativeHandle, forwardRef, useState, useCallback, useMemo } from 'react';
+import * as monaco from 'monaco-editor';
+import { initVimMode } from 'monaco-vim';
+import type {
+  IDisposable,
+  IStandaloneCodeEditor,
+  KeyCode,
+  KeyMod
+} from '@handterm/types';
 
 declare global {
   interface Window {
+    monacoEditor?: IStandaloneCodeEditor;
     selectedFilePath?: string;
   }
 }
-import Editor, { type Monaco } from '@monaco-editor/react';
-import type { IStandaloneCodeEditor } from '../types/monaco';
-import { KeyCode } from 'monaco-editor';
-import type * as monaco from 'monaco-editor';
-import { initVimMode } from 'monaco-vim';
+
+type OnMount = (
+  editor: editor.IStandaloneCodeEditor,
+  monacoInstance: typeof monaco
+) => void;
 import { formatTreeContent, getItemAtLine } from '../utils/treeFormatter';
+
+// Declare window extensions
+declare global {
+  interface Window {
+    monacoEditor?: editor.IStandaloneCodeEditor;
+    selectedFilePath?: string;
+  }
+}
 
 interface TreeItem {
   path: string;
@@ -57,7 +74,7 @@ const mapGitHubToLocalTreeItem = (item: GitHubTreeItem): TreeItem => ({
 
 const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(
   ({ initialValue, language = 'plaintext', height = '80vh', isTreeView, onFileSelect, onContentChange }, ref) => {
-    const editorRef = useRef<IStandaloneCodeEditor | null>(null);
+    const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
     const vimStatusBarRef = useRef<HTMLDivElement | null>(null);
     const vimModeRef = useRef<monaco.IDisposable | null>(null);
     const [disposables] = useState<monaco.IDisposable[]>([]);
@@ -75,26 +92,16 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(
 
     useImperativeHandle(ref, () => ({
       focus: () => {
-        if (editorRef.current) {
-          editorRef.current.focus();
+        const editor = editorRef.current;
+        if (editor) {
+          editor.focus();
         }
       }
     }));
 
-    const handleEditorDidMount = (
-      editor: IStandaloneCodeEditor,
-      _monaco: Monaco
-    ) => {
-      console.log('MonacoEditor: Editor mounted with props:', {
-        isTreeView,
-        initialValue,
-        language,
-        height
-      });
+    const handleEditorDidMount: OnMount = (editor, monacoInstance) => {
       editorRef.current = editor;
       window.monacoEditor = editor;
-      console.log('MonacoEditor: Editor reference set on window');
-      console.log('MonacoEditor: isTreeView:', isTreeView);
 
       if (vimStatusBarRef.current) {
         vimModeRef.current = initVimMode(editor, vimStatusBarRef.current);
@@ -106,10 +113,11 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(
         const moveDown = editor.addAction({
           id: 'moveDown',
           label: 'Move Down',
-          keybindings: [KeyCode.KeyJ],
+          keybindings: [monacoInstance.KeyCode.KeyJ],
           run: () => {
-            const currentLine = editor.getPosition()?.lineNumber || 1;
-            const nextLine = Math.min(currentLine + 1, editor.getModel()?.getLineCount() || 1);
+            const currentLine = editor.getPosition()?.lineNumber ?? 1;
+            const model = editor.getModel();
+            const nextLine = Math.min(currentLine + 1, model?.getLineCount() ?? 1);
             editor.setPosition({ lineNumber: nextLine, column: 1 });
             editor.revealLine(nextLine);
           }
@@ -119,7 +127,7 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(
         const moveUp = editor.addAction({
           id: 'moveUp',
           label: 'Move Up',
-          keybindings: [KeyCode.KeyK],
+          keybindings: [monacoInstance.KeyCode.KeyK],
           run: () => {
             const currentLine = editor.getPosition()?.lineNumber ?? 1;
             const prevLine = Math.max(currentLine - 1, 1);
@@ -129,11 +137,10 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(
         });
         disposables.push(moveUp);
 
-        // Add back navigation action
         const navigateBack = editor.addAction({
           id: 'navigateBack',
           label: 'Navigate Back',
-          keybindings: [KeyCode.Ctrl | KeyCode.KeyO],
+          keybindings: [monacoInstance.KeyCode.Ctrl | monacoInstance.KeyCode.KeyO],
           run: () => {
             if (history.current.length > 0) {
               const previousState = history.current.pop();
@@ -150,22 +157,19 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(
         const selectItem = editor.addAction({
           id: 'selectItem',
           label: 'Select Item',
-          keybindings: [KeyCode.Enter],
+          keybindings: [monacoInstance.KeyCode.Enter],
           run: () => {
             const currentLine = editor.getPosition()?.lineNumber ?? 1;
             const item = getItemAtLine(treeItemsState, currentLine);
 
             if (item != null) {
               if (item.type === 'directory') {
-                // Filter tree items to show only items within this directory
-                // Store current state for back navigation
                 const currentState = {
                   items: treeItemsState,
                   path: item.path
                 };
                 history.current.push(currentState);
 
-                // Show only immediate children of the selected directory
                 const newTreeItems = treeItemsState
                   .filter(t => {
                     const isChild = t.path.startsWith(item.path + '/');
@@ -174,7 +178,6 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(
                     return isChild && childDepth === parentDepth + 1;
                   })
                   .sort((a, b) => {
-                    // Directories first, then files
                     if (a.type === 'directory' && b.type !== 'directory') return -1;
                     if (b.type === 'directory' && a.type !== 'directory') return 1;
                     return a.path.localeCompare(b.path);
@@ -195,15 +198,10 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(
     };
 
     const updateTreeData = useCallback(() => {
-      console.log('MonacoEditor: updateTreeData called');
       if (!isTreeView) return;
 
       const storedItems = localStorage.getItem('github_tree_items');
-      console.log('MonacoEditor: Retrieved github_tree_items from localStorage:', storedItems);
-      console.log('MonacoEditor: isTreeView:', isTreeView);
-      console.log('MonacoEditor: editorRef.current:', editorRef.current);
       if (!storedItems) {
-        console.log('MonacoEditor: No tree items found in localStorage');
         setTreeItemsState([]);
         return;
       }
@@ -211,18 +209,13 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(
       try {
         const parsedItems: unknown = JSON.parse(storedItems);
         if (isGitHubTreeItems(parsedItems)) {
-          console.log('MonacoEditor: Parsed github_tree_items:', parsedItems);
           const mappedItems = parsedItems.map(mapGitHubToLocalTreeItem);
-          console.log('MonacoEditor: Mapped tree items:', mappedItems);
           setTreeItemsState(mappedItems);
           setInitialized(true);
           setError(null);
-        } else {
-          console.log('MonacoEditor: Invalid github_tree_items format:', parsedItems);
         }
       } catch (error) {
         if (error instanceof Error) {
-          console.error('Failed to parse github_tree_items:', error.message);
           setError(error.message);
           setTreeItemsState([]);
         }
@@ -231,45 +224,34 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(
 
     useEffect(() => {
       if (isTreeView) {
-        console.log('MonacoEditor: Initial tree view mount - loading data');
         updateTreeData();
       }
     }, [isTreeView, updateTreeData]);
 
     useEffect(() => {
       if (isTreeView && !initialized) {
-        console.log('MonacoEditor: Initializing tree view data');
         updateTreeData();
       }
     }, [isTreeView, initialized, updateTreeData]);
 
     useEffect(() => {
       const handleStorageChange = (event: StorageEvent) => {
-        console.log('MonacoEditor: Storage event detected', {
-          key: event.key,
-          newValue: event.newValue
-        });
         if (event.key === 'github_tree_items') {
-          console.log('MonacoEditor: github_tree_items changed - updating');
           updateTreeData();
         }
       };
 
-      console.log('MonacoEditor: Adding storage event listener');
       window.addEventListener('storage', handleStorageChange);
       return () => {
-        console.log('MonacoEditor: Removing storage event listener');
         window.removeEventListener('storage', handleStorageChange);
       };
     }, [updateTreeData]);
 
-    // Manual refresh when tree view becomes active
     useEffect(() => {
       if (isTreeView && editorRef.current) {
-        console.log('MonacoEditor: Tree view became active - refreshing data');
         updateTreeData();
       }
-    }, [isTreeView]);
+    }, [isTreeView, updateTreeData]);
 
     const editorContent = useMemo(() => {
       if (!isTreeView) return initialValue;
@@ -288,10 +270,11 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(
 
     const loadFileContent = useCallback((path: string) => {
       const content = localStorage.getItem(`github_file_content:${path}`);
-      if (content && editorRef.current) {
-        editorRef.current.setValue(content);
-        editorRef.current.setPosition({ lineNumber: 1, column: 1 });
-        editorRef.current.revealLine(1);
+      const editor = editorRef.current;
+      if (content && editor) {
+        editor.setValue(content);
+        editor.setPosition({ lineNumber: 1, column: 1 });
+        editor.revealLine(1);
         setCurrentFilePath(path);
       }
     }, []);
@@ -310,35 +293,27 @@ const MonacoEditor = forwardRef<MonacoEditorHandle, MonacoEditorProps>(
     }, [loadFileContent, onFileSelect]);
 
     useEffect(() => {
-      if (editorRef.current != null) {
-        console.log('MonacoEditor: Updating editor content', {
-          isTreeView,
-          initialized,
-          treeItemsState,
-          editorContent
-        });
-
-        editorRef.current.updateOptions({
+      const editor = editorRef.current;
+      if (editor) {
+        editor.updateOptions({
           readOnly: isTreeView,
           lineNumbers: isTreeView ? 'off' : 'on',
           wordWrap: isTreeView ? 'on' : 'off'
         });
 
-        const currentValue = editorRef.current.getValue();
+        const currentValue = editor.getValue();
         if (currentValue !== editorContent) {
-          console.log('MonacoEditor: Setting new editor content');
-          editorRef.current.setValue(editorContent);
-          editorRef.current.setPosition({ lineNumber: 1, column: 1 });
-          editorRef.current.revealLine(1);
-        } else {
-          console.log('MonacoEditor: Content is already up to date');
+          editor.setValue(editorContent);
+          editor.setPosition({ lineNumber: 1, column: 1 });
+          editor.revealLine(1);
         }
       }
-    }, [editorContent, isTreeView, treeItemsState, initialized]);
+    }, [editorContent, isTreeView]);
 
     useEffect(() => {
-      if (!isTreeView && currentFilePath && onContentChange) {
-        const model = editorRef.current?.getModel();
+      const editor = editorRef.current;
+      if (!isTreeView && currentFilePath && onContentChange && editor) {
+        const model = editor.getModel();
         if (model) {
           const contentListener = model.onDidChangeContent(() => {
             const content = model.getValue();

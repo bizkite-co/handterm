@@ -1,4 +1,4 @@
-import { ActivityType } from '@handterm/types'
+import { ActivityType, type ActivityTypeValues } from '@handterm/types'
 import { test, expect, type Page } from '@playwright/test'
 import { signal, type Signal } from '@preact/signals-react'
 import { withTempEditor, isMonacoWindow } from '../../packages/types/src/monaco'
@@ -8,7 +8,7 @@ test.describe('Monaco Editor Tree View', () => {
     // Initialize activity signal before navigation
     await page.addInitScript(() => {
       interface ActivityWindow extends Window {
-        activitySignal: Signal<ActivityType>
+        activitySignal: Signal<ActivityTypeValues>
       }
       (window as unknown as ActivityWindow).activitySignal = signal(ActivityType.TREE)
     })
