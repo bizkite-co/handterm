@@ -88,8 +88,8 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
   useEffect(() => {
     const updateActivity = () => {
       logger.debug('Activity signal changed:', {
-        from: ActivityType[currentActivity],
-        to: ActivityType[activitySignal.value],
+        from: currentActivity,
+        to: activitySignal.value,
         tutorialState: tutorialSignal.value,
         isTutorialComplete: tutorialSignal.value === null
       });
@@ -117,7 +117,7 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
 
   useEffect(() => {
     logger.debug('Current activity:', {
-      activity: ActivityType[currentActivity],
+      activity: currentActivity,
       tutorialState: tutorialSignal.value,
       isTutorialComplete: tutorialSignal.value === null
     });
@@ -173,7 +173,7 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
     if (key === '' || value === '') {
       return;
     }
-    logger.debug('handlePhraseSuccess called with phrase:', key, 'Activity:', ActivityType[activitySignal.value]);
+    logger.debug('handlePhraseSuccess called with phrase:', key, 'Activity:', activitySignal.value);
     const wpms = wpmCalculator.getWPMs();
     const wpmAverage = wpms.wpmAverage;
 
@@ -315,7 +315,7 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
   // Initialize window methods
   useEffect(() => {
     window.setActivity = (activity: ActivityType) => {
-      logger.debug('Setting activity:', ActivityType[activity]);
+      logger.debug('Setting activity:', activity);
       activitySignal.value = activity;
     };
     window.setNextTutorial = (tutorial: GamePhrase | null) => {
@@ -378,18 +378,14 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
 
       {currentActivity === ActivityType.EDIT && (
         <MonacoCore
-          initialValue={getStoredContent()}
+          value={getStoredContent()}
           language="markdown"
-          isTreeView={false}
         />
       )}
       {currentActivity === ActivityType.TREE && treeItems.length > 0 && (
         <MonacoCore
-          initialValue=""
+          value=""
           language="plaintext"
-          isTreeView={true}
-          treeItems={treeItems}
-          onFileSelect={handleFileSelectWrapper}
         />
       )}
       {isShowVideoSignal.value !== null && (

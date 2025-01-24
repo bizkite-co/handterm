@@ -78,7 +78,7 @@ export function navigate(options: ParsedLocation, navOptions: boolean | Navigati
     return; // Early return to prevent setting any params
   } else {
     // Set activity parameter
-    url.searchParams.set('activity', ActivityType[newActivity].toLowerCase());
+    url.searchParams.set('activity', newActivity.toLowerCase());
 
     // Set key parameter
     if (newPhraseKey != null) {

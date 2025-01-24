@@ -1,9 +1,11 @@
+// Activity type constants - use UPPERCASE properties to access lowercase string values
 export const ActivityType = {
-  NORMAL: 'NORMAL',
-  TUTORIAL: 'TUTORIAL',
-  GAME: 'GAME',
-  EDIT: 'EDIT',
-  TREE: 'TREE'
+  NORMAL: 'normal',
+  EDIT: 'edit',
+  GITHUB: 'github',
+  TREE: 'tree',
+  TUTORIAL: 'tutorial',
+  GAME: 'game'
 } as const;
 
 export type ActivityType = typeof ActivityType[keyof typeof ActivityType];

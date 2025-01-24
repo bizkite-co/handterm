@@ -21,20 +21,19 @@
     "lint:style": "prettier --check \"src/**/*.{ts,tsx,js,jsx}\"",
     "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx}\"",
     "preview": "vite preview",
-    "type-check": "tsc --noEmit",
-    "restart-status": "concurrently -n 'TYPES,LINT,CHECKLIST' -c 'bgBlue.bold,bgMagenta.bold,bgGreen.bold' \"npm run type-check\" \"npm run lint\" \"node scripts/checklist-status.js\"",
-    "type-check": "tsc --noEmit",
-    "restart-status": "concurrently -n 'TYPES,LINT,CHECKLIST' -c 'bgBlue.bold,bgMagenta.bold,bgGreen.bold' \"npm run type-check\" \"npm run lint\" \"node scripts/checklist-status.js\"",
-    "build-shared": "vite build --ssr",
+    "restart-status": "concurrently -n 'TYPES,LINT,CHECKLIST' -c 'bgBlue.bold,bgMagenta.bold,bgGreen.bold' \"npm run type-check 2>&1 | tee .type-errors.log\" \"npm run lint\" \"node scripts/checklist-status.js\""
+  },
+  "config": {
+    "checklist_path": "docs/worklog/reconcile-mock-types-with-prod/migrate-from-monaco-editor-react/full-rewrite-checklist.md"
+  },
+  "dependencies": {
     "test:unit": "vitest",
     "test": "vitest --run && npm run test:e2e",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "npx playwright test",
     "validate": "npm run lint && npm run lint:types && npm run lint:style && npm run test",
-    "deploy": "gh-pages -d dist"
-  },
-  "dependencies": {
+    "deploy": "gh-pages -d dist",
     "@aws-sdk/client-apigatewayv2": "^3.x.x",
     "@emotion/react": "^11.14.0",
     "@fortawesome/fontawesome-svg-core": "^6.6.0",
@@ -122,8 +121,5 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   }
-}
-  }
-}
 }
 
