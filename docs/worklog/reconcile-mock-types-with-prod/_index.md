@@ -18,6 +18,7 @@ NOTE: Never remove a checkbox. If you find a checkbox we no longer need, mark it
   - [ ] [Core Type Unification](type-system-cleanup.md)
   - [~] [Signal Interface Alignment](signal-type-unification.md) (partial - brand symbols added)
   - [~] [Monaco Type Consolidation](monaco-type-consolidation.md) (partial - monaco-tree-view.spec.ts completed)
+  - [ ] [Migrate from Monaco Editor React](./migrate-from-monaco-editor-react/_index.md)
   - [x] Document 2025-01-22 session progress - Added simplified validation pattern
   - [x] Implemented runtime validation for external libraries
   - [ ] Update remaining signal docs with new pattern

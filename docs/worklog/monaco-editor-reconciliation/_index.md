@@ -3,6 +3,8 @@ title: Monaco Editor Reconciliation
 
 ---
 
+* [ ] [Tasks](./worklog/2025-01-15-monaco-editor-reconciliation.md)
+
 use `docs/worklog/2025-01-15-monaco-editor-reconciliation.md` as the worklog.
 
 Read the `src/components/MonacoEditor.md` for a brief description of the Monaco Editor component.

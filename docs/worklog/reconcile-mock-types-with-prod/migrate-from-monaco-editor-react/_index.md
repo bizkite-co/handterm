@@ -7,6 +7,8 @@
 
 ## Implementation Blueprint
 
+[Full Rewrite Checklist](./full-rewrite-checklist.md) - Detailed task breakdown for complete migration
+
 ### Phase 1: Core Replacement (50 LOC)
 - [x] Remove `@monaco-editor/react` from package.json
 - [ ] Base editor component:
