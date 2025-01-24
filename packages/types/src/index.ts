@@ -1,5 +1,10 @@
+export enum ActivityType {
+  EDIT = 'edit',
+  TREE = 'tree'
+}
 export * from './monaco.js';
 export * from './signal.js';
+export * from './activity.js';
 
 // Re-export Monaco types
 export type {

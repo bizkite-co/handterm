@@ -40,7 +40,7 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          monacoEditor: ['@monaco-editor/react'],
+          monaco: ['monaco-editor'],
         },
       },
     },

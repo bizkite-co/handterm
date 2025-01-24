@@ -19,7 +19,7 @@ import { navigate, parseLocation } from '../utils/navigationUtils';
 import WebCam from '../utils/WebCam';
 
 import { Chord } from './Chord';
-import { MonacoEditor } from './MonacoEditor';
+import MonacoCore from './MonacoCore';
 import NextCharsDisplay, { type NextCharsDisplayHandle } from './NextCharsDisplay';
 import { Prompt } from './Prompt';
 import { TutorialManager } from './TutorialManager';
@@ -377,14 +377,14 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
       )}
 
       {currentActivity === ActivityType.EDIT && (
-        <MonacoEditor
+        <MonacoCore
           initialValue={getStoredContent()}
           language="markdown"
           isTreeView={false}
         />
       )}
       {currentActivity === ActivityType.TREE && treeItems.length > 0 && (
-        <MonacoEditor
+        <MonacoCore
           initialValue=""
           language="plaintext"
           isTreeView={true}

@@ -86,7 +86,6 @@
     "test",
     "src/e2e",
     "moduleResolver.ts",
-    "@monaco-editor-react.js",
     ".eslintrc.cjs"
   ],
   "exclude": [
