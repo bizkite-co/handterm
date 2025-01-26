@@ -84,7 +84,7 @@ import { navigate } from 'src/utils/navigationUtils';
 
 export const setActivity = (activity: ActivityType): void => {
     activitySignal.value = activity;
-    logger.debug(ActivityType[activitySignal.value]);
+    logger.debug(activitySignal.value);
     navigate({
         activityKey: activity,
         contentKey: null,

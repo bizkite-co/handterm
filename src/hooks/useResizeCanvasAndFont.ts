@@ -56,8 +56,8 @@ export function useResizeCanvasAndFont(): {
         const touch1 = touches[0];
         const touch2 = touches[1];
         return Math.sqrt(
-            Math.pow(touch2.pageX - touch1.pageX, 2) +
-            Math.pow(touch2.pageY - touch1.pageY, 2),
+            Math.pow((touch2?.pageX ?? 0) - (touch1?.pageX ?? 0), 2) +
+            Math.pow((touch2?.pageY ?? 0) - (touch1?.pageY ?? 0), 2),
         );
     }
 
