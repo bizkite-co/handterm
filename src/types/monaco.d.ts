@@ -1,3 +1,7 @@
+declare module 'monaco' {
+  export = Monaco;
+}
+
 declare module 'monaco-editor' {
   export interface IStandaloneCodeEditor {
     getValue(): string;

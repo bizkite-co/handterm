@@ -37,11 +37,10 @@ test.describe('Complete Command', () => {
 
     // Initialize tutorial signals
     await page.evaluate(() => {
-      (window as typeof window & { tutorialSignals?: TutorialSignals }).tutorialSignals = {
-        value: {
-          isCompleted: false,
-          currentTutorial: 'tutorial'
-        }
+      (window as any).tutorialSignals = {
+        currentStep: { value: '0' },
+        totalSteps: { value: 5 },
+        isCompleted: { value: false }
       };
     });
   });

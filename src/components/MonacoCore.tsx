@@ -36,8 +36,6 @@ export default function MonacoCore({ value, language = 'text' }: MonacoCoreProps
       return () => {
         resizeObserver.disconnect();
         editorInstance?.dispose();
-        const models = monaco.editor.getModels();
-        models.forEach(model => model.dispose());
         editorRef.current = null;
       };
     } catch (error) {

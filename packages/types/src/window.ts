@@ -17,6 +17,8 @@ export interface TutorialSignals {
  * Signal-related window extensions
  */
 export interface WindowExtensions {
+  /** Monaco editor instance */
+  monaco?: typeof import('monaco-editor');
   /** Activity signal for tracking current activity state */
   activitySignal: Signal<ActivityType>;
   /** Command line signal for handling commands */

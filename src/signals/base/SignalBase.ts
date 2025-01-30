@@ -2,7 +2,7 @@ import type { Signal } from '@handterm/types';
 
 export abstract class SignalBase<T> implements Signal<T> {
   abstract readonly type: string;
-  abstract value: T;
+  private _value!: T;
   abstract readonly brand: symbol;
   readonly key: string;
   readonly props: Record<string, unknown> = {};
@@ -13,19 +13,27 @@ export abstract class SignalBase<T> implements Signal<T> {
   }
 
   toJSON(): T {
-    return this.value;
+    return this._value;
   }
 
   peek(): T {
-    return this.value;
+    return this._value;
   }
 
   valueOf(): T {
-    return this.value;
+    return this._value;
   }
 
-  notifySubscribers(): void {
-    this.subscribers.forEach(cb => cb(this.value));
+  protected notifySubscribers(): void {
+    this.subscribers.forEach(cb => cb(this._value));
+  }
+  get value(): T {
+    return this._value;
+  }
+
+  set(value: T): void {
+    this._value = value;
+    this.notifySubscribers();
   }
 
   abstract subscribe(callback: (value: T) => void): () => void;

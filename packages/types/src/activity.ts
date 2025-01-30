@@ -9,6 +9,7 @@ export const ActivityType = {
 } as const;
 
 export type ActivityType = typeof ActivityType[keyof typeof ActivityType];
+export type ActivityTypeValues = typeof ActivityType[keyof typeof ActivityType];
 
 export interface EditorActivityState {
   content: string;

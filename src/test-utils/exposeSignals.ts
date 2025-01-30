@@ -7,6 +7,7 @@ import {
   ActivityType,
   isWindowDefined
 } from '@handterm/types';
+import type * as Monaco from 'monaco-editor';
 import GamePhrases from '../utils/GamePhrases';
 
 interface SignalError extends Error {

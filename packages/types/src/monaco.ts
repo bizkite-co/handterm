@@ -1,19 +1,16 @@
-import type * as Monaco from 'monaco-editor';
+import type * as monaco from 'monaco-editor';
 
-export type IDisposable = Monaco.IDisposable;
-export type IStandaloneCodeEditor = Monaco.editor.IStandaloneCodeEditor;
-export type ITextModel = Monaco.editor.ITextModel;
-export type IActionDescriptor = Monaco.editor.IActionDescriptor;
-export type KeyCode = Monaco.KeyCode;
-export type KeyMod = Monaco.KeyMod;
+export type IDisposable = monaco.IDisposable;
+export type IStandaloneCodeEditor = monaco.editor.IStandaloneCodeEditor;
+export type ITextModel = monaco.editor.ITextModel;
+export type IActionDescriptor = monaco.editor.IActionDescriptor;
+export type KeyCode = monaco.KeyCode;
+export type KeyMod = monaco.KeyMod;
 
 declare global {
   interface Window {
-    monaco?: {
-      editor: {
-        onDidCreateEditor: (callback: (editor: IStandaloneCodeEditor) => void) => IDisposable
-      }
-    }
+    monacoEditor?: IStandaloneCodeEditor;
+    Monaco: typeof monaco;
   }
 }
 
