@@ -1,4 +1,4 @@
-import { type ActionType } from "./types/ActionTypes";
+import { type ActionType } from "@handterm/types";
 import { type SpritePosition } from "./types/Position";
 
 export interface ICharacterProps {

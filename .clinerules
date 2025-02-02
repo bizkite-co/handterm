@@ -18,6 +18,7 @@ version: 1.0.0
     1. State your understanding of the problem.
     1. State your plan to solve the problem.
     1. State your next steps.
+    2. Add `// TODO:` comments to your code to indicate the changes that need to be made and the plan document that describes the change.
     1. Implement your next step in code while observing the linting rules and warnings.
     1. Whenever you create a measurable improvement, commit the change with a multi-line commit message.
     1. If you are stuck, state your current problem and ask for help.

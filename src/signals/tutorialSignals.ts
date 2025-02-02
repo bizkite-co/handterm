@@ -1,9 +1,8 @@
 // src/signals/tutorialSignals.ts
 import { computed, signal } from "@preact/signals-react";
 
-import { ActivityType } from '@handterm/types';
-import type { GamePhrase } from "@handterm/types/Types";
-import { Phrases } from "@handterm/types/Types";
+import { ActivityType, Phrases } from '@handterm/types';
+import type { GamePhrase } from "@handterm/types";
 import { createLogger } from "src/utils/Logger";
 
 import { createPersistentSignal } from "../utils/signalPersistence";
@@ -53,7 +52,7 @@ const loadInitialState = () => {
 
     if (storedTutorials != null) {
       logger.debug('Found stored tutorials:', storedTutorials);
-      completedTutorialsSignal.value = new Set(JSON.parse(storedTutorials) as string[]);
+      completedTutorialsSignal.value = new Set<string>(JSON.parse(storedTutorials));
     } else {
       logger.debug('No stored tutorials found - initializing new state');
       completedTutorialsSignal.value = new Set();

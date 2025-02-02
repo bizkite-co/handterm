@@ -1,4 +1,5 @@
 // ActionTypes.ts
+import { type  ActionType } from '@handterm/types';
 import { HeroAnimations } from '../characters/hero/HeroAnimations';
 import { Zombie4Animations } from '../characters/zombie4/Zombie4Animations';
 
@@ -10,19 +11,6 @@ export type Action = {
   dy: number;
   continueous: boolean;
 };
-
-const ActionType = {
-  Run: 'Run',
-  Idle: 'Idle',
-  Walk: 'Walk',
-  Jump: 'Jump',
-  Attack: 'Attack',
-  Summersault: 'Summersault',
-  Death: 'Death',
-  Hurt: 'Hurt',
-} as const;
-
-export type ActionType = typeof ActionType[keyof typeof ActionType];
 
 export const HeroActions: Record<ActionType, Action> = {
   Run: {
