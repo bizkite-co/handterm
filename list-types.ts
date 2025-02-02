@@ -17,6 +17,9 @@ function listTypesInFile(filePath: string): TypeInfo[] {
 
   function visit(node: ts.Node) {
     if (ts.isInterfaceDeclaration(node) || ts.isTypeAliasDeclaration(node)) {
+      if (node.name.text.startsWith('_')) {
+        return;
+      }
       types.push({
         name: node.name.text,
         location: `${filePath}:${node.name.getStart(sourceFile) + 1}`
@@ -30,6 +33,9 @@ function listTypesInFile(filePath: string): TypeInfo[] {
 }
 
 function walkDirectory(dir: string, fileList: string[] = []): string[] {
+  if (dir.includes('node_modules')) {
+    return fileList;
+  }
   const files = fs.readdirSync(dir, { });
 
   files.forEach(file => {
