@@ -16,13 +16,7 @@
   };
   ```
 
-### Phase 2: Feature Parity
-- [ ] VIM mode integration with proper disposal
-- [ ] Keyboard navigation (J/K keys)
-- [ ] File tree view integration
-- [ ] Editor action system (save/format)
-
-### Phase 3: Type Safety
+### Phase 2: Type Safety
 - [ ] Strict monaco namespace imports
 - [ ] Runtime type validation:
   ```tsx
@@ -33,6 +27,33 @@
   };
   ```
 - [ ] Window interface extension
+- [ ] TODO: Move all Monaco-related types to @handterm/types:
+  - [ ] IStandaloneCodeEditor
+  - [ ] ITextModel
+  - [ ] IActionDescriptor
+  - [ ] KeyCode/KeyMod
+  - [ ] Editor options interface
+  - [ ] VIM mode types
+- [ ] TODO: Add runtime type validation utilities:
+  - [ ] Editor instance validation
+  - [ ] Model validation
+  - [ ] Action validation
+  - [ ] Configuration validation
+- [ ] TODO: Add type guards for Playwright compatibility:
+  - [ ] Editor state validation
+  - [ ] Content validation
+  - [ ] Selection state validation
+  - [ ] Configuration state validation
+- [ ] TODO: Update imports to use @handterm/types:
+  - [ ] Update DirectMonaco.tsx
+  - [ ] Update test files
+  - [ ] Update any components using Monaco types
+
+### Phase 3: Feature Parity
+- [ ] VIM mode integration with proper disposal
+- [ ] Keyboard navigation (J/K keys)
+- [ ] File tree view integration
+- [ ] Editor action system (save/format)
 
 ### Phase 4: Testing & Validation
 - [ ] Update Playwright tests for new DOM structure
@@ -64,9 +85,65 @@
 1. Core implementation (3 hours):
    ```bash
    npm run dev -- --force  # Bypass type checks during initial implementation
+   # Temporary test type suppression:
+   # Add @ts-nocheck to test files interacting with Monaco
+   # Update .eslintrc.cjs overrides for test directories
+   git checkout -b monaco-phase1  # Work in isolation
    ```
 2. Type safety refinement (2 hours)
 3. Feature integration (4 hours)
 4. Final testing/validation (3 hours)
 
 This can be executed over 4 focused work sessions.
+
+### Type Migration Strategy
+1. Move all Monaco-related types to @handterm/types:
+   ```typescript
+   // packages/types/src/monaco.ts
+   import type * as monaco from 'monaco-editor';
+
+   export interface EditorOptions extends monaco.editor.IEditorOptions {
+     // Add any custom options
+   }
+
+   export interface EditorState {
+     value: string;
+     selection?: monaco.Selection;
+     scrollPosition?: monaco.editor.IScrollPosition;
+   }
+
+   // Add type guards for Playwright
+   export function isValidEditorState(state: unknown): state is EditorState {
+     // Implementation
+   }
+   ```
+
+2. Update imports in components:
+   ```typescript
+   // Before
+   import type * as monaco from 'monaco-editor';
+
+   // After
+   import type { EditorOptions, EditorState } from '@handterm/types';
+   ```
+
+3. Add runtime validation:
+   ```typescript
+   // packages/types/src/monaco.ts
+   export function validateEditor(editor: unknown): editor is IStandaloneCodeEditor {
+     return (
+       !!editor &&
+       typeof (editor as any).getModel === 'function' &&
+       typeof (editor as any).dispose === 'function'
+     );
+   }
+   ```
+
+4. Update test utilities:
+   ```typescript
+   // test-utils/monaco.ts
+   import type { EditorState } from '@handterm/types';
+
+   export function createMockEditor(): EditorState {
+     // Implementation
+   }

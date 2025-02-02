@@ -1,7 +1,6 @@
 import { navigate } from "../utils/navigationUtils.js";
 import { type ICommand, type ICommandContext, type ICommandResponse } from "../contexts/CommandContext.js";
-import { ActivityType } from '@handterm/types';
-import type { ParsedCommand } from "../types/Types";
+import { ActivityType, ParsedCommand } from '@handterm/types';
 import {
   getRepoTree,
   listRecentRepos,

@@ -1,5 +1,4 @@
 import { createSignal, isSignal } from '../src/signal';
-import type { Signal } from '../src/signal';
 
 describe('Signal', () => {
   it('should create a valid signal', () => {

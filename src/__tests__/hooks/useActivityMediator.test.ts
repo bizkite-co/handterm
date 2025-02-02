@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { useActivityMediator } from 'src/hooks/useActivityMediator';
-import { allTutorialPhraseNames } from 'src/types/Types';
+import { allTutorialPhraseNames } from '@handterm/types/Types';
 
 interface MockLocation extends Location {
   href: string;

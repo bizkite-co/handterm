@@ -1,5 +1,7 @@
 @monaco-editor-react.js
-/tests-examples
-/tests/example.spec.ts
+tests-examples
+tests/example.spec.ts
 webpack.lambda.config.js
 scripts/clearLocalStorage.js
+playwright-report/
+backups/

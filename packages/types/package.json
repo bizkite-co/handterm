@@ -3,12 +3,15 @@
   "version": "1.0.0",
   "description": "Shared types package for Handterm project",
   "type": "module",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "types": "index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+      "types": "./index.d.ts",
+      "import": "./src/index.ts"
+    },
+    "./monaco": {
+      "types": "./monaco.d.ts",
+      "import": "./src/monaco.ts"
     }
   },
   "scripts": {

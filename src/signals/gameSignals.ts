@@ -3,7 +3,7 @@
 import { signal } from "@preact/signals-react";
 
 import { type ActionType } from "src/game/types/ActionTypes";
-import { type GamePhrase, Phrases } from "src/types/Types";
+import { type GamePhrase, Phrases } from "@handterm/types/Types";
 import { createPersistentSignal } from "src/utils/signalPersistence";
 
 export const startGameSignal = signal<string | undefined>(undefined);

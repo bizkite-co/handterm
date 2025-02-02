@@ -13,12 +13,14 @@ There is a server-side AWS API Gateway/Lambda backend defined in `/home/mstouffe
 Check `pwd` to determine which project you're running CLI commands in.
 
 1. Use `docs/worklog/` for docmentation. Use the MCP `date-server` to get the local system date if you have to creat a new dated file.
-    1. Specify the intended work by using checkboxes to indicate completion.
-    2. Initially, ALL CHECKBOXES SHOULD BE UNCHECKED.
-    2. Update the checkboxes or modify the changes _after_ any successes, such as solved linting or solved tests.
-    3. CHECK THE CHECKBOX TO INDICATE COMPLETION.
-    4. AT THE END OF THE WORK ITEM, ALL CHECKBOXES SHOULD BE CHECKED.
-    5. NEVER DELETE A CHEECKBOX LINE. If you find that a checkboxed line is not needed, check the checkbox and explain why it is not needed on an indented next line.
+    2. Specify the intended work by using checkboxes to indicate completion.
+    3. Initially, ALL CHECKBOXES SHOULD BE UNCHECKED.
+    1. Always add multi-line comments to the code file reflecting the latest plannning and design decisions from the planning documents.
+       1. Also, add a link to the source planning documents that you are referencing.
+    4. Update the checkboxes or modify the changes _after_ any successes, such as solved linting or solved tests.
+    5. CHECK THE CHECKBOX TO INDICATE COMPLETION.
+    6. AT THE END OF THE WORK ITEM, ALL CHECKBOXES SHOULD BE CHECKED.
+    7. NEVER DELETE A CHEECKBOX LINE. If you find that a checkboxed line is not needed, check the checkbox and explain why it is not needed on an indented next line.
 
 Use the VS Code linter after editing each file to ensure the changes you're making are _reducing_ the number of linting problems.
 

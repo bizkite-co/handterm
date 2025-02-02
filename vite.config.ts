@@ -48,13 +48,11 @@ export default defineConfig({
   resolve: {
     alias: {
       'src': path.resolve(__dirname, './src'),
-      '@monaco-editor/react': path.resolve(__dirname, 'node_modules/@monaco-editor/react'),
       'monaco-editor': path.resolve(__dirname, 'node_modules/monaco-editor'),
     },
   },
   optimizeDeps: {
     include: [
-      '@monaco-editor/react',
       '@preact/signals-react',
       'hoist-non-react-statics',
       '@xterm/xterm',

@@ -6,4 +6,5 @@ Feature: Complete Command
         Given I am on the tutorial page
         When I enter the `complete` command
         Then I should see the tutorial complete message
+        And The tutorial should be marked as complete for this user
         And I should be on the home page without any Tutorial or Game showing.

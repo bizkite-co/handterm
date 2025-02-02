@@ -3,7 +3,7 @@ import { type Page, type Locator, expect } from '@playwright/test';
 import { TERMINAL_CONSTANTS } from 'src/constants/terminal';
 import type { Signal } from '@preact/signals-react';
 import type { ActivityType } from '@handterm/types';
-import type { GamePhrase } from 'src/types/Types';
+import type { GamePhrase } from '@handterm/types/Types';
 import { TEST_CONFIG } from '../config';
 
 // Extend Window interface for our signals

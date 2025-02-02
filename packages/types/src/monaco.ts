@@ -28,7 +28,7 @@ export async function withTempEditor<T>(
   const editor = await new Promise<IStandaloneCodeEditor>((resolve) => {
     const disposable = window.monaco!.editor.onDidCreateEditor((editor) => {
       disposable.dispose();
-      resolve(editor);
+      resolve(editor as IStandaloneCodeEditor); // Cast to IStandaloneCodeEditor
     });
   });
   return callback(editor);

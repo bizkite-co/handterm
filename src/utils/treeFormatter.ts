@@ -1,13 +1,10 @@
-interface TreeItem {
-    path: string;
-    type: 'file' | 'directory' | 'blob' | 'tree';
-}
+import type { TreeItem } from '@handterm/types';
 
 export function formatTreeContent(items: TreeItem[]): string {
     const sortedItems = [...items].sort((a, b) => {
         // Directories come first
-        const aIsDir = a.type === 'tree' || a.type === 'directory';
-        const bIsDir = b.type === 'tree' || b.type === 'directory';
+        const aIsDir = a.type === 'directory';
+        const bIsDir = b.type === 'directory';
         if (aIsDir && !bIsDir) return -1;
         if (!aIsDir && bIsDir) return 1;
         return a.path.localeCompare(b.path);
@@ -18,7 +15,7 @@ export function formatTreeContent(items: TreeItem[]): string {
     // Add items at current level
     sortedItems.forEach(item => {
         const name = item.path.split('/').pop() ?? '';
-        if (item.type === 'tree' || item.type === 'directory') {
+        if ( item.type === 'directory') {
             lines.push(`${name}/`);
         } else {
             lines.push(name);
@@ -55,7 +52,7 @@ export function getItemAtLine(
     const item = items.find(i => {
         const itemName = i.path.split('/').pop() ?? '';
         return itemName === name &&
-            (isDirectory ? (i.type === 'tree' || i.type === 'directory') : true);
+            (isDirectory ? ( i.type === 'directory') : true);
     });
 
     return item ? {

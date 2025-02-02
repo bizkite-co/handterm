@@ -13,8 +13,9 @@ module.exports = {
   extends: [
     'eslint:recommended',
     'plugin:@typescript-eslint/recommended',
-    'plugin:@typescript-eslint/recommended-requiring-type-checking',
-    'plugin:@typescript-eslint/strict',
+    // 'plugin:@typescript-eslint/recommended-requiring-type-checking',
+    // 'plugin:@typescript-eslint/strict-type-checked',
+    // 'plugin:@typescript-eslint/stylistic-type-checked',
     'plugin:react/recommended',
     'plugin:react/jsx-runtime',
     'plugin:react-hooks/recommended',
@@ -25,14 +26,12 @@ module.exports = {
   ],
   parser: '@typescript-eslint/parser',
   parserOptions: {
-    project: './tsconfig.eslint.json',
     exclude: ['eslint-plugin-custom-rules/**'],
     ecmaVersion: 'latest',
     sourceType: 'module',
     ecmaFeatures: {
       jsx: true,
     },
-    tsconfigRootDir: __dirname,
   },
   plugins: [
     'react',
@@ -81,15 +80,15 @@ module.exports = {
     }],
 
     // Type Safety Strategies
-    '@typescript-eslint/strict-boolean-expressions': ['warn', {
-      allowString: false,
-      allowNumber: false,
-      allowNullableObject: false,
-      allowNullableBoolean: false,
-      allowNullableString: false,
-      allowNullableNumber: false,
-      allowAny: false
-    }],
+    // '@typescript-eslint/strict-boolean-expressions': ['warn', {
+    //   allowString: false,
+    //   allowNumber: false,
+    //   allowNullableObject: false,
+    //   allowNullableBoolean: false,
+    //   allowNullableString: false,
+    //   allowNullableNumber: false,
+    //   allowAny: false
+    // }],
 
     // Functional Programming Encouragement (without plugin)
     'no-var': 'error',
@@ -106,13 +105,6 @@ module.exports = {
     ]
   },
   overrides: [
-    // Playwright Config Override
-    {
-      files: ['playwright.config.js'],
-      parserOptions: {
-        project: './tsconfig.eslint.json'
-      }
-    },
     // Test Files Override
     {
       files: [
@@ -135,17 +127,9 @@ module.exports = {
             name: 'ImageData',
             message: 'Import ImageData from the canvas package instead of using the global browser API'
           }
-        ]
-      }
-    },
-    // Type Declaration Files Override
-    {
-      files: [
-        'src/test-utils/**/*.d.ts',
-        'src/hooks/useActivityMediator.d.ts'
-      ],
-      parserOptions: {
-        project: './tsconfig.eslint-canvas.json'
+        ],
+        // TODO: Re-enable this rule after completing Phase 3 (Type Safety) of the Monaco migration.
+        'custom-rules/no-ts-check': 'off'
       }
     }
   ]

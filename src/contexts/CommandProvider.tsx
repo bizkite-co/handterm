@@ -1,7 +1,7 @@
 // src/contexts/CommandProvider.tsx
 import type React from 'react';
 
-import { type ParsedCommand } from 'src/types/Types';
+import { type ParsedCommand } from '@handterm/types/Types';
 import { parseCommand } from 'src/utils/commandUtils';
 import { navigate } from 'src/utils/navigationUtils';
 

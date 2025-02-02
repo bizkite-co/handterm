@@ -11,7 +11,7 @@ import {
 
 import { commandLineSignal } from 'src/signals/commandLineSignals';
 import { setCompletedGamePhrase } from 'src/signals/gameSignals';
-import { type GamePhrase } from 'src/types/Types';
+import { type GamePhrase } from '@handterm/types/Types';
 import * as GamePhrases from 'src/utils/GamePhrases';
 import { parseLocation } from 'src/utils/navigationUtils';
 

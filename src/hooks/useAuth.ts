@@ -13,8 +13,9 @@ import {
   setIsInLoginProcess,
   isLoggedInSignal
 } from '../signals/appSignals';
-import { type MyResponse } from '../types/Types';
 import { isNullOrEmptyString } from '../utils/typeSafetyUtils';
+import type { AuthResponse, IAuthProps, LoginCredentials, MyResponse, SignUpCredentials } from '@handterm/types';
+import { TokenKeys } from '@handterm/types';
 
 const logger = createLogger({
   prefix: 'Auth',
@@ -23,46 +24,6 @@ const logger = createLogger({
 
 const API_URL = endpoints.api.BaseUrl;
 
-interface LoginCredentials {
-  username: string;
-  password: string;
-}
-
-interface SignUpCredentials extends LoginCredentials {
-  email: string;
-}
-
-export const TokenKeys = {
-  AccessToken: 'AccessToken',
-  RefreshToken: 'RefreshToken',
-  IdToken: 'IdToken',
-  ExpiresAt: 'ExpiresAt',
-  ExpiresIn: 'ExpiresIn',
-  GithubUsername: 'githubUsername'
-} as const;
-export type TokenKey = keyof typeof TokenKeys;
-
-export interface AuthResponse {
-  AccessToken: string;
-  RefreshToken: string;
-  IdToken: string;
-  ExpiresAt: string;
-  ExpiresIn: number;
-  githubUsername?: string | undefined; // Explicitly define githubUsername as string | undefined
-}
-
-export interface IAuthProps {
-  login: (username: string, password: string) => Promise<MyResponse<AuthResponse>>;
-  signup: (credentials: SignUpCredentials) => Promise<MyResponse<unknown>>;
-  verify: (username: string, code: string) => Promise<unknown>;
-  refreshToken: () => Promise<MyResponse<AuthResponse>>;
-  validateAndRefreshToken: () => Promise<MyResponse<AuthResponse>>;
-  isLoggedIn: boolean;
-  isLoading: boolean;
-  isError: boolean;
-  error: Error | null;
-  isPending: boolean;
-}
 
 export function useAuth(): IAuthProps {
   const queryClient = useQueryClient();
@@ -261,7 +222,7 @@ export function useAuth(): IAuthProps {
         }
 
         const isValid = await validateAndRefreshToken();
-        if (isValid.status !== 200) {
+        if (isValid.status != 200) {
           clearTokens(); // Ensure tokens are cleared on validation failure
           throw new Error('Token validation failed');
         }

@@ -3,10 +3,10 @@ import { describe, it, expect, vi, beforeEach, type MockedFunction } from 'vites
 import * as appSignals from 'src/signals/appSignals';
 import { type ICommandContext, type ICommandResponse } from 'src/contexts/CommandContext';
 import { type IAuthProps, type AuthResponse } from 'src/hooks/useAuth';
-import { type MyResponse } from 'src/types/Types';
-import { type IHandTermWrapperMethods } from 'src/types/HandTerm';
+import { type MyResponse } from '@handterm/types';
 
 import { LoginCommand } from '../LoginCommand';
+import { IHandTermWrapperMethods } from '\'components/HandTermWrapper\'';
 
 // Type-safe mock of signals
 type SignalMock = { value: boolean };

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { tutorialSignal } from 'src/signals/tutorialSignals';
-import { allTutorialPhraseNames, type GamePhrase } from 'src/types/Types';
+import { allTutorialPhraseNames, type GamePhrase } from '@handterm/types/Types';
 
 export function useTutorialState(): {
   shouldSkipTutorial: boolean;

@@ -4,15 +4,14 @@ import { useComputed } from '@preact/signals-react';
 
 import { Game, type IGameHandle } from '../game/Game';
 import { useActivityMediator } from '../hooks/useActivityMediator';
-import { type IAuthProps } from '../hooks/useAuth';
 import { useTerminal } from '../hooks/useTerminal';
 import { useWPMCalculator } from '../hooks/useWPMCaculator';
 import { activitySignal, isShowVideoSignal } from '../signals/appSignals';
 import { commandTimeSignal } from '../signals/commandLineSignals';
 import { setGamePhrase } from '../signals/gameSignals';
 import { tutorialSignal } from '../signals/tutorialSignals';
+import type { GamePhrase, IHandTermWrapperMethods, IHandTermWrapperProps, TreeItem } from '@handterm/types';
 import { ActivityType } from '@handterm/types';
-import { type GamePhrase, type OutputElement } from '../types/Types';
 import { getFileContent } from '../utils/apiClient';
 import { createLogger, LogLevel } from '../utils/Logger';
 import { navigate, parseLocation } from '../utils/navigationUtils';
@@ -28,38 +27,6 @@ const logger = createLogger({
   prefix: 'HandTermWrapper',
   level: LogLevel.DEBUG
 });
-
-interface TreeItem {
-  path: string;
-  type: 'file' | 'directory';
-}
-
-interface IHandTermWrapperProps {
-  terminalWidth: number;
-  auth: IAuthProps;
-  onOutputUpdate: (output: OutputElement) => void;
-}
-
-interface XtermMethods {
-  focusTerminal: () => void;
-  terminalWrite: (data: string) => void;
-  getCurrentCommand: () => string;
-  getTerminalSize: () => { width: number; height: number } | undefined;
-  prompt: () => void;
-  scrollBottom: () => void;
-}
-
-interface IHandTermWrapperMethods {
-  writeOutput: (output: string) => void;
-  prompt: () => void;
-  saveCommandResponseHistory: (command: string, response: string, status: number) => string;
-  focusTerminal: () => void;
-  handleCharacter: (character: string) => void;
-  refreshComponent: () => void;
-  setHeroSummersaultAction: () => void;
-  setEditMode: (isEditMode: boolean) => void;
-  handleEditSave: (content: string) => void;
-}
 
 const getTimestamp = (date: Date): string => date.toTimeString().split(' ')[0] ?? '';
 
@@ -143,7 +110,7 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
         activitySignal.value = ActivityType.GAME;
       }
     }
-  }, [tutorialSignal.value, currentActivity]);
+  }, [currentActivity]);
 
   // Declare handlePhraseComplete with all its dependencies
   const handlePhraseComplete = useCallback(() => {
@@ -325,6 +292,8 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
     window.ActivityType = ActivityType;
   }, []);
 
+  // TODO: This is suppoed to exist and be used somewhere.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleFileSelectWrapper = useCallback((path: string) => {
     void handleFileSelect(path);
   }, [handleFileSelect]);
@@ -399,5 +368,5 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
 
 HandTermWrapper.displayName = 'HandTermWrapper';
 
-export type { IHandTermWrapperMethods, IHandTermWrapperProps, XtermMethods };
+export type { IHandTermWrapperMethods, IHandTermWrapperProps };
 export { HandTermWrapper };

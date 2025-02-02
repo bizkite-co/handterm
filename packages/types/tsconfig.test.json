@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig.json",
+  "include": ["src/**/*.{test,spec}.{ts,tsx}"],
+  "compilerOptions": {
+    "types": ["vitest/globals"],
+    "moduleResolution": "node",
+    "module": "esnext"
+  }
+}

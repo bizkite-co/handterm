@@ -59,7 +59,7 @@
         "./node_modules/monaco-editor/esm/vs/editor/editor.api.js"
       ],
       "@handterm/types": [
-        "./packages/types/src/index.ts"
+        "./packages/types/index.d.ts"
       ]
     },
     "plugins": [
