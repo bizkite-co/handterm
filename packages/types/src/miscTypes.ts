@@ -1,4 +1,4 @@
-import { ActivityType } from "./runtimeConstants";
+import { ActivityType } from "./runtimeConstants.js";
 
 export interface ParsedLocation {
   activityKey: ActivityType;

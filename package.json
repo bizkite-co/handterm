@@ -7,7 +7,7 @@
   "scripts": {
     "type-check": "tsc --noEmit",
     "dev": "npm run clean && vite",
-    "build:package": "cd packages/types && npm run build && cd -",
+    "build:package": "cd packages/types && rm -rf dist && npm run build && cd - && npm install",
     "build": "npm run build:package && vite build",
     "clean": "rm -rf dist && npm cache verify",
     "list-types": "tsx list-types.ts > project-types.lst",

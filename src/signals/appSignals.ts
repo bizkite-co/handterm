@@ -1,9 +1,9 @@
 // src/signals/appSignals.ts
 declare global {
-  interface Window {
-    setActivity: typeof setActivity;
-    ActivityType: typeof ActivityType;
-  }
+    interface Window {
+        setActivity: typeof setActivity;
+        ActivityType: typeof ActivityType;
+    }
 }
 
 import { computed, signal } from '@preact/signals-react';
@@ -14,8 +14,8 @@ import { createLogger, LogLevel } from 'src/utils/Logger';
 import { createPersistentSignal } from 'src/utils/signalPersistence';
 
 const logger = createLogger({
-  prefix: 'AppSignals',
-  level: LogLevel.DEBUG
+    prefix: 'AppSignals',
+    level: LogLevel.DEBUG
 });
 
 const currentOutputKey = 'current-output';

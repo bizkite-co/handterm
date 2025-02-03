@@ -1,8 +1,6 @@
 import { type ReactNode } from "react";
-export type { SignalOptions, SignalExtensions } from './signal.js';
-import { Signal } from './signal.js';
 import { ActivityType } from './runtimeConstants.js';
-export { createSignal, isSignal } from './signal.js';
+export type { Signal, ReadonlySignal } from './signal.js';
 export * from './miscTypes.js';
 export * from './runtimeConstants.js';
 export * from './window.js';
@@ -118,15 +116,6 @@ export interface IChord {
   alias?: string;
 }
 
-// export class Chord implements IChord {
-//   key: string;
-//   chordCode: string;
-//   index: number;
-//   alias?: string;
-//   constructor(key: string, chordCode: string, index: number);
-// }
-
-
 export interface WPM {
   readonly wpm: number;
   readonly character: string;
@@ -229,7 +218,6 @@ export function isWindowDefined(): boolean {
   return typeof window !== 'undefined';
 }
 
-// Auth Types
 export interface LoginCredentials {
   username: string;
   password: string;
@@ -271,7 +259,6 @@ export interface IAuthProps {
   isPending: boolean;
 }
 
-// HandTerm Types
 export interface IHandTermWrapperMethods {
   writeOutput: (output: string) => void;
   prompt: () => void;
@@ -282,53 +269,4 @@ export interface IHandTermWrapperMethods {
   setHeroSummersaultAction: () => void;
   setEditMode: (isEditMode: boolean) => void;
   handleEditSave: (content: string) => void;
-}
-
-/**
- * Signal-related window extensions
- */
-export interface WindowExtensions {
-  /** Monaco editor instance and types */
-  monaco?: typeof import('monaco-editor');
-  monacoEditor?: import('./monaco.js').IStandaloneCodeEditor;
-  /** Activity signal for tracking current activity state */
-  activitySignal: Signal<ActivityType>;
-  /** Command line signal for handling commands */
-  commandLineSignal: Signal<string>;
-  /** Activity type enum for type safety */
-  ActivityType: typeof ActivityType;
-  /** Tutorial-related signals */
-  tutorialSignals: TutorialSignals;
-  /** Execute command function */
-  executeCommand?: (command: string) => Promise<void>;
-}
-
-/**
- * Extend Window interface with signal functionality
- */
-declare global {
-  interface Window extends WindowExtensions {}
-}
-
-/**
- * Tutorial-related signals interface
- */
-export interface TutorialSignals {
-  /** Current tutorial step */
-  currentStep: Signal<string>;
-  /** Total number of tutorial steps */
-  totalSteps: Signal<number>;
-  /** Whether tutorial is completed */
-  isCompleted: Signal<boolean>;
-}
-
-export interface OutputElement {
-  command: ParsedCommand;
-  response?: ReactNode;
-  status: number;
-  wpmAverage?: number;
-  characterAverages?: ReadonlyArray<WPM>;
-  commandTime: Date;
-  component?: ReactNode; // New field for React components
-  sensitive?: boolean; // Flag to indicate if the command contains sensitive data
 }

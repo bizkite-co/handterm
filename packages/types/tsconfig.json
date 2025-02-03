@@ -13,9 +13,12 @@
     "esModuleInterop": true,
     "lib": ["ESNext", "DOM"],
     "skipLibCheck": true,
-    "outDir": "dist",
+    "allowImportingTsExtensions": false,
+    "rootDir": "./src",
+    "outDir": "./dist/packages/types/src",
     "declaration": true,
-    "declarationMap": true
+    "declarationMap": true,
+    "noEmit": false
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],
   "exclude": ["node_modules", "dist"]
