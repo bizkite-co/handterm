@@ -1,6 +1,5 @@
 import { signal } from '@preact/signals-react';
-import { ActivityType } from '@handterm/types';
-import { allTutorialPhraseNames } from '../types/Types';
+import { ActivityType, allTutorialKeys } from '@handterm/types';
 
 // Unified activity state
 export const activityState = signal<{
@@ -24,7 +23,7 @@ export function checkTutorialCompletion(): boolean {
     const completedTutorials: unknown = JSON.parse(completed);
     if (!Array.isArray(completedTutorials)) return false;
 
-    return allTutorialPhraseNames.every(name =>
+    return allTutorialKeys.every(name =>
       typeof name === 'string' && completedTutorials.includes(name)
     );
   } catch {

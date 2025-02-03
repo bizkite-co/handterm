@@ -1,6 +1,5 @@
 import { test } from '@playwright/test';
-import { type ActivityType } from '@handterm/types';
-import type { GamePhrase } from '../types/Types';
+import { type ActivityType, type GamePhrase } from '@handterm/types';
 
 declare global {
   interface Window {

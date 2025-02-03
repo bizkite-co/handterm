@@ -1,18 +1,17 @@
 import { useComputed, useSignalEffect } from '@preact/signals-react';
 import {
-  useState,
-  useRef,
-  useImperativeHandle,
-  useCallback,
-  useEffect,
-  useMemo,
-  forwardRef,
+    useState,
+    useRef,
+    useImperativeHandle,
+    useCallback,
+    useEffect,
+    useMemo,
+    forwardRef,
 } from 'react';
 
 import { commandLineSignal } from 'src/signals/commandLineSignals';
 import { setCompletedGamePhrase } from 'src/signals/gameSignals';
-import { type GamePhrase } from '@handterm/types/Types';
-import * as GamePhrases from 'src/utils/GamePhrases';
+import { type GamePhrase } from '@handterm/types'
 import { parseLocation } from 'src/utils/navigationUtils';
 
 import { TerminalCssClasses } from '../types/TerminalTypes';
@@ -185,7 +184,7 @@ const NextCharsDisplay = forwardRef<NextCharsDisplayHandle, INextCharsDisplayPro
     // Optimize useEffect to only run when content key changes
     useEffect(() => {
         const { activityKey, contentKey } = currentLocation;
-        if (activityKey === null || activityKey === undefined ||isNullOrEmptyString(contentKey)) return;
+        if (activityKey === null || activityKey === undefined || isNullOrEmptyString(contentKey)) return;
 
         const foundPhrase = GamePhrases.default.getGamePhraseByKey(contentKey);
         if (foundPhrase === null || foundPhrase === undefined) return;

@@ -1,8 +1,7 @@
 import { test, expect, type Page } from '@playwright/test';
 import '../playwright.setup';
 import { TerminalPage } from '../page-objects/TerminalPage';
-import type { GamePhrase } from '../../types/Types';
-import { Phrases } from '../../types/Types';
+import { type GamePhrase, Phrases } from '@handterm/types';
 import { TEST_CONFIG } from '../config';
 
 //*

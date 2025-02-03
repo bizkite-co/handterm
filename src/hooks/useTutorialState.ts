@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { tutorialSignal } from 'src/signals/tutorialSignals';
-import { allTutorialPhraseNames, type GamePhrase } from '@handterm/types/Types';
+import { allTutorialKeys, type GamePhrase } from '@handterm/types';
 
 export function useTutorialState(): {
   shouldSkipTutorial: boolean;
@@ -14,7 +14,7 @@ export function useTutorialState(): {
     const parsedTutorials = completedTutorials
       ? JSON.parse(completedTutorials) as GamePhrase[]
       : [];
-    const hasCompletedTutorials = parsedTutorials.length === allTutorialPhraseNames.length;
+    const hasCompletedTutorials = parsedTutorials.length === allTutorialKeys.length;
 
     // Check bypass signal
     const shouldBypass = Boolean(tutorialSignal.value);

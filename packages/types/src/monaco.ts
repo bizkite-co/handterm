@@ -10,11 +10,11 @@ export type KeyMod = monaco.KeyMod;
 declare global {
   interface Window {
     monacoEditor?: IStandaloneCodeEditor;
-    Monaco: typeof monaco;
+    monaco?: typeof monaco;
   }
 }
 
-export function isMonacoWindow(window: Window): boolean {
+export function isMonacoWindow(window: Window): window is Window & { monaco: typeof monaco } {
   return typeof window.monaco !== 'undefined';
 }
 
@@ -25,10 +25,12 @@ export async function withTempEditor<T>(
     throw new Error('Monaco editor not available');
   }
 
+  const monaco = window.monaco;
   const editor = await new Promise<IStandaloneCodeEditor>((resolve) => {
-    const disposable = window.monaco!.editor.onDidCreateEditor((editor) => {
+    const disposable = monaco.editor.onDidCreateEditor((codeEditor) => {
       disposable.dispose();
-      resolve(editor as IStandaloneCodeEditor); // Cast to IStandaloneCodeEditor
+      // We know this is a standalone editor in our context
+      resolve(codeEditor as unknown as IStandaloneCodeEditor);
     });
   });
   return callback(editor);
