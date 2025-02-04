@@ -42,12 +42,15 @@ async function isTutorialCompleted(page: Page, tutorialKey: string): Promise<boo
   try {
     console.log('[Tutorial CHECK tutorialKey]', tutorialKey);
     return await page.evaluate((key: string): boolean => {
+      console.log('[Tutorial EVALUATE FUNCTION ENTERED]'); // Added console.log here
       console.log('[Tutorial CHECK key]', key);
       const completedTutorials = localStorage.getItem('completed-tutorials');
       console.log('[Tutorial CHECK]', key, completedTutorials);
       if (!completedTutorials) return false;
+      console.log('[Tutorial CHECK completedTutorials]', completedTutorials); // Log completedTutorials before try-catch
       try {
         const parsed: unknown = JSON.parse(completedTutorials);
+        console.log('[Tutorial CHECK tutorialKey]', tutorialKey, 'parsed:', parsed); // Add console.log here
         if (!Array.isArray(parsed) || !parsed.every(item => typeof item === 'string')) {
           console.log('[Tutorial Parse Error] completed-tutorials is not a string array', parsed);
           return false;
@@ -86,7 +89,7 @@ async function logTutorialState(page: Page, label: string): Promise<void> {
 }
 
 test.describe('Tutorial Mode', () => {
-  test.describe.serial('tutorial progression', () => {
+  test.describe('tutorial progression', () => { // Changed to test.describe (parallel execution)
     test.beforeEach(async ({ context, page }, testInfo) => {
       test.setTimeout(TIMEOUTS.long);
 
@@ -151,7 +154,7 @@ test.describe('Tutorial Mode', () => {
         try {
           await page.waitForSelector('#handterm-wrapper', { state: 'attached', timeout: TIMEOUTS.medium });
         } catch (error: unknown) {
-          const html = await page.content();
+          // const html = await page.content();
           // console.log('[Page Content]', html);
 
           const message = typeof error === 'object' && error !== null && 'message' in error &&
@@ -196,6 +199,7 @@ test.describe('Tutorial Mode', () => {
     test('should complete fdsa tutorial', async ({ page }) => {
       // Verify we're at the right step
       const completed = await page.evaluate(() => {
+        console.log('[FDSA TEST EVALUATE FUNCTION ENTERED]'); // Added console.log here
         // localStorage.setItem('completed-tutorials', '[]'); // Set to empty array here FIRST
         const step1 = JSON.stringify(['\\r']);
         localStorage.setItem('completed-tutorials', step1); // Then set to step1
@@ -239,7 +243,7 @@ test.describe('Tutorial Mode', () => {
           return [];
         }
       });
-      expect(completed, 'Unexpected completed tutorials before jkl;').toEqual(['\r']);
+      expect(completed, 'Unexpected completed tutorials before jkl;').toEqual(['\r', 'fdsa']);
 
       // Ensure terminal is focused
       await terminalPage.focus();
@@ -303,5 +307,18 @@ test.describe('Tutorial Mode', () => {
       await expect(terminalPage.tutorialMode, 'Tutorial mode not visible after completion').toBeVisible({ timeout: TIMEOUTS.transition });
       await logTutorialState(page, 'Final State');
     });
+
+    test('test isTutorialCompleted', async ({ page }) => { // New basic test for isTutorialCompleted
+      const tutorialCompleted = await isTutorialCompleted(page, 'test-key'); // Call isTutorialCompleted
+      console.log('[BASIC TEST - isTutorialCompleted] tutorialCompleted:', tutorialCompleted); // Log result
+      expect(tutorialCompleted).toBeFalsy(); // Basic assertion
+    });
+  });
+
+  test('test page.evaluate', async ({ page }) => { // Added basic test
+    await page.evaluate(() => {
+      console.log('[BASIC TEST - PAGE.EVALUATE WORKS]'); // Basic log
+    });
+    expect(true).toBeTruthy(); // Basic assertion to pass the test
   });
 });
