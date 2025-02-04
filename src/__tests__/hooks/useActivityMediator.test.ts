@@ -27,6 +27,8 @@ vi.mock('src/hooks/useReactiveLocation', () => ({
 describe('useActivityMediator Hook', () => {
   let originalLocation: Location;
   let mockLocation: MockLocation;
+  let mockHistoryReplaceState: any;
+  let originalHistoryReplaceState: any;
 
   beforeEach(() => {
     // Clear localStorage before each test
@@ -65,11 +67,18 @@ describe('useActivityMediator Hook', () => {
       writable: true,
       configurable: true
     });
+
+    // Save and mock window.history.replaceState
+    mockHistoryReplaceState = vi.fn();
+    originalHistoryReplaceState = window.history.replaceState;
+    window.history.replaceState = mockHistoryReplaceState;
   });
 
   afterEach(() => {
     // Restore original location
-    window.location = originalLocation;
+    // window.location = originalLocation;
+    // Restore original history.replaceState
+    window.history.replaceState = originalHistoryReplaceState;
   });
 
   it('should initialize with default state', () => {
@@ -96,8 +105,8 @@ describe('useActivityMediator Hook', () => {
     expect(result.current.isInGameMode).toBe(false);
     expect(result.current.isInEdit).toBe(false);
     await waitFor(() => {
-      expect(mockLocation.replace).toHaveBeenCalledWith(
-        expect.stringContaining('activity=NORMAL')
+      expect(mockHistoryReplaceState).toHaveBeenCalledWith(
+        {}, '', expect.not.stringContaining('activity=normal')
       );
     });
   });

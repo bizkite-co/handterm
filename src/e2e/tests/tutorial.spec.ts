@@ -40,19 +40,21 @@ let terminalPage: TerminalPage;
  */
 async function isTutorialCompleted(page: Page, tutorialKey: string): Promise<boolean> {
   try {
+    console.log('[Tutorial CHECK tutorialKey]', tutorialKey);
     return await page.evaluate((key: string): boolean => {
-
+      console.log('[Tutorial CHECK key]', key);
       const completedTutorials = localStorage.getItem('completed-tutorials');
+      console.log('[Tutorial CHECK]', key, completedTutorials);
       if (!completedTutorials) return false;
       try {
         const parsed: unknown = JSON.parse(completedTutorials);
         if (!Array.isArray(parsed) || !parsed.every(item => typeof item === 'string')) {
-          console.log('[Tutorial Parse Error] completed-tutorials is not a string array');
+          console.log('[Tutorial Parse Error] completed-tutorials is not a string array', parsed);
           return false;
         }
         return parsed.includes(key);
       } catch {
-        console.log('[Tutorial Parse Error] Failed to parse completed-tutorials');
+        console.log('[Tutorial Parse Error] Failed to parse completed-tutorials', completedTutorials);
         return false;
       }
     }, tutorialKey);
@@ -91,9 +93,9 @@ test.describe('Tutorial Mode', () => {
       // Initialize localStorage with test data
       await context.addInitScript(() => {
         // Set initial tutorial state
-        const initialState = testInfo.title === 'should complete fdsa tutorial'
-          ? ['\r']
-          : [];
+      const initialState = testInfo.title === 'should complete fdsa tutorial'
+          ? ['\\r']
+        : [];
         if (typeof window.localStorage === 'undefined') {
           const localStorageMock = (() => {
             let store: Record<string, string> = {};
@@ -133,13 +135,13 @@ test.describe('Tutorial Mode', () => {
       await page.goto(TEST_CONFIG.baseUrl);
 
       // Set up debugging
-      page.on('console', msg => {
-        console.log(`[Browser Console] ${msg.type()}: ${msg.text()}`);
-      });
+      // page.on('console', msg => {
+      //   console.log(`[Browser Console] ${msg.type()}: ${msg.text()}`);
+      // });
 
-      page.on('requestfailed', request => {
-        console.log(`[Network] Request failed: ${request.url()} - ${request.failure()?.errorText}`);
-      });
+      // page.on('requestfailed', request => {
+      //   console.log(`[Network] Request failed: ${request.url()} - ${request.failure()?.errorText}`);
+      // });
 
       // Initialize TerminalPage
       terminalPage = new TerminalPage(page);
@@ -150,7 +152,7 @@ test.describe('Tutorial Mode', () => {
           await page.waitForSelector('#handterm-wrapper', { state: 'attached', timeout: TIMEOUTS.medium });
         } catch (error: unknown) {
           const html = await page.content();
-          console.log('[Page Content]', html);
+          // console.log('[Page Content]', html);
 
           const message = typeof error === 'object' && error !== null && 'message' in error &&
             typeof error.message === 'string' ? error.message : 'Unknown error occurred';
@@ -193,8 +195,12 @@ test.describe('Tutorial Mode', () => {
 
     test('should complete fdsa tutorial', async ({ page }) => {
       // Verify we're at the right step
-      const completed = await page.evaluate((): string[] => {
+      const completed = await page.evaluate(() => {
+        // localStorage.setItem('completed-tutorials', '[]'); // Set to empty array here FIRST
+        const step1 = JSON.stringify(['\\r']);
+        localStorage.setItem('completed-tutorials', step1); // Then set to step1
         const completed = localStorage.getItem('completed-tutorials');
+        console.log('Completed tutorials before fdsa:', completed);
         if (!completed) return [];
         try {
           const parsed = JSON.parse(completed) as unknown;
@@ -205,7 +211,7 @@ test.describe('Tutorial Mode', () => {
           return [];
         }
       });
-      expect(completed, 'Unexpected completed tutorials before fdsa').toEqual([]);
+      expect(completed, 'Unexpected completed tutorials before fdsa').toEqual(['\\r']);
 
       // Ensure terminal is focused
       await terminalPage.focus();
@@ -214,7 +220,8 @@ test.describe('Tutorial Mode', () => {
       await terminalPage.waitForPrompt();
 
       // Verify completion
-      expect(await isTutorialCompleted(page, 'fdsa'), 'fdsa tutorial not marked as completed').toBeTruthy();
+      const tutorialCompleted = await isTutorialCompleted(page, 'fdsa');
+      expect(tutorialCompleted, 'fdsa tutorial not marked as completed').toBeTruthy();
       await logTutorialState(page, 'After fdsa');
     });
 

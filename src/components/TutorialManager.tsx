@@ -10,11 +10,11 @@ export const TutorialManager = memo(({
   tutorial,
 }: TutorialManagerProps): JSX.Element => {
   if (tutorial == null) {
-    return <div className="tutorial-component" data-testid="tutorial-component" />;
+    return <div id="tutorial-component" className="tutorial-component" data-testid="tutorial-component" />;
   }
 
   return (
-    <div className="tutorial-component" data-testid="tutorial-component">
+    <div id="tutorial-component" className="tutorial-component" data-testid="tutorial-component">
       <pre className="tutorial-prompt">{tutorial.value}</pre>
       <div className="chord-display-container">
         {tutorial.key.split('').map((character: string, index: number) => (

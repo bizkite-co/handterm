@@ -1,5 +1,12 @@
 import { test, expect } from '@playwright/test';
-import { ActivityType } from '@handterm/types';
+import { ActivityType, type WindowExtensions } from '@handterm/types';
+import { signal } from '@preact/signals-core';
+
+// Extend Window interface with our extensions
+declare global {
+  // eslint-disable-next-line @typescript-eslint/no-empty-interface
+  interface Window extends WindowExtensions {}
+}
 
 test.describe('Editor Basic Functionality', () => {
   test.beforeEach(async ({ page }) => {
@@ -8,32 +15,40 @@ test.describe('Editor Basic Functionality', () => {
 
     // Initialize signals before each test
     await page.evaluate(() => {
-      window.activitySignal = {
-        value: ActivityType.NORMAL,
-        set: () => {},
-        subscribe: () => {}
-      };
+      // Initialize required window properties
+      window.ActivityType = ActivityType;
+
+      // Create signals
+      window.activityStateSignal = signal({
+        current: ActivityType.NORMAL,
+        previous: null,
+        transitionInProgress: false,
+        tutorialCompleted: false
+      });
 
       window.tutorialSignals = {
-        currentStep: {
-          value: 0,
-          set: () => {}
-        },
-        totalSteps: {
-          value: 0,
-          set: () => {}
-        },
-        isComplete: {
-          value: false,
-          set: () => {},
-          subscribe: () => {}
-        }
-      } as any;
+        currentStep: signal(0),
+        totalSteps: signal(0),
+        isComplete: signal(false)
+      };
 
-      window.commandLineSignal = {
-        value: '',
-        set: () => {},
-        subscribe: () => {}
+      window.commandLineSignal = signal('');
+
+      // Set up activity function
+      window.setActivity = (activity) => {
+        const currentState = window.activityStateSignal.value;
+        window.activityStateSignal.value = {
+          current: activity,
+          previous: currentState.current,
+          transitionInProgress: false,
+          tutorialCompleted: currentState.tutorialCompleted
+        };
+      };
+
+      // Set up execute command function
+      window.executeCommand = async (command: string) => {
+        window.commandLineSignal.value = command;
+        await new Promise((resolve) => setTimeout(resolve, 500));
       };
     });
   });

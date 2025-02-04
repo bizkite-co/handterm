@@ -20,7 +20,7 @@ if (typeof global === 'undefined') {
 
 const logger: ReturnType<typeof createLogger> = createLogger({
   prefix: 'main',
-  level: LogLevel.DEBUG
+  level: LogLevel.ERROR
 });
 
 // Expose signals for e2e testing in development/test environments

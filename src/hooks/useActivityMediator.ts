@@ -320,7 +320,7 @@ export function useActivityMediator(): {
             });
 
             // Update state after navigation
-            bypassTutorialSignal.value = true;
+            // bypassTutorialSignal.value = true;
             activitySignal.value = ActivityType.NORMAL;
         } else {
             logger.debug('No completed tutorials found - checking for next tutorial');

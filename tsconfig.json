@@ -9,6 +9,8 @@
     "forceConsistentCasingInFileNames": true,
     "strict": true,
     "skipLibCheck": true,
+    "sourceMap": true,
+    "types": ["node", "@testing-library/jest-dom"],
     "paths": {
       "'*'": [
         "./src/*"
@@ -85,14 +87,18 @@
     ]
   },
   "include": [
-    "src",
-    "test",
-    "src/e2e",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/**/*.d.ts",
+    "test/**/*.ts",
     "moduleResolver.ts",
-    ".eslintrc.cjs"
+    ".eslintrc.cjs",
+    "node_modules/@types/testing-library__jest-dom/index.d.ts",
+    "node_modules/@playwright/test/index.d.ts"
   ],
   "exclude": [
-    "scripts"
+    "scripts",
+    "node_modules"
   ],
   "references": [
     {

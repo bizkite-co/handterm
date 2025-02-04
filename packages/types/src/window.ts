@@ -1,4 +1,18 @@
 import type { ActivityType } from './runtimeConstants.js';
+import type { Signal } from '@preact/signals-core';
+
+export interface TutorialSignals {
+  currentStep: Signal<number>;
+  totalSteps: Signal<number>;
+  isComplete: Signal<boolean>;
+}
+
+export interface ActivityState {
+  current: ActivityType;
+  previous: ActivityType | null;
+  transitionInProgress: boolean;
+  tutorialCompleted: boolean;
+}
 
 /**
  * Window extensions for testing
@@ -19,4 +33,8 @@ export interface WindowExtensions {
     getTree: () => Promise<{ tree: Array<{ path: string; type: string }> }>;
     getRepoInfo: () => Promise<{ owner: string; repo: string }>;
   };
+  /** Signal properties */
+  activityStateSignal: Signal<ActivityState>;
+  commandLineSignal: Signal<string>;
+  tutorialSignals: TutorialSignals;
 }

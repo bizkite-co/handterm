@@ -1,12 +1,11 @@
-// @ts-nocheck - Temporarily disable type checking during Monaco migration
+import { signal } from '@preact/signals-core';
 import { commandLineSignal } from '../signals/commandLineSignals';
-import { SignalBase } from '../signals/base/SignalBase';
 import { activityState } from '../utils/activityState';
 import {
   type WindowExtensions,
-  type TutorialSignals,
   ActivityType,
-  isWindowDefined
+  isWindowDefined,
+  Phrases
 } from '@handterm/types';
 
 interface SignalError extends Error {
@@ -21,26 +20,29 @@ let isInitialized = false;
  */
 function isWindowWithSignals(win: unknown): win is Window & WindowExtensions {
   // Enhanced type checking with runtime validation
+  const winWithSignals = win as Window & Partial<WindowExtensions>;
+
   const isValid = typeof win === 'object' &&
     win !== null &&
     isWindowDefined() &&
-    'activitySignal' in win &&
-    typeof (win as WindowExtensions).activitySignal?.peek === 'function' &&
-    typeof (win as WindowExtensions).activitySignal?.subscribe === 'function' &&
-    'commandLineSignal' in win &&
-    'tutorialSignals' in win;
+    'activityStateSignal' in winWithSignals &&
+    'commandLineSignal' in winWithSignals &&
+    'tutorialSignals' in winWithSignals &&
+    'ActivityType' in winWithSignals &&
+    'setActivity' in winWithSignals;
 
   if (!isValid) {
     console.error('Window signals validation failed:', {
-      activitySignal: (win as WindowExtensions).activitySignal,
-      commandLineSignal: (win as WindowExtensions).commandLineSignal,
-      tutorialSignals: (win as WindowExtensions).tutorialSignals
+      activityStateSignal: 'activityStateSignal' in winWithSignals,
+      commandLineSignal: 'commandLineSignal' in winWithSignals,
+      tutorialSignals: 'tutorialSignals' in winWithSignals,
+      ActivityType: 'ActivityType' in winWithSignals,
+      setActivity: 'setActivity' in winWithSignals
     });
   }
 
   return isValid;
 }
-
 
 /**
  * Initialize window signals and properties
@@ -51,74 +53,31 @@ function initializeWindow(): void {
   }
 
   try {
-    // Create activity signal
-    const activitySignal = new class extends SignalBase<ActivityType> {
-      type = 'activity';
-      brand = Symbol('activitySignal');
-      get value(): ActivityType {
-        return activityState.value.current;
-      }
-      set value(v: ActivityType) {
-        activityState.value = { ...activityState.value, current: v };
-        this.notifySubscribers();
-      }
+    // Create activity signal using @preact/signals-core
+    const activityStateSignal = signal(activityState.value);
 
-      subscribe(callback: (value: ActivityType) => void): () => void {
-        this.subscribers.add(callback);
-        return () => this.subscribers.delete(callback);
-      }
-    };
-
-    // Create tutorial signals
-    const tutorialSignals = new class extends SignalBase<unknown> implements TutorialSignals {
-      type = 'tutorial';
-      brand = Symbol('tutorialSignals');
-      value = null;
-
-      currentStep = new class extends SignalBase<string> {
-        type = 'tutorialStep';
-        brand = Symbol('tutorialStep');
-        value = '0';
-
-        subscribe(callback: (value: string) => void): () => void {
-          this.subscribers.add(callback);
-          return () => this.subscribers.delete(callback);
-        }
-      };
-
-      totalSteps = new class extends SignalBase<number> {
-        type = 'tutorialTotalSteps';
-        brand = Symbol('tutorialTotalSteps');
-        value = GamePhrases.getGamePhrasesByTutorialGroup('tutorial').length;
-
-        subscribe(callback: (value: number) => void): () => void {
-          this.subscribers.add(callback);
-          return () => this.subscribers.delete(callback);
-        }
-      };
-
-      isCompleted = new class extends SignalBase<boolean> {
-        type = 'tutorialCompleted';
-        brand = Symbol('tutorialCompleted');
-        value = false;
-
-        subscribe(callback: (value: boolean) => void): () => void {
-          this.subscribers.add(callback);
-          return () => this.subscribers.delete(callback);
-        }
-      };
-
-      subscribe(): () => void {
-        throw new Error('Method not implemented.');
-      }
+    // Create tutorial signals using @preact/signals-core
+    const tutorialSignals = {
+      currentStep: signal(0),
+      totalSteps: signal(Phrases.filter(p => p.displayAs === 'Tutorial').length),
+      isComplete: signal(false)
     };
 
     // Initialize window properties with proper descriptors
     const signalsToAttach = {
-      activitySignal,
+      activityStateSignal,
       commandLineSignal,
       ActivityType,
       tutorialSignals,
+      setActivity: (activity: ActivityType) => {
+        const currentState = activityStateSignal.value;
+        activityStateSignal.value = {
+          current: activity,
+          previous: currentState.current,
+          transitionInProgress: false,
+          tutorialCompleted: currentState.tutorialCompleted
+        };
+      },
       executeCommand: async (command: string): Promise<void> => {
         console.log('[exposeSignals] Executing command:', command);
         commandLineSignal.value = command;
@@ -127,7 +86,7 @@ function initializeWindow(): void {
     };
 
     console.log('[exposeSignals] Attaching signals:', {
-      activitySignal: !!signalsToAttach.activitySignal,
+      activityStateSignal: !!signalsToAttach.activityStateSignal,
       commandLineSignal: !!signalsToAttach.commandLineSignal,
       tutorialSignals: !!signalsToAttach.tutorialSignals
     });

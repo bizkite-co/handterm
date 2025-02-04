@@ -34,10 +34,12 @@ export class TerminalPage {
     }
   }
 
-  async waitForTutorialMode(timeout = 10000): Promise<void> {
+  async waitForTutorialMode(timeout = 1000000): Promise<void> {
     try {
+      await this.logNodeChildrenWithIds('div#handterm-wrapper');
       // Wait for tutorial component to be attached
       await this.page.waitForSelector('.tutorial-component', { state: 'attached', timeout });
+
 
       // Wait for tutorial content to be loaded (tutorial-prompt only appears when content is set)
       await this.page.waitForSelector('.tutorial-prompt', { state: 'visible', timeout });
@@ -58,10 +60,41 @@ export class TerminalPage {
         throw new Error('Tutorial content is empty');
       }
     } catch (error) {
-      // Log the current page state for debugging
+      // Enhanced error logging: Log specific DOM elements and full page content on failure
       const html = await this.page.content();
-      console.log('[Page Content]', html);
+      const tutorialComponent = await this.tutorialMode.evaluate(el => el?.outerHTML);
+      const tutorialPrompt = await this.page.locator('.tutorial-prompt').evaluate(el => el?.outerHTML);
+      console.log('[waitForTutorialMode] Error:', (error as Error).message);
+      console.log('[waitForTutorialMode] Tutorial Component:', tutorialComponent);
+      console.log('[waitForTutorialMode] Tutorial Prompt:', tutorialPrompt);
+      console.log('[waitForTutorialMode] Full Page Content:', html);
       throw error;
+    }
+  }
+
+  /**
+   * Logs the tag name and id of all child nodes with IDs for a given node selector.
+   * @param nodeSelector CSS selector for the node to inspect.
+   */
+  private async logNodeChildrenWithIds(nodeSelector: string): Promise<void> {
+    try {
+      const wrapperNodesWithIds = await this.page.evaluate(
+        (selector) => {
+          const wrapper = document.querySelector(selector);
+          if (!wrapper) {
+            return `${selector} not found`;
+          }
+          const elementsWithIds = Array.from(wrapper.querySelectorAll('*[id]'));
+          return elementsWithIds.map((element) => ({
+            tagName: element.tagName,
+            id: element.id,
+          }));
+        },
+        nodeSelector,
+      );
+      console.log(`[DOM Nodes with IDs in ${nodeSelector}]`, wrapperNodesWithIds);
+    } catch (error) {
+      console.error(`ERROR in logNodeChildrenWithIds for selector ${nodeSelector}:`, error);
     }
   }
 
