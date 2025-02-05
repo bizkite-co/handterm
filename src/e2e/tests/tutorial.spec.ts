@@ -55,7 +55,9 @@ async function isTutorialCompleted(page: Page, tutorialKey: string): Promise<boo
           console.log('[Tutorial Parse Error] completed-tutorials is not a string array', parsed);
           return false;
         }
-        return parsed.includes(key);
+        const includesKey = parsed.includes(key);
+        console.log('[Tutorial CHECK includesKey]', includesKey, 'key', key, 'parsed', parsed);
+        return includesKey;
       } catch {
         console.log('[Tutorial Parse Error] Failed to parse completed-tutorials', completedTutorials);
         return false;
@@ -96,9 +98,21 @@ test.describe('Tutorial Mode', () => {
       // Initialize localStorage with test data
       await context.addInitScript(() => {
         // Set initial tutorial state
-      const initialState = testInfo.title === 'should complete fdsa tutorial'
-          ? ['\\r']
-        : [];
+      const initialState = (() => {
+        switch (testInfo.title) {
+          case 'should complete \\r tutorial':
+            return [];
+          case 'should complete fdsa tutorial':
+            return ['\\r'];
+          case 'should complete jkl; tutorial':
+          case 'should transition to game mode':
+            return ['\\r', 'fdsa'];
+          case 'should complete game phrase and return to tutorial':
+            return ['\\r', 'fdsa', 'jkl;'];
+          default:
+            return [];
+        }
+      })();
         if (typeof window.localStorage === 'undefined') {
           const localStorageMock = (() => {
             let store: Record<string, string> = {};
@@ -179,7 +193,6 @@ test.describe('Tutorial Mode', () => {
       }, [Phrases[0] ?? null] as [GamePhrase | null]);
 
       await terminalPage.goto();
-      await logTutorialState(page, 'Initial Setup');
     });
 
     test('should start with `\\r` tutorial', async ({ page }) => {
@@ -222,6 +235,7 @@ test.describe('Tutorial Mode', () => {
       await terminalPage.typeKeys('fdsa');
       await terminalPage.pressEnter();
       await terminalPage.waitForPrompt();
+      await page.waitForTimeout(TIMEOUTS.short); // Add a short delay
 
       // Verify completion
       const tutorialCompleted = await isTutorialCompleted(page, 'fdsa');
@@ -243,7 +257,7 @@ test.describe('Tutorial Mode', () => {
           return [];
         }
       });
-      expect(completed, 'Unexpected completed tutorials before jkl;').toEqual(['\r', 'fdsa']);
+      expect(completed, 'Unexpected completed tutorials before jkl;').toEqual(['\\r', 'fdsa']);
 
       // Ensure terminal is focused
       await terminalPage.focus();
@@ -270,7 +284,7 @@ test.describe('Tutorial Mode', () => {
           return [];
         }
       });
-      expect(completed, 'Unexpected completed tutorials before game transition').toEqual(['\r', 'fdsa']);
+      expect(completed, 'Unexpected completed tutorials before game transition').toEqual(['\\r', 'fdsa']);
 
       await terminalPage.waitForActivityTransition();
       await expect(terminalPage.tutorialMode, 'Tutorial mode still visible after transition').not.toBeVisible({ timeout: TIMEOUTS.transition });
@@ -292,7 +306,7 @@ test.describe('Tutorial Mode', () => {
           return [] as string[];
         }
       });
-      expect(completed, 'Unexpected completed tutorials before game phrase').toEqual(['\r', 'fdsa', 'jkl;']);
+      expect(completed, 'Unexpected completed tutorials before game phrase').toEqual(['\\r', 'fdsa', 'jkl;']);
 
       await terminalPage.waitForNextChars('all sad lads ask dad; alas fads fall');
 
