@@ -1,5 +1,6 @@
 import type { ActivityType } from './runtimeConstants.js';
 import type { Signal } from '@preact/signals-core';
+import type { GamePhrase } from './index.js';
 
 export interface TutorialSignals {
   currentStep: Signal<number>;
@@ -37,4 +38,13 @@ export interface WindowExtensions {
   activityStateSignal: Signal<ActivityState>;
   commandLineSignal: Signal<string>;
   tutorialSignals: TutorialSignals;
+  tutorialSignal: Signal<GamePhrase | null>;
+  completedTutorialsSignal: Signal<Set<string>>;
+  /** Tutorial functions */
+  setNextTutorial: (tutorial: GamePhrase | null) => void;
+  getNextTutorial: () => GamePhrase | null;
+  setCompletedTutorial: (tutorialKey: string) => void;
+  updateCompletedTutorials: (value: Set<string>) => void;
+  /** Constants */
+  Phrases: GamePhrase[];
 }
