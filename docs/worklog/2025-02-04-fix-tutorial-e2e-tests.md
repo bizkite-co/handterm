@@ -1,3 +1,81 @@
+# Tutorial E2E Test Investigation
+
+## Current Issues
+
+1. Tests are timing out waiting for window functions
+2. Signal initialization is inconsistent between app and tests
+3. Multiple initialization points causing race conditions
+
+## Root Causes
+
+1. setup.ts only initializes empty stubs for window methods
+2. exposeSignals.ts creates real signals but isn't properly integrated into test setup
+3. Inconsistent state management between localStorage and signals
+
+## Required Changes
+
+### 1. Fix Test Environment Setup
+* [ ] Move signal initialization to setup.ts
+* [ ] Remove duplicate initialization in individual tests
+* [ ] Ensure exposeSignals runs before any tests
+
+### 2. Align Signal Management
+* [ ] Use createPersistentSignal consistently
+* [ ] Remove manual localStorage manipulation
+* [ ] Ensure signals and localStorage stay in sync
+
+### 3. Improve Test Stability
+* [ ] Add proper error handling for signal initialization
+* [ ] Add better logging for initialization failures
+* [ ] Remove redundant state setup
+
+## Implementation Plan
+
+1. Update setup.ts:
+   ```ts
+   test.beforeEach(async ({ page }) => {
+     // Initialize signals first
+     await page.addInitScript(() => {
+       const { exposeSignals } = require('../test-utils/exposeSignals');
+       exposeSignals();
+     });
+
+     // Wait for signals to be ready
+     await page.waitForFunction(() => {
+       return typeof window.completedTutorialsSignal !== 'undefined';
+     });
+
+     // Then initialize test state
+     await page.evaluate(() => {
+       window.completedTutorialsSignal.value = new Set();
+     });
+   });
+   ```
+
+2. Clean up tutorial.spec.ts:
+   - Remove manual localStorage initialization
+   - Use signal functions for state management
+   - Add proper error handling
+
+3. Update exposeSignals.ts:
+   - Ensure consistent signal creation
+   - Add better error reporting
+   - Fix race conditions with localStorage
+
+## Next Steps
+
+1. Implement setup.ts changes
+2. Update tutorial.spec.ts to use new setup
+3. Add error handling and logging
+4. Verify signal synchronization
+
+## Notes
+
+- The current approach of manually managing localStorage and signals separately is causing race conditions
+- We need to ensure signals are initialized before any tests run
+- Better error handling will help identify initialization issues
+- Moving signal initialization to setup.ts will provide a single source of truth
+
 ---
 date: 2025-02-04
 title: Fix Tutorial E2E Tests
@@ -42,19 +120,19 @@ After analyzing and fixing the codebase, we found several issues causing the tut
 # Plan
 
 1. Fix test initialization:
-   - ✓ Remove duplicate condition in beforeEach
-   - ✓ Ensure proper initial state for each test case
-   - ✓ Move state initialization to context.addInitScript
+   - [x] Remove duplicate condition in beforeEach
+   - [x] Ensure proper initial state for each test case
+   - [x] Move state initialization to context.addInitScript
 
 2. Fix state synchronization:
-   - ✓ Remove direct localStorage manipulation in tests
-   - ✓ Use proper signal initialization in beforeEach
+   - [x] Remove direct localStorage manipulation in tests
+   - [x] Use proper signal initialization in beforeEach
    - Add wait for tutorial signals to be initialized
 
 3. Improve state verification:
-   - ✓ Add logging to track localStorage state changes
-   - ✓ Add explicit state checks between steps
-   - ✓ Verify localStorage and signal state are in sync
+   - [x] Add logging to track localStorage state changes
+   - [x] Add explicit state checks between steps
+   - [x] Verify localStorage and signal state are in sync
 
 4. Next Steps:
    - Add wait for tutorial signals to be initialized in beforeEach

@@ -16,38 +16,51 @@ Currently, our signal architecture has several issues:
 ## Implementation Plan
 
 ### Phase 1: Move Signal Types to Package
-* [ ] Create signal types in @handterm/types
-  * [ ] Move TutorialSignals interface
-  * [ ] Move ActivityState interface
-  * [ ] Add SignalFactory types
-* [ ] Update imports in application code
-* [ ] Update imports in test code
+* [x] Create signal types in @handterm/types
+  * [x] Move TutorialSignals interface
+  * [x] Move ActivityState interface
+  * [x] Add SignalFactory types
+* [x] Update imports in application code
+* [x] Update imports in test code
 
 ### Phase 2: Create Signal Factories
 * [ ] Create factory functions in @handterm/types
   * [ ] createTutorialSignals()
   * [ ] createActivitySignals()
-  * [ ] createPersistentSignal() (move from utils)
+  * [x] Use existing createPersistentSignal from utils
 * [ ] Add proper type exports
-* [ ] Add localStorage synchronization in factories
+* [x] Add localStorage synchronization in factories
 
 ### Phase 3: Update Application Code
 * [ ] Update tutorialSignals.ts to use factories
 * [ ] Update appSignals.ts to use factories
 * [ ] Remove duplicate signal creation code
-* [ ] Update type imports
+* [x] Update type imports
 
 ### Phase 4: Update Test Environment
-* [ ] Remove exposeSignals.ts
-* [ ] Create test-specific signal initialization
-* [ ] Update e2e tests to use factories
-* [ ] Add proper type checking
+* [ ] Modify exposeSignals.ts to use same patterns as app
+  * [x] Use createPersistentSignal for test signals
+  * [x] Add updateCompletedTutorials to window
+  * [x] Add Phrases to window
+  * [ ] Add proper error handling for signal updates
+* [ ] Update e2e tests
+  * [x] Remove manual localStorage manipulation
+  * [x] Use signal functions to set test state
+  * [ ] Add helper functions for common test states
+  * [ ] Add state verification utilities
 
 ### Phase 5: Cleanup and Documentation
 * [ ] Remove old type definitions
-* [ ] Update WindowExtensions interface
+* [x] Update WindowExtensions interface
 * [ ] Add documentation for signal factories
-* [ ] Update test documentation
+* [x] Document test state management
+* [ ] Add examples for common test patterns
+
+### Phase 6: Testing and Validation
+* [ ] Add tests for signal factories
+* [ ] Verify localStorage synchronization
+* [ ] Test error handling
+* [ ] Measure test performance impact
 
 ## Benefits
 1. Single source of truth for signal creation
