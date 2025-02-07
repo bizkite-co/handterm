@@ -47,4 +47,6 @@ export interface WindowExtensions {
   updateCompletedTutorials: (value: Set<string>) => void;
   /** Constants */
   Phrases: GamePhrase[];
+  /** Test utilities */
+  testFunction: () => string;
 }

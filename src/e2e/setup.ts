@@ -1,39 +1,21 @@
 import { test } from '@playwright/test';
-import { type ActivityType, type GamePhrase } from '@handterm/types';
 
-declare global {
-  interface Window {
-    setNextTutorial: (tutorial: GamePhrase | null) => void;
-    setActivity: (activity: ActivityType) => void;
-    ActivityType: typeof ActivityType;
-  }
-}
-
-// Initialize localStorage and window methods for all tests
 test.beforeEach(async ({ page }) => {
-  await page.addInitScript(() => {
-    // Initialize localStorage
-    if (typeof window.localStorage === 'undefined') {
-      const store: Record<string, string | undefined> = {};
-      window.localStorage = {
-        getItem: (key: string) => store[key] || null,
-        setItem: (key: string, value: string) => { store[key] = value; },
-        removeItem: (key: string) => { store[key] = undefined; },
-        clear: () => { Object.keys(store).forEach(key => { store[key] = undefined; }); },
-        length: Object.keys(store).length,
-        key: (index: number) => Object.keys(store)[index] || null
-      };
-    }
+  console.log('[Node] Setting up page');
 
-    // Initialize tutorial state
-    window.localStorage.setItem('tutorial-state', JSON.stringify({ currentStep: 0 }));
-
-    // Initialize window methods
-    if (typeof window.setActivity === 'undefined') {
-      window.setActivity = () => { };
-    }
-    if (typeof window.setNextTutorial === 'undefined') {
-      window.setNextTutorial = () => { };
-    }
+  // Add console listener before the script runs
+  page.on('console', msg => {
+    console.log(`[Browser->Node] ${msg.text()}`);
   });
+
+  console.log('[Node] Adding init script');
+  await page.addInitScript(() => {
+    console.log('[Browser] Init script is running');
+    (window as unknown as { testFunction: () => string }).testFunction = () => {
+      console.log('[Browser] testFunction was called');
+      return "Hello from Playwright!";
+    };
+    console.log('[Browser] Init script finished');
+  });
+  console.log('[Node] Init script added');
 });
