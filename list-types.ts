@@ -3,6 +3,7 @@ const ts = tsNamespace.default || tsNamespace;
 import * as fs from 'fs';
 import * as path from 'path';
 
+// TODO: Put a comment here about how to call this and pass a parameter
 interface TypeInfo {
   name: string;
   location: string;
