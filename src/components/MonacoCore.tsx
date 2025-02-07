@@ -1,5 +1,6 @@
 import { useRef, useEffect } from 'react';
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
+import type { IStandaloneCodeEditor } from '@handterm/types/monaco';
 
 interface MonacoCoreProps {
   value: string;
@@ -16,6 +17,12 @@ export default function MonacoCore({ value, language = 'text' }: MonacoCoreProps
 
     let editorInstance: monaco.editor.IStandaloneCodeEditor | null = null;
     try {
+      // Wait for monaco to be loaded
+      if (!monaco.editor) {
+        console.error('Monaco editor not loaded');
+        return;
+      }
+
       editorInstance = monaco.editor.create(containerRef.current, {
         value,
         language,
@@ -32,11 +39,13 @@ export default function MonacoCore({ value, language = 'text' }: MonacoCoreProps
       resizeObserver.observe(containerRef.current);
 
       editorRef.current = editorInstance;
+      window.monacoEditor = editorInstance;
 
       return () => {
         resizeObserver.disconnect();
         editorInstance?.dispose();
         editorRef.current = null;
+        window.monacoEditor = null;
       };
     } catch (error) {
       console.error('Monaco editor initialization failed:', error);

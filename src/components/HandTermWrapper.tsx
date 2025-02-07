@@ -277,9 +277,9 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
       logger.debug('Setting activity:', activity);
       activitySignal.value = activity;
     };
-    window.setNextTutorial = (tutorial: GamePhrase | null) => {
+    window.setNextTutorial = (tutorial: string | null) => {
       logger.debug('Setting tutorial:', tutorial);
-      tutorialSignal.value = tutorial;
+      tutorialSignal.value = tutorial as unknown as GamePhrase | null;
     };
     window.ActivityType = ActivityType;
   }, []);
@@ -292,7 +292,14 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
 
   const getStoredContent = useCallback((): string => {
     const content = localStorage.getItem('edit-content');
-    return content !== null ? content : '';
+    if (!content) return '';
+    try {
+      const parsed = JSON.parse(content);
+      return parsed.content ?? '';
+    } catch (error) {
+      logger.error('Failed to parse edit content:', error);
+      return '';
+    }
   }, []);
 
   return (

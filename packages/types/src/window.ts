@@ -1,6 +1,7 @@
 import type { ActivityType } from './runtimeConstants.js';
 import type { Signal } from '@preact/signals-core';
 import type { GamePhrase } from './index.js';
+import type { IStandaloneCodeEditor } from './monaco.js';
 
 export interface TutorialSignals {
   currentStep: Signal<number>;
@@ -21,7 +22,7 @@ export interface ActivityState {
 export interface WindowExtensions {
   /** Monaco editor instance and types */
   monaco?: typeof import('monaco-editor');
-  monacoEditor?: import('./monaco.js').IStandaloneCodeEditor;
+  monacoEditor?: IStandaloneCodeEditor;
   /** Activity type enum for type safety */
   ActivityType: typeof ActivityType;
   /** Set activity function */
@@ -41,7 +42,7 @@ export interface WindowExtensions {
   tutorialSignal: Signal<GamePhrase | null>;
   completedTutorialsSignal: Signal<Set<string>>;
   /** Tutorial functions */
-  setNextTutorial: (tutorial: GamePhrase | null) => void;
+  setNextTutorial: (tutorial: string | null) => void;
   getNextTutorial: () => GamePhrase | null;
   setCompletedTutorial: (tutorialKey: string) => void;
   updateCompletedTutorials: (value: Set<string>) => void;

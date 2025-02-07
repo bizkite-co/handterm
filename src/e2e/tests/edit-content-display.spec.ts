@@ -90,19 +90,20 @@ test.describe('Edit Content Display', () => {
       { timeout: TEST_CONFIG.timeout.medium }
     );
 
-    // Wait for Monaco container to be rendered by React
+    // Wait for Monaco container to be mounted by React
     const editorContainer = page.locator('div[style*="height: 100%"][style*="width: 100%"]');
-    await expect(editorContainer).toBeVisible({ timeout: TEST_CONFIG.timeout.medium });
+    await expect(editorContainer).toBeVisible({ timeout: TEST_CONFIG.timeout.short });
 
     // Wait for Monaco editor to be initialized
     await page.waitForFunction(() => {
-      const editor = (window as any).monacoEditor;
-      return editor !== null && editor !== undefined;
-    }, { timeout: TEST_CONFIG.timeout.medium });
+      const container = document.querySelector('div[style*="height: 100%"][style*="width: 100%"]');
+      return container?.children.length ?? 0 > 0;
+    }, { timeout: TEST_CONFIG.timeout.short });
 
     // Verify editor content
     const editorContent = await page.evaluate(() => {
       const editor = (window as any).monacoEditor;
+      if (!editor) throw new Error('Monaco editor not found');
       return editor.getValue();
     });
     expect(editorContent).toBe(testContent.content);
@@ -124,7 +125,7 @@ test.describe('Edit Content Display', () => {
     );
     expect(activityState).toBe('normal');
 
-    // Wait for error message to be displayed
+    // Wait for error message
     const error = page.locator('text=File not found');
     await expect(error).toBeVisible({ timeout: TEST_CONFIG.timeout.short });
   });
