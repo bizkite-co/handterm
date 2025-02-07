@@ -82,6 +82,24 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
     };
   }, [currentActivity]);
 
+  // Handle location change events
+  useEffect(() => {
+    const handleLocationChange = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      const activity = customEvent.detail?.activity;
+      if (activity) {
+        logger.debug('Location change event:', {
+          activity,
+          currentActivity: activitySignal.value
+        });
+        activitySignal.value = activity;
+      }
+    };
+
+    window.addEventListener('locationchange', handleLocationChange);
+    return () => window.removeEventListener('locationchange', handleLocationChange);
+  }, []);
+
   useEffect(() => {
     logger.debug('Current activity:', {
       activity: currentActivity,
@@ -230,32 +248,6 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
       return;
     }
   }, [props.auth]);
-
-  // const handleEditorClose = useCallback((): void => {
-  //   logger.info('Closing editor, returning to NORMAL mode');
-  //   // Clear stored content and file path
-  //   localStorage.removeItem('edit-content');
-  //   setCurrentFile(null);
-  //   // Return to normal mode
-  //   navigate({
-  //     activityKey: ActivityType.NORMAL,
-  //     contentKey: null,
-  //     groupKey: null
-  //   });
-  // }, []);
-
-  // const handleTreeClose = useCallback((): void => {
-  //   logger.info('Closing tree view, returning to NORMAL mode');
-  //   // Clear tree items
-  //   setTreeItems([]);
-  //   localStorage.removeItem('github_tree_items');
-  //   // Return to normal mode
-  //   navigate({
-  //     activityKey: ActivityType.NORMAL,
-  //     contentKey: null,
-  //     groupKey: null
-  //   });
-  // }, []);
 
   const handlePhraseErrorState = useCallback((errorIndex: number | undefined) => {
     setErrorCharIndex(errorIndex);

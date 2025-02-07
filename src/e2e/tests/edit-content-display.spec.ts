@@ -1,7 +1,7 @@
 import { test, expect, type Page } from '@playwright/test';
 import { TerminalPage } from '../page-objects/TerminalPage';
 import { TEST_CONFIG } from '../config';
-import { Phrases, type GamePhrase } from '@handterm/types';
+import { Phrases, type GamePhrase, type ActivityType } from '@handterm/types';
 
 test.describe('Edit Content Display', () => {
   let page: Page;
@@ -32,19 +32,28 @@ test.describe('Edit Content Display', () => {
       win.tutorialSignal = { value: null };
       win.activityStateSignal = {
         value: {
-          current: 'normal',
-          previous: 'tutorial',
+          current: 'normal' as ActivityType,
+          previous: 'tutorial' as ActivityType,
           transitionInProgress: false,
           tutorialCompleted: true
         }
       };
+
+      // Set up activity setter
+      win.setActivity = (activity: ActivityType) => {
+        console.log('Setting activity to:', activity);
+        win.activityStateSignal.value = {
+          ...win.activityStateSignal.value,
+          current: activity
+        };
+      };
     }, Phrases);
 
     // Wait for application to be ready
-    await page.waitForSelector('#handterm-wrapper', { state: 'attached', timeout: TEST_CONFIG.timeout.medium });
+    await page.waitForSelector('#handterm-wrapper', { state: 'attached', timeout: TEST_CONFIG.timeout.short });
   });
 
-  test('displays content in editor when in edit mode', async () => {
+  test('transitions to edit mode and displays content', async () => {
     // Set up test content
     const testContent = {
       key: '_index.md',
@@ -54,16 +63,46 @@ test.describe('Edit Content Display', () => {
       localStorage.setItem('edit-content', JSON.stringify(content));
     }, testContent);
 
+    // Log initial state
+    const initialState = await page.evaluate(() => ({
+      activity: window.activityStateSignal.value.current,
+      tutorialSignal: window.tutorialSignal.value,
+      editContent: localStorage.getItem('edit-content')
+    }));
+    console.log('Initial state:', initialState);
+
     // Execute edit command
     await terminal.executeCommand('edit _index.md');
 
-    // Verify editor is visible and shows content
-    const editor = page.locator('.monaco-editor');
-    await expect(editor).toBeVisible({ timeout: TEST_CONFIG.timeout.medium });
+    // Log state after command
+    const afterCommandState = await page.evaluate(() => ({
+      activity: window.activityStateSignal.value.current,
+      editContent: localStorage.getItem('edit-content')
+    }));
+    console.log('After command state:', afterCommandState);
 
+    // Wait for activity state to update
+    await page.waitForFunction(
+      () => {
+        console.log('Current activity:', window.activityStateSignal.value.current);
+        return window.activityStateSignal.value.current === 'edit';
+      },
+      { timeout: TEST_CONFIG.timeout.medium }
+    );
+
+    // Wait for Monaco container to be rendered by React
+    const editorContainer = page.locator('div[style*="height: 100%"][style*="width: 100%"]');
+    await expect(editorContainer).toBeVisible({ timeout: TEST_CONFIG.timeout.medium });
+
+    // Wait for Monaco editor to be initialized
+    await page.waitForFunction(() => {
+      const editor = (window as any).monacoEditor;
+      return editor !== null && editor !== undefined;
+    }, { timeout: TEST_CONFIG.timeout.medium });
+
+    // Verify editor content
     const editorContent = await page.evaluate(() => {
       const editor = (window as any).monacoEditor;
-      if (!editor) throw new Error('Monaco editor not found');
       return editor.getValue();
     });
     expect(editorContent).toBe(testContent.content);
@@ -72,8 +111,22 @@ test.describe('Edit Content Display', () => {
   test('shows error for non-existent file', async () => {
     await terminal.executeCommand('edit nonexistent.md');
 
-    const error = page.locator('.error-message');
-    await expect(error).toContainText('File not found', { timeout: TEST_CONFIG.timeout.medium });
+    // Log state after command
+    const afterCommandState = await page.evaluate(() => ({
+      activity: window.activityStateSignal.value.current,
+      editContent: localStorage.getItem('edit-content')
+    }));
+    console.log('After error command state:', afterCommandState);
+
+    // Verify we stay in normal mode
+    const activityState = await page.evaluate(() =>
+      window.activityStateSignal.value.current
+    );
+    expect(activityState).toBe('normal');
+
+    // Wait for error message to be displayed
+    const error = page.locator('text=File not found');
+    await expect(error).toBeVisible({ timeout: TEST_CONFIG.timeout.short });
   });
 
   test.afterEach(async () => {
