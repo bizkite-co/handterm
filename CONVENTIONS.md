@@ -8,6 +8,10 @@ This is a React/TypeScript/Vite/Vitest/Palaywright website that is deployed to G
 
 THIS APP IS A TUI (Text User Interface) and should not include _ANY BUTTONS_. HTML is used only for read-only ouput. All user actions should be keyboard driven.
 
+In order to share TypeScript types that are used in the browser context with Playwright, which works in the Node.js context, we have migrated some types to `packages/types` as `@handterm/types`.
+
+Always check `@handterm/types` for any types that you need to use in both contexts. You can use `./list-types.ts` to list all types in `@handterm/types`.
+
 There is a server-side AWS API Gateway/Lambda backend defined in `/home/mstouffer/repos/handterm-proj/handterm-cdk` and a shared API endpoints in `src/shared/endpoints.json`.
 
 Check `pwd` to determine which project you're running CLI commands in.

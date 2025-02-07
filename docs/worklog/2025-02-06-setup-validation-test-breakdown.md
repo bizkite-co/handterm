@@ -192,3 +192,76 @@ test.describe('Context Boundaries', () => {
 - Clear understanding of which interface aspect fails
 - Specific, actionable fix proposal
 - Improved test suite organization
+
+## Testing Strategy and Separation of Concerns
+
+After analyzing the codebase structure and current tests, we can identify distinct layers that should be tested differently:
+
+### 1. Unit Tests (Vitest)
+Location: `src/__tests__/`
+Purpose: Test implementation details and logic
+Target:
+- Signal persistence mechanism (`signalPersistence.ts`)
+  * Serialization/deserialization
+  * Signal creation
+  * Basic signal operations
+- Tutorial progression logic (`tutorialSignals.ts`)
+  * Tutorial completion rules
+  * Next tutorial selection
+  * Activity state transitions
+
+### 2. Integration Tests (Vitest)
+Location: `src/__tests__/`
+Purpose: Test signal interactions
+Target:
+- Signal updates trigger correct side effects
+- Tutorial completion updates related signals
+- Activity state transitions work correctly
+
+### 3. E2E Tests (Playwright)
+Location: `src/e2e/tests/`
+Purpose: Test browser functionality
+Target:
+- localStorage persistence works
+- UI updates reflect signal changes
+- User can complete tutorials
+- Tutorial progression flows correctly
+
+### What to Test Where
+
+#### Unit Tests Should:
+- Test signal persistence logic
+- Test tutorial progression rules
+- Test state management logic
+- Mock localStorage
+- Not need a browser environment
+
+#### E2E Tests Should:
+- Verify browser integration works
+- Test actual localStorage operations
+- Verify UI updates correctly
+- Not test implementation details
+- Focus on user-visible behavior
+
+### Current Focus
+Our Playwright tests should verify that:
+1. localStorage operations work in the browser
+2. Signal updates are reflected in localStorage
+3. UI responds correctly to signal changes
+
+They should NOT test:
+1. Signal implementation details
+2. Tutorial progression logic
+3. Activity state management
+
+## Revised Next Steps
+1. Move signal and tutorial logic tests to Vitest
+2. Keep Playwright tests focused on browser integration
+3. Ensure each test suite tests the appropriate layer
+4. Document which aspects belong in which test suite
+
+## Updated Success Criteria
+- Clear separation of test responsibilities
+- Each test suite focuses on appropriate layer
+- No duplication of test coverage
+- Tests are independent and self-contained

@@ -10,84 +10,153 @@ test.describe('Tutorial Signal', () => {
 
     // Set up the minimal window extensions we need
     await page.evaluate(() => {
-      // Initialize signal with any existing localStorage data
-      const stored = localStorage.getItem('completed-tutorials');
-      const initialValue = stored ? new Set(JSON.parse(stored)) : new Set<string>();
+      // Create a signal with a value from localStorage
+      function createSignalFromStorage() {
+        // Read from localStorage
+        const stored = localStorage.getItem('completed-tutorials');
+        console.log('[Signal] Reading from localStorage:', stored);
 
-      // Create the signal
-      const signal = {
-        value: initialValue,
-        subscribers: new Set<(value: Set<string>) => void>(),
-        subscribe(fn: (value: Set<string>) => void) {
-          this.subscribers.add(fn);
-          return () => this.subscribers.delete(fn);
+        // Parse the value
+        let initialValue = new Set<string>();
+        if (stored) {
+          try {
+            const parsed = JSON.parse(stored);
+            if (Array.isArray(parsed) && parsed.every(item => typeof item === 'string')) {
+              initialValue = new Set(parsed);
+              console.log('[Signal] Initialized with:', Array.from(initialValue));
+            }
+          } catch (e) {
+            console.error('[Signal] Error parsing localStorage:', e);
+          }
         }
-      };
+
+        // Create and return the signal
+        return {
+          value: initialValue,
+          subscribers: new Set<(value: Set<string>) => void>(),
+          subscribe(fn: (value: Set<string>) => void) {
+            this.subscribers.add(fn);
+            return () => this.subscribers.delete(fn);
+          }
+        };
+      }
+
+      // Function to update localStorage
+      function updateStorage(value: Set<string>) {
+        const array = Array.from(value);
+        console.log('[updateStorage] Array:', array);
+        const json = JSON.stringify(array);
+        console.log('[updateStorage] JSON:', json);
+        console.log('[updateStorage] JSON bytes:', Array.from(json).map(c => c.charCodeAt(0)));
+        localStorage.setItem('completed-tutorials', json);
+
+        const stored = localStorage.getItem('completed-tutorials');
+        console.log('[updateStorage] Read back:', stored);
+      }
+
+      // Create and initialize the signal
+      const signal = createSignalFromStorage();
 
       // Add it to window
       (window as any).completedTutorialsSignal = signal;
 
       // Add the completion function
       (window as any).setCompletedTutorial = (key: string) => {
-        console.log('[Test] Completing tutorial:', key);
-        signal.value.add(key);
-        // Update localStorage to match signal
-        localStorage.setItem('completed-tutorials', JSON.stringify(Array.from(signal.value)));
+        // Create new Set with existing values plus the new one
+        const newSet = new Set(signal.value);
+        newSet.add(key);
+        signal.value = newSet;
+        updateStorage(signal.value);
         signal.subscribers.forEach(fn => fn(signal.value));
       };
-    });
-  });
 
-  test('signal reflects empty localStorage state', async () => {
-    // Set up empty localStorage state
-    await page.evaluate(() => {
-      localStorage.setItem('completed-tutorials', '[]');
-    });
-
-    // Check signal state
-    const result = await page.evaluate(() => {
-      return Array.from(window.completedTutorialsSignal.value);
-    });
-
-    expect(result).toEqual([]);
-  });
-
-  test('signal reflects pre-existing completed tutorial', async () => {
-    // Set up localStorage with a completed tutorial
-    await page.evaluate(() => {
-      localStorage.setItem('completed-tutorials', '["\\r"]');
-    });
-
-    // Check signal state
-    const result = await page.evaluate(() => {
-      return {
-        hasEnterTutorial: window.completedTutorialsSignal.value.has('\\r'),
-        allTutorials: Array.from(window.completedTutorialsSignal.value)
+      // Function to reinitialize signal from localStorage
+      (window as any).reinitializeSignal = () => {
+        signal.value = createSignalFromStorage().value;
       };
     });
-
-    expect(result.hasEnterTutorial).toBe(true);
-    expect(result.allTutorials).toEqual(['\\r']);
   });
 
-  test('can mark additional tutorial as completed', async () => {
-    // Set up localStorage with one completed tutorial
-    await page.evaluate(() => {
-      localStorage.setItem('completed-tutorials', '["\\r"]');
+  test.describe('Tutorial Progression', () => {
+    test('starts with empty tutorial state', async () => {
+      await page.evaluate(() => {
+        localStorage.setItem('completed-tutorials', JSON.stringify([]));
+        (window as any).reinitializeSignal();
+      });
+
+      const tutorials = await page.evaluate(() => {
+        return Array.from((window as any).completedTutorialsSignal.value);
+      });
+
+      expect(tutorials).toEqual([]);
     });
 
-    // Mark another tutorial as completed
-    await page.evaluate(() => {
-      window.setCompletedTutorial('fdsa');
+    test('completes enter tutorial', async () => {
+      // Start with empty state
+      await page.evaluate(() => {
+        localStorage.setItem('completed-tutorials', JSON.stringify([]));
+        (window as any).reinitializeSignal();
+      });
+
+      // Complete enter tutorial
+      await page.evaluate(() => {
+        (window as any).setCompletedTutorial('\\r');
+      });
+
+      const tutorials = await page.evaluate(() => {
+        return Array.from((window as any).completedTutorialsSignal.value);
+      });
+
+      expect(tutorials).toEqual(['\\r']);
     });
 
-    // Check final state
-    const result = await page.evaluate(() => {
-      return Array.from(window.completedTutorialsSignal.value);
+    test('completes fdsa tutorial after enter', async () => {
+      // Start with enter completed
+      await page.evaluate(() => {
+        const value = ['\\r'];
+        console.log('[Test] Setting localStorage with value:', value);
+        const json = JSON.stringify(value);
+        console.log('[Test] JSON string:', json);
+        console.log('[Test] JSON bytes:', Array.from(json).map(c => c.charCodeAt(0)));
+        localStorage.setItem('completed-tutorials', json);
+
+        const stored = localStorage.getItem('completed-tutorials');
+        console.log('[Test] Reading back from localStorage:', stored);
+        console.log('[Test] Read bytes:', Array.from(stored || '').map(c => c.charCodeAt(0)));
+
+        (window as any).reinitializeSignal();
+      });
+
+      // Complete fdsa tutorial
+      await page.evaluate(() => {
+        (window as any).setCompletedTutorial('fdsa');
+      });
+
+      const tutorials = await page.evaluate(() => {
+        return Array.from((window as any).completedTutorialsSignal.value);
+      });
+
+      expect(tutorials).toEqual(['\\r', 'fdsa']);
     });
 
-    expect(result).toContain('\\r');
-    expect(result).toContain('fdsa');
+    test('completes jkl; tutorial after fdsa', async () => {
+      // Start with enter and fdsa completed
+      await page.evaluate(() => {
+        localStorage.setItem('completed-tutorials', '["\\r","fdsa"]');
+        (window as any).reinitializeSignal();
+      });
+
+      // Complete jkl; tutorial
+      await page.evaluate(() => {
+        (window as any).setCompletedTutorial('jkl;');
+      });
+
+      const tutorials = await page.evaluate(() => {
+        return Array.from((window as any).completedTutorialsSignal.value);
+      });
+
+      expect(tutorials).toEqual(['\\r', 'fdsa', 'jkl;']);
+    });
   });
 
   test.afterEach(async () => {

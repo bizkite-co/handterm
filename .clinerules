@@ -5,23 +5,28 @@ version: 1.0.0
 ---
 
 1. Make sure your commands return control of the terminl.
-2. Do not run commands that remain attached. If you're unsure, pipe the output to a `temp` file and grep the file.
+2. Prefer creating a new test or assertion of debug logging.
+   1. Testing is more robust than debug logging because it can be run at design time and doesn't need to be removed.
+   2. Try to only add logging for long-term resiliency checks, not for short-term troubleshooting.
+3. If any tests are dificult to resolve, break them down to test smaller prerequisisites of the larger test.
+   1. For intance, if you have an failing end-to-end test that involves persisting data, create a test that only tests writing the data and another test that only tests reading the data.
+4. Do not run commands that remain attached. If you're unsure, pipe the output to a `temp` file and grep the file.
    1. For instance, you can run a command like this: `git diff 9a487aa3bc01e0981ee9d43151dcd5bcb9c389b3 HEAD -- src/components/MonacoEditor.tsx > temp/monaco_9a487aa3bc01e0981ee9d43151dcd5bcb9c389b3_HEAD.diff`, and then `grep` or `cat` or `tail` or `head` the file, depending on what you need from it.
-3. Read `CONVENTIONS.md` at the start of each chat.
-4. Read `./.eslintrc.cjs` and follow the rules. Avoid creating warnings.
+5. Read `CONVENTIONS.md` at the start of each chat.
+6. Read `./.eslintrc.cjs` and follow the rules. Avoid creating warnings.
     a. For instance, don't violate `eslint@typescript-eslint/strict-boolean-expressions` when writing code.
-5. Use a `./docs/worklog/` directory for all planning and worklog purposes.
-    5. If the user passes you a `./docs/worklog/` directory, use that directory for all planning and worklog purposes.
-    5. If the user does not pass you a `./docs/worklog/` directory, create a worklog file starting with todays date in the name in `./docs/worklog/`.
-    5. Use the `date-server` MCP server to get the current date.
-    1. State the task you are working on.
-    1. State your understanding of the problem.
-    1. State your plan to solve the problem.
-    1. State your next steps.
-    2. Add `// TODO:` comments to your code to indicate the changes that need to be made and the plan document that describes the change.
-    1. Implement your next step in code while observing the linting rules and warnings.
-    1. Whenever you create a measurable improvement, commit the change with a multi-line commit message.
-    1. If you are stuck, state your current problem and ask for help.
-    1. Perioically review your last three comments to make sure you're not stuck in a non-productive loop.
-6. Assume 'npm run dev' is already running and available at `http://localhost:5173/`.
-7. DO NOT RUN `npm run dev`. You can assume it is already running.
+7. Use a `./docs/worklog/` directory for all planning and worklog purposes.
+    1. If the user passes you a `./docs/worklog/` directory, use that directory for all planning and worklog purposes.
+    2. If the user does not pass you a `./docs/worklog/` directory, create a worklog file starting with todays date in the name in `./docs/worklog/`.
+    3. Use the `date-server` MCP server to get the current date.
+    4. State the task you are working on.
+    5. State your understanding of the problem.
+    6. State your plan to solve the problem.
+    7. State your next steps.
+    8. Add `// TODO:` comments to your code to indicate the changes that need to be made and the plan document that describes the change.
+    9. Implement your next step in code while observing the linting rules and warnings.
+    10. Whenever you create a measurable improvement, commit the change with a multi-line commit message.
+    11. If you are stuck, state your current problem and ask for help.
+    12. Perioically review your last three comments to make sure you're not stuck in a non-productive loop.
+8. Assume 'npm run dev' is already running and available at `http://localhost:5173/`.
+9.  DO NOT RUN `npm run dev`. You can assume it is already running.
