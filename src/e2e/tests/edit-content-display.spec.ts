@@ -1,7 +1,7 @@
 import { test, expect, type Page } from '@playwright/test';
 import { TerminalPage } from '../page-objects/TerminalPage';
 import { TEST_CONFIG } from '../config';
-import { Phrases, type GamePhrase, type ActivityType } from '@handterm/types';
+import { Phrases, type GamePhrase, type ActivityType, StorageKeys } from '@handterm/types';
 
 test.describe('Edit Content Display', () => {
   let page: Page;
@@ -22,9 +22,7 @@ test.describe('Edit Content Display', () => {
       const allTutorialKeys = phrases
         .filter(t => t.displayAs === 'Tutorial')
         .map(t => t.key);
-
-      // Store completed tutorials
-      localStorage.setItem('completed-tutorials', JSON.stringify(allTutorialKeys));
+      localStorage.setItem(StorageKeys.completedTutorials, JSON.stringify(allTutorialKeys));
 
       // Set up minimal signals for test
       const win = window as any;
@@ -104,7 +102,7 @@ test.describe('Edit Content Display', () => {
     const editorContent = await page.evaluate(() => {
       const editor = (window as any).monacoEditor;
       if (!editor) throw new Error('Monaco editor not found');
-      return editor.getValue();
+      const stored = localStorage.getItem(StorageKeys.editContent);
     });
     expect(editorContent).toBe(testContent.content);
   });

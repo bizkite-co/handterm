@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { useActivityMediator } from 'src/hooks/useActivityMediator';
-import { allTutorialKeys } from '@handterm/types';
+import { allTutorialKeys, StorageKeys } from '@handterm/types';
 
 interface MockLocation extends Location {
   href: string;
@@ -93,7 +93,7 @@ describe('useActivityMediator Hook', () => {
 
   it('should skip tutorial when completed-tutorials exists in localStorage', async () => {
     // Setup completed tutorials in localStorage
-    window.localStorage.setItem('completed-tutorials', JSON.stringify(allTutorialKeys));
+    window.localStorage.setItem(StorageKeys.completedTutorials, JSON.stringify(allTutorialKeys));
 
     const { result } = renderHook(() => useActivityMediator());
 

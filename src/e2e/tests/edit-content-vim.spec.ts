@@ -2,7 +2,7 @@ import { test, expect, type Page } from '@playwright/test';
 import { TerminalPage } from '../page-objects/TerminalPage';
 import { EditorPage } from '../page-objects/EditorPage';
 import { TEST_CONFIG } from '../config';
-import { Phrases, type GamePhrase, type ActivityType } from '@handterm/types';
+import { Phrases, type GamePhrase, type ActivityType, StorageKeys } from '@handterm/types';
 
 /**
  * Tests for Vim mode in the Monaco editor.
@@ -32,7 +32,7 @@ test.describe('Edit Content Vim Navigation', () => {
         .map(t => t.key);
 
       // Store completed tutorials
-      localStorage.setItem('completed-tutorials', JSON.stringify(allTutorialKeys));
+      localStorage.setItem(StorageKeys.completedTutorials, JSON.stringify(allTutorialKeys));
 
       // Set up minimal signals for test
       const win = window as any;
@@ -59,7 +59,7 @@ test.describe('Edit Content Vim Navigation', () => {
       content: '# Test Content'
     };
     await page.evaluate((content) => {
-      localStorage.setItem('edit-content', JSON.stringify(content));
+      localStorage.setItem(StorageKeys.editContent, JSON.stringify(content));
     }, testContent);
 
     // Enter edit mode
@@ -86,7 +86,7 @@ test.describe('Edit Content Vim Navigation', () => {
       content: '# Test Content'
     };
     await page.evaluate((content) => {
-      localStorage.setItem('edit-content', JSON.stringify(content));
+      localStorage.setItem(StorageKeys.editContent, JSON.stringify(content));
     }, testContent);
 
     // Enter edit mode

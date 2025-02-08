@@ -2,7 +2,7 @@
 
 import { safelyCallMethodOnRef } from '../utils/typeSafetyUtils';
 import { type ICommand, type ICommandContext, type ICommandResponse } from '../contexts/CommandContext';
-import { StorageKeys } from '../types/TerminalTypes';
+import { StorageKeys } from '@handterm/types';
 import { saveCommandHistory } from '../utils/commandUtils';
 
 function isString(value: unknown): value is string {

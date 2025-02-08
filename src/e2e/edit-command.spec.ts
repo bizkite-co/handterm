@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { TerminalPage } from './page-objects/TerminalPage';
 import type { IStandaloneCodeEditor } from '../types/monaco';
+import { StorageKeys } from '@handterm/types';
 
 test.describe('Edit Command', () => {
   let terminal: TerminalPage;
@@ -13,7 +14,7 @@ test.describe('Edit Command', () => {
   test('should navigate to edit activity and load content', async ({ page }) => {
     // Set test content in localStorage
     await page.evaluate(() => {
-      localStorage.setItem('edit-content', JSON.stringify({
+      localStorage.setItem(StorageKeys.editContent, JSON.stringify({
         key: '_index.md',
         content: '# Test Content'
       }));

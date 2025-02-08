@@ -1,4 +1,4 @@
-export const TerminalCssClasses: Record<string, string> = {
+export const TerminalCssClasses = {
     terminal: 'terminal',
     line: 'terminal-line',
     output: 'terminal-output',
@@ -28,9 +28,10 @@ export const TerminalCssClasses: Record<string, string> = {
     timerSvg: 'timerSvg',
     charTimes: 'charTimes',
     wpm: 'wpm',
-} satisfies Record<keyof typeof TerminalCssClasses, string>;
+} as const;
+export type TerminalCssClasses = (typeof TerminalCssClasses)[keyof typeof TerminalCssClasses];
 
-export const AnsiColorCodes: Record<string, string> = {
+export const AnsiColorCodes = {
     reset: "\x1B[0m",
     bright: "\x1B[1m",
     dim: "\x1B[2m",
@@ -56,7 +57,8 @@ export const AnsiColorCodes: Record<string, string> = {
     bgMagenta: "\x1B[45m",
     bgCyan: "\x1B[46m",
     bgWhite: "\x1B[47m"
-} satisfies Record<keyof typeof AnsiColorCodes, string>;
+} as const;
+export type AnsiColorCodes = (typeof AnsiColorCodes)[keyof typeof AnsiColorCodes];
 
 export const StorageKeys = {
     charTime: 'char-time',
@@ -69,8 +71,10 @@ export const StorageKeys = {
     username: 'userName',
     gitHubUsername: 'githubUserName',
     editContent: 'editContent',
+    completedTutorials: 'completed-tutorials',
+    tutorialState: 'tutorial-state'
 } as const;
-export type StorageKey = (typeof StorageKeys)[keyof typeof StorageKeys];
+export type StorageKeys = (typeof StorageKeys)[keyof typeof StorageKeys];
 
 export type TimeCode = string;
 export type TimeHTML = string;

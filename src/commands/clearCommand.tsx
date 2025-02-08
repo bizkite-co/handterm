@@ -1,8 +1,8 @@
 // src/commands/clearCommand.tsx
 import { type IHandTermWrapperMethods } from "../components/HandTermWrapper";
 import { type ICommand, type ICommandContext, type ICommandResponse } from '../contexts/CommandContext';
-import { StorageKeys } from '../types/TerminalTypes';
-import { type ParsedCommand, type OutputElement } from '../types/Types';
+import { type ParsedCommand, type OutputElement, StorageKeys } from '@handterm/types';
+
 
 interface HandTermState {
   commandHistory?: unknown[];

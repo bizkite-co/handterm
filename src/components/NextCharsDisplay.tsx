@@ -11,10 +11,9 @@ import {
 
 import { commandLineSignal } from 'src/signals/commandLineSignals';
 import { setCompletedGamePhrase } from 'src/signals/gameSignals';
-import { type GamePhrase } from '@handterm/types'
+import { type GamePhrase, TerminalCssClasses } from '@handterm/types'
 import { parseLocation } from 'src/utils/navigationUtils';
 
-import { TerminalCssClasses } from '../types/TerminalTypes';
 import { Phrase } from '../utils/Phrase';
 
 import ErrorDisplay from './ErrorDisplay';

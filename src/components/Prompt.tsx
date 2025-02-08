@@ -3,7 +3,7 @@ import type React from 'react';
 
 import { promptInfoSignal } from 'src/signals/commandLineSignals';
 
-import { TerminalCssClasses } from "../types/TerminalTypes"
+import { TerminalCssClasses } from '@handterm/types'
 
 interface PromptProps {
     domain: string;

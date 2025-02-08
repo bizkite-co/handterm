@@ -1,5 +1,5 @@
 import { vi, beforeAll } from 'vitest';
-import { type ActivityType } from '@handterm/types';
+import { type ActivityType, StorageKeys } from '@handterm/types';
 import type { GamePhrase } from './src/types/Types';
 
 declare global {
@@ -25,7 +25,7 @@ beforeAll(() => {
   }
 
   // Initialize tutorial state
-  window.localStorage.setItem('tutorial-state', JSON.stringify({ currentStep: 0 }));
+  window.localStorage.setItem(StorageKeys.tutorialState, JSON.stringify({ currentStep: 0 }));
 
   // Initialize window methods
   if (typeof window.setActivity === 'undefined') {

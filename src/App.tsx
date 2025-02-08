@@ -9,8 +9,7 @@ import { AppProvider } from './contexts/AppContext';
 import { CommandProvider } from './contexts/CommandProvider';
 import { useAuth } from './hooks/useAuth';
 import { bypassTutorialSignal } from './signals/appSignals';
-import { TerminalCssClasses } from './types/TerminalTypes';
-import { ActivityType } from '@handterm/types';
+import { ActivityType, TerminalCssClasses } from '@handterm/types';
 import { parseLocation } from './utils/navigationUtils';
 
 export function App(): JSX.Element {

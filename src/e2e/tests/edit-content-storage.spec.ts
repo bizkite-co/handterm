@@ -3,6 +3,7 @@
 
 import { test, expect, type Page } from '@playwright/test';
 import { TEST_CONFIG } from '../config';
+import { StorageKeys } from '@handterm/types';
 
 test.describe.skip('Legacy Edit Content Storage', () => {
     let page: Page;
@@ -20,10 +21,10 @@ test.describe.skip('Legacy Edit Content Storage', () => {
 
         const result = await page.evaluate((content) => {
             // Store content
-            localStorage.setItem('edit-content', JSON.stringify(content));
+            localStorage.setItem(StorageKeys.editContent, JSON.stringify(content));
 
             // Retrieve content
-            const stored = localStorage.getItem('edit-content');
+            const stored = localStorage.getItem(StorageKeys.editContent);
             return stored ? JSON.parse(stored) : null;
         }, testContent);
 
@@ -38,12 +39,12 @@ test.describe.skip('Legacy Edit Content Storage', () => {
 
         // First call: store the content
         await page.evaluate((content) => {
-            localStorage.setItem('edit-content', JSON.stringify(content));
+            localStorage.setItem(StorageKeys.editContent, JSON.stringify(content));
         }, testContent);
 
         // Second call: retrieve the content
         const result = await page.evaluate(() => {
-            const stored = localStorage.getItem('edit-content');
+            const stored = localStorage.getItem(StorageKeys.editContent);
             return stored ? JSON.parse(stored) : null;
         });
 
@@ -53,7 +54,7 @@ test.describe.skip('Legacy Edit Content Storage', () => {
     test('can update existing edit content', async () => {
         // Store initial content
         await page.evaluate(() => {
-            localStorage.setItem('edit-content', JSON.stringify({
+            localStorage.setItem(StorageKeys.editContent, JSON.stringify({
                 key: 'update.md',
                 content: 'Initial content'
             }));
@@ -66,12 +67,12 @@ test.describe.skip('Legacy Edit Content Storage', () => {
         };
 
         await page.evaluate((content) => {
-            localStorage.setItem('edit-content', JSON.stringify(content));
+            localStorage.setItem(StorageKeys.editContent, JSON.stringify(content));
         }, updatedContent);
 
         // Verify update
         const result = await page.evaluate(() => {
-            const stored = localStorage.getItem('edit-content');
+            const stored = localStorage.getItem(StorageKeys.editContent);
             return stored ? JSON.parse(stored) : null;
         });
 

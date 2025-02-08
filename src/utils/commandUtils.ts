@@ -1,5 +1,4 @@
-import { StorageKeys } from "../types/TerminalTypes";
-import { type ParsedCommand } from "../types/Types";
+import { type ParsedCommand, StorageKeys } from '@handterm/types';
 
 export const commandTextToHTML = (text: string): string => {
   return text.replace(/\n/g, '<br/>');

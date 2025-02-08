@@ -11,7 +11,7 @@ import { commandTimeSignal } from '../signals/commandLineSignals';
 import { setGamePhrase } from '../signals/gameSignals';
 import { tutorialSignal } from '../signals/tutorialSignals';
 import type { GamePhrase, IHandTermWrapperMethods, IHandTermWrapperProps, TreeItem } from '@handterm/types';
-import { ActivityType } from '@handterm/types';
+import { ActivityType, StorageKeys } from '@handterm/types';
 import { getRepoContent } from '../utils/apiClient';
 import { createLogger, LogLevel } from '../utils/Logger';
 import { navigate, parseLocation } from '../utils/navigationUtils';
@@ -230,7 +230,7 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
 
       if (response !== null && response.status === 200 && response.data !== undefined) {
         // Store content and file path
-        localStorage.setItem('edit-content', response.data.content);
+        localStorage.setItem(StorageKeys.editContent, response.data.content);
         setCurrentFile(path);
 
         // Update location with file path
@@ -291,7 +291,7 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
   }, [handleFileSelect]);
 
   const getStoredContent = useCallback((): string => {
-    const content = localStorage.getItem('edit-content');
+    const content = localStorage.getItem(StorageKeys.editContent);
     if (!content) return '';
     try {
       const parsed = JSON.parse(content);
