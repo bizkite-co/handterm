@@ -9,7 +9,7 @@ import { createLogger } from 'src/utils/Logger';
 
 import { commandRegistry } from '../commands/commandRegistry';
 import { CommandContext, type ICommandResponse } from '../contexts/CommandContext';
-import { LogKeys } from '../types/TerminalTypes';
+import { StorageKeys } from '../types/TerminalTypes';
 import { ActivityType } from '@handterm/types';
 import { type OutputElement, type ParsedCommand } from '../types/Types';
 import { parsedCommandToString, loadCommandHistory, saveCommandHistory } from '../utils/commandUtils';
@@ -86,7 +86,7 @@ export const useCommand = (): {
         const history: string[] = [];
         for (let i = 0; i < localStorage.length; i++) {
             const key = localStorage.key(i);
-            if (key?.startsWith(LogKeys.Command + '_')) {
+            if (key?.startsWith(StorageKeys.command + '_')) {
                 keys.push(key);
             }
         }

@@ -125,10 +125,11 @@ export async function getFile(
     auth: IAuthProps,
     path: string = '_index.md'
 ): Promise<APIResponse<FileContentResponse>> {
+    const [ key = '', extension = '' ] = path.split('.');
     return makeAuthenticatedRequest<FileContentResponse>(
         auth,
         ENDPOINTS.api.GetFile,
-        { path }
+        { key, extension }
     );
 }
 

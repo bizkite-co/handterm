@@ -2,7 +2,7 @@
 
 import { safelyCallMethodOnRef } from '../utils/typeSafetyUtils';
 import { type ICommand, type ICommandContext, type ICommandResponse } from '../contexts/CommandContext';
-import { LogKeys } from '../types/TerminalTypes';
+import { StorageKeys } from '../types/TerminalTypes';
 import { saveCommandHistory } from '../utils/commandUtils';
 
 function isString(value: unknown): value is string {
@@ -20,7 +20,7 @@ export const cleanCommand: ICommand = {
             return { status: 404, message: 'No command context available.' };
         }
         // Explicitly handle undefined case for localStorage.getItem()
-        const storedValue = localStorage.getItem(LogKeys.CommandHistory ?? '');
+        const storedValue = localStorage.getItem(StorageKeys.commandHistory ?? '');
         let commandHistory: string[] = [];
         if (isString(storedValue)) {
             commandHistory = JSON.parse(storedValue ?? '[]') as string[];

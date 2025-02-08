@@ -1,7 +1,7 @@
 import { isNullOrEmptyString } from '../utils/typeSafetyUtils';
 import { type ICommand, type ICommandContext, type ICommandResponse } from '../contexts/CommandContext';
-import { LogKeys } from '../types/TerminalTypes';
-import { type ParsedCommand , type OutputElement } from '../types/Types';
+import { StorageKeys } from '../types/TerminalTypes';
+import { type ParsedCommand, type OutputElement } from '../types/Types';
 
 interface HandTermProps {
     auth: {
@@ -36,7 +36,7 @@ export const archiveCommand: ICommand = {
                 };
             }
 
-            if (key.startsWith(LogKeys.Command + '_') || key.startsWith(LogKeys.CharTime + '_')) {
+            if (key.startsWith(StorageKeys.command + '_') || key.startsWith(StorageKeys.charTime + '_')) {
                 if (key.includes('_archive_')) {
                     localStorage.removeItem(key);
                 } else {

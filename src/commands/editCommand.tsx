@@ -1,6 +1,7 @@
 import type { ICommand, ICommandResponse, ICommandContext } from '../contexts/CommandContext';
 import { ActivityType, type ParsedCommand } from '@handterm/types';
 import { getFile } from '../utils/awsApiClient';
+import { StorageKeys } from '../types/TerminalTypes';
 
 const EditCommand: ICommand = {
     name: 'edit',
@@ -26,12 +27,22 @@ const EditCommand: ICommand = {
                 // Set activity state directly
                 window.setActivity(ActivityType.EDIT);
 
+                // Store content in local storage
+                if (response.data != null && response.data.content != null ) {
+                    const contentObj = JSON.stringify(response.data.content)
+                    localStorage.setItem(
+                        StorageKeys.editContent,
+                        contentObj
+                    );
+                }
+
                 // Update location
                 context.updateLocation({
                     activityKey: ActivityType.EDIT,
                     contentKey: filename,
                     groupKey: null
                 });
+
 
                 return {
                     status: 200,

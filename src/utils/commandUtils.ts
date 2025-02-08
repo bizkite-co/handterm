@@ -1,4 +1,4 @@
-import { LogKeys } from "../types/TerminalTypes";
+import { StorageKeys } from "../types/TerminalTypes";
 import { type ParsedCommand } from "../types/Types";
 
 export const commandTextToHTML = (text: string): string => {
@@ -6,7 +6,7 @@ export const commandTextToHTML = (text: string): string => {
 };
 
 export const loadCommandHistory = (): string[] => {
-  const storedHistory = localStorage.getItem(LogKeys.commandHistory ?? '') ?? '[]';
+  const storedHistory = localStorage.getItem(StorageKeys.commandHistory ?? '') ?? '[]';
   try {
     const parsedHistory = JSON.parse(storedHistory) as unknown;
     // If it's an array of strings, return it directly
@@ -27,8 +27,8 @@ export const loadCommandHistory = (): string[] => {
 }
 
 export const saveCommandHistory = (commandHistory: string[]): void => {
-  if (LogKeys.commandHistory != null)
-    localStorage.setItem(LogKeys.commandHistory ?? '', JSON.stringify(commandHistory));
+  if (StorageKeys.commandHistory != null)
+    localStorage.setItem(StorageKeys.commandHistory ?? '', JSON.stringify(commandHistory));
 }
 
 export function parsedCommandToString(cmd: ParsedCommand): string {
@@ -50,7 +50,7 @@ export function parsedCommandToString(cmd: ParsedCommand): string {
 }
 
 function isSwitch(part: string): boolean {
-  return part.substring(0, 1) === '--'  || (part.startsWith('-') && part.length === 2);
+  return part.substring(0, 1) === '--' || (part.startsWith('-') && part.length === 2);
 }
 
 export const parseCommand = (input: string): ParsedCommand => {

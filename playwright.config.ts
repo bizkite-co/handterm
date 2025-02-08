@@ -25,7 +25,7 @@ export default defineConfig({
     '**/__tests__/**', // Exclude Vitest tests
     '**/*.test.ts' // Exclude .test files
   ],
-  timeout: 60 * 1000, // Global timeout of 60 seconds
+  timeout: 30 * 1000, // Global timeout of 30 seconds
   /* Run tests in files in parallel */
   fullyParallel: false,
   /* Fail the build on CI if you accidentally left test.only in the source code. */

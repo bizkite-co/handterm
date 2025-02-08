@@ -1,7 +1,7 @@
 // src/commands/clearCommand.tsx
 import { type IHandTermWrapperMethods } from "../components/HandTermWrapper";
 import { type ICommand, type ICommandContext, type ICommandResponse } from '../contexts/CommandContext';
-import { LogKeys } from '../types/TerminalTypes';
+import { StorageKeys } from '../types/TerminalTypes';
 import { type ParsedCommand, type OutputElement } from '../types/Types';
 
 interface HandTermState {
@@ -43,9 +43,9 @@ export const clearCommand: ICommand = {
 
     // Logic to clear the command history from localStorage
     const removeKeys = Object.keys(localStorage).filter(key => {
-      const matchesDefaultKeys = key.includes(LogKeys.Command ?? '') ||
+      const matchesDefaultKeys = key.includes(StorageKeys.command ?? '') ||
         key.includes('terminalCommandHistory') ||
-        key.includes(LogKeys.CharTime ?? '');
+        key.includes(StorageKeys.charTime ?? '');
 
       const matchesArg = parsedCommand.args.length > 0 &&
         key.includes(parsedCommand.args[0] ?? '');
