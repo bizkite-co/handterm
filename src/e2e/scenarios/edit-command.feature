@@ -3,7 +3,12 @@ Feature: Edit Command
     I want to use the `edit` command to open files for editing
     So I can modify file contents
 
+    Background:
+        Given that I have completed the tutorial
+        Or that I have run the `complete` command
+
     Scenario: Edit default file
+
         When I run `edit`
         Then I should be navigated to edit activity with contentKey "_index.md"
 
