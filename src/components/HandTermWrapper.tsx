@@ -12,7 +12,7 @@ import { setGamePhrase } from '../signals/gameSignals';
 import { tutorialSignal } from '../signals/tutorialSignals';
 import type { GamePhrase, IHandTermWrapperMethods, IHandTermWrapperProps, TreeItem } from '@handterm/types';
 import { ActivityType } from '@handterm/types';
-import { getFileContent } from '../utils/apiClient';
+import { getRepoContent } from '../utils/apiClient';
 import { createLogger, LogLevel } from '../utils/Logger';
 import { navigate, parseLocation } from '../utils/navigationUtils';
 import WebCam from '../utils/WebCam';
@@ -225,7 +225,7 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
       }
 
       logger.info('Fetching file content:', { repo: currentRepo, path });
-      const response = await getFileContent(props.auth, currentRepo, path);
+      const response = await getRepoContent(props.auth, currentRepo, path);
       logger.debug('File content response:', response);
 
       if (response !== null && response.status === 200 && response.data !== undefined) {

@@ -244,11 +244,6 @@ test.describe('Tutorial Mode', () => {
       // Initialize TerminalPage
       terminalPage = new TerminalPage(page);
 
-      // Listen to console events
-      page.on('console', msg => {
-        console.log(`[Browser Console] ${msg.type()}: ${msg.text()}`);
-      });
-
       await logTutorialState(page, 'Initial state');
 
       await terminalPage.goto();

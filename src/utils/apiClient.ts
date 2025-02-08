@@ -155,7 +155,7 @@ export async function getRepoTree(auth: IAuthProps, repo: string, path?: string,
     });
 }
 
-export async function getFileContent(auth: IAuthProps, repo: string, path: string): Promise<APIResponse<FileContentResponse>> {
+export async function getRepoContent(auth: IAuthProps, repo: string, path: string): Promise<APIResponse<FileContentResponse>> {
     // Use the same getRepoTree endpoint - it handles both tree and file content
     return makeAuthenticatedRequest<FileContentResponse>(auth, ENDPOINTS.api.GetRepoTree, {
         repo,

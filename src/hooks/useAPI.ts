@@ -37,7 +37,7 @@ interface APIError {
 
 export function useAPI(auth: IAuthProps): {
     getRepoTree: (repo: string, path?: string, sha?: string) => Promise<APIResponse<TreeItemResponse[]>>,
-    getFileContent: (repo: string, path: string) => Promise<APIResponse<FileContentResponse>>,
+    getRepoContent: (repo: string, path: string) => Promise<APIResponse<FileContentResponse>>,
     listRecentRepos: () => Promise<APIResponse<RepoResponse[]>>
 } {
     const makeAuthenticatedRequest = useCallback(async <T,>(
@@ -96,7 +96,7 @@ export function useAPI(auth: IAuthProps): {
         });
     }, [makeAuthenticatedRequest]);
 
-    const getFileContent = useCallback(async (repo: string, path: string) => {
+    const getRepoContent = useCallback(async (repo: string, path: string) => {
         return makeAuthenticatedRequest<FileContentResponse>('/github/file', {
             repo,
             path
@@ -109,7 +109,7 @@ export function useAPI(auth: IAuthProps): {
 
     return {
         getRepoTree,
-        getFileContent,
+        getRepoContent: getRepoContent,
         listRecentRepos
     };
 }
