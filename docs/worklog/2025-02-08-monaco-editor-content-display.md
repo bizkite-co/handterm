@@ -20,7 +20,11 @@ Investigating why content from editCommand.tsx is not displaying in the Monaco e
 - The issue likely lies in how the Monaco editor component retrieves and displays the content.
 - MonacoCore.tsx is responsible for rendering the editor and receives a 'value' prop.
 - The 'value' prop is likely not being updated correctly when the 'edit' command is executed.
+- HandTermWrapper.tsx uses getStoredContent() to retrieve content from localStorage.
+- The e2e test was setting 'edit-content' in localStorage *before* executing the 'edit' command, causing the initial issue.
+- Tests are still failing; completing the tutorial is a prerequisite for entering 'edit' mode.
+- StorageKeys has been moved to @handterm/types.
 
 ## Next Steps
-1. Find where MonacoCore is being used.
-2. Examine how its props, especially 'value', are being managed and updated.
+1. Run the tests to confirm the current state.
+2. If tests still fail, investigate further.
