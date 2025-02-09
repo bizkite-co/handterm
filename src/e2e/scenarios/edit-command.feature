@@ -8,7 +8,6 @@ Feature: Edit Command
         Or that I have run the `complete` command
 
     Scenario: Edit default file
-
         When I run `edit`
         Then I should be navigated to edit activity with contentKey "_index.md"
 
