@@ -49,9 +49,9 @@ export function createPersistentSignal<T>({
     };
 
     // Load initial state
-    console.log(`[createPersistentSignal] Before loadInitialState, key: ${key}`); // Added log
+    // console.log(`[createPersistentSignal] Before loadInitialState, key: ${key}`); // Added log
     loadInitialState();
-    console.log(`[createPersistentSignal] After loadInitialState, key: ${key}`); // Added log
+    // console.log(`[createPersistentSignal] After loadInitialState, key: ${key}`); // Added log
 
     const updateSignal = (newValue: T | ((prev: T) => T)) => {
         if (typeof newValue === 'function') {

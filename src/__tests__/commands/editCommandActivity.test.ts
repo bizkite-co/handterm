@@ -5,9 +5,8 @@ import { ActivityType, StorageKeys, allTutorialKeys } from '@handterm/types';
 describe('EditCommand Activity Switching', () => {
   it('should set activity to EDIT when file is found and tutorials are complete', async () => {
     // Mock getFile to return a successful response
-    const mockGetFile = vi.fn().mockResolvedValue({ status: 200, data: { content: '# Test Content' } });
     vi.mock('../../utils/awsApiClient', () => ({
-      getFile: mockGetFile,
+      getFile: vi.fn().mockResolvedValue({ status: 200, data: { content: '# Test Content' } }),
     }));
 
     // Mock window.setActivity

@@ -76,7 +76,8 @@ export class TerminalPage {
    * Logs the tag name and id of all child nodes with IDs for a given node selector.
    * @param nodeSelector CSS selector for the node to inspect.
    */
-  private async logNodeChildrenWithIds(nodeSelector: string): Promise<void> {
+  private async logNodeChildrenWithIds(nodeSelector: string, isDebug:boolean=false): Promise<void> {
+    if(isDebug) return;
     try {
       const wrapperNodesWithIds = await this.page.evaluate(
         (selector) => {
@@ -92,7 +93,9 @@ export class TerminalPage {
         },
         nodeSelector,
       );
-      console.log(`[DOM Nodes with IDs in ${nodeSelector}]`, wrapperNodesWithIds);
+
+      // Only print if we're in debug mode.
+      if(isDebug) console.log(`[DOM Nodes with IDs in ${nodeSelector}]`, wrapperNodesWithIds);
     } catch (error) {
       console.error(`ERROR in logNodeChildrenWithIds for selector ${nodeSelector}:`, error);
     }
