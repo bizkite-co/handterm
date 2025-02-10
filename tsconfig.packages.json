@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+        "paths": {
+      "@handterm/types": [
+        "./packages/types/dist/packages/types/src"
+      ]
+    }
+  },
+  "include": [
+    "packages/types/**/*"
+  ]
+}

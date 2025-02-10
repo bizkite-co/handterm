@@ -1,6 +1,6 @@
 import { createPersistentSignal } from '../utils/signalPersistence';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { signal, type Signal } from '@preact/signals-react';
+import { signal } from '@preact/signals-react';
 
 // Mock localStorage for testing
 const localStorageMock = {

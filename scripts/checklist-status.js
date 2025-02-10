@@ -70,7 +70,7 @@ function formatStatus(branch, progress, typeErrors) {
     return `⚠️  Could not load checklist status`;
   }
 
-  let status = `
+  const status = `
 ┌─────────────────── RESTART STATUS ───────────────────┐
 │ Branch: ${branch.padEnd(41)}│
 │ Current Phase: ${progress.currentPhase.padEnd(34)}│

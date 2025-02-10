@@ -25,6 +25,7 @@ module.exports = {
     'plugin:vitest-globals/recommended',
   ],
   parser: '@typescript-eslint/parser',
+  ignorePatterns: ['packages/types/dist/**/*'],
   parserOptions: {
     exclude: ['eslint-plugin-custom-rules/**'],
     ecmaVersion: 'latest',
@@ -53,6 +54,7 @@ module.exports = {
           './tsconfig.json',
           './tsconfig.test.json',
           './tsconfig.node.json',
+          './tsconfig.packages.json',
         ],
         alwaysTryTypes: true,
       },

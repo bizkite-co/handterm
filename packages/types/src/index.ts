@@ -5,6 +5,7 @@ export * from './miscTypes.js';
 export * from './runtimeConstants.js';
 export * from './window.js';
 export * from './TerminalTypes.js';
+export type { IStandaloneCodeEditor } from './monaco.js';
 
 export interface GamePhrase {
   key: string;

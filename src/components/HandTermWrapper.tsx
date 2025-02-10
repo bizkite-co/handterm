@@ -293,10 +293,10 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
 
   const getStoredContent = useCallback((): string => {
     const content = localStorage.getItem(StorageKeys.editContent);
-    if (!content) return '';
+    if (content == null) return '';
     try {
       const parsed = JSON.parse(content);
-      return parsed.content ?? '';
+      return parsed ?? '';
     } catch (error) {
       logger.error('Failed to parse edit content:', error);
       return '';

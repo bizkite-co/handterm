@@ -1,7 +1,10 @@
 import { test, expect } from '@playwright/test';
 import { TerminalPage } from './page-objects/TerminalPage';
-import type { IStandaloneCodeEditor } from '../types/monaco';
-import { StorageKeys } from '@handterm/types';
+import { type IStandaloneCodeEditor, StorageKeys } from '@handterm/types';
+
+function isString(value: unknown): value is string {
+  return typeof value === 'string';
+}
 
 test.describe('Edit Command', () => {
   let terminal: TerminalPage;
@@ -37,7 +40,7 @@ test.describe('Edit Command', () => {
         throw new Error('Monaco editor not found');
       }
       const value = editor.getValue();
-      if (typeof value !== 'string') {
+      if (!isString(value)) {
         throw new Error('Expected string value from editor');
       }
       return value;

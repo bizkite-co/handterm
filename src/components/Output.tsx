@@ -4,7 +4,7 @@ import type React from 'react';
 import { useState } from 'react';
 
 import { outputElementsSignal } from 'src/signals/appSignals';
-import { type OutputElement } from '@handterm/types/Types';
+import { type OutputElement } from '@handterm/types';
 
 import { CommandOutput } from './CommandOutput';
 

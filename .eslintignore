@@ -5,3 +5,5 @@ webpack.lambda.config.js
 scripts/clearLocalStorage.js
 playwright-report/
 backups/
+packages/types/dist
+dist/

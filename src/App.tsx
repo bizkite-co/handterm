@@ -12,6 +12,10 @@ import { bypassTutorialSignal } from './signals/appSignals';
 import { ActivityType, TerminalCssClasses } from '@handterm/types';
 import { parseLocation } from './utils/navigationUtils';
 
+function isHandTermWrapperMethods(ref: React.RefObject<IHandTermWrapperMethods>): ref is React.RefObject<IHandTermWrapperMethods> & { current: IHandTermWrapperMethods } {
+  return ref.current !== null && typeof ref.current.focusTerminal === 'function';
+}
+
 export function App(): JSX.Element {
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState<number>(0);
@@ -42,8 +46,8 @@ export function App(): JSX.Element {
       const currentRef = handexTermWrapperRef.current;
       if (currentRef === null) return;
 
-      // Check if the click is outside of the terminal area
-      if ((event.target as HTMLElement).id !== TerminalCssClasses.Terminal) {
+      // Check if the click is outside of the terminal area and if event.target is an HTMLElement
+      if (event.target instanceof HTMLElement && event.target.id !== TerminalCssClasses.terminal) {
         event.stopPropagation();
         currentRef.focusTerminal();
 
@@ -52,7 +56,7 @@ export function App(): JSX.Element {
           (event instanceof TouchEvent && event.touches.length === 1)
         ) {
           setTimeout(() => {
-            if (handexTermWrapperRef.current !== null) {
+            if (isHandTermWrapperMethods(handexTermWrapperRef)) {
               handexTermWrapperRef.current.focusTerminal();
             }
           }, 1000);

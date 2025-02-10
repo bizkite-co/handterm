@@ -27,11 +27,15 @@
     "src/hooks/**/*.d.ts",
     "src/test-utils/canvasMock.d.ts",
     "src/test-utils/**/*.d.ts",
-    "tests-examples/**/*"
+    "tests-examples/**/*",
+    "packages/types/test/signal.test.ts"
   ],
   "references": [
     {
       "path": "./tsconfig.json"
     }
+  ],
+  "exclude": [
+    "packages/types/dist"
   ]
 }

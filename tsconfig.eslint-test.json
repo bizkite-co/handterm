@@ -17,5 +17,8 @@
     "src/commands/__tests__/LoginCommand.test.tsx",
     "src/e2e/tests/tutorial.spec.ts",
     "src/e2e/scenarios/loginPersistence.spec.ts"
+  ],
+  "exclude": [
+    "packages/types/dist"
   ]
 }

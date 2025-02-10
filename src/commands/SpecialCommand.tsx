@@ -17,6 +17,7 @@ export const SpecialCommand: ICommand = {
       <Chord key={char} displayChar={char} />
     ));
     const chordsHtml = chordElements.map(element =>
+      // eslint-disable-next-line import/no-named-as-default-member
       ReactDOMServer.renderToStaticMarkup(element)
     ).join('');
 

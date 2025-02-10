@@ -1,5 +1,5 @@
 import type { ICommand, ICommandResponse, ICommandContext } from '../contexts/CommandContext';
-import { ActivityType, type ParsedCommand, StorageKeys } from '@handterm/types';
+import { type ParsedCommand, StorageKeys } from '@handterm/types';
 import { getFile } from '../utils/awsApiClient';
 
 const EditCommand: ICommand = {

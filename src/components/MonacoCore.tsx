@@ -16,7 +16,7 @@ export default function MonacoCore({ value, language = 'text' }: MonacoCoreProps
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const statusBarRef = useRef<HTMLDivElement>(null);
-  const [containerStyle, setContainerStyle] = useState({ flexGrow: 1, height: '300px' });
+  const [containerStyle, setContainerStyle] = useState({ flexGrow: 1, height: '1000px' });
 
   // Editor initialization and cleanup
   useEffect(() => {
@@ -74,18 +74,22 @@ export default function MonacoCore({ value, language = 'text' }: MonacoCoreProps
       vimMode?.dispose();
       editorInstance?.dispose();
     }
-  }, []);
+  }, [language, value]);
+
+    // Type guard for ITextModel
+    function isTextModel(model: monaco.editor.ITextModel | null): model is monaco.editor.ITextModel {
+      return model !== null && typeof model.getValue === 'function';
+    }
 
   // Value synchronization
-  useEffect(() => {
-    const editor = editorRef.current;
-    if (!editor) return;
-
-    const model = editor.getModel();
-    if (model?.getValue() !== value) {
-      editor.setValue(value);
-    }
-  }, [value]);
+    useEffect(() => {
+      const editor = editorRef.current;
+      if (!editor) return;
+      const model = editor.getModel();
+      if (isTextModel(model) && model.getValue() !== value) {
+          editor.setValue(value);
+      }
+    }, [value]);
 
   return (
     <div className="monaco-editor-container" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>

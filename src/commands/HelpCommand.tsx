@@ -28,6 +28,7 @@ export const HelpCommand: ICommand = {
         <Chord key={c} displayChar={c} />
       ));
       const commandChordsHtml = commandChords.map(element => (
+        // eslint-disable-next-line import/no-named-as-default-member
         ReactDOMServer.renderToStaticMarkup(element)
       )).join('');
       const commandList = commandRegistry.getHelp();

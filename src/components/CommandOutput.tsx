@@ -8,7 +8,7 @@ import { parsedCommandToString } from 'src/utils/commandUtils';
 import { type ParsedCommand, type WPMs } from '../types/Types';
 
 import { TimeDisplay } from './TimeDisplay';
-import WpmTable from './WpmTable';
+import { WpmTable } from './WpmTable';
 
 interface CommandOutputProps {
     command: ParsedCommand;

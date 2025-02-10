@@ -4,7 +4,6 @@ import { signal } from '@preact/signals-core';
 
 // Extend Window interface with our extensions
 declare global {
-  // eslint-disable-next-line @typescript-eslint/no-empty-interface
   interface Window extends WindowExtensions {}
 }
 

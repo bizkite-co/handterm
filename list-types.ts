@@ -1,5 +1,4 @@
-import tsNamespace from 'typescript';
-const ts = tsNamespace.default || tsNamespace;
+import * as ts from 'typescript';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -12,9 +11,8 @@ interface TypeInfo {
 function listTypesInFile(filePath: string): TypeInfo[] {
   const types: TypeInfo[] = [];
   const fileContent = fs.readFileSync(filePath, 'utf-8');
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
   const createSourceFile = ts.createSourceFile;
-  const sourceFile = createSourceFile(filePath, fileContent, 7, true);
+  const sourceFile = createSourceFile(filePath, fileContent, ts.ScriptTarget.Latest, true);
 
   function visit(node: ts.Node) {
     if (ts.isInterfaceDeclaration(node) || ts.isTypeAliasDeclaration(node)) {
@@ -42,7 +40,8 @@ function walkDirectory(dir: string, fileList: string[] = []): string[] {
   files.forEach(file => {
     const filePath = path.join(dir, file);
     if (fs.statSync(filePath).isDirectory()) {
-      fileList = walkDirectory(filePath, fileList);
+      const nextFileList = walkDirectory(filePath, fileList);
+      fileList = fileList.concat(nextFileList);
     } else if (filePath.endsWith('.ts') || filePath.endsWith('.tsx')) {
       fileList.push(filePath);
     }

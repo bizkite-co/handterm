@@ -2,11 +2,14 @@ import { describe, it, expect, vi, beforeEach, type MockedFunction } from 'vites
 
 import * as appSignals from 'src/signals/appSignals';
 import { type ICommandContext, type ICommandResponse } from 'src/contexts/CommandContext';
-import { type IAuthProps, type AuthResponse } from 'src/hooks/useAuth';
+import type { IAuthProps, AuthResponse } from 'src/hooks/useAuth';
 import { type MyResponse } from '@handterm/types';
 
 import { LoginCommand } from '../LoginCommand';
-import { IHandTermWrapperMethods } from '\'components/HandTermWrapper\'';
+import type { IHandTermWrapperMethods } from 'src/components/HandTermWrapper';
+import type { useActivityMediator } from 'src/hooks/useActivityMediator';
+
+type ActivityMediatorType = ReturnType<typeof useActivityMediator>;
 
 // Type-safe mock of signals
 type SignalMock = { value: boolean };
@@ -38,7 +41,8 @@ describe('LoginCommand', () => {
         refreshComponent: vi.fn(),
         setHeroSummersaultAction: vi.fn(),
         setEditMode: vi.fn(),
-        handleEditSave: vi.fn()
+        handleEditSave: vi.fn(),
+        activityMediator: {} as ActivityMediatorType
       } as IHandTermWrapperMethods
     },
     auth: {
