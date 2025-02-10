@@ -1,6 +1,11 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 import { initVimMode } from 'monaco-vim';
+
+/*
+  Refer to EditorOptions
+  https://microsoft.github.io/monaco-editor/typedoc/variables/editor.EditorOptions.html
+*/
 
 interface MonacoCoreProps {
   value: string;
@@ -11,6 +16,7 @@ export default function MonacoCore({ value, language = 'text' }: MonacoCoreProps
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const statusBarRef = useRef<HTMLDivElement>(null);
+  const [containerStyle, setContainerStyle] = useState({ flexGrow: 1, height: '300px' });
 
   // Editor initialization and cleanup
   useEffect(() => {
@@ -20,19 +26,25 @@ export default function MonacoCore({ value, language = 'text' }: MonacoCoreProps
     let vimMode: { dispose: () => void } | null = null;
 
     try {
-      console.log('Creating Monaco editor...');
       editorInstance = monaco.editor.create(containerRef.current, {
         value,
         language,
         minimap: { enabled: false },
         automaticLayout: true,
         scrollBeyondLastLine: false,
-        readOnly: false
+        readOnly: false,
+        theme: 'vs-dark',
+        scrollbar: {
+          horizontal: 'hidden',
+          vertical: 'hidden'
+        },
+        lineNumbersMinChars: 2,
       });
-      console.log('Monaco editor created');
+
+      // Remove explicit height after editor creation
+      setContainerStyle({ flexGrow: 1, height: 'auto' });
 
       // Initialize Vim mode
-      console.log('Initializing Vim mode...');
       try {
         vimMode = initVimMode(editorInstance, statusBarRef.current);
         console.log('Vim mode initialized');
@@ -47,7 +59,7 @@ export default function MonacoCore({ value, language = 'text' }: MonacoCoreProps
       resizeObserver.observe(containerRef.current);
 
       editorRef.current = editorInstance;
-      window.monacoEditor = editorInstance;
+      // window.monacoEditor = editorInstance;
 
       return () => {
         console.log('Cleaning up editor...');
@@ -55,7 +67,7 @@ export default function MonacoCore({ value, language = 'text' }: MonacoCoreProps
         vimMode?.dispose();
         editorInstance?.dispose();
         editorRef.current = null;
-        window.monacoEditor = null;
+        // window.monacoEditor = null;
       };
     } catch (error) {
       console.error('Monaco editor initialization failed:', error);
@@ -76,8 +88,8 @@ export default function MonacoCore({ value, language = 'text' }: MonacoCoreProps
   }, [value]);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <div ref={containerRef} style={{ flexGrow: 1 }} />
+    <div className="monaco-editor-container" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      <div ref={containerRef} style={containerStyle} />
       <div ref={statusBarRef} className="vim-status-bar" style={{ height: '20px' }} />
     </div>
   );

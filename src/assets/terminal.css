@@ -421,32 +421,32 @@ div.cm-content {
 
 /* Monaco editor styling */
 
-#root > div > div > div.monaco-editor-container {
+div.monaco-editor-container {
   background: #0000;
 }
 
-#root > div > div > div.monaco-editor-container > section {
+div.monaco-editor-container > section {
   background: #0000;
 }
-#root > div > div > div.monaco-editor-container > section > div {
+div.monaco-editor-container > section > div {
   background: #0000;
 }
-#root > div > div > div.monaco-editor-container > section > div > div {
+div.monaco-editor-container > section > div > div {
   background: #0000;
 }
-#root > div > div > div.monaco-editor-container > section > div > div > div.overflow-guard {
-  background: #0000;
-}
-
-#root > div > div > div.monaco-editor-container > section > div > div > div.overflow-guard > div.monaco-scrollable-element.editor-scrollable.vs-dark {
+div.monaco-editor-container > section > div > div > div.overflow-guard {
   background: #0000;
 }
 
-#root > div > div > div.monaco-editor-container > section > div > div > div.overflow-guard > div.monaco-scrollable-element.editor-scrollable.vs-dark > div.lines-content.monaco-editor-background {
+div.monaco-editor-container > section > div > div > div.overflow-guard > div.monaco-scrollable-element.editor-scrollable.vs-dark {
   background: #0000;
 }
 
-#root > div > div > div.monaco-editor-container > section > div > div > div.overflow-guard > div.monaco-scrollable-element.editor-scrollable.vs-dark > div.lines-content.monaco-editor-background > div.view-lines.monaco-mouse-cursor-text {
+div.monaco-editor-container > section > div > div > div.overflow-guard > div.monaco-scrollable-element.editor-scrollable.vs-dark > div.lines-content.monaco-editor-background {
+  background: #0000;
+}
+
+div.monaco-editor-container > section > div > div > div.overflow-guard > div.monaco-scrollable-element.editor-scrollable.vs-dark > div.lines-content.monaco-editor-background > div.view-lines.monaco-mouse-cursor-text {
   background: #0000;
 }
 
@@ -463,6 +463,6 @@ div.monaco-editor-container > section > div > div > div.overflow-guard > div.mar
   background: #0005;
 }
 
-#root > div > div > div.monaco-editor-container > section > div > div > div.overflow-guard > div.minimap.slider-mouseover > canvas.minimap-decorations-layer {
+div.monaco-editor-container > section > div > div > div.overflow-guard > div.minimap.slider-mouseover > canvas.minimap-decorations-layer {
   background: #0000;
 }

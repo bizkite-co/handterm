@@ -347,12 +347,14 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
 
       {currentActivity === ActivityType.EDIT && (
         <MonacoCore
+          key={currentActivity}
           value={getStoredContent()}
           language="markdown"
         />
       )}
       {currentActivity === ActivityType.TREE && treeItems.length > 0 && (
         <MonacoCore
+          key={currentActivity}
           value=""
           language="plaintext"
         />
