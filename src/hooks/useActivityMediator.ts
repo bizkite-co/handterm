@@ -15,8 +15,7 @@ import {
 import { createLogger } from 'src/utils/Logger';
 import { navigate, parseLocation } from 'src/utils/navigationUtils';
 
-import { type ActionType } from '../game/types/ActionTypes';
-import { ActivityType } from '@handterm/types';
+import { ActivityType, type ActionType, StorageKeys } from '@handterm/types';
 import type { ParsedCommand, GamePhrase } from '../types/Types';
 import GamePhrases from '../utils/GamePhrases';
 
@@ -37,6 +36,7 @@ export function useActivityMediator(): {
     setHeroAction: React.Dispatch<React.SetStateAction<ActionType>>;
     setZombie4Action: React.Dispatch<React.SetStateAction<ActionType>>;
     checkGameProgress: (successPhrase: GamePhrase) => void;
+    setActivity: (activity: ActivityType) => void;
 } {
     const [heroAction, setHeroAction] = useState<ActionType>('Idle');
     const [zombie4Action, setZombie4Action] = useState<ActionType>('Walk');
@@ -251,7 +251,11 @@ export function useActivityMediator(): {
     }, [canUnlockTutorial, displayAsActivity, displayAsKey, transitionToGame]);
 
     const handleCommandExecuted = useCallback((parsedCommand: ParsedCommand): boolean => {
-        logger.debug('Handling command:', parsedCommand);
+        logger.debug('Handling command:', parsedCommand, {
+            currentActivity: activitySignal.value,
+            tutorialState: tutorialSignal.value,
+            location: parseLocation()
+        });
         let result = false;
         if (parseLocation().activityKey === ActivityType.TUTORIAL) {
             checkTutorialProgress(parsedCommand.command);
@@ -280,6 +284,25 @@ export function useActivityMediator(): {
                 result = true;
                 break;
             }
+            case 'edit': {
+                // Only transition to edit mode if tutorials are complete
+                const completedTutorials = localStorage.getItem(StorageKeys.completedTutorials);
+                if (!completedTutorials) {
+                    logger.debug('Tutorials not complete, staying in current mode\rTo bypass the tutorial execute h `complete` command.');
+                    result = false;
+                    break;
+                }
+
+                logger.debug('Tutorials complete, transitioning to edit mode');
+                activitySignal.value = ActivityType.EDIT;
+                navigate({
+                    activityKey: ActivityType.EDIT,
+                    contentKey: parseLocation().contentKey ?? null,
+                    groupKey: null
+                });
+                result = true;
+                break;
+            }
             default:
                 result = false;
         }
@@ -297,8 +320,8 @@ export function useActivityMediator(): {
     // Initial activity determination - runs once on mount
     useEffect(() => {
         logger.debug('Initial activity determination - starting');
-        const completedTutorials = localStorage.getItem('completed-tutorials');
-        logger.debug(`Found completed-tutorials in localStorage: ${completedTutorials}`);
+        const completedTutorials = localStorage.getItem(StorageKeys.completedTutorials);
+        logger.debug(`Found completed tutorials in localStorage: ${completedTutorials}`);
 
         if (completedTutorials) {
             logger.debug('Found completed tutorials - transitioning to NORMAL mode');
@@ -346,6 +369,16 @@ export function useActivityMediator(): {
         };
     }, []);
 
+    const setActivity = useCallback((newActivity: ActivityType) => {
+        logger.debug('Setting activity:', newActivity);
+        activitySignal.value = newActivity;
+        navigate({
+            activityKey: newActivity,
+            contentKey: parseLocation().contentKey ?? null,
+            groupKey: parseLocation().groupKey ?? null
+        });
+    }, []);
+
     return {
         isInGameMode: activity === ActivityType.GAME,
         isInTutorial: activity === ActivityType.TUTORIAL,
@@ -358,5 +391,6 @@ export function useActivityMediator(): {
         setHeroAction,
         setZombie4Action,
         checkGameProgress,
+        setActivity,
     };
 }

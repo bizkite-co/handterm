@@ -1,15 +1,17 @@
 import { type Page, type Locator, expect } from '@playwright/test';
+import { type IHandTermWrapperMethods } from 'src/components/HandTermWrapper';
 
 import { TERMINAL_CONSTANTS } from 'src/constants/terminal';
 import type { Signal } from '@preact/signals-react';
 import type { ActivityType, GamePhrase } from '@handterm/types';
 import { TEST_CONFIG } from '../config';
 
-// Extend Window interface for our signals
+// Extend Window interface for our signals and ref
 declare global {
   interface Window {
     tutorialSignal: Signal<GamePhrase | null>;
     activitySignal: Signal<ActivityType>;
+    handtermRef: React.RefObject<IHandTermWrapperMethods>;
   }
 }
 
@@ -261,5 +263,11 @@ export class TerminalPage {
     await this.terminal.click();
     await this.page.keyboard.press('Control+C');
     await this.waitForPrompt();
+  }
+
+  public async getActivityMediator(): Promise<any> {
+    return await this.page.evaluateHandle(() => {
+      return window.handtermRef?.current?.activityMediator;
+    });
   }
 }

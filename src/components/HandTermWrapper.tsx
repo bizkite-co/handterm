@@ -1,7 +1,5 @@
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
-
 import { useComputed } from '@preact/signals-react';
-
 import { Game, type IGameHandle } from '../game/Game';
 import { useActivityMediator } from '../hooks/useActivityMediator';
 import { useTerminal } from '../hooks/useTerminal';
@@ -10,7 +8,7 @@ import { activitySignal, isShowVideoSignal } from '../signals/appSignals';
 import { commandTimeSignal } from '../signals/commandLineSignals';
 import { setGamePhrase } from '../signals/gameSignals';
 import { tutorialSignal } from '../signals/tutorialSignals';
-import type { GamePhrase, IHandTermWrapperMethods, IHandTermWrapperProps, TreeItem } from '@handterm/types';
+import type { GamePhrase, IHandTermWrapperProps, TreeItem } from '@handterm/types';
 import { ActivityType, StorageKeys } from '@handterm/types';
 import { getRepoContent } from '../utils/apiClient';
 import { createLogger, LogLevel } from '../utils/Logger';
@@ -29,6 +27,8 @@ const logger = createLogger({
 });
 
 const getTimestamp = (date: Date): string => date.toTimeString().split(' ')[0] ?? '';
+
+type ActivityMediatorType = ReturnType<typeof useActivityMediator>;
 
 const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProps>((props, forwardedRef) => {
   const { xtermRef, writeToTerminal, resetPrompt } = useTerminal();
@@ -269,10 +269,11 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
     setHeroSummersaultAction: () => { },
     setEditMode: () => { },
     handleEditSave: () => { },
-  }), [writeToTerminal, xtermRef]);
+    activityMediator: activityMediator,
+  }), [writeToTerminal, xtermRef, activityMediator]);
 
-  // Initialize window methods
-  useEffect(() => {
+    // Initialize window methods
+    useEffect(() => {
     window.setActivity = (activity: ActivityType) => {
       logger.debug('Setting activity:', activity);
       activitySignal.value = activity;
@@ -367,5 +368,18 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
 
 HandTermWrapper.displayName = 'HandTermWrapper';
 
-export type { IHandTermWrapperMethods, IHandTermWrapperProps };
+export interface IHandTermWrapperMethods {
+    writeOutput: (output: string) => void;
+    prompt: () => void;
+    saveCommandResponseHistory: (history: string) => string;
+    focusTerminal: () => void;
+    handleCharacter: (char: string) => void;
+    refreshComponent: () => void;
+    setHeroSummersaultAction: (summersault: boolean) => void;
+    setEditMode: (editMode: boolean) => void;
+    handleEditSave: () => void;
+    activityMediator: ActivityMediatorType;
+}
+
+export type { IHandTermWrapperProps };
 export { HandTermWrapper };

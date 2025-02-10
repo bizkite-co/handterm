@@ -23,8 +23,14 @@ const EditCommand: ICommand = {
                     };
                 }
 
-                // Set activity state directly
-                window.setActivity(ActivityType.EDIT);
+                // Store content in local storage
+                if (response.data != null && response.data.content != null ) {
+                    const contentObj = JSON.stringify(response.data.content)
+                    localStorage.setItem(
+                        StorageKeys.editContent,
+                        contentObj
+                    );
+                }
 
                 // Store content in local storage
                 if (response.data != null && response.data.content != null ) {
@@ -35,13 +41,12 @@ const EditCommand: ICommand = {
                     );
                 }
 
-                // Update location
+                // Update location to trigger activity mediator
                 context.updateLocation({
-                    activityKey: ActivityType.EDIT,
+                    activityKey: 'edit',
                     contentKey: filename,
                     groupKey: null
                 });
-
 
                 return {
                     status: 200,

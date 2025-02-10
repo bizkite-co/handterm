@@ -73,14 +73,46 @@ test.describe('Edit Content Display', () => {
 
   });
 
+  test('setActivity function updates activity state', async () => {
+    // Verify setActivity exists and is callable
+    const hasSetActivity = await page.evaluate(() => {
+      return typeof window.setActivity === 'function';
+    });
+    expect(hasSetActivity).toBe(true);
+
+    // Call setActivity directly
+    await page.evaluate(() => {
+      window.setActivity('edit');
+    });
+
+    // Verify activity state was updated
+    const activityState = await page.evaluate(() => window.activityStateSignal.value.current);
+    expect(activityState).toBe('edit');
+  });
+
   test('transitions to edit mode and displays content', async () => {
-    // Execute edit command
+   // Execute edit command
     await terminal.executeCommand('edit _index.md');
 
-    // Wait for activity state to update to 'edit' by waiting for the Monaco editor container and checking URL
-    const editorContainer = page.locator('div[style*="flexGrow: 1"]'); // Unique to MonacoCore
+    // Wait for and verify activity state changes to 'edit' through the mediator
+    await page.waitForFunction(
+      () => terminal.getActivityMediator().isInEdit,
+      { timeout: TEST_CONFIG.timeout.short }
+    );
+    const activityState = await page.evaluate(() =>  terminal.getActivityMediator().isInEdit);
+    expect(activityState).toBe(true);
+
+    // Verify content is stored in localStorage
+    const storedContent = await page.evaluate((key) => localStorage.getItem(key), StorageKeys.editContent);
+    expect(storedContent).toBeDefined();
+    expect(storedContent).not.toBeNull();
+
+    // Verify URL changes
+    await expect(page).toHaveURL(/activity=edit&key=_index\.md/);
+
+    // Finally, verify editor becomes visible
+    const editorContainer = page.locator('.monaco-editor');
     await expect(editorContainer).toBeVisible({ timeout: TEST_CONFIG.timeout.medium });
-    await expect(page).toHaveURL(/activity=edit\?key=_index\.md/);
 
     // Verify editor content matches the expected content
     const editorContent = await page.evaluate((editContent: string) => {
