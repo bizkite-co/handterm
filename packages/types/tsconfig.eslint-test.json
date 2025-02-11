@@ -1,0 +1,8 @@
+{
+  "extends": "../../tsconfig.test.json",
+  "include": ["test/**/*.ts", "test/**/*.tsx", "../../src/**/*.ts", "src/**/*.tsx", "test/signal.test.ts"],
+  "compilerOptions": {
+    "noEmit": true,
+    "allowJs": true
+  }
+}

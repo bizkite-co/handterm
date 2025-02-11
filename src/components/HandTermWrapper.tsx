@@ -8,11 +8,16 @@ import { activitySignal, isShowVideoSignal } from '../signals/appSignals';
 import { commandTimeSignal } from '../signals/commandLineSignals';
 import { setGamePhrase } from '../signals/gameSignals';
 import { tutorialSignal } from '../signals/tutorialSignals';
-import type { GamePhrase, IHandTermWrapperProps, TreeItem } from '@handterm/types';
-import { ActivityType, StorageKeys } from '@handterm/types';
-import { getRepoContent } from '../utils/apiClient';
+import {
+  type GamePhrase,
+  type IHandTermWrapperProps,
+  type TreeItem,
+  ActivityType,
+  StorageKeys,
+  type IHandTermWrapperMethods
+} from '@handterm/types';
 import { createLogger, LogLevel } from '../utils/Logger';
-import { navigate, parseLocation } from '../utils/navigationUtils';
+import { parseLocation } from '../utils/navigationUtils';
 import WebCam from '../utils/WebCam';
 
 import { Chord } from './Chord';
@@ -27,8 +32,6 @@ const logger = createLogger({
 });
 
 const getTimestamp = (date: Date): string => date.toTimeString().split(' ')[0] ?? '';
-
-type ActivityMediatorType = ReturnType<typeof useActivityMediator>;
 
 const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProps>((props, forwardedRef) => {
   const { xtermRef, writeToTerminal, resetPrompt } = useTerminal();
@@ -47,7 +50,6 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
   const [userName] = useState<string | null>(null);
   const commandTime = useComputed(() => commandTimeSignal.value);
   const [treeItems, setTreeItems] = useState<TreeItem[]>([]);
-  const [, setCurrentFile] = useState<string | null>(null);
 
   const [currentActivity, setCurrentActivity] = useState(parseLocation().activityKey);
 
@@ -215,40 +217,6 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
     }
   }, [currentActivity, xtermRef, resetPrompt]);
 
-  const handleFileSelect = useCallback(async (path: string) => {
-    try {
-      // Get the current repository from localStorage (set by GitHubCommand)
-      const currentRepo = localStorage.getItem('current_github_repo')?.trim() ?? '';
-      if (currentRepo === '') {
-        logger.error('No repository selected');
-        return;
-      }
-
-      logger.info('Fetching file content:', { repo: currentRepo, path });
-      const response = await getRepoContent(props.auth, currentRepo, path);
-      logger.debug('File content response:', response);
-
-      if (response !== null && response.status === 200 && response.data !== undefined) {
-        // Store content and file path
-        localStorage.setItem(StorageKeys.editContent, response.data.content);
-        setCurrentFile(path);
-
-        // Update location with file path
-        navigate({
-          activityKey: ActivityType.EDIT,
-          contentKey: `${currentRepo}/${path}`,
-          groupKey: null
-        });
-      } else {
-        logger.error('Failed to fetch file content:', response?.error);
-      }
-    } catch (error) {
-      logger.error('Failed to fetch file content:', error);
-      // Stay in tree view mode on error
-      return;
-    }
-  }, [props.auth]);
-
   const handlePhraseErrorState = useCallback((errorIndex: number | undefined) => {
     setErrorCharIndex(errorIndex);
   }, []);
@@ -284,12 +252,6 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
     };
     window.ActivityType = ActivityType;
   }, []);
-
-  // TODO: This is suppoed to exist and be used somewhere.
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const handleFileSelectWrapper = useCallback((path: string) => {
-    void handleFileSelect(path);
-  }, [handleFileSelect]);
 
   const getStoredContent = useCallback((): string => {
     const content = localStorage.getItem(StorageKeys.editContent);
@@ -370,18 +332,4 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
 
 HandTermWrapper.displayName = 'HandTermWrapper';
 
-export interface IHandTermWrapperMethods {
-    writeOutput: (output: string) => void;
-    prompt: () => void;
-    saveCommandResponseHistory: (history: string) => string;
-    focusTerminal: () => void;
-    handleCharacter: (char: string) => void;
-    refreshComponent: () => void;
-    setHeroSummersaultAction: (summersault: boolean) => void;
-    setEditMode: (editMode: boolean) => void;
-    handleEditSave: () => void;
-    activityMediator: ActivityMediatorType;
-}
-
-export type { IHandTermWrapperProps };
 export { HandTermWrapper };

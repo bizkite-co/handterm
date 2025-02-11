@@ -1,19 +1,17 @@
 import { test, expect, type Page } from '@playwright/test';
 import { TerminalPage } from '../page-objects/TerminalPage';
-import { type WindowExtensions, type ActivityType } from '@handterm/types';
+import type { GamePhrase, Signal, ActivityType } from '@handterm/types';
 import { TEST_CONFIG } from '../config';
 
 declare global {
   interface Window {
     completedTutorialsSignal: { value: Set<string> };
-    tutorialSignal: { value: string | null };
+    tutorialSignal: Signal<GamePhrase | null>;
     activityStateSignal: { value: { current: ActivityType; previous: string | null; transitionInProgress: boolean; tutorialCompleted: boolean; } };
-    setActivity: (activity: string) => void;
     setNextTutorial: (tutorial: string | null) => void;
     setCompletedTutorial: (key: string) => void;
     localStorage: any;
     Phrases: string[];
-    ActivityType: Record<string, ActivityType>;
   }
 }
 /**

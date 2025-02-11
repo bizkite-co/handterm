@@ -50,12 +50,6 @@ module.exports = {
     },
     'import/resolver': {
       typescript: {
-        project: [
-          './tsconfig.json',
-          './tsconfig.test.json',
-          './tsconfig.node.json',
-          './tsconfig.packages.json',
-        ],
         alwaysTryTypes: true,
       },
       node: {
@@ -131,6 +125,24 @@ module.exports = {
           }
         ],
         // TODO: Re-enable this rule after completing Phase 3 (Type Safety) of the Monaco migration.
+        'custom-rules/no-ts-check': 'off'
+      }
+    },
+    {
+      files: ['packages/types/test/**/*.ts', 'packages/types/test/**/*.tsx'],
+      parserOptions: {
+        project: './packages/types/tsconfig.eslint-test.json'
+      },
+      rules: {
+        '@typescript-eslint/no-explicit-any': 'off',
+        'no-param-reassign': 'off',
+        'no-restricted-globals': [
+          'error',
+          {
+            name: 'ImageData',
+            message: 'Import ImageData from the canvas package instead of using the global browser API'
+          }
+        ],
         'custom-rules/no-ts-check': 'off'
       }
     }
