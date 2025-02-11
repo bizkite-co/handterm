@@ -107,14 +107,38 @@ export function useAuth(): IAuthProps {
       const idToken = localStorage.getItem(TokenKeys.IdToken);
       const githubUsername = localStorage.getItem(TokenKeys.GithubUsername);
 
-      // If we have no refresh token, clear all tokens and return error
-      if (refreshToken == null || refreshToken === '') {
-        clearTokens();
-        return {
-          status: 401,
-          message: "No refresh token available",
-          error: []
-        };
+      // If we have no refresh token and no refresh attempt is in progress,
+      // initiate a refresh attempt or clear tokens and return error
+      if (!refreshToken && !refreshMutation.isPending) {
+        try {
+          const response = await refreshMutation.mutateAsync();
+          if (response.data?.AccessToken != null) {
+            setIsLoggedIn(true);
+            return {
+              status: 200,
+              data: response.data,
+              message: "Token refreshed",
+              error: []
+            };
+          }
+        } catch (error) {
+          // Only clear tokens if refresh fails AND refresh token is missing
+          if (!localStorage.getItem(TokenKeys.RefreshToken)) {
+            clearTokens();
+          }
+          return {
+            status: 401,
+            message: "Token refresh failed",
+            error: []
+          };
+        }
+      } else if (!refreshToken) {
+          clearTokens();
+          return {
+            status: 401,
+            message: "No refresh token available",
+            error: []
+          };
       }
 
       // If we have a refresh token but no access token, attempt to refresh
@@ -131,7 +155,10 @@ export function useAuth(): IAuthProps {
             };
           }
         } catch (error) {
-          clearTokens();
+          // Only clear tokens if refresh fails AND refresh token is missing
+          if (!localStorage.getItem(TokenKeys.RefreshToken)) {
+              clearTokens();
+          }
           return {
             status: 401,
             message: "Token refresh failed",
