@@ -14,9 +14,12 @@ import {
   type TreeItem,
   ActivityType,
   StorageKeys,
-  type IHandTermWrapperMethods
+  type IHandTermWrapperMethods,
+  type ParsedCommand
 } from '@handterm/types';
 import { createLogger, LogLevel } from '../utils/Logger';
+
+export type { IHandTermWrapperMethods };
 import { parseLocation } from '../utils/navigationUtils';
 import WebCam from '../utils/WebCam';
 
@@ -34,7 +37,8 @@ const logger = createLogger({
 const getTimestamp = (date: Date): string => date.toTimeString().split(' ')[0] ?? '';
 
 const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProps>((props, forwardedRef) => {
-  const { xtermRef, writeToTerminal, resetPrompt } = useTerminal();
+  const [isTerminalLoading, setIsTerminalLoading] = useState(true);
+  const { xtermRef, writeToTerminal, resetPrompt, instance } = useTerminal(setIsTerminalLoading);
   const targetWPM = 10;
   const wpmCalculator = useWPMCalculator();
   const gameHandleRef = useRef<IGameHandle>(null);
@@ -82,7 +86,7 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
     return () => {
       unsubscribe();
     };
-  }, [currentActivity]);
+  }, [activitySignal]);
 
   // Handle location change events
   useEffect(() => {
@@ -237,11 +241,24 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
     setHeroSummersaultAction: () => { },
     setEditMode: () => { },
     handleEditSave: () => { },
-    activityMediator: activityMediator,
+    activityMediator: {
+      isInGameMode: false,
+      isInTutorial: false,
+      isInEdit: false,
+      isInNormal: false,
+      checkTutorialProgress: (_command: string | null) => { },
+      heroAction: 'Idle',
+      zombie4Action: 'Walk',
+      handleCommandExecuted: (_parsedCommand: ParsedCommand) => false,
+      setHeroAction: () => { },
+      setZombie4Action: () => { },
+      checkGameProgress: (_successPhrase: GamePhrase) => { },
+      setActivity: (_activity: ActivityType) => { }
+    }
   }), [writeToTerminal, xtermRef, activityMediator]);
 
-    // Initialize window methods
-    useEffect(() => {
+  // Initialize window methods
+  useEffect(() => {
     window.setActivity = (activity: ActivityType) => {
       logger.debug('Setting activity:', activity);
       activitySignal.value = activity;
@@ -293,18 +310,22 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
 
       {/* Always show terminal unless in EDIT or TREE mode */}
       {currentActivity !== ActivityType.EDIT && currentActivity !== ActivityType.TREE && (
-        <div id="prompt-and-terminal">
-          <Prompt
-            username={userName ?? 'guest'}
-            domain={domain ?? 'handterm.com'}
-            githubUsername={githubUsername}
-            timestamp={getTimestamp(commandTime.value)}
-          />
-          <div
-            ref={xtermRef}
-            id="xtermRef"
-          />
-        </div>
+        instance && !isTerminalLoading ? (
+          <div id="prompt-and-terminal">
+            <Prompt
+              username={userName ?? 'guest'}
+              domain={domain ?? 'handterm.com'}
+              githubUsername={githubUsername}
+              timestamp={getTimestamp(commandTime.value)}
+            />
+            <div
+              ref={xtermRef}
+              id="xtermRef"
+            />
+          </div>
+        ) : (
+          <div>Loading terminal...</div>
+        )
       )}
 
       {currentActivity === ActivityType.EDIT && (
@@ -312,6 +333,10 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
           key={currentActivity}
           value={getStoredContent()}
           language="markdown"
+          toggleVideo={() => {
+            isShowVideoSignal.value = !isShowVideoSignal.value;
+            return isShowVideoSignal.value;
+          }}
         />
       )}
       {currentActivity === ActivityType.TREE && treeItems.length > 0 && (

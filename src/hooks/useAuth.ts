@@ -29,6 +29,7 @@ export function useAuth(): IAuthProps {
   const queryClient = useQueryClient();
 
   const clearTokens = () => {
+    return;
     localStorage.removeItem(TokenKeys.AccessToken);
     localStorage.removeItem(TokenKeys.RefreshToken);
     localStorage.removeItem(TokenKeys.ExpiresAt);
@@ -56,7 +57,6 @@ export function useAuth(): IAuthProps {
 
         if (response.status === 500) {
           logger.error('Server error during token refresh');
-          clearTokens();
           throw new Error('Server error during token refresh');
         }
 
@@ -72,7 +72,6 @@ export function useAuth(): IAuthProps {
         }
       } catch (error) {
         if (axios.isAxiosError(error) && error.response?.status === 500) {
-          clearTokens();
           throw new Error('Server error during token refresh');
         }
         throw error;
@@ -133,12 +132,12 @@ export function useAuth(): IAuthProps {
           };
         }
       } else if (!refreshToken) {
-          clearTokens();
-          return {
-            status: 401,
-            message: "No refresh token available",
-            error: []
-          };
+        clearTokens();
+        return {
+          status: 401,
+          message: "No refresh token available",
+          error: []
+        };
       }
 
       // If we have a refresh token but no access token, attempt to refresh
@@ -157,7 +156,7 @@ export function useAuth(): IAuthProps {
         } catch (error) {
           // Only clear tokens if refresh fails AND refresh token is missing
           if (!localStorage.getItem(TokenKeys.RefreshToken)) {
-              clearTokens();
+            clearTokens();
           }
           return {
             status: 401,
@@ -434,15 +433,14 @@ export function useAuth(): IAuthProps {
       }
     };
 
-    // Sync on initial load and when storage changes
-    void syncLoginState();
+    // Sync when storage changes
     const onStorageChange = (): void => { void syncLoginState() };
     window.addEventListener('storage', onStorageChange);
 
     return () => {
       window.removeEventListener('storage', onStorageChange);
     };
-  }, [validateAndRefreshToken]);
+  }, []);
 
   const isLoading = loginMutation.isPending ?? signupMutation.isPending ?? verifyMutation.isPending;
   const isError = loginMutation.isError ?? signupMutation.isError ?? verifyMutation.isError;

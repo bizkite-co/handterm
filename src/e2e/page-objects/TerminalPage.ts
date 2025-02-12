@@ -201,7 +201,7 @@ export class TerminalPage {
 
     // Then wait for the specific text
     await this.nextChars.waitFor({ state: 'visible' });
-    await expect(this.nextChars).toHaveText(text, { timeout: 10000 });
+    await expect(this.nextChars).toHaveText(text, { timeout: TEST_CONFIG.timeout.long });
   }
 
   /**

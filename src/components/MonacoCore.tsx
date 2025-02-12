@@ -1,24 +1,33 @@
 import { useRef, useEffect, useState } from 'react';
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 import { initVimMode } from 'monaco-vim';
+import { ActivityType, StorageKeys } from '@handterm/types';
+
+declare global {
+  interface Window {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    MonacoVim?: any;
+    setActivity: (activity: ActivityType) => void;
+  }
+}
 
 /*
   Refer to EditorOptions
   https://microsoft.github.io/monaco-editor/typedoc/variables/editor.EditorOptions.html
 */
-
 interface MonacoCoreProps {
   value: string;
   language?: string;
+  toggleVideo?: () => boolean;
 }
 
-export default function MonacoCore({ value, language = 'text' }: MonacoCoreProps): JSX.Element {
+export default function MonacoCore({ value, language = 'text', toggleVideo }: MonacoCoreProps): JSX.Element {
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const statusBarRef = useRef<HTMLDivElement>(null);
   const [containerStyle, setContainerStyle] = useState({ flexGrow: 1, height: '1000px' });
 
-  // Editor initialization and cleanup
+    // Editor initialization and cleanup
   useEffect(() => {
     if (!containerRef.current || !statusBarRef.current) return;
 
@@ -44,10 +53,61 @@ export default function MonacoCore({ value, language = 'text' }: MonacoCoreProps
       // Remove explicit height after editor creation
       setContainerStyle({ flexGrow: 1, height: 'auto' });
 
-      // Initialize Vim mode
+      // Initialize Vim mode and get Vim object
       try {
         vimMode = initVimMode(editorInstance, statusBarRef.current);
-        console.log('Vim mode initialized');
+        // MonacoVim is not a normal import, it's a global object
+
+        // Define Vim commands after a short delay to ensure VimMode is initialized
+        setTimeout(() => {
+          if (window.MonacoVim && window.MonacoVim.VimMode && window.MonacoVim.VimMode.Vim) {
+            const Vim = window.MonacoVim.VimMode.Vim;
+
+            Vim.defineEx('w', '', () => {
+              if (editorRef.current) {
+                const content = editorRef.current.getValue();
+                localStorage.setItem(StorageKeys.editContent, JSON.stringify(content));
+                console.log('Content saved to localStorage');
+              }
+            });
+
+            Vim.defineEx('q', '', () => {
+              if (typeof window.setActivity === 'function') {
+                window.setActivity(ActivityType.NORMAL);
+              }
+              localStorage.removeItem(StorageKeys.editContent);
+              console.log('Exiting edit mode');
+            });
+
+            Vim.defineEx('q!', '', () => {
+              if (typeof window.setActivity === 'function') {
+                window.setActivity(ActivityType.NORMAL);
+              }
+              localStorage.removeItem(StorageKeys.editContent);
+              console.log('Exiting edit mode without saving');
+            });
+
+            Vim.defineEx('wq', '', () => {
+              if (editorRef.current) {
+                const content = editorRef.current.getValue();
+                localStorage.setItem(StorageKeys.editContent, JSON.stringify(content));
+                console.log('Content saved to localStorage');
+              }
+              if (typeof window.setActivity === 'function') {
+                window.setActivity(ActivityType.NORMAL);
+              }
+              localStorage.removeItem(StorageKeys.editContent);
+              console.log('Exiting edit mode');
+            });
+            Vim.defineEx('vid', '', () => {
+              if (toggleVideo) {
+                toggleVideo();
+              }
+            });
+          } else {
+            console.error('MonacoVim not initialized properly.');
+          }
+        }, 100); // 100ms delay
       } catch (vimError) {
         console.error('Failed to initialize Vim mode:', vimError);
       }
@@ -59,7 +119,6 @@ export default function MonacoCore({ value, language = 'text' }: MonacoCoreProps
       resizeObserver.observe(containerRef.current);
 
       editorRef.current = editorInstance;
-      // window.monacoEditor = editorInstance;
 
       return () => {
         console.log('Cleaning up editor...');
@@ -67,21 +126,18 @@ export default function MonacoCore({ value, language = 'text' }: MonacoCoreProps
         vimMode?.dispose();
         editorInstance?.dispose();
         editorRef.current = null;
-        // window.monacoEditor = null;
       };
     } catch (error) {
       console.error('Monaco editor initialization failed:', error);
-      vimMode?.dispose();
-      editorInstance?.dispose();
     }
-  }, [language, value]);
+  }, [language, value, toggleVideo]);
 
     // Type guard for ITextModel
     function isTextModel(model: monaco.editor.ITextModel | null): model is monaco.editor.ITextModel {
       return model !== null && typeof model.getValue === 'function';
     }
 
-  // Value synchronization
+    // Value synchronization
     useEffect(() => {
       const editor = editorRef.current;
       if (!editor) return;

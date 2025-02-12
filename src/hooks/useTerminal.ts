@@ -29,7 +29,7 @@ import { useWPMCalculator } from './useWPMCaculator';
 
 const logger = createLogger({ prefix: 'useTerminal' });
 
-export const useTerminal = (): { xtermRef: React.RefObject<HTMLDivElement>; writeToTerminal: (data: string) => void; resetPrompt: () => void } => {
+export const useTerminal = (setIsTerminalLoading: React.Dispatch<React.SetStateAction<boolean>>): { xtermRef: React.RefObject<HTMLDivElement>; writeToTerminal: (data: string) => void; resetPrompt: () => void; instance: ReturnType<typeof useXTerm>['instance'] } => {
   const { instance, ref: xtermRef } = useXTerm({ options: XtermAdapterConfig });
   const { handleCommand, commandHistory, commandHistoryIndex, setCommandHistoryIndex } = useCommand();
   const wpmCalculator = useWPMCalculator();
@@ -132,7 +132,8 @@ export const useTerminal = (): { xtermRef: React.RefObject<HTMLDivElement>; writ
     instance.loadAddon(fitAddon.current);
     fitAddon.current.fit();
     resetPrompt();
-  }, [instance, resetPrompt]);
+    setIsTerminalLoading(false);
+  }, [instance, resetPrompt, setIsTerminalLoading]);
 
   useEffect(() => {
     if (instance == null) return;
@@ -270,5 +271,6 @@ export const useTerminal = (): { xtermRef: React.RefObject<HTMLDivElement>; writ
     xtermRef,
     writeToTerminal,
     resetPrompt,
+    instance
   };
 };
