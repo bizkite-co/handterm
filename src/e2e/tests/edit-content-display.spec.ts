@@ -1,7 +1,7 @@
 import { test, expect, type Page } from '@playwright/test';
 import { TerminalPage } from '../page-objects/TerminalPage';
 import { TEST_CONFIG } from '../config';
-import { Phrases, type GamePhrase, type ActivityType, StorageKeys } from '@handterm/types';
+import { type GamePhrase, Phrases, StorageKeys } from '@handterm/types';
 
 test.describe('Edit Content Display', () => {
   let page: Page;
@@ -13,67 +13,29 @@ test.describe('Edit Content Display', () => {
     terminal = new TerminalPage(page);
     await terminal.goto();
 
-    // Clear edit-content before each test
-    await page.evaluate((storageKey) => {
-      localStorage.removeItem(storageKey);
-    }, StorageKeys.editContent);
+     // Clear edit-content before each test
+     await page.evaluate((storageKey) => {
+       localStorage.removeItem(storageKey);
+     }, StorageKeys.editContent);
 
     // Set up initial state, including tutorial completion
     await page.evaluate((props: { phrases: GamePhrase[]; completedTutorials: string }) => {
-      const { phrases, completedTutorials } = props;
-      // Set up Phrases in window context
-      (window as any).Phrases = phrases;
+        const { phrases, completedTutorials } = props;
+        // Set up Phrases in window context
+        (window as any).Phrases = phrases;
 
-      // Get all tutorial keys and mark as complete
-      const allTutorialKeys = phrases
-        .filter(t => t.displayAs === 'Tutorial')
-        .map(t => t.key);
-      localStorage.setItem(completedTutorials, JSON.stringify(allTutorialKeys));
-
-      // Set up minimal signals for test
-      const win = window as any;
-      win.completedTutorialsSignal = { value: new Set(allTutorialKeys) };
-      win.tutorialSignal = { value: null }; // Start with no tutorial active
-      win.activityStateSignal = {
-        value: {
-          current: 'normal' as ActivityType,
-          previous: 'tutorial' as ActivityType, // Assuming we transitioned from tutorial
-          transitionInProgress: false,
-          tutorialCompleted: true // Mark tutorial as completed
-        }
-      };
-
-      // Set up activity setter (important for transitioning to edit mode)
-      win.setActivity = (activity: ActivityType) => {
-        console.log('Setting activity to:', activity);
-        win.activityStateSignal.value = {
-          ...win.activityStateSignal.value,
-          current: activity
-        };
-      };
+        // Get all tutorial keys and mark as complete
+        const allTutorialKeys = phrases
+          .filter(t => t.displayAs === 'Tutorial')
+          .map(t => t.key);
+        localStorage.setItem(completedTutorials, JSON.stringify(allTutorialKeys));
     }, { phrases: Phrases, completedTutorials: StorageKeys.completedTutorials });
 
-    // Wait for application to be ready
-    await page.waitForSelector('#handterm-wrapper', { state: 'attached', timeout: TEST_CONFIG.timeout.short });
+     // Wait for application to be ready
+     await page.waitForSelector('#handterm-wrapper', { state: 'attached', timeout: TEST_CONFIG.timeout.short });
+   });
 
-    // Add checks for initial state
-    const initialState = await page.evaluate((storageKey: string) => {
-      const win = window as any;
-      return {
-        phrases: win.Phrases,
-        completedTutorials: localStorage.getItem(storageKey),
-        currentActivity: win.activityStateSignal.value.current
-      }
-    }, StorageKeys.completedTutorials);
-    expect(initialState.phrases).toBeDefined();
-    expect(initialState.phrases.length).toBeGreaterThan(0);
-    expect(initialState.completedTutorials).toBeDefined();
-    expect(initialState.completedTutorials).not.toBeNull();
-    expect(initialState.currentActivity).toBe('normal');
-
-  });
-
-  test('setActivity function updates activity state', async () => {
+   test('setActivity function updates activity state', async () => {
     // Verify setActivity exists and is callable
     const hasSetActivity = await page.evaluate(() => {
       return typeof window.setActivity === 'function';
@@ -91,15 +53,15 @@ test.describe('Edit Content Display', () => {
   });
 
   test('transitions to edit mode and displays content', async () => {
-   // Execute edit command
+    // Execute edit command
     await terminal.executeCommand('edit _index.md');
 
     // Wait for and verify activity state changes to 'edit' through the mediator
     await page.waitForFunction(
-      () => terminal.getActivityMediator().isInEdit,
+      async () => (await terminal.getActivityMediator()).isInEdit,
       { timeout: TEST_CONFIG.timeout.short }
     );
-    const activityState = await page.evaluate(() =>  terminal.getActivityMediator().isInEdit);
+    const activityState = await page.evaluate(async () => (await terminal.getActivityMediator()).isInEdit);
     expect(activityState).toBe(true);
 
     // Verify content is stored in localStorage

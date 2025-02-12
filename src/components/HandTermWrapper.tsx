@@ -19,6 +19,13 @@ import {
 } from '@handterm/types';
 import { createLogger, LogLevel } from '../utils/Logger';
 
+declare global {
+  interface Window {
+    isTerminalReady: boolean;
+    // ... other existing window properties ...
+  }
+}
+
 export type { IHandTermWrapperMethods };
 import { parseLocation } from '../utils/navigationUtils';
 import WebCam from '../utils/WebCam';
@@ -213,146 +220,142 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
   useEffect(() => {
     if (currentActivity === ActivityType.NORMAL) {
       logger.info('Resetting terminal in NORMAL mode');
-      const term = xtermRef.current;
-      if (term !== null && typeof term.focus === 'function') {
-        term.focus();
-      }
-      resetPrompt();
+      xtermRef.current?.focus();
     }
   }, [currentActivity, xtermRef, resetPrompt]);
 
-  const handlePhraseErrorState = useCallback((errorIndex: number | undefined) => {
-    setErrorCharIndex(errorIndex);
-  }, []);
+const handlePhraseErrorState = useCallback((errorIndex: number | undefined) => {
+  setErrorCharIndex(errorIndex);
+}, []);
 
-  // Initialize component methods
-  useImperativeHandle(forwardedRef, () => ({
-    writeOutput: writeToTerminal,
-    prompt: () => { },
-    saveCommandResponseHistory: () => '',
-    focusTerminal: () => {
-      const term = xtermRef.current;
-      if (term !== null && term !== undefined && typeof term.focus === 'function') {
-        term.focus();
-      }
-    },
-    handleCharacter: () => { },
-    refreshComponent: () => { },
-    setHeroSummersaultAction: () => { },
-    setEditMode: () => { },
-    handleEditSave: () => { },
-    activityMediator: {
-      isInGameMode: false,
-      isInTutorial: false,
-      isInEdit: false,
-      isInNormal: false,
-      checkTutorialProgress: (_command: string | null) => { },
-      heroAction: 'Idle',
-      zombie4Action: 'Walk',
-      handleCommandExecuted: (_parsedCommand: ParsedCommand) => false,
-      setHeroAction: () => { },
-      setZombie4Action: () => { },
-      checkGameProgress: (_successPhrase: GamePhrase) => { },
-      setActivity: (_activity: ActivityType) => { }
+// Initialize component methods
+useImperativeHandle(forwardedRef, () => ({
+  writeOutput: writeToTerminal,
+  prompt: () => { },
+  saveCommandResponseHistory: () => '',
+  focusTerminal: () => {
+    const term = xtermRef.current;
+    if (term !== null && term !== undefined && typeof term.focus === 'function') {
+      term.focus();
     }
-  }), [writeToTerminal, xtermRef, activityMediator]);
+  },
+  handleCharacter: () => { },
+  refreshComponent: () => { },
+  setHeroSummersaultAction: () => { },
+  setEditMode: () => { },
+  handleEditSave: () => { },
+  activityMediator: {
+    isInGameMode: false,
+    isInTutorial: false,
+    isInEdit: false,
+    isInNormal: false,
+    checkTutorialProgress: (_command: string | null) => { },
+    heroAction: 'Idle',
+    zombie4Action: 'Walk',
+    handleCommandExecuted: (_parsedCommand: ParsedCommand) => false,
+    setHeroAction: () => { },
+    setZombie4Action: () => { },
+    checkGameProgress: (_successPhrase: GamePhrase) => { },
+    setActivity: (_activity: ActivityType) => { }
+  }
+}), [writeToTerminal, xtermRef, activityMediator]);
 
-  // Initialize window methods
-  useEffect(() => {
-    window.setActivity = (activity: ActivityType) => {
-      logger.debug('Setting activity:', activity);
-      activitySignal.value = activity;
-    };
-    window.setNextTutorial = (tutorial: string | null) => {
-      logger.debug('Setting tutorial:', tutorial);
-      tutorialSignal.value = tutorial as unknown as GamePhrase | null;
-    };
-    window.ActivityType = ActivityType;
-  }, []);
+// Initialize window methods
+useEffect(() => {
+  window.setActivity = (activity: ActivityType) => {
+    logger.debug('Setting activity:', activity);
+    activitySignal.value = activity;
+  };
+  window.setNextTutorial = (tutorial: string | null) => {
+    logger.debug('Setting tutorial:', tutorial);
+    tutorialSignal.value = tutorial as unknown as GamePhrase | null;
+  };
+  window.ActivityType = ActivityType;
+}, []);
 
-  const getStoredContent = useCallback((): string => {
-    const content = localStorage.getItem(StorageKeys.editContent);
-    if (content == null) return '';
-    try {
-      const parsed = JSON.parse(content);
-      return parsed ?? '';
-    } catch (error) {
-      logger.error('Failed to parse edit content:', error);
-      return '';
-    }
-  }, []);
+const getStoredContent = useCallback((): string => {
+  const content = localStorage.getItem(StorageKeys.editContent);
+  if (content == null) return '';
+  try {
+    const parsed = JSON.parse(content);
+    return parsed ?? '';
+  } catch (error) {
+    logger.error('Failed to parse edit content:', error);
+    return '';
+  }
+}, []);
 
-  return (
-    <div id='handterm-wrapper'>
-      {currentActivity === ActivityType.GAME && (
-        <Game
-          ref={gameHandleRef}
-          canvasHeight={canvasHeight}
-          canvasWidth={props.terminalWidth}
-        />
-      )}
-      {currentActivity === ActivityType.GAME && (
-        <NextCharsDisplay
-          ref={nextCharsDisplayRef}
-          isInPhraseMode={true}
-          onPhraseSuccess={handlePhraseSuccess}
-          onError={handlePhraseErrorState}
-        />
-      )}
-      {lastTypedCharacter !== null && (
-        <Chord displayChar={lastTypedCharacter} />
-      )}
-      {currentActivity === ActivityType.TUTORIAL && tutorialSignal.value != null && (
-        <TutorialManager
-          tutorial={tutorialSignal.value}
-        />
-      )}
+return (
+  <div id='handterm-wrapper'>
+    {currentActivity === ActivityType.GAME && (
+      <Game
+        ref={gameHandleRef}
+        canvasHeight={canvasHeight}
+        canvasWidth={props.terminalWidth}
+      />
+    )}
+    {currentActivity === ActivityType.GAME && (
+      <NextCharsDisplay
+        ref={nextCharsDisplayRef}
+        isInPhraseMode={true}
+        onPhraseSuccess={handlePhraseSuccess}
+        onError={handlePhraseErrorState}
+      />
+    )}
+    {lastTypedCharacter !== null && (
+      <Chord displayChar={lastTypedCharacter} />
+    )}
+    {currentActivity === ActivityType.TUTORIAL && tutorialSignal.value != null && (
+      <TutorialManager
+        tutorial={tutorialSignal.value}
+      />
+    )}
 
-      {/* Always show terminal unless in EDIT or TREE mode */}
-      {currentActivity !== ActivityType.EDIT && currentActivity !== ActivityType.TREE && (
-        instance && !isTerminalLoading ? (
-          <div id="prompt-and-terminal">
-            <Prompt
-              username={userName ?? 'guest'}
-              domain={domain ?? 'handterm.com'}
-              githubUsername={githubUsername}
-              timestamp={getTimestamp(commandTime.value)}
-            />
-            <div
-              ref={xtermRef}
-              id="xtermRef"
-            />
-          </div>
-        ) : (
-          <div>Loading terminal...</div>
-        )
-      )}
+    {/* Always show terminal unless in EDIT or TREE mode */}
+    {currentActivity !== ActivityType.EDIT && currentActivity !== ActivityType.TREE && (
+      instance && !isTerminalLoading ? (
+        <div id="prompt-and-terminal">
+          <Prompt
+            username={userName ?? 'guest'}
+            domain={domain ?? 'handterm.com'}
+            githubUsername={githubUsername}
+            timestamp={getTimestamp(commandTime.value)}
+          />
+          <div
+            ref={xtermRef}
+            id="xtermRef"
+          />
+        </div>
+      ) : (
+        <div>Loading terminal...</div>
+      )
+    )}
 
-      {currentActivity === ActivityType.EDIT && (
-        <MonacoCore
-          key={currentActivity}
-          value={getStoredContent()}
-          language="markdown"
-          toggleVideo={() => {
-            isShowVideoSignal.value = !isShowVideoSignal.value;
-            return isShowVideoSignal.value;
-          }}
-        />
-      )}
-      {currentActivity === ActivityType.TREE && treeItems.length > 0 && (
-        <MonacoCore
-          key={currentActivity}
-          value=""
-          language="plaintext"
-        />
-      )}
-      {isShowVideoSignal.value !== null && (
-        <WebCam
-          setOn={isShowVideoSignal.value}
-        />
-      )}
-    </div>
-  );
+    {currentActivity === ActivityType.EDIT && (
+      <MonacoCore
+        key={currentActivity}
+        value={getStoredContent()}
+        language="markdown"
+        toggleVideo={() => {
+          isShowVideoSignal.value = !isShowVideoSignal.value;
+          return isShowVideoSignal.value;
+        }}
+      />
+    )}
+    {currentActivity === ActivityType.TREE && treeItems.length > 0 && (
+      <MonacoCore
+        key={currentActivity}
+        value=""
+        language="plaintext"
+      />
+    )}
+    {isShowVideoSignal.value !== null && (
+      <WebCam
+        setOn={isShowVideoSignal.value}
+      />
+    )}
+  </div>
+);
 });
 
 HandTermWrapper.displayName = 'HandTermWrapper';

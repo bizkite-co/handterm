@@ -114,9 +114,8 @@ export class TerminalPage {
   }
 
   public async goto(): Promise<void> {
-    await this.page.goto(`${TEST_CONFIG.baseUrl}/`);
-    // Wait for the signal to be exposed
-    await this.page.waitForFunction(() => 'commandLineSignal' in window, { timeout: TEST_CONFIG.timeout.medium });
+      // Wait for the signal to be exposed
+      await this.page.waitForFunction(() => 'commandLineSignal' in window, { timeout: TEST_CONFIG.timeout.medium });
     await this.waitForTerminal();
     await this.waitForPrompt();
   }
@@ -265,8 +264,8 @@ export class TerminalPage {
     await this.waitForPrompt();
   }
 
-  public async getActivityMediator(): Promise<any> {
-    return await this.page.evaluateHandle(() => {
+  public async getActivityMediator(): Promise<{ isInEdit: boolean; }> {
+    return await this.page.evaluate(() => {
       return window.handtermRef?.current?.activityMediator;
     });
   }
