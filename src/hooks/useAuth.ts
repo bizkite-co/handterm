@@ -29,7 +29,6 @@ export function useAuth(): IAuthProps {
   const queryClient = useQueryClient();
 
   const clearTokens = () => {
-    return;
     localStorage.removeItem(TokenKeys.AccessToken);
     localStorage.removeItem(TokenKeys.RefreshToken);
     localStorage.removeItem(TokenKeys.ExpiresAt);
@@ -44,7 +43,7 @@ export function useAuth(): IAuthProps {
   const refreshMutation = useMutation({
     mutationFn: async (): Promise<MyResponse<AuthResponse>> => {
       const refreshToken = localStorage.getItem(TokenKeys.RefreshToken);
-      if (typeof refreshToken !== 'string' || refreshToken === '') {
+      if (refreshToken == null || refreshToken === '') {
         clearTokens();
         throw new Error('No refresh token');
       }
@@ -88,7 +87,9 @@ export function useAuth(): IAuthProps {
     },
     retry: (failureCount: number, error: unknown): boolean => {
       if (axios.isAxiosError(error) && error.response?.status === 500) {
-        clearTokens();
+        if(failureCount > 50){
+          clearTokens();
+        }
         return false;
       }
       return failureCount < 3;
@@ -122,7 +123,7 @@ export function useAuth(): IAuthProps {
           }
         } catch (error) {
           // Only clear tokens if refresh fails AND refresh token is missing
-          if (!localStorage.getItem(TokenKeys.RefreshToken)) {
+          if (localStorage.getItem(TokenKeys.RefreshToken) == null) {
             clearTokens();
           }
           return {
@@ -131,7 +132,7 @@ export function useAuth(): IAuthProps {
             error: []
           };
         }
-      } else if (!refreshToken) {
+      } else if (refreshToken == null) {
         clearTokens();
         return {
           status: 401,
@@ -249,7 +250,8 @@ export function useAuth(): IAuthProps {
 
         const isValid = await validateAndRefreshToken();
         if (isValid.status != 200) {
-          clearTokens(); // Ensure tokens are cleared on validation failure
+          // NOTE: Don't do stuff like this.
+          // clearTokens(); // Ensure tokens are cleared on validation failure
           throw new Error('Token validation failed');
         }
 
