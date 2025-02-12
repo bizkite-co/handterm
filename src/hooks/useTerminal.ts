@@ -135,6 +135,10 @@ export const useTerminal = (setIsTerminalLoading: React.Dispatch<React.SetStateA
     setIsTerminalLoading(false);
   }, [instance, resetPrompt, setIsTerminalLoading]);
 
+    // Dispatch custom event with a unique name
+    const terminalInitializedEvent = new Event('handtermTerminalInitialized');
+    document.dispatchEvent(terminalInitializedEvent);
+
   useEffect(() => {
     if (instance == null) return;
 
