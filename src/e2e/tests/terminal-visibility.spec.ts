@@ -20,10 +20,7 @@ test.describe('Terminal Visibility', () => {
     await page.goto(TEST_CONFIG.baseUrl);
     const terminal = new TerminalPage(page);
     await terminal.waitForTerminal();
-    console.log('After waitForTerminal');
     const hasChildren = await terminal.terminalHasChildren();
-    console.log('Before expect, hasChildren:', hasChildren);
     await expect(hasChildren).toBe(true);
-    console.log('After expect');
   })
 });

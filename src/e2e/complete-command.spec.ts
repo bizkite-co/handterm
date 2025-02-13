@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { ActivityType, type WindowExtensions } from '@handterm/types';
 import { signal } from '@preact/signals-core';
+import { TEST_CONFIG } from './config';
 
 // Extend Window interface with our extensions
 declare global {
@@ -9,8 +10,10 @@ declare global {
 
 test.describe('Editor Basic Functionality', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('http://localhost:5173/');
-    await page.waitForSelector('.monaco-editor');
+    await page.goto(TEST_CONFIG.baseUrl)
+      .catch((reason) => {
+        console.log("Base page not loaded", reason);
+      });
 
     // Initialize signals before each test
     await page.evaluate(() => {

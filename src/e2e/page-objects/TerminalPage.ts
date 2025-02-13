@@ -43,7 +43,6 @@ export class TerminalPage {
     return await this.page.evaluate(() => {
       const terminal = document.querySelector('#xtermRef');
       const hasChildren = terminal ? terminal.children.length > 0 : false;
-      console.log('terminalHasChildren called, result:', hasChildren);
       return hasChildren;
     });
   }
@@ -53,9 +52,7 @@ export class TerminalPage {
    */
   public async waitForTerminal(): Promise<void> {
     // Wait for application to load
-    console.log('Before waitForSelector #handterm-wrapper');
     await this.page.waitForSelector('#handterm-wrapper', { state: 'attached', timeout: TEST_CONFIG.timeout.short });
-    console.log('After waitForSelector #handterm-wrapper');
 
     // Wait for terminal element
     const xtermRef = await this.page.$('#xtermRef');
@@ -105,14 +102,14 @@ export class TerminalPage {
       await this.page.waitForSelector('.tutorial-prompt', { state: 'visible', timeout });
 
       // Get current tutorial state for debugging
-      const tutorialState = await this.page.evaluate(() => ({
-        tutorialSignal: window.tutorialSignal?.value,
-        activitySignal: window.activitySignal?.value,
-        completedTutorials: localStorage.getItem('completed-tutorials'),
-        tutorialState: localStorage.getItem('tutorial-state')
-      }));
+      // const tutorialState = await this.page.evaluate(() => ({
+      //   tutorialSignal: window.tutorialSignal?.value,
+      //   activitySignal: window.activitySignal?.value,
+      //   completedTutorials: localStorage.getItem('completed-tutorials'),
+      //   tutorialState: localStorage.getItem('tutorial-state')
+      // }));
 
-      console.log('[Tutorial State]', tutorialState);
+      // console.log('[Tutorial State]', tutorialState);
 
       // Verify tutorial content is actually set
       const tutorialContent = await this.page.locator('.tutorial-prompt').textContent();
