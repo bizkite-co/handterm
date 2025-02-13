@@ -19,13 +19,6 @@ import {
 } from '@handterm/types';
 import { createLogger, LogLevel } from '../utils/Logger';
 
-declare global {
-  interface Window {
-    isTerminalReady: boolean;
-    // ... other existing window properties ...
-  }
-}
-
 export type { IHandTermWrapperMethods };
 import { parseLocation } from '../utils/navigationUtils';
 import WebCam from '../utils/WebCam';
@@ -61,20 +54,6 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
   const [userName] = useState<string | null>(null);
   const commandTime = useComputed(() => commandTimeSignal.value);
   const [treeItems, setTreeItems] = useState<TreeItem[]>([]);
-
-    const [isTerminalReady, setIsTerminalReady] = useState(false);
-
-    useEffect(() => {
-        const handleTerminalInitialized = () => {
-            setIsTerminalReady(true);
-        };
-
-        document.addEventListener('handtermTerminalInitialized', handleTerminalInitialized);
-
-        return () => {
-            document.removeEventListener('handtermTerminalInitialized', handleTerminalInitialized);
-        };
-    }, []);
 
   const [currentActivity, setCurrentActivity] = useState(parseLocation().activityKey);
 
