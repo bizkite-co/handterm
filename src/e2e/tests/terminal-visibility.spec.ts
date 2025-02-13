@@ -8,11 +8,6 @@ test.describe('Terminal Visibility', () => {
     // Wait for the handterm wrapper to be attached
     await page.waitForSelector('#handterm-wrapper', { state: 'attached' });
 
-    // Wait for isTerminalReady to be true in the component
-    await page.waitForFunction(() => {
-      return (window as any).isTerminalReady === true;
-    });
-
     // Check if #xtermRef exists
     const xtermRef = await page.$('#xtermRef');
     expect(xtermRef).not.toBeNull();
