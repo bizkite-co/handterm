@@ -29,7 +29,7 @@ import { useWPMCalculator } from './useWPMCaculator';
 
 const logger = createLogger({ prefix: 'useTerminal' });
 
-export const useTerminal = (setIsTerminalLoading: React.Dispatch<React.SetStateAction<boolean>>): { xtermRef: React.RefObject<HTMLDivElement>; writeToTerminal: (data: string) => void; resetPrompt: () => void; instance: ReturnType<typeof useXTerm>['instance'] } => {
+export const useTerminal = (): { xtermRef: React.RefObject<HTMLDivElement>; writeToTerminal: (data: string) => void; resetPrompt: () => void } => {
   const { instance, ref: xtermRef } = useXTerm({ options: XtermAdapterConfig });
   const { handleCommand, commandHistory, commandHistoryIndex, setCommandHistoryIndex } = useCommand();
   const wpmCalculator = useWPMCalculator();
@@ -133,12 +133,7 @@ export const useTerminal = (setIsTerminalLoading: React.Dispatch<React.SetStateA
     instance.loadAddon(fitAddon.current);
     fitAddon.current.fit();
     resetPrompt();
-    setIsTerminalLoading(false);
-  }, [instance, resetPrompt, setIsTerminalLoading]);
-
-    // Dispatch custom event with a unique name
-    const terminalInitializedEvent = new Event('handtermTerminalInitialized');
-    document.dispatchEvent(terminalInitializedEvent);
+  }, [instance, resetPrompt]);
 
   useEffect(() => {
     if (instance == null) return;
@@ -270,12 +265,11 @@ export const useTerminal = (setIsTerminalLoading: React.Dispatch<React.SetStateA
       window.removeEventListener('resize', resizeHandler);
       dataHandler.dispose();
     };
-  }, [instance]); // Simplified dependencies for debugging
+  }, [instance, getCurrentCommand, resetPrompt, wpmCalculator, commandLine, navigateHistory, handleCharacter, _commandLineState, handleCommand, setCommandHistoryIndex]);
 
   return {
     xtermRef,
     writeToTerminal,
     resetPrompt,
-    instance
   };
 };

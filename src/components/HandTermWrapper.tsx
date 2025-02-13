@@ -14,12 +14,9 @@ import {
   type TreeItem,
   ActivityType,
   StorageKeys,
-  type IHandTermWrapperMethods,
-  type ParsedCommand
+  type IHandTermWrapperMethods
 } from '@handterm/types';
 import { createLogger, LogLevel } from '../utils/Logger';
-
-export type { IHandTermWrapperMethods };
 import { parseLocation } from '../utils/navigationUtils';
 import WebCam from '../utils/WebCam';
 
@@ -37,8 +34,7 @@ const logger = createLogger({
 const getTimestamp = (date: Date): string => date.toTimeString().split(' ')[0] ?? '';
 
 const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProps>((props, forwardedRef) => {
-  const [isTerminalLoading, setIsTerminalLoading] = useState(true);
-  const { xtermRef, writeToTerminal, resetPrompt, instance } = useTerminal(setIsTerminalLoading);
+  const { xtermRef, writeToTerminal, resetPrompt } = useTerminal();
   const targetWPM = 10;
   const wpmCalculator = useWPMCalculator();
   const gameHandleRef = useRef<IGameHandle>(null);
@@ -86,7 +82,7 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
     return () => {
       unsubscribe();
     };
-  }, [activitySignal]);
+  }, [currentActivity]);
 
   // Handle location change events
   useEffect(() => {
@@ -129,10 +125,10 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
       });
 
       // Only transition if we're currently in TUTORIAL mode
-      // if (currentActivity === ActivityType.TUTORIAL) {  <-- Comment out this block
-      //   logger.debug('Transitioning from TUTORIAL to GAME');
-      //   activitySignal.value = ActivityType.GAME;
-      // }
+      if (currentActivity === ActivityType.TUTORIAL) {
+        logger.debug('Transitioning from TUTORIAL to GAME');
+        activitySignal.value = ActivityType.GAME;
+      }
     }
   }, [currentActivity]);
 
@@ -213,7 +209,11 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
   useEffect(() => {
     if (currentActivity === ActivityType.NORMAL) {
       logger.info('Resetting terminal in NORMAL mode');
-      xtermRef.current?.focus();
+      const term = xtermRef.current;
+      if (term !== null && typeof term.focus === 'function') {
+        term.focus();
+      }
+      resetPrompt();
     }
   }, [currentActivity, xtermRef, resetPrompt]);
 
@@ -237,20 +237,7 @@ useImperativeHandle(forwardedRef, () => ({
   setHeroSummersaultAction: () => { },
   setEditMode: () => { },
   handleEditSave: () => { },
-  activityMediator: {
-    isInGameMode: false,
-    isInTutorial: false,
-    isInEdit: false,
-    isInNormal: false,
-    checkTutorialProgress: (_command: string | null) => { },
-    heroAction: 'Idle',
-    zombie4Action: 'Walk',
-    handleCommandExecuted: (_parsedCommand: ParsedCommand) => false,
-    setHeroAction: () => { },
-    setZombie4Action: () => { },
-    checkGameProgress: (_successPhrase: GamePhrase) => { },
-    setActivity: (_activity: ActivityType) => { }
-  }
+    activityMediator: activityMediator,
 }), [writeToTerminal, xtermRef, activityMediator]);
 
 // Initialize window methods
@@ -306,7 +293,6 @@ return (
 
     {/* Always show terminal unless in EDIT or TREE mode */}
     {currentActivity !== ActivityType.EDIT && currentActivity !== ActivityType.TREE && (
-      instance && !isTerminalLoading ? (
         <div id="prompt-and-terminal">
           <Prompt
             username={userName ?? 'guest'}
@@ -319,9 +305,6 @@ return (
             id="xtermRef"
           />
         </div>
-      ) : (
-        <div>Loading terminal...</div>
-      )
     )}
 
     {currentActivity === ActivityType.EDIT && (
