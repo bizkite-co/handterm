@@ -33,9 +33,19 @@ export class TerminalPage {
     return this;
   }
 
-  public async logHandtermWrapper(): Promise<void> {
+  // NEW METHOD: checkHandtermWrapper
+  public async checkHandtermWrapper(): Promise<void> {
     const handtermWrapper = await this.page.$('#handterm-wrapper');
     console.log('TerminalPage checkHandtermWrapper:', handtermWrapper);
+  }
+
+  public async terminalHasChildren(): Promise<boolean> {
+    return await this.page.evaluate(() => {
+      const terminal = document.querySelector('#xtermRef');
+      const hasChildren = terminal ? terminal.children.length > 0 : false;
+      console.log('terminalHasChildren called, result:', hasChildren);
+      return hasChildren;
+    });
   }
 
   /**
@@ -43,7 +53,9 @@ export class TerminalPage {
    */
   public async waitForTerminal(): Promise<void> {
     // Wait for application to load
+    console.log('Before waitForSelector #handterm-wrapper');
     await this.page.waitForSelector('#handterm-wrapper', { state: 'attached', timeout: TEST_CONFIG.timeout.short });
+    console.log('After waitForSelector #handterm-wrapper');
 
     // Wait for terminal element
     const xtermRef = await this.page.$('#xtermRef');
@@ -57,24 +69,17 @@ export class TerminalPage {
       throw new Error('Terminal element (#xtermRef) is not visible');
     }
 
-    // Check if #xtermRef has children
-    const hasChildren = await this.page.evaluate(() => {
-      const terminal = document.querySelector('#xtermRef');
-      return terminal ? terminal.children.length > 0 : false;
-    });
-
-    if (!hasChildren) {
-      throw new Error('Terminal element (#xtermRef) has no children');
+    // Check if #xtermRef has children. Now using the new method.
+    if (!await this.terminalHasChildren()) {
+        throw new Error('Terminal element (#xtermRef) has no children');
     }
-    // Focus the terminal
-    await this.focus();
   }
 
   /**
    * Focuses the terminal
    */
   public async focus(): Promise<void> {
-    await this.terminal.click();
+    await this.terminal.focus();
   }
 
   async waitForActivityTransition(timeout = 10000): Promise<void> {
@@ -119,7 +124,7 @@ export class TerminalPage {
       const html = await this.page.content();
       const tutorialComponent = await this.tutorialMode.evaluate(el => el?.outerHTML);
       const tutorialPrompt = await this.page.locator('.tutorial-prompt').evaluate(el => el?.outerHTML);
-      console.log('[waitForTutorialMode] Error:', (error as Error).message);
+      console.log('[waitForTutorialMode] Error:', (error instanceof Error) ? error.message : 'Unknown error'); // Check if error is an instance of Error
       console.log('[waitForTutorialMode] Tutorial Component:', tutorialComponent);
       console.log('[waitForTutorialMode] Tutorial Prompt:', tutorialPrompt);
       console.log('[waitForTutorialMode] Full Page Content:', html);
@@ -131,8 +136,8 @@ export class TerminalPage {
    * Logs the tag name and id of all child nodes with IDs for a given node selector.
    * @param nodeSelector CSS selector for the node to inspect.
    */
-  private async logNodeChildrenWithIds(nodeSelector: string, isDebug: boolean = false): Promise<void> {
-    if (isDebug) return;
+  private async logNodeChildrenWithIds(nodeSelector: string, isDebug:boolean=false): Promise<void> {
+    if(isDebug) return;
     try {
       const wrapperNodesWithIds = await this.page.evaluate(
         (selector) => {
@@ -150,15 +155,15 @@ export class TerminalPage {
       );
 
       // Only print if we're in debug mode.
-      if (isDebug) console.log(`[DOM Nodes with IDs in ${nodeSelector}]`, wrapperNodesWithIds);
+      if(isDebug) console.log(`[DOM Nodes with IDs in ${nodeSelector}]`, wrapperNodesWithIds);
     } catch (error) {
       console.error(`ERROR in logNodeChildrenWithIds for selector ${nodeSelector}:`, error);
     }
   }
 
   public async goto(): Promise<void> {
-    // Wait for the signal to be exposed
-    await this.page.waitForFunction(() => 'commandLineSignal' in window, { timeout: TEST_CONFIG.timeout.medium });
+      // Wait for the signal to be exposed
+      await this.page.waitForFunction(() => 'commandLineSignal' in window, { timeout: TEST_CONFIG.timeout.medium });
     await this.waitForTerminal();
     await this.waitForPrompt();
   }
@@ -263,7 +268,7 @@ export class TerminalPage {
     await this.waitForPrompt();
   }
 
-  public async getActivityMediator(): Promise<{
+ public async getActivityMediator(): Promise<{
     isInGameMode: boolean;
     isInTutorial: boolean;
     isInEdit: boolean;

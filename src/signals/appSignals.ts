@@ -54,17 +54,6 @@ export const setTempPassword = (value: string): void => {
     tempPasswordSignal.value = value;
 };
 
-// Create a persistent signal for bypassTutorial
-export const {
-    signal: bypassTutorialSignal,
-    update: setBypassTutorial
-} = createPersistentSignal<boolean>({
-    key: 'bypassTutorialKey', // Unique key for localStorage
-    signal: signal<boolean>(false),
-    serialize: (value: boolean) => JSON.stringify(value),
-    deserialize: (value: string) => JSON.parse(value) as boolean
-});
-
 const {
     signal: outputElementsSignal,
     update: updateOutput

@@ -1,4 +1,4 @@
-import { test } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 import { TEST_CONFIG } from '../config';
 import { TerminalPage } from '../page-objects/TerminalPage';
 
@@ -8,30 +8,22 @@ test.describe('Terminal Visibility', () => {
 
     const terminal = new TerminalPage(page);
 
-    await page.waitForSelector('#handterm-wrapper', { state: 'attached', timeout: TEST_CONFIG.timeout.short });
+    // Wrap the waitForTerminal call in an expect().not.toThrow()
+    await expect(async () => {
+      await terminal.waitForTerminal();
+    }).not.toThrow();
 
-    // Wait for terminal element
-    const xtermRef = await page.$('#xtermRef');
-    if (!xtermRef) {
-      throw new Error('Terminal element (#xtermRef) not found');
-    }
-    await terminal.waitForTerminal();
-
-    // Check if #xtermRef is visible
-    const isVisible = await xtermRef.isVisible();
-    if (!isVisible) {
-      throw new Error('Terminal element (#xtermRef) is not visible');
-    }
-
-    // Check if #xtermRef has children
-    const hasChildren = await page.evaluate(() => {
-      const terminal = document.querySelector('#xtermRef');
-      return terminal ? terminal.children.length > 0 : false;
-    });
-
-    if (!hasChildren) {
-      throw new Error('Terminal element (#xtermRef) has no children');
-    }
-
+    // Use the terminal page object for the assertion
+    expect(terminal.terminal).toBeVisible();
   });
+  test('terminal element should have children', async ({ page }) => {
+    await page.goto(TEST_CONFIG.baseUrl);
+    const terminal = new TerminalPage(page);
+    await terminal.waitForTerminal();
+    console.log('After waitForTerminal');
+    const hasChildren = await terminal.terminalHasChildren();
+    console.log('Before expect, hasChildren:', hasChildren);
+    await expect(hasChildren).toBe(true);
+    console.log('After expect');
+  })
 });
