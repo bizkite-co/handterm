@@ -205,7 +205,7 @@ export interface IHandTermWrapperMethods {
   setHeroSummersaultAction: () => void;
   setEditMode: (isEditMode: boolean) => void;
   handleEditSave: (content: string) => void;
-  actvitMedator?: {
+  activityMediator?: {
     isInGameMode: boolean;
     isInTutorial: boolean;
     isInEdit: boolean;
