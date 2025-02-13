@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { useComputed } from '@preact/signals-react';
 
-import { activitySignal, setNotification, bypassTutorialSignal } from 'src/signals/appSignals';
+import { activitySignal, setNotification } from 'src/signals/appSignals';
 import {
     getIncompletePhrasesByTutorialGroup, initializeGame,
     setCompletedGamePhrase,
@@ -45,7 +45,6 @@ export function useActivityMediator(): {
         canUnlockTutorial
     } = useTutorial();
     const activity = useComputed(() => activitySignal.value).value;
-    const bypassTutorial = useComputed(() => bypassTutorialSignal.value);
     const currentTutorialRef = useRef<GamePhrase | null>(null);
 
     const transitionToGame = useCallback((contentKey?: string | null, groupKey?: string | null): void => {
@@ -65,7 +64,6 @@ export function useActivityMediator(): {
     }, []);
 
     const displayAsActivity = useCallback((nextTutorial: GamePhrase): ActivityType => {
-        if (bypassTutorial.value) return ActivityType.NORMAL;
         switch (nextTutorial.displayAs) {
             case 'Tutorial':
                 return ActivityType.TUTORIAL;
@@ -74,10 +72,9 @@ export function useActivityMediator(): {
             default:
                 return ActivityType.NORMAL;
         }
-    }, [bypassTutorial.value])
+    }, [])
 
     const displayAsKey = useCallback((nextTutorial: GamePhrase): string | null => {
-        if (bypassTutorial.value) return null;
         switch (nextTutorial.displayAs) {
             case 'Tutorial':
                 return nextTutorial.key;
@@ -86,7 +83,7 @@ export function useActivityMediator(): {
             default:
                 return null;
         }
-    }, [bypassTutorial.value])
+    }, [])
 
 
     const checkGameProgress = useCallback((successPhrase: GamePhrase) => {
@@ -343,7 +340,6 @@ export function useActivityMediator(): {
             });
 
             // Update state after navigation
-            // bypassTutorialSignal.value = true;
             activitySignal.value = ActivityType.NORMAL;
         } else {
             logger.debug('No completed tutorials found - checking for next tutorial');
@@ -360,13 +356,6 @@ export function useActivityMediator(): {
                 groupKey: null
             });
         }
-    }, []);
-
-    // Reset bypassTutorialSignal on unmount
-    useEffect(() => {
-        return () => {
-            bypassTutorialSignal.value = false;
-        };
     }, []);
 
     const setActivity = useCallback((newActivity: ActivityType) => {

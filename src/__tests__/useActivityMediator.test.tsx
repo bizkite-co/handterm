@@ -51,11 +51,9 @@ vi.mock('src/hooks/useReactiveLocation', () => ({
 
 vi.mock('src/signals/appSignals', () => ({
   activitySignal: { value: 'NORMAL' },
-  bypassTutorialSignal: { value: false },
   isInLoginProcessSignal: { value: false },
   tempUserNameSignal: { value: '' },
   setNotification: vi.fn(),
-  setBypassTutorial: vi.fn(),
   setIsInLoginProcess: vi.fn(),
   setTempUserName: vi.fn(),
   setActivity: vi.fn(),

@@ -16,10 +16,7 @@ export function useTutorialState(): {
       : [];
     const hasCompletedTutorials = parsedTutorials.length === allTutorialKeys.length;
 
-    // Check bypass signal
-    const shouldBypass = Boolean(tutorialSignal.value);
-
-    setShouldSkipTutorial(hasCompletedTutorials || shouldBypass);
+    setShouldSkipTutorial(hasCompletedTutorials );
   }, []);
 
   useEffect(() => {
