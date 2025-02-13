@@ -129,6 +129,7 @@ export const useTerminal = (setIsTerminalLoading: React.Dispatch<React.SetStateA
 
   useEffect(() => {
     if (instance == null) return;
+    console.log("useTerminal instance:", instance); // Add this line
     instance.loadAddon(fitAddon.current);
     fitAddon.current.fit();
     resetPrompt();
@@ -269,7 +270,7 @@ export const useTerminal = (setIsTerminalLoading: React.Dispatch<React.SetStateA
       window.removeEventListener('resize', resizeHandler);
       dataHandler.dispose();
     };
-  }, [instance, getCurrentCommand, resetPrompt, wpmCalculator, commandLine, navigateHistory, handleCharacter, _commandLineState, handleCommand, setCommandHistoryIndex]);
+  }, [instance]); // Simplified dependencies for debugging
 
   return {
     xtermRef,

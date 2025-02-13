@@ -62,6 +62,20 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
   const commandTime = useComputed(() => commandTimeSignal.value);
   const [treeItems, setTreeItems] = useState<TreeItem[]>([]);
 
+    const [isTerminalReady, setIsTerminalReady] = useState(false);
+
+    useEffect(() => {
+        const handleTerminalInitialized = () => {
+            setIsTerminalReady(true);
+        };
+
+        document.addEventListener('handtermTerminalInitialized', handleTerminalInitialized);
+
+        return () => {
+            document.removeEventListener('handtermTerminalInitialized', handleTerminalInitialized);
+        };
+    }, []);
+
   const [currentActivity, setCurrentActivity] = useState(parseLocation().activityKey);
 
   // Update activity state when activitySignal changes
@@ -136,10 +150,10 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
       });
 
       // Only transition if we're currently in TUTORIAL mode
-      if (currentActivity === ActivityType.TUTORIAL) {
-        logger.debug('Transitioning from TUTORIAL to GAME');
-        activitySignal.value = ActivityType.GAME;
-      }
+      // if (currentActivity === ActivityType.TUTORIAL) {  <-- Comment out this block
+      //   logger.debug('Transitioning from TUTORIAL to GAME');
+      //   activitySignal.value = ActivityType.GAME;
+      // }
     }
   }, [currentActivity]);
 
