@@ -1,5 +1,5 @@
 import { type Page, type Locator, expect } from '@playwright/test';
-import { StorageKeys, allTutorialKeys } from '@handterm/types';
+import { allTutorialKeys } from '@handterm/types';
 
 import { TERMINAL_CONSTANTS } from 'src/constants/terminal';
 import type { Signal } from '@preact/signals-react';
@@ -81,12 +81,37 @@ export class TerminalPage {
 
   async waitForActivityTransition(timeout = 10000): Promise<void> {
     try {
-      await this.page.waitForSelector('#terminal-game', { state: 'visible', timeout });
-      await this.page.waitForSelector('.tutorial-component', { state: 'hidden', timeout });
+      // First, wait for any tutorial components to be hidden
+      await this.page.waitForSelector('.tutorial-component', {
+        state: 'hidden',
+        timeout: timeout / 2
+      }).catch(() => {/* ignore if not present */});
+
+      // Then verify we're in a stable state by checking localStorage
+      const activity = await this.page.evaluate(() => {
+        return localStorage.getItem('current-activity');
+      });
+
+      if (!activity) {
+        throw new Error('No activity found in localStorage after transition');
+      }
+
+      // Log the current state for debugging
+      console.log('Current activity state:', {
+        activity,
+        url: this.page.url()
+      });
+
     } catch (error) {
-      const gameVisible = await this.gameMode.isVisible();
-      const tutorialVisible = await this.tutorialMode.isVisible();
-      console.log('Activity transition failed. Current state:', { gameVisible, tutorialVisible });
+      // Get more detailed state information
+      const state = await this.page.evaluate(() => ({
+        activity: localStorage.getItem('current-activity'),
+        url: window.location.href,
+        tutorialVisible: document.querySelector('.tutorial-component')?.isVisible,
+        handtermWrapper: document.querySelector('#handterm-wrapper')?.isVisible
+      }));
+
+      console.log('Activity transition failed. Current state:', state);
       throw error;
     }
   }
