@@ -1,4 +1,5 @@
 import { type Page, type Locator, expect } from '@playwright/test';
+import { StorageKeys, allTutorialKeys } from '@handterm/types';
 
 import { TERMINAL_CONSTANTS } from 'src/constants/terminal';
 import type { Signal } from '@preact/signals-react';
@@ -280,5 +281,24 @@ export class TerminalPage {
     return await this.page.evaluate(() => {
       return window.handtermRef?.current?.activityMediator;
     });
+  }
+
+  async completeTutorials(): Promise<void> {
+    // Pass the storage key value directly instead of the enum
+    await this.page.evaluate((tutorials) => {
+      localStorage.setItem('completed-tutorials', JSON.stringify(tutorials));
+    }, allTutorialKeys);
+
+    // Wait for the application to process the localStorage change
+    // and update its state accordingly
+    await this.page.waitForTimeout(100);
+
+    // Verify we're not in tutorial mode anymore
+    const url = new URL(this.page.url());
+    if (url.searchParams.get('activity') === 'tutorial') {
+      // If still in tutorial, try executing the 'complete' command
+      await this.executeCommand('complete');
+      await this.page.waitForTimeout(100);
+    }
   }
 }
