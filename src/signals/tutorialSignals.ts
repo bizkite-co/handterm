@@ -1,7 +1,7 @@
 // src/signals/tutorialSignals.ts
 import { computed, signal } from "@preact/signals-react";
 
-import { ActivityType, Phrases } from '@handterm/types';
+import { ActivityType, Phrases, allTutorialKeys } from '@handterm/types';
 import type { GamePhrase } from "@handterm/types";
 import { createLogger } from "src/utils/Logger";
 
@@ -110,9 +110,6 @@ export const resetCompletedTutorials = (): void => {
  */
 export const completeAllTutorials = (): void => {
   logger.debug('Completing all tutorials');
-  const allTutorialKeys = Phrases
-    .filter(t => t.displayAs === "Tutorial")
-    .map(t => t.key);
   updateCompletedTutorials(new Set(allTutorialKeys));
   setNextTutorial(null);
   activitySignal.value = ActivityType.NORMAL;
