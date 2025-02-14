@@ -30,6 +30,7 @@ export class TerminalPage {
     this.tutorialMode = page.locator('.tutorial-component');
     this.gameMode = page.locator('#terminal-game');
     this.nextChars = page.locator('pre#next-chars');
+    page.goto(TEST_CONFIG.baseUrl);
     return this;
   }
 
@@ -68,7 +69,7 @@ export class TerminalPage {
 
     // Check if #xtermRef has children. Now using the new method.
     if (!await this.terminalHasChildren()) {
-        throw new Error('Terminal element (#xtermRef) has no children');
+      throw new Error('Terminal element (#xtermRef) has no children');
     }
   }
 
@@ -133,8 +134,8 @@ export class TerminalPage {
    * Logs the tag name and id of all child nodes with IDs for a given node selector.
    * @param nodeSelector CSS selector for the node to inspect.
    */
-  private async logNodeChildrenWithIds(nodeSelector: string, isDebug:boolean=false): Promise<void> {
-    if(isDebug) return;
+  private async logNodeChildrenWithIds(nodeSelector: string, isDebug: boolean = false): Promise<void> {
+    if (isDebug) return;
     try {
       const wrapperNodesWithIds = await this.page.evaluate(
         (selector) => {
@@ -152,15 +153,17 @@ export class TerminalPage {
       );
 
       // Only print if we're in debug mode.
-      if(isDebug) console.log(`[DOM Nodes with IDs in ${nodeSelector}]`, wrapperNodesWithIds);
+      if (isDebug) console.log(`[DOM Nodes with IDs in ${nodeSelector}]`, wrapperNodesWithIds);
     } catch (error) {
       console.error(`ERROR in logNodeChildrenWithIds for selector ${nodeSelector}:`, error);
     }
   }
 
   public async goto(): Promise<void> {
-      // Wait for the signal to be exposed
-      await this.page.waitForFunction(() => 'commandLineSignal' in window, { timeout: TEST_CONFIG.timeout.medium });
+    // Wait for the signal to be exposed
+    await this.page.waitForFunction(
+      () => 'commandLineSignal' in window, { timeout: TEST_CONFIG.timeout.medium }
+    );
     await this.waitForTerminal();
     await this.waitForPrompt();
   }
@@ -265,7 +268,7 @@ export class TerminalPage {
     await this.waitForPrompt();
   }
 
- public async getActivityMediator(): Promise<{
+  public async getActivityMediator(): Promise<{
     isInGameMode: boolean;
     isInTutorial: boolean;
     isInEdit: boolean;
