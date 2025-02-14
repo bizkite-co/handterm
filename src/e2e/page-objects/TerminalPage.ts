@@ -30,8 +30,6 @@ export class TerminalPage {
     this.tutorialMode = page.locator('.tutorial-component');
     this.gameMode = page.locator('#terminal-game');
     this.nextChars = page.locator('pre#next-chars');
-    page.goto(TEST_CONFIG.baseUrl);
-    return this;
   }
 
   // NEW METHOD: checkHandtermWrapper
@@ -160,10 +158,7 @@ export class TerminalPage {
   }
 
   public async goto(): Promise<void> {
-    // Wait for the signal to be exposed
-    await this.page.waitForFunction(
-      () => 'commandLineSignal' in window, { timeout: TEST_CONFIG.timeout.medium }
-    );
+    await this.page.goto(TEST_CONFIG.baseUrl);
     await this.waitForTerminal();
     await this.waitForPrompt();
   }

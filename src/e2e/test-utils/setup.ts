@@ -54,3 +54,11 @@ export async function setupTestEnvironment(page: Page): Promise<void> {
     };
   });
 }
+
+export async function verifyLocalStorage(page: Page, key: string): Promise<unknown> {
+  return page.evaluate((storageKey) => {
+    const value = localStorage.getItem(storageKey);
+    console.log(`[Storage Check] ${storageKey}:`, value);
+    return value ? JSON.parse(value) : null;
+  }, key);
+}
