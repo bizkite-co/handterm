@@ -1,7 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
 // Separate Playwright-specific setup from Vitest
-export const PLAYWRIGHT_SETUP = './src/e2e/global.setup.ts';
+export const PLAYWRIGHT_SETUP = './src/e2e/playwright.setup.ts';
 import type { Expect } from '@playwright/test';
 import { TEST_CONFIG } from './src/e2e/config';
 
