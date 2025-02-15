@@ -1,17 +1,31 @@
 import { type Page, type Locator, expect } from '@playwright/test';
-import { allTutorialKeys } from '@handterm/types';
-
 import { TERMINAL_CONSTANTS } from 'src/constants/terminal';
-import type { Signal } from '@preact/signals-react';
-import type { ActivityType, GamePhrase, IHandTermWrapperMethods, ActionType, ParsedCommand } from '@handterm/types';
+import type { GamePhrase, ActionType, ParsedCommand, ActivityType } from '@handterm/types';
+import { allTutorialKeys } from '@handterm/types';
 import { TEST_CONFIG } from '../config';
+import { setupBrowserWindow } from '../browser-setup/setupWindow';
 
 // Extend Window interface for our signals and ref
 declare global {
   interface Window {
-    tutorialSignal: Signal<GamePhrase | null>;
-    activitySignal: Signal<ActivityType>;
-    handtermRef: React.RefObject<IHandTermWrapperMethods>;
+    activityStateSignal: {
+      value: {
+        current: ActivityType;
+        previous: ActivityType | null;
+        transitionInProgress: boolean;
+        tutorialCompleted: boolean;
+      };
+    };
+    completedTutorialsSignal: {
+      value: Set<string>;
+    };
+    tutorialSignal: {
+      value: null;
+    };
+    TERMINAL_CONSTANTS: typeof import('src/constants/terminal').TERMINAL_CONSTANTS;
+    terminalInstance: any; // or more specific type from xterm.js
+    setActivity: (activity: ActivityType) => void;
+    setCompletedTutorial: (key: string) => void;
   }
 }
 
@@ -31,6 +45,32 @@ export class TerminalPage {
     this.tutorialMode = page.locator('.tutorial-component');
     this.gameMode = page.locator('#terminal-game');
     this.nextChars = page.locator('pre#next-chars');
+  }
+
+  async initialize(): Promise<void> {
+    // Setup browser window environment first
+    await setupBrowserWindow(this.page);
+
+    // Verify window functions are properly exposed
+    const verification = await this.page.evaluate(() => ({
+      hasSetCompletedTutorial: typeof window.setCompletedTutorial === 'function',
+      hasSetActivity: typeof window.setActivity === 'function',
+      hasSignals: !!window.activityStateSignal
+    }));
+
+    if (!verification.hasSetCompletedTutorial) {
+      throw new Error('Required window function setCompletedTutorial was not properly exposed');
+    }
+    if (!verification.hasSetActivity) {
+      throw new Error('Required window function setActivity was not properly exposed');
+    }
+    if (!verification.hasSignals) {
+      throw new Error('Required activity signal was not properly exposed');
+    }
+
+    // Navigate to the page and wait for terminal
+    await this.page.goto(TEST_CONFIG.baseUrl);
+    await this.waitForTerminal();
   }
 
   // NEW METHOD: checkHandtermWrapper
@@ -107,8 +147,8 @@ export class TerminalPage {
       const state = await this.page.evaluate(() => ({
         activity: localStorage.getItem('current-activity'),
         url: window.location.href,
-        tutorialVisible: document.querySelector('.tutorial-component')?.isVisible,
-        handtermWrapper: document.querySelector('#handterm-wrapper')?.isVisible
+        tutorialVisible: !!document.querySelector('.tutorial-component')?.offsetParent,
+        handtermWrapper: !!document.querySelector('#handterm-wrapper')?.offsetParent
       }));
 
       console.log('Activity transition failed. Current state:', state);
@@ -276,7 +316,24 @@ export class TerminalPage {
    * Waits for the prompt to appear, indicating the terminal is ready
    */
   public async waitForPrompt(): Promise<void> {
-    await this.terminal.getByText(this.prompt).last().waitFor();
+    // First wait for the activity state to be NORMAL and not in transition
+    await this.page.waitForFunction(() =>
+      window.activityStateSignal?.value?.current === 'NORMAL' as ActivityType
+      && !window.activityStateSignal?.value?.transitionInProgress
+    , { timeout: TEST_CONFIG.timeout.long });
+
+    // Then wait for the terminal prompt
+    await this.terminal.locator('.xterm-screen').waitFor({ state: 'visible' });
+
+    // Use evaluate to check the terminal content
+    const hasPrompt = await this.page.evaluate(() => {
+      const terminal = document.querySelector('.xterm-screen');
+      return terminal?.textContent?.includes('>') ?? false;
+    });
+
+    if (!hasPrompt) {
+      throw new Error('Terminal prompt not found');
+    }
   }
 
 
@@ -309,21 +366,26 @@ export class TerminalPage {
   }
 
   async completeTutorials(): Promise<void> {
-    // Pass the storage key value directly instead of the enum
-    await this.page.evaluate((tutorials) => {
-      localStorage.setItem('completed-tutorials', JSON.stringify(tutorials));
+    await this.page.evaluate((tutorialKeys) => {
+      if (typeof window.setCompletedTutorial !== 'function') {
+        throw new Error('setCompletedTutorial is not available on window');
+      }
+
+      tutorialKeys.forEach(key => {
+        console.log('Completing tutorial', key);
+        window.setCompletedTutorial(key);
+      });
+
+      if (typeof window.setActivity !== 'function') {
+        throw new Error('setActivity is not available on window');
+      }
+
+      window.setActivity('NORMAL');
     }, allTutorialKeys);
 
-    // Wait for the application to process the localStorage change
-    // and update its state accordingly
-    await this.page.waitForTimeout(100);
-
-    // Verify we're not in tutorial mode anymore
-    const url = new URL(this.page.url());
-    if (url.searchParams.get('activity') === 'tutorial') {
-      // If still in tutorial, try executing the 'complete' command
-      await this.executeCommand('complete');
-      await this.page.waitForTimeout(100);
-    }
+    await this.page.waitForFunction(
+      () => window.activityStateSignal?.value?.current === 'NORMAL',
+      { timeout: 5000 }
+    );
   }
 }

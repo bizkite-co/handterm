@@ -1,6 +1,6 @@
 import { type Page, type Locator } from '@playwright/test';
 import { TEST_CONFIG } from '../config';
-
+import { setupBrowserWindow } from '../browser-setup/setupWindow';
 /**
  * Page object for interacting with the Monaco editor in Vim mode.
  * This represents a TUI (Text User Interface) element that only accepts keyboard input.
@@ -15,6 +15,10 @@ export class EditorPage {
     this.page = page;
     this.editor = page.locator('.monaco-editor');
     this.statusBar = page.locator('.vim-status-bar');
+  }
+
+  async initialize(): Promise<void> {
+    await setupBrowserWindow(this.page);
   }
 
   /**

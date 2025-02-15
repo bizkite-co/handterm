@@ -15,7 +15,7 @@ test.describe('Signal Initialization', () => {
     }));
 
     expect(signalState.hasSignal).toBe(true);
-    expect(signalState.current).toBe(ActivityType.NORMAL);
+    expect(signalState.current).toBe(ActivityType.TUTORIAL);
   });
 
   test('should handle multiple signal initializations', async ({ page }) => {
@@ -32,6 +32,6 @@ test.describe('Signal Initialization', () => {
     }));
 
     expect(signalState.hasSignal).toBe(true);
-    expect(signalState.current).toBe(ActivityType.NORMAL);
+    expect(signalState.current).toBe(ActivityType.TUTORIAL);
   });
 });

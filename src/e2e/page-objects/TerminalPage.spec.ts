@@ -1,12 +1,22 @@
 import { test, expect } from '@playwright/test';
 import { TerminalPage } from './TerminalPage';
+import { ActivityType } from '@handterm/types';
+import { TEST_CONFIG } from '../config';
+import { initializeActivitySignal } from '../helpers/initializeSignals';
 
 test.describe('TerminalPage', () => {
   let terminal: TerminalPage;
 
   test.beforeEach(async ({ page }) => {
+    // First navigate to the page
+    await page.goto(TEST_CONFIG.baseUrl);
+    await page.waitForLoadState('domcontentloaded');
+
+    // Initialize signals
+    await initializeActivitySignal(page);
+
+    // Initialize terminal page object
     terminal = new TerminalPage(page);
-    await terminal.goto();
   });
 
   test('completeTutorials should properly complete all tutorials', async ({ page }) => {
@@ -60,7 +70,11 @@ test.describe('TerminalPage', () => {
     await terminal.waitForPrompt();
 
     // Additional verification that prompt is actually visible
-    const promptVisible = await terminal.terminal.getByText('>').isVisible();
+    const promptVisible = await terminal.terminal
+      .locator('.xterm-prompt, .prompt')
+      .filter({ hasText: '>' })
+      .first()
+      .isVisible();
     expect(promptVisible).toBe(true);
   });
 
@@ -116,7 +130,7 @@ test.describe('TerminalPage', () => {
     expect(JSON.parse(storedContent!)).toEqual(testContent);
   });
 
-  test('should execute commands and verify UI updates', async ({ page }) => {
+  test('should execute commands and verify UI updates', async () => {
     await terminal.completeTutorials();
     await terminal.waitForPrompt();
 

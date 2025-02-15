@@ -129,7 +129,12 @@ export const useTerminal = (): { xtermRef: React.RefObject<HTMLDivElement>; writ
 
   useEffect(() => {
     if (instance == null) return;
-    console.log("useTerminal instance:", instance); // Add this line
+
+    // Expose terminal instance for testing
+    if (process.env.NODE_ENV !== 'production') {
+      (window as any).terminalInstance = instance;
+    }
+
     instance.loadAddon(fitAddon.current);
     fitAddon.current.fit();
     resetPrompt();

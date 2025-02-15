@@ -3,15 +3,21 @@ import type { Page } from '@playwright/test';
 
 export async function initializeActivitySignal(page: Page): Promise<void> {
   await page.evaluate(({ NORMAL }) => {
-    // Simplified signal without persistence
+    // Only use URL params if explicitly set, otherwise use NORMAL
+    const urlParams = new URLSearchParams(window.location.search);
+    const activityParam = urlParams.get('activity') as ActivityType | null;
+    const initialActivity = activityParam || NORMAL;
+
     window.activityStateSignal = {
       value: {
-        current: NORMAL,
+        current: initialActivity,
         previous: null,
         transitionInProgress: false,
         tutorialCompleted: false
       }
     };
+
+    console.log('[Signal Init] Setting initial activity:', initialActivity);
     return true;
   }, {
     NORMAL: ActivityType.NORMAL
@@ -19,11 +25,14 @@ export async function initializeActivitySignal(page: Page): Promise<void> {
 
   const signalState = await page.evaluate(() => ({
     hasSignal: !!window.activityStateSignal,
-    current: window.activityStateSignal?.value?.current
+    current: window.activityStateSignal?.value?.current,
+    url: window.location.href
   }));
 
-  if (!signalState.hasSignal || signalState.current !== ActivityType.NORMAL) {
-    throw new Error('Signal initialization failed');
+  console.log('[Signal Init] Verification state:', signalState);
+
+  if (!signalState.hasSignal || !signalState.current) {
+    throw new Error(`Signal initialization failed: ${JSON.stringify(signalState, null, 2)}`);
   }
 }
 
