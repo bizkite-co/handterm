@@ -392,4 +392,12 @@ export class TerminalPage {
       return currentLine ? currentLine.translateToString() : '';
     });
   }
+
+  /**
+   * Gets the full terminal content
+   * @returns The entire text content of the terminal
+   */
+  public async getFullTerminalContent(): Promise<string> {
+    return await this.terminal.innerText();
+  }
 }

@@ -73,10 +73,19 @@ test.describe('TerminalPage', () => {
     const currentCommand = await terminal.getCurrentCommand();
     const actualTerminalLine = await terminal.getActualTerminalLine();
 
+    // Get full terminal content to check for duplicate prompts
+    const fullTerminalContent = await terminal.terminal.innerText();
+
     // Verify the command line is empty (only prompt remains)
     expect(currentCommand,
       `Expected empty command but got "${currentCommand}". Full terminal line: "${actualTerminalLine}"`
     ).toBe('');
+
+    // Verify there is exactly one prompt in the entire terminal
+    const promptCount = (fullTerminalContent.match(new RegExp(TERMINAL_CONSTANTS.PROMPT, 'g')) || []).length;
+    expect(promptCount,
+      `Expected exactly one prompt but found ${promptCount}. Full terminal content: "${fullTerminalContent}"`
+    ).toBe(1);
 
     // Additional verification that prompt exists and is visible
     const promptVisible = await terminal.terminal
