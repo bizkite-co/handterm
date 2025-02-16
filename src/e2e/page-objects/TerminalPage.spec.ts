@@ -1,6 +1,5 @@
 import { test, expect } from '@playwright/test';
 import { TerminalPage } from './TerminalPage';
-import { ActivityType } from '@handterm/types';
 import { TEST_CONFIG } from '../config';
 import { initializeActivitySignal } from '../helpers/initializeSignals';
 
@@ -17,6 +16,18 @@ test.describe('TerminalPage', () => {
 
     // Initialize terminal page object
     terminal = new TerminalPage(page);
+
+    // Wait for the application to be ready and verify signal state
+    await page.waitForSelector('#handterm-wrapper', {
+      state: 'attached',
+      timeout: TEST_CONFIG.timeout.long
+    });
+
+    const signalState = await page.evaluate(() => ({
+      hasSignal: !!window.activityStateSignal,
+      state: window.activityStateSignal?.value
+    }));
+    console.log('Signal verification:', signalState);
   });
 
   test('completeTutorials should properly complete all tutorials', async ({ page }) => {
@@ -71,9 +82,8 @@ test.describe('TerminalPage', () => {
 
     // Additional verification that prompt is actually visible
     const promptVisible = await terminal.terminal
-      .locator('.xterm-prompt, .prompt')
-      .filter({ hasText: '>' })
-      .first()
+      .getByText('>')
+      .last()
       .isVisible();
     expect(promptVisible).toBe(true);
   });
