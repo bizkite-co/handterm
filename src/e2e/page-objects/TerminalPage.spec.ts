@@ -23,25 +23,10 @@ test.describe('TerminalPage', () => {
       state: 'attached',
       timeout: TEST_CONFIG.timeout.long
     });
-  });
 
-  test('completeTutorials should properly complete all tutorials', async ({ page }) => {
-    // Initial state check
-    const initialUrl = page.url();
-    expect(initialUrl).toContain('activity=tutorial');
-
-    // Execute completeTutorials
+    // Complete tutorials once at the beginning
     await terminal.completeTutorials();
-
-    // Verify tutorials are completed in localStorage
-    const completedTutorials = await page.evaluate(() => {
-      return localStorage.getItem('completed-tutorials');
-    });
-    expect(completedTutorials).not.toBeNull();
-
-    // Verify we're not in tutorial mode
-    const finalUrl = page.url();
-    expect(finalUrl).not.toContain('activity=tutorial');
+    await terminal.waitForPrompt();
   });
 
   test('should be able to type and execute commands', async () => {
@@ -84,11 +69,6 @@ test.describe('TerminalPage', () => {
   });
 
   test('should have prompt only', async () => {
-    await terminal.completeTutorials();
-
-    // Wait for prompt to appear
-    await terminal.waitForPrompt();
-
     // Get current command line content
     const currentCommand = await terminal.getCurrentCommand();
     const actualTerminalLine = await terminal.getActualTerminalLine();

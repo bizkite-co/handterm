@@ -122,41 +122,39 @@ export class TerminalPage {
     await this.terminal.focus();
   }
 
-  async waitForActivityTransition(timeout = 10000): Promise<void> {
-    try {
-      // First, wait for any tutorial components to be hidden
-      await this.page.waitForSelector('.tutorial-component', {
-        state: 'hidden',
-        timeout: timeout / 2
-      }).catch(() => {/* ignore if not present */});
+  /**
+   * Waits for activity transition to complete
+   */
+  private async waitForActivityTransition(timeout: number = 5000): Promise<void> {
+    const startTime = Date.now();
 
-      // Then verify we're in a stable state by checking localStorage
-      const activity = await this.page.evaluate(() => {
-        return localStorage.getItem('current-activity');
-      });
+    while (Date.now() - startTime < timeout) {
+      try {
+        const state = await this.page.evaluate(() => {
+          return {
+            activity: localStorage.getItem('activity'),
+            url: window.location.href,
+            tutorialVisible: !!document.querySelector('.tutorial-prompt'),
+            handtermWrapper: document.querySelector('#handterm-wrapper')
+          };
+        });
 
-      if (!activity) {
-        throw new Error('No activity found in localStorage after transition');
+        // Log the current state for debugging
+        console.log('Current activity state:', state);
+
+        // If we're no longer in tutorial mode and have a valid wrapper, consider it success
+        if (!state.tutorialVisible && state.handtermWrapper) {
+          return;
+        }
+
+        // Short delay before next check
+        await this.page.waitForTimeout(100);
+      } catch (error) {
+        console.error('Error checking activity transition:', error);
       }
-
-      // Log the current state for debugging
-      console.log('Current activity state:', {
-        activity,
-        url: this.page.url()
-      });
-
-    } catch (error) {
-      // Get more detailed state information
-      const state = await this.page.evaluate(() => ({
-        activity: localStorage.getItem('current-activity'),
-        url: window.location.href,
-        tutorialVisible: !!document.querySelector('.tutorial-component')?.offsetParent,
-        handtermWrapper: document.querySelector('#handterm-wrapper')?.offsetParent
-      }));
-
-      console.log('Activity transition failed. Current state:', state);
-      throw error;
     }
+
+    throw new Error(`Activity transition timed out after ${timeout}ms`);
   }
 
   async waitForTutorialMode(timeout = 1000000): Promise<void> {
@@ -363,28 +361,22 @@ export class TerminalPage {
   async completeTutorials(): Promise<void> {
     console.log('Starting completeTutorials');
 
+    // Set completed tutorials in localStorage
     await this.page.evaluate((tutorials) => {
       console.log('Setting completed-tutorials in localStorage');
       localStorage.setItem('completed-tutorials', JSON.stringify(tutorials));
     }, allTutorialKeys);
 
-    await this.page.waitForTimeout(100);
-
+    // Check if we're in tutorial mode
     const url = new URL(this.page.url());
     if (url.searchParams.get('activity') === 'tutorial') {
       console.log('Still in tutorial mode, executing complete command');
       await this.executeCommand('complete');
 
-      // Add debug output for terminal state
-      const terminalLine = await this.getActualTerminalLine();
-      console.log('Terminal line after complete:', terminalLine);
-
-      await this.page.waitForTimeout(100);
+      // Wait for the tutorial prompt to disappear and terminal to be ready
+      await this.waitForActivityTransition();
+      await this.waitForPrompt();
     }
-
-    // Final terminal state
-    const finalLine = await this.getActualTerminalLine();
-    console.log('Final terminal line:', finalLine);
   }
 
   /**
