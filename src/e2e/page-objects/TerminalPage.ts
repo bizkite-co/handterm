@@ -361,22 +361,30 @@ export class TerminalPage {
   }
 
   async completeTutorials(): Promise<void> {
-    // Pass the storage key value directly instead of the enum
+    console.log('Starting completeTutorials');
+
     await this.page.evaluate((tutorials) => {
+      console.log('Setting completed-tutorials in localStorage');
       localStorage.setItem('completed-tutorials', JSON.stringify(tutorials));
     }, allTutorialKeys);
 
-    // Wait for the application to process the localStorage change
-    // and update its state accordingly
     await this.page.waitForTimeout(100);
 
-    // Verify we're not in tutorial mode anymore
     const url = new URL(this.page.url());
     if (url.searchParams.get('activity') === 'tutorial') {
-      // If still in tutorial, try executing the 'complete' command
+      console.log('Still in tutorial mode, executing complete command');
       await this.executeCommand('complete');
+
+      // Add debug output for terminal state
+      const terminalLine = await this.getActualTerminalLine();
+      console.log('Terminal line after complete:', terminalLine);
+
       await this.page.waitForTimeout(100);
     }
+
+    // Final terminal state
+    const finalLine = await this.getActualTerminalLine();
+    console.log('Final terminal line:', finalLine);
   }
 
   /**
