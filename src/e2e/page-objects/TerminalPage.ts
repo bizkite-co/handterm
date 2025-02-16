@@ -286,7 +286,7 @@ export class TerminalPage {
     await this.waitForTerminal();
 
     // Get the text from the terminal's active buffer
-    const terminalText = await this.page.evaluate(() => {
+    const terminalText = await this.page.evaluate((promptString) => {
       const terminal = window.terminalInstance;
       if (!terminal) return '';
 
@@ -297,9 +297,8 @@ export class TerminalPage {
 
       const lineText = currentLine.translateToString();
       // Remove the prompt from the beginning of the line
-      const promptLength = window.TERMINAL_CONSTANTS.PROMPT.length;
-      return lineText.substring(promptLength).trimStart();
-    });
+      return lineText.substring(promptString.length).trimStart();
+    }, this.prompt);
 
     return terminalText;
   }
@@ -378,5 +377,19 @@ export class TerminalPage {
       await this.executeCommand('complete');
       await this.page.waitForTimeout(100);
     }
+  }
+
+  /**
+   * Gets the actual terminal line content, including the prompt
+   * @returns The full terminal line content
+   */
+  public async getActualTerminalLine(): Promise<string> {
+    return await this.page.evaluate(() => {
+      const terminal = window.terminalInstance;
+      if (!terminal) return '';
+      const buffer = terminal.buffer.active;
+      const currentLine = buffer.getLine(buffer.cursorY);
+      return currentLine ? currentLine.translateToString() : '';
+    });
   }
 }

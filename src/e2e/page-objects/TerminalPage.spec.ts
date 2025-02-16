@@ -91,16 +91,19 @@ test.describe('TerminalPage', () => {
 
     // Get current command line content
     const currentCommand = await terminal.getCurrentCommand();
+    const actualTerminalLine = await terminal.getActualTerminalLine();
 
     // Verify the command line is empty (only prompt remains)
-    expect(currentCommand).toBe('');
+    expect(currentCommand,
+      `Expected empty command but got "${currentCommand}". Full terminal line: "${actualTerminalLine}"`
+    ).toBe('');
 
     // Additional verification that prompt exists and is visible
     const promptVisible = await terminal.terminal
-      .getByText(TERMINAL_CONSTANTS.PROMPT.trim())
+      .getByText(TERMINAL_CONSTANTS.PROMPT)
       .last()
       .isVisible();
-    expect(promptVisible).toBe(true);
+    expect(promptVisible, 'Expected prompt to be visible').toBe(true);
   });
 
   test('should handle activity transitions', async ({ page }) => {
