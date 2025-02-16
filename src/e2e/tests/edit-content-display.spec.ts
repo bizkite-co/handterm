@@ -2,6 +2,7 @@ import { test, expect, type Page } from '@playwright/test';
 import { TerminalPage } from '../page-objects/TerminalPage';
 import { TEST_CONFIG } from '../config';
 import { type GamePhrase, Phrases, StorageKeys } from '@handterm/types';
+import { initializeActivitySignal } from '../helpers/initializeSignals';
 
 test.describe('Edit Content Display', () => {
   let page: Page;
@@ -10,59 +11,76 @@ test.describe('Edit Content Display', () => {
   test.beforeEach(async ({ browser }) => {
     page = await browser.newPage();
     await page.goto(TEST_CONFIG.baseUrl);
-    terminal = new TerminalPage(page);
-    await terminal.goto();
+    await page.waitForLoadState('domcontentloaded');
 
-     // Clear edit-content before each test
-     await page.evaluate((storageKey) => {
-       localStorage.removeItem(storageKey);
-     }, StorageKeys.editContent);
+    // Initialize signals
+    await initializeActivitySignal(page);
+
+    // Initialize terminal page object
+    terminal = new TerminalPage(page);
+
+    // Wait for the application to be ready
+    await page.waitForSelector('#handterm-wrapper', {
+      state: 'attached',
+      timeout: TEST_CONFIG.timeout.long
+    });
+
+    // Clear edit-content before each test
+    await page.evaluate((storageKey) => {
+      localStorage.removeItem(storageKey);
+    }, StorageKeys.editContent);
 
     // Set up initial state, including tutorial completion
     await page.evaluate((props: { phrases: GamePhrase[]; completedTutorials: string }) => {
-        const { phrases, completedTutorials } = props;
-        // Set up Phrases in window context
-        (window as any).Phrases = phrases;
+      const { phrases, completedTutorials } = props;
+      // Set up Phrases in window context
+      (window as any).Phrases = phrases;
 
-        // Get all tutorial keys and mark as complete
-        const allTutorialKeys = phrases
-          .filter(t => t.displayAs === 'Tutorial')
-          .map(t => t.key);
-        localStorage.setItem(completedTutorials, JSON.stringify(allTutorialKeys));
+      // Get all tutorial keys and mark as complete
+      const allTutorialKeys = phrases
+        .filter(t => t.displayAs === 'Tutorial')
+        .map(t => t.key);
+      localStorage.setItem(completedTutorials, JSON.stringify(allTutorialKeys));
     }, { phrases: Phrases, completedTutorials: StorageKeys.completedTutorials });
 
-     // Wait for application to be ready
-     await page.waitForSelector('#handterm-wrapper', { state: 'attached', timeout: TEST_CONFIG.timeout.short });
-   });
+    // Complete tutorials to ensure we're in the right state
+    await terminal.completeTutorials();
+  });
 
-   test('setActivity function updates activity state', async () => {
+  test('setActivity function updates activity state', async () => {
+    await terminal.completeTutorials();
+    await terminal.waitForPrompt();
+
     // Verify setActivity exists and is callable
     const hasSetActivity = await page.evaluate(() => {
-      return typeof window.setActivity === 'function';
+      return typeof (window as any).setActivity === 'function';
     });
     expect(hasSetActivity).toBe(true);
 
     // Call setActivity directly
     await page.evaluate(() => {
-      window.setActivity('edit');
+      (window as any).setActivity('edit');
     });
 
     // Verify activity state was updated
-    const activityState = await page.evaluate(() => window.activityStateSignal.value.current);
+    const activityState = await page.evaluate(() =>
+      (window as any).activityStateSignal?.value?.current
+    );
     expect(activityState).toBe('edit');
   });
 
   test('transitions to edit mode and displays content', async () => {
+    await terminal.completeTutorials();
+    await terminal.waitForPrompt();
+
     // Execute edit command
     await terminal.executeCommand('edit _index.md');
 
-    // Wait for and verify activity state changes to 'edit' through the mediator
+    // Wait for activity state to change to 'edit'
     await page.waitForFunction(
-      async () => (await terminal.getActivityMediator()).isInEdit,
+      () => (window as any).activityStateSignal?.value?.current === 'edit',
       { timeout: TEST_CONFIG.timeout.short }
     );
-    const activityState = await page.evaluate(async () => (await terminal.getActivityMediator()).isInEdit);
-    expect(activityState).toBe(true);
 
     // Verify content is stored in localStorage
     const storedContent = await page.evaluate((key) => localStorage.getItem(key), StorageKeys.editContent);
@@ -72,9 +90,9 @@ test.describe('Edit Content Display', () => {
     // Verify URL changes
     await expect(page).toHaveURL(/activity=edit&key=_index\.md/);
 
-    // Finally, verify editor becomes visible
+    // Verify editor becomes visible
     const editorContainer = page.locator('.monaco-editor');
-    await expect(editorContainer).toBeVisible({ timeout: TEST_CONFIG.timeout.medium });
+    await expect(editorContainer).toBeVisible({ timeout: TEST_CONFIG.timeout.short });
 
     // Verify editor content matches the expected content
     const editorContent = await page.evaluate((editContent: string) => {
@@ -85,7 +103,7 @@ test.describe('Edit Content Display', () => {
       return JSON.parse(stored).content;
     }, StorageKeys.editContent);
 
-    // Fetch expected content directly (no pre-population)
+    // Fetch expected content directly
     const expectedContent = await page.evaluate(async () => {
       const response = await fetch('/api/content/_index.md');
       const data = await response.json();
@@ -96,11 +114,15 @@ test.describe('Edit Content Display', () => {
   });
 
   test('shows error for non-existent file', async () => {
+    await terminal.completeTutorials();
+    await terminal.waitForPrompt();
+
+    // Execute edit command for a non-existent file
     await terminal.executeCommand('edit nonexistent.md');
 
     // Verify we stay in normal mode
     const activityState = await page.evaluate(() =>
-      window.activityStateSignal.value.current
+      (window as any).activityStateSignal?.value?.current
     );
     expect(activityState).toBe('normal');
 

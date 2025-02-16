@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 import { TerminalPage } from './TerminalPage';
 import { TEST_CONFIG } from '../config';
 import { initializeActivitySignal } from '../helpers/initializeSignals';
+import { TERMINAL_CONSTANTS } from 'src/constants/terminal';
 
 test.describe('TerminalPage', () => {
   let terminal: TerminalPage;
@@ -83,6 +84,26 @@ test.describe('TerminalPage', () => {
     // Additional verification that prompt is actually visible
     const promptVisible = await terminal.terminal
       .getByText('>')
+      .last()
+      .isVisible();
+    expect(promptVisible).toBe(true);
+  });
+
+  test('should have prompt only', async () => {
+    await terminal.completeTutorials();
+
+    // Wait for prompt to appear
+    await terminal.waitForPrompt();
+
+    // Get current command line content
+    const currentCommand = await terminal.getCurrentCommand();
+
+    // Verify the command line is empty (only prompt remains)
+    expect(currentCommand).toBe('');
+
+    // Additional verification that prompt exists and is visible
+    const promptVisible = await terminal.terminal
+      .getByText(TERMINAL_CONSTANTS.PROMPT.trim())
       .last()
       .isVisible();
     expect(promptVisible).toBe(true);

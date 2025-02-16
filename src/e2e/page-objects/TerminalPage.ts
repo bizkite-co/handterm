@@ -283,15 +283,25 @@ export class TerminalPage {
    * @returns The current command line text
    */
   public async getCurrentCommand(): Promise<string> {
-    // Wait for the signal to be available
-    await this.page.waitForFunction(() => 'commandLineSignal' in window);
+    await this.waitForTerminal();
 
-    // Get the value from commandLineSignal
-    const commandLine = await this.page.evaluate(() => {
-      return (window as unknown as { commandLineSignal: { value: string } }).commandLineSignal.value;
+    // Get the text from the terminal's active buffer
+    const terminalText = await this.page.evaluate(() => {
+      const terminal = window.terminalInstance;
+      if (!terminal) return '';
+
+      // Get the current line from the buffer
+      const buffer = terminal.buffer.active;
+      const currentLine = buffer.getLine(buffer.cursorY);
+      if (!currentLine) return '';
+
+      const lineText = currentLine.translateToString();
+      // Remove the prompt from the beginning of the line
+      const promptLength = window.TERMINAL_CONSTANTS.PROMPT.length;
+      return lineText.substring(promptLength).trimStart();
     });
 
-    return commandLine ?? '';
+    return terminalText;
   }
 
   /**
