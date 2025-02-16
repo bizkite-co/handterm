@@ -23,12 +23,6 @@ test.describe('TerminalPage', () => {
       state: 'attached',
       timeout: TEST_CONFIG.timeout.long
     });
-
-    const signalState = await page.evaluate(() => ({
-      hasSignal: !!window.activityStateSignal,
-      state: window.activityStateSignal?.value
-    }));
-    console.log('Signal verification:', signalState);
   });
 
   test('completeTutorials should properly complete all tutorials', async ({ page }) => {
@@ -83,7 +77,7 @@ test.describe('TerminalPage', () => {
 
     // Additional verification that prompt is actually visible
     const promptVisible = await terminal.terminal
-      .getByText('>')
+      .getByText('> ')
       .last()
       .isVisible();
     expect(promptVisible).toBe(true);

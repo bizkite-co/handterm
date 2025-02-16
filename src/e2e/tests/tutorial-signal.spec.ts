@@ -14,7 +14,6 @@ test.describe('Tutorial Signal', () => {
       function createSignalFromStorage() {
         // Read from localStorage
         const stored = localStorage.getItem('completed-tutorials');
-        console.log('[Signal] Reading from localStorage:', stored);
 
         // Parse the value
         let initialValue = new Set<string>();
@@ -23,7 +22,6 @@ test.describe('Tutorial Signal', () => {
             const parsed = JSON.parse(stored);
             if (Array.isArray(parsed) && parsed.every(item => typeof item === 'string')) {
               initialValue = new Set(parsed);
-              console.log('[Signal] Initialized with:', Array.from(initialValue));
             }
           } catch (e) {
             console.error('[Signal] Error parsing localStorage:', e);
@@ -44,14 +42,8 @@ test.describe('Tutorial Signal', () => {
       // Function to update localStorage
       function updateStorage(value: Set<string>) {
         const array = Array.from(value);
-        console.log('[updateStorage] Array:', array);
         const json = JSON.stringify(array);
-        console.log('[updateStorage] JSON:', json);
-        console.log('[updateStorage] JSON bytes:', Array.from(json).map(c => c.charCodeAt(0)));
         localStorage.setItem('completed-tutorials', json);
-
-        const stored = localStorage.getItem('completed-tutorials');
-        console.log('[updateStorage] Read back:', stored);
       }
 
       // Create and initialize the signal

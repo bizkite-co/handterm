@@ -2,6 +2,7 @@
 import { chromium, type FullConfig } from '@playwright/test';
 import { exposeSignals } from '../test-utils/exposeSignals';
 import { TEST_CONFIG } from './config';
+import { assert } from 'console';
 
 async function globalSetup(_config: FullConfig): Promise<void> {
   const browser = await chromium.launch();
@@ -12,30 +13,14 @@ async function globalSetup(_config: FullConfig): Promise<void> {
     console.log(`Setup log: ${msg.text()}`);
   });
 
-  // Expose signals before navigation
+  // Expose signals before any tests run
   await page.addInitScript(`
     ${exposeSignals.toString()};
     (() => {
       console.log('Exposing signals...');
       exposeSignals();
-      console.log('Signals exposed:', {
-        hasActivityState: !!window.activityStateSignal,
-        initialState: window.activityStateSignal?.value
-      });
     })();
   `);
-
-  await page.goto(TEST_CONFIG.baseUrl);
-
-  // Verify signals after navigation
-  const signalsPresent = await page.evaluate(() => {
-    return {
-      hasActivityState: !!window.activityStateSignal,
-      state: window.activityStateSignal?.value
-    };
-  });
-
-  console.log('Signals verification:', signalsPresent);
 
   await browser.close();
 }

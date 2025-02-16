@@ -17,7 +17,6 @@ export async function initializeActivitySignal(page: Page): Promise<void> {
       }
     };
 
-    console.log('[Signal Init] Setting initial activity:', initialActivity);
     return true;
   }, {
     NORMAL: ActivityType.NORMAL
@@ -29,7 +28,6 @@ export async function initializeActivitySignal(page: Page): Promise<void> {
     url: window.location.href
   }));
 
-  console.log('[Signal Init] Verification state:', signalState);
 
   if (!signalState.hasSignal || !signalState.current) {
     throw new Error(`Signal initialization failed: ${JSON.stringify(signalState, null, 2)}`);
@@ -43,7 +41,6 @@ export async function verifySignalState(page: Page): Promise<void> {
     fullValue: window.activityStateSignal?.value
   }));
 
-  console.log('Signal verification state:', signalState);
 
   if (!signalState.hasSignal || !signalState.current) {
     throw new Error(`Signal verification failed: ${JSON.stringify(signalState, null, 2)}`);

@@ -35,7 +35,6 @@ export function createPersistentSignal<T>({
     };
 
     const persistToLocalStorage = (value: T) => {
-        console.log(`[persistToLocalStorage] key: ${key}, value:`, value); // Added log
         if (key == 'completed-tutorials') {
             console.log('Completing tutorial', value);
         }
