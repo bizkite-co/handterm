@@ -35,6 +35,47 @@ class ResizeObserverMock {
 
 window.ResizeObserver = ResizeObserverMock as unknown as typeof ResizeObserver;
 
+// Mock window methods that HandTermWrapper uses
+(window as any).setActivity = vi.fn();
+(window as any).setNextTutorial = vi.fn();
+
+// Mock monaco-vim before any imports
+vi.mock('monaco-vim', () => ({
+  default: {
+    initVimMode: vi.fn().mockReturnValue({
+      dispose: vi.fn()
+    })
+  }
+}));
+
+// Mock monaco-editor
+vi.mock('monaco-editor', () => ({
+  editor: {
+    create: vi.fn().mockReturnValue({
+      dispose: vi.fn(),
+      onDidChangeModelContent: vi.fn(),
+      getValue: vi.fn(),
+      setValue: vi.fn(),
+      getModel: vi.fn(),
+      layout: vi.fn()
+    })
+  }
+}));
+
+// Mock monaco-editor/esm/vs/editor/editor.api
+vi.mock('monaco-editor/esm/vs/editor/editor.api', () => ({
+  editor: {
+    create: vi.fn().mockReturnValue({
+      dispose: vi.fn(),
+      onDidChangeModelContent: vi.fn(),
+      getValue: vi.fn(),
+      setValue: vi.fn(),
+      getModel: vi.fn(),
+      layout: vi.fn()
+    })
+  }
+}));
+
 // Mock requestAnimationFrame
 window.requestAnimationFrame = vi.fn((callback) => {
   return setTimeout(callback, 0);

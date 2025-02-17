@@ -177,4 +177,43 @@ test.describe('TerminalPage', () => {
     // but for now we'll document the actual behavior
     expect(terminalCharCodes).toEqual([62, 32, 32]);
   });
+
+  test('should maintain single prompt after page refresh', async ({ page }) => {
+    // First navigate to the page
+    await page.goto(TEST_CONFIG.baseUrl);
+    await page.waitForLoadState('domcontentloaded');
+
+    // Initialize signals
+    await initializeActivitySignal(page);
+
+    // Initialize terminal page object
+    const terminal = new TerminalPage(page);
+
+    // Complete tutorials and wait for prompt
+    await terminal.completeTutorials();
+    await terminal.waitForPrompt();
+
+    // Refresh the page
+    await page.reload();
+    await page.waitForLoadState('domcontentloaded');
+
+    // Wait for terminal to be ready
+    await terminal.waitForPrompt();
+
+    // Get full terminal content to check for duplicate prompts
+    const fullTerminalContent = await terminal.terminal.innerText();
+
+    // Verify there is exactly one prompt in the entire terminal
+    const promptCount = (fullTerminalContent.match(new RegExp(TERMINAL_CONSTANTS.PROMPT, 'g')) || []).length;
+    expect(promptCount,
+      `Expected exactly one prompt but found ${promptCount}. Full terminal content: "${fullTerminalContent}"`
+    ).toBe(1);
+
+    // Additional verification that prompt exists and is visible
+    const promptVisible = await terminal.terminal
+      .getByText(TERMINAL_CONSTANTS.PROMPT)
+      .last()
+      .isVisible();
+    expect(promptVisible, 'Expected prompt to be visible').toBe(true);
+  });
 });

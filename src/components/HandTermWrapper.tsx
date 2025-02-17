@@ -56,12 +56,6 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
   // Update activity state when activitySignal changes
   useEffect(() => {
     const updateActivity = () => {
-      logger.debug('Activity signal changed:', {
-        from: currentActivity,
-        to: activitySignal.value,
-        tutorialState: tutorialSignal.value,
-        isTutorialComplete: tutorialSignal.value === null
-      });
       setCurrentActivity(activitySignal.value);
 
       // Log when transitioning from TUTORIAL to GAME

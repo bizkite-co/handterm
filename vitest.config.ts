@@ -4,7 +4,6 @@ import react from '@vitejs/plugin-react';
 import tsconfigPaths from 'vite-tsconfig-paths';
 import { defineConfig } from 'vitest/config';
 
-
 export default defineConfig({
   plugins: [
     react(),
@@ -25,19 +24,13 @@ export default defineConfig({
       '**/e2e/**', // Exclude Playwright tests
       '**/*.spec.ts' // Exclude .spec files
     ],
-    coverage: {
-      provider: 'v8',
-      reporter: ['text', 'json', 'html'],
-      exclude: [
-        'node_modules/',
-        'src/test-utils/',
-        '**/*.d.ts',
-        '**/*.test.{ts,tsx}',
-        '**/*.spec.{ts,tsx}',
-        '**/types/',
-        'tests/',
-        'e2e/'
-      ]
+    server: {
+      deps: {
+        inline: [
+          'monaco-editor',
+          'monaco-vim'
+        ]
+      }
     }
   },
   resolve: {
