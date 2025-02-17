@@ -38,8 +38,6 @@ export async function setupBrowserWindow(page: Page): Promise<void> {
     hasSignals: !!window.tutorialSignal && !!window.completedTutorialsSignal
   }));
 
-  console.log('Setup verification:', verification);
-
   if (!verification.hasSetCompletedTutorial || !verification.hasSetActivity || !verification.hasSignals) {
     throw new Error(`Window setup failed: ${JSON.stringify(verification)}`);
   }

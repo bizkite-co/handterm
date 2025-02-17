@@ -242,8 +242,6 @@ test.describe('Tutorial Mode', () => {
       // Initialize TerminalPage
       terminalPage = new TerminalPage(page);
 
-      await logTutorialState(page, 'Initial state');
-
       await terminalPage.goto();
     });
 
