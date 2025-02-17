@@ -4,7 +4,7 @@ export const TerminalCssClasses = {
     output: 'terminal-output',
     input: 'terminal-input',
     terminalGame: 'terminal-game',
-    prompt: 'prompt',
+    promptHeader: 'prompt-header',
     head: 'head',
     tail: 'tail',
     logPrefix: 'log-prefix',

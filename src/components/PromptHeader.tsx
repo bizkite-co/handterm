@@ -12,11 +12,11 @@ interface PromptProps {
     githubUsername: string | null;
 }
 
-export const Prompt: React.FC<PromptProps> = ({ domain, username, timestamp, githubUsername }) => {
+export const PromptHeader: React.FC<PromptProps> = ({ domain, username, timestamp, githubUsername }) => {
     const promptInfo = useComputed(() => promptInfoSignal.value);
 
     return (
-        <pre id={TerminalCssClasses.Prompt}>
+        <pre id={TerminalCssClasses.promptHeader}>
             <span className="timestamp">{timestamp}</span>
             <span className="user">{username}</span>
             <span className="domain">@{domain}</span>
