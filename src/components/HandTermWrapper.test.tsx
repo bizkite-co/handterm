@@ -1,9 +1,10 @@
-import { render, act, waitFor } from '@testing-library/react';
+import { render, act } from '@testing-library/react';
 import { vi, describe, test, expect, beforeEach, afterEach } from 'vitest';
 import { HandTermWrapper } from './HandTermWrapper';
 import { activitySignal } from '../signals/appSignals';
-import { ActivityType, type IAuthProps, type OutputElement, type MyResponse, type AuthResponse } from '@handterm/types';
+import { ActivityType } from '@handterm/types';
 import { commandTimeSignal } from '../signals/commandLineSignals';
+import { TerminalTestUtils } from '../test-utils/TerminalTestUtils';
 
 // Add these mocks at the very top of the file, before any imports
 vi.mock('monaco-vim', () => ({
@@ -27,6 +28,23 @@ vi.mock('monaco-editor', () => ({
   }
 }));
 
+// Mock GamePhrases
+vi.mock('@handterm/types', async (importOriginal) => {
+  const actual = await importOriginal();
+  return {
+    ...actual as object,
+    GamePhrases: {
+      default: {
+        getGamePhrase: vi.fn().mockReturnValue({
+          value: "Test phrase",
+          displayAs: "Tutorial",
+          key: "test"
+        })
+      }
+    }
+  };
+});
+
 // Add these mocks at the top of the file
 vi.mock('../components/MonacoEditor', () => ({
   MonacoEditor: () => null
@@ -46,6 +64,11 @@ vi.mock('../hooks/useTerminal', () => ({
     writeToTerminal: vi.fn(),
     resetPrompt: vi.fn(),
   })
+}));
+
+// Add this mock with the other mocks at the top
+vi.mock('../components/NextCharsDisplay', () => ({
+  NextCharsDisplay: () => null
 }));
 
 describe('HandTermWrapper', () => {
@@ -110,71 +133,82 @@ describe('HandTermWrapper', () => {
   };
 
   beforeEach(() => {
-    // Reset signals and storage
+    // Reset signals and storage before each test
     activitySignal.value = ActivityType.NORMAL;
     commandTimeSignal.value = new Date();
     localStorage.clear();
 
     // Clear all terminal content
     document.body.innerHTML = '';
+
+    // Reset all mocks
+    vi.clearAllMocks();
   });
 
   afterEach(() => {
     vi.clearAllMocks();
   });
 
-  test('should initialize activity state only once', () => {
+  test('should initialize activity state only once', async () => {
     const activityTransitions: ActivityType[] = [];
+
+    // Subscribe before rendering
     const unsubscribe = activitySignal.subscribe((value) => {
-      // Only track actual changes in activity type
-      if (activityTransitions.length === 0 || activityTransitions[activityTransitions.length - 1] !== value) {
-        activityTransitions.push(value);
-      }
+      activityTransitions.push(value);
     });
 
     render(<HandTermWrapper {...mockProps} />);
+    await TerminalTestUtils.waitForPrompt();
+
     unsubscribe();
 
-    expect(activityTransitions.length).toBe(1);
-    expect(activityTransitions[0]).toBe(ActivityType.NORMAL);
+    // Filter out duplicate consecutive values
+    const uniqueTransitions = activityTransitions.filter((value, index, array) =>
+      index === 0 || value !== array[index - 1]
+    );
+
+    expect(uniqueTransitions.length).toBe(1);
+    expect(uniqueTransitions[0]).toBe(ActivityType.NORMAL);
   });
 
-  test('should handle page load with stored activity', () => {
+  test('should handle page load with stored activity', async () => {
     const storedActivity = ActivityType.NORMAL;
     localStorage.setItem('lastActivity', storedActivity);
 
     const activityTransitions: ActivityType[] = [];
+
     const unsubscribe = activitySignal.subscribe((value) => {
-      // Only track actual changes in activity type
-      if (activityTransitions.length === 0 || activityTransitions[activityTransitions.length - 1] !== value) {
-        activityTransitions.push(value);
-      }
+      activityTransitions.push(value);
     });
 
     render(<HandTermWrapper {...mockProps} />);
+    await TerminalTestUtils.waitForPrompt();
+
     unsubscribe();
 
-    expect(activityTransitions.length).toBe(1);
-    expect(activityTransitions[0]).toBe(storedActivity);
+    const uniqueTransitions = activityTransitions.filter((value, index, array) =>
+      index === 0 || value !== array[index - 1]
+    );
+
+    expect(uniqueTransitions.length).toBe(1);
+    expect(uniqueTransitions[0]).toBe(storedActivity);
   });
 
   test('should render prompt in normal mode', async () => {
-    const { container } = render(<HandTermWrapper {...mockProps} />);
+    render(<HandTermWrapper {...mockProps} />);
+    await TerminalTestUtils.waitForPrompt();
 
-    await waitFor(() => {
-      const promptElements = container.querySelectorAll('.prompt, .tutorial-prompt');
-      expect(promptElements.length).toBe(1);
-    });
+    const promptCount = await TerminalTestUtils.getPromptCount();
+    expect(promptCount).toBe(1);
   });
 
   test('should maintain single prompt after activity changes', async () => {
-    const { container } = render(<HandTermWrapper {...mockProps} />);
+    render(<HandTermWrapper {...mockProps} />);
+    await TerminalTestUtils.waitForPrompt();
 
     // Initial check
-    await waitFor(() => {
-      const promptElements = container.querySelectorAll('.prompt, .tutorial-prompt');
-      expect(promptElements.length).toBe(1);
-    });
+    let promptCount = await TerminalTestUtils.getPromptCount();
+    expect(promptCount).toBe(1);
 
     // Change activity
     act(() => {
@@ -182,28 +216,25 @@ describe('HandTermWrapper', () => {
     });
 
     // Check after activity change
-    await waitFor(() => {
-      const promptElements = container.querySelectorAll('.prompt, .tutorial-prompt');
-      expect(promptElements.length).toBe(1);
-    });
+    await TerminalTestUtils.waitForPrompt();
+    promptCount = await TerminalTestUtils.getPromptCount();
+    expect(promptCount).toBe(1);
   });
 
   test('should maintain single prompt after terminal reset', async () => {
-    const { container, rerender } = render(<HandTermWrapper {...mockProps} />);
+    const { rerender } = render(<HandTermWrapper {...mockProps} />);
+    await TerminalTestUtils.waitForPrompt();
 
     // Initial check
-    await waitFor(() => {
-      const promptElements = container.querySelectorAll('.prompt, .tutorial-prompt');
-      expect(promptElements.length).toBe(1);
-    });
+    let promptCount = await TerminalTestUtils.getPromptCount();
+    expect(promptCount).toBe(1);
 
     // Simulate component rerender
     rerender(<HandTermWrapper {...mockProps} />);
 
     // Check after rerender
-    await waitFor(() => {
-      const promptElements = container.querySelectorAll('.prompt, .tutorial-prompt');
-      expect(promptElements.length).toBe(1);
-    });
+    await TerminalTestUtils.waitForPrompt();
+    promptCount = await TerminalTestUtils.getPromptCount();
+    expect(promptCount).toBe(1);
   });
 });

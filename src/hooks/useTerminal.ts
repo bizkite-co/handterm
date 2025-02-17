@@ -34,38 +34,13 @@ export const useTerminal = (): { xtermRef: React.RefObject<HTMLDivElement>; writ
   const { handleCommand, commandHistory, commandHistoryIndex, setCommandHistoryIndex } = useCommand();
   const wpmCalculator = useWPMCalculator();
   const commandLine = useComputed(() => commandLineSignal.value);
-
   const [_commandLineState, _setCommandLineState] = useState('');
-
   const fitAddon = useRef(new FitAddon());
 
   const writeToTerminal = useCallback((data: string): void => {
     logger.debug('Writing to terminal:', data);
     instance?.write(data);
   }, [instance]);
-
-  const resetPrompt = useCallback((): void => {
-    if (instance == null) return;
-    logger.debug('Resetting prompt');
-    instance.reset();
-    setCommandLine('');
-    _setCommandLineState('');
-    instance.write(TERMINAL_CONSTANTS.PROMPT);
-    instance.scrollToBottom();
-  }, [instance]);
-
-  const lastTypedCharacterRef = useRef<string | null>(null);
-  const setLastTypedCharacter = (value: string | null) => {
-    lastTypedCharacterRef.current = value;
-  };
-
-  const {
-    handleCharacter,
-  } = useCharacterHandler({
-    setLastTypedCharacter,
-    isInSvgMode: false,
-    writeOutputInternal: writeToTerminal,
-  });
 
   const getCurrentCommand = useCallback((): string => {
     if (instance == null) return '';
@@ -82,6 +57,39 @@ export const useTerminal = (): { xtermRef: React.RefObject<HTMLDivElement>; writ
     logger.debug('Getting current command:', currentCommand);
     return currentCommand;
   }, [instance]);
+
+  const resetPrompt = useCallback((): void => {
+    if (instance == null) return;
+    logger.debug('Resetting prompt');
+
+    // Get current content before reset
+    const currentContent = getCurrentCommand();
+
+    // Reset terminal
+    instance.reset();
+    setCommandLine('');
+    _setCommandLineState('');
+
+    // Write prompt only if needed
+    if (!currentContent.includes(TERMINAL_CONSTANTS.PROMPT)) {
+      instance.write(TERMINAL_CONSTANTS.PROMPT);
+    }
+
+    instance.scrollToBottom();
+  }, [instance, getCurrentCommand]);
+
+  const lastTypedCharacterRef = useRef<string | null>(null);
+  const setLastTypedCharacter = (value: string | null) => {
+    lastTypedCharacterRef.current = value;
+  };
+
+  const {
+    handleCharacter,
+  } = useCharacterHandler({
+    setLastTypedCharacter,
+    isInSvgMode: false,
+    writeOutputInternal: writeToTerminal,
+  });
 
   const clearCurrentLine = useCallback((): void => {
     if (instance == null) return;
@@ -182,7 +190,8 @@ export const useTerminal = (): { xtermRef: React.RefObject<HTMLDivElement>; writ
     };
 
     const handleEnterKey = () => {
-      logger.debug('Handling Enter key');
+      if (instance == null) return;
+
       if (isInLoginProcessSignal.value) {
         const loginCommand = parseCommand([
           'login',
@@ -217,7 +226,7 @@ export const useTerminal = (): { xtermRef: React.RefObject<HTMLDivElement>; writ
         wpmCalculator.clearKeystrokes();
       }
       setCommandHistoryIndex(-1); // Reset history index after command execution
-      resetPrompt();
+      resetPrompt(); // The prompt will be written by resetPrompt, no need to write it here
     };
 
     const handleBackspace = (cursorX: number) => {

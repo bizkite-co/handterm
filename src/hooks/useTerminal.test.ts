@@ -32,18 +32,29 @@ describe('useTerminal', () => {
   let mockInstance: MockInstance;
   let mockWrite: MockWrite;
   let dataHandler: (data: string) => void;
+  let currentTerminalContent: string;
 
   beforeEach(() => {
-    mockWrite = vi.fn() as MockWrite;
+    currentTerminalContent = TERMINAL_CONSTANTS.PROMPT;
+    mockWrite = vi.fn((data: string) => {
+      if (data === '\r\n') {
+        currentTerminalContent = '';
+      } else {
+        currentTerminalContent += data;
+      }
+    }) as MockWrite;
+
     mockInstance = {
       write: mockWrite,
-      reset: vi.fn(),
+      reset: vi.fn(() => {
+        currentTerminalContent = '';
+      }),
       buffer: {
         active: {
           cursorY: 0,
           cursorX: TERMINAL_CONSTANTS.PROMPT_LENGTH,
           getLine: () => ({
-            translateToString: () => TERMINAL_CONSTANTS.PROMPT
+            translateToString: () => currentTerminalContent
           })
         }
       },
@@ -121,5 +132,119 @@ describe('useTerminal', () => {
       .filter(call => call[0] === TERMINAL_CONSTANTS.PROMPT);
 
     expect(promptWritesAfterCommand).toHaveLength(1);
+  });
+
+  test('should maintain single XTerm prompt line', async () => {
+    const { result } = renderHook(() => useTerminal());
+    mockWrite.mockClear(); // Clear initialization calls
+
+    // Get initial state
+    const initialWrites = mockWrite.mock.calls.map(call => call[0]);
+    console.log('Initial terminal writes:', initialWrites);
+
+    // Trigger a reset
+    act(() => {
+      result.current.resetPrompt();
+    });
+
+    // Check writes after reset
+    const writesAfterReset = mockWrite.mock.calls.map(call => call[0]);
+    console.log('Writes after reset:', writesAfterReset);
+
+    // Count actual prompt strings (should be exactly one)
+    const promptCount = mockWrite.mock.calls.filter(
+      call => call[0] === TERMINAL_CONSTANTS.PROMPT
+    ).length;
+
+    expect(promptCount).toBe(1);
+  });
+
+  test('should track all prompt writes during initialization and usage', () => {
+    const { result } = renderHook(() => useTerminal());
+
+    // Clear any initialization writes
+    mockWrite.mockClear();
+
+    // Log initial state
+    console.log('Initial writes:', mockWrite.mock.calls.map(call =>
+      JSON.stringify(call[0]).replace(/\\x1b/g, 'ESC')
+    ));
+
+    // Simulate terminal initialization sequence
+    act(() => {
+      // Trigger initialization effect
+      if (mockInstance.loadAddon.mock.calls.length > 0) {
+        const fitAddon = mockInstance.loadAddon.mock.calls[0][0];
+        fitAddon.fit();
+      }
+    });
+
+    console.log('After initialization:', mockWrite.mock.calls.map(call =>
+      JSON.stringify(call[0]).replace(/\\x1b/g, 'ESC')
+    ));
+
+    // Simulate a reset
+    act(() => {
+      result.current.resetPrompt();
+    });
+
+    console.log('After reset:', mockWrite.mock.calls.map(call =>
+      JSON.stringify(call[0]).replace(/\\x1b/g, 'ESC')
+    ));
+
+    // Count all prompt writes
+    const allPromptWrites = mockWrite.mock.calls.filter(
+      call => call[0] === TERMINAL_CONSTANTS.PROMPT
+    );
+
+    console.log('Total prompt writes:', allPromptWrites.length);
+    console.log('Write call sequence:', mockWrite.mock.calls.map((call, i) =>
+      `${i}: ${JSON.stringify(call[0]).replace(/\\x1b/g, 'ESC')}`
+    ));
+
+    expect(allPromptWrites.length).toBe(1);
+  });
+
+  test('should maintain single prompt through complete lifecycle', () => {
+    const { result } = renderHook(() => useTerminal());
+    mockWrite.mockClear();
+
+    // 1. Initial state
+    console.log('1. Initial state writes:', mockWrite.mock.calls.map(c => JSON.stringify(c[0])));
+
+    // 2. Simulate initialization
+    act(() => {
+      if (mockInstance.loadAddon.mock.calls.length > 0) {
+        const fitAddon = mockInstance.loadAddon.mock.calls[0][0];
+        fitAddon.fit();
+      }
+    });
+    console.log('2. After initialization:', mockWrite.mock.calls.map(c => JSON.stringify(c[0])));
+
+    // 3. Simulate command entry and execution
+    act(() => {
+      if (dataHandler) {
+        'test'.split('').forEach(char => dataHandler(char));
+        dataHandler('\r');
+      }
+    });
+    console.log('3. After command execution:', mockWrite.mock.calls.map(c => JSON.stringify(c[0])));
+
+    // 4. Simulate reset
+    act(() => {
+      result.current.resetPrompt();
+    });
+    console.log('4. After reset:', mockWrite.mock.calls.map(c => JSON.stringify(c[0])));
+
+    // Count total prompt writes
+    const promptWrites = mockWrite.mock.calls.filter(
+      call => call[0] === TERMINAL_CONSTANTS.PROMPT
+    );
+
+    expect(promptWrites.length,
+      `Expected single prompt but found ${promptWrites.length}. Full sequence: ${
+        mockWrite.mock.calls.map(c => JSON.stringify(c[0])).join(', ')
+      }`
+    ).toBe(1);
   });
 });

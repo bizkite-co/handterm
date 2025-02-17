@@ -189,9 +189,16 @@ test.describe('TerminalPage', () => {
     // Initialize terminal page object
     const terminal = new TerminalPage(page);
 
+    // Log initial state
+    const initialContent = await terminal.terminal.innerText();
+    console.log('Initial terminal content:', JSON.stringify(initialContent));
+
     // Complete tutorials and wait for prompt
     await terminal.completeTutorials();
     await terminal.waitForPrompt();
+
+    const preRefreshContent = await terminal.terminal.innerText();
+    console.log('Pre-refresh terminal content:', JSON.stringify(preRefreshContent));
 
     // Refresh the page
     await page.reload();
@@ -201,12 +208,13 @@ test.describe('TerminalPage', () => {
     await terminal.waitForPrompt();
 
     // Get full terminal content to check for duplicate prompts
-    const fullTerminalContent = await terminal.terminal.innerText();
+    const postRefreshContent = await terminal.terminal.innerText();
+    console.log('Post-refresh terminal content:', JSON.stringify(postRefreshContent));
 
     // Verify there is exactly one prompt in the entire terminal
-    const promptCount = (fullTerminalContent.match(new RegExp(TERMINAL_CONSTANTS.PROMPT, 'g')) || []).length;
+    const promptCount = (postRefreshContent.match(new RegExp(TERMINAL_CONSTANTS.PROMPT, 'g')) || []).length;
     expect(promptCount,
-      `Expected exactly one prompt but found ${promptCount}. Full terminal content: "${fullTerminalContent}"`
+      `Expected exactly one prompt but found ${promptCount}. Full terminal content: "${postRefreshContent}"`
     ).toBe(1);
 
     // Additional verification that prompt exists and is visible
