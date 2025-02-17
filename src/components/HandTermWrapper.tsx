@@ -90,10 +90,6 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
       const customEvent = event as CustomEvent;
       const activity = customEvent.detail?.activity;
       if (activity) {
-        logger.debug('Location change event:', {
-          activity,
-          currentActivity: activitySignal.value
-        });
         activitySignal.value = activity;
       }
     };
@@ -103,30 +99,11 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
   }, []);
 
   useEffect(() => {
-    logger.debug('Current activity:', {
-      activity: currentActivity,
-      tutorialState: tutorialSignal.value,
-      isTutorialComplete: tutorialSignal.value === null
-    });
-  }, [currentActivity]);
-
-  useEffect(() => {
-    logger.debug('Tutorial signal:', {
-      current: tutorialSignal.value,
-      completed: localStorage.getItem('completed-tutorials'),
-      state: localStorage.getItem('tutorial-state')
-    });
 
     // When tutorial signal changes to null, check if we should transition to GAME
     if (tutorialSignal.value === null) {
-      logger.debug('Tutorial completed, checking for game transition', {
-        currentActivity,
-        activitySignal: activitySignal.value
-      });
-
       // Only transition if we're currently in TUTORIAL mode
       if (currentActivity === ActivityType.TUTORIAL) {
-        logger.debug('Transitioning from TUTORIAL to GAME');
         activitySignal.value = ActivityType.GAME;
       }
     }
@@ -190,10 +167,8 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
         return;
       }
 
-      logger.debug('Stored items:', storedItems);
       try {
         const items = JSON.parse(storedItems) as TreeItem[];
-        logger.debug('Parsed items:', items);
         if (Array.isArray(items) && items.length > 0) {
           setTreeItems(items);
         } else {
@@ -208,7 +183,6 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
   // Reset terminal when returning to normal mode
   useEffect(() => {
     if (currentActivity === ActivityType.NORMAL) {
-      logger.info('Resetting terminal in NORMAL mode');
       const term = xtermRef.current;
       if (term !== null && typeof term.focus === 'function') {
         term.focus();
@@ -243,11 +217,9 @@ useImperativeHandle(forwardedRef, () => ({
 // Initialize window methods
 useEffect(() => {
   window.setActivity = (activity: ActivityType) => {
-    logger.debug('Setting activity:', activity);
     activitySignal.value = activity;
   };
   window.setNextTutorial = (tutorial: string | null) => {
-    logger.debug('Setting tutorial:', tutorial);
     tutorialSignal.value = tutorial as unknown as GamePhrase | null;
   };
   window.ActivityType = ActivityType;

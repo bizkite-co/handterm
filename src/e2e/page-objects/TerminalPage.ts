@@ -139,9 +139,6 @@ export class TerminalPage {
           };
         });
 
-        // Log the current state for debugging
-        console.log('Current activity state:', state);
-
         // If we're no longer in tutorial mode and have a valid wrapper, consider it success
         if (!state.tutorialVisible && state.handtermWrapper) {
           return;
@@ -166,16 +163,6 @@ export class TerminalPage {
 
       // Wait for tutorial content to be loaded (tutorial-prompt only appears when content is set)
       await this.page.waitForSelector('.tutorial-prompt', { state: 'visible', timeout });
-
-      // Get current tutorial state for debugging
-      // const tutorialState = await this.page.evaluate(() => ({
-      //   tutorialSignal: window.tutorialSignal?.value,
-      //   activitySignal: window.activitySignal?.value,
-      //   completedTutorials: localStorage.getItem('completed-tutorials'),
-      //   tutorialState: localStorage.getItem('tutorial-state')
-      // }));
-
-      // console.log('[Tutorial State]', tutorialState);
 
       // Verify tutorial content is actually set
       const tutorialContent = await this.page.locator('.tutorial-prompt').textContent();
@@ -359,18 +346,15 @@ export class TerminalPage {
   }
 
   async completeTutorials(): Promise<void> {
-    console.log('Starting completeTutorials');
 
     // Set completed tutorials in localStorage
     await this.page.evaluate((tutorials) => {
-      console.log('Setting completed-tutorials in localStorage');
       localStorage.setItem('completed-tutorials', JSON.stringify(tutorials));
     }, allTutorialKeys);
 
     // Check if we're in tutorial mode
     const url = new URL(this.page.url());
     if (url.searchParams.get('activity') === 'tutorial') {
-      console.log('Still in tutorial mode, executing complete command');
       await this.executeCommand('complete');
 
       // Wait for the tutorial prompt to disappear and terminal to be ready

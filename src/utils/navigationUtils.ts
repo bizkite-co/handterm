@@ -101,9 +101,6 @@ export function navigate(options: ParsedLocation, navOptions: boolean | Navigati
     }
   }
 
-  // Log navigation for debugging
-  console.log(`NAVIGATING to: ${url.search.toString()}`);
-
   // Use replaceState when clearing params, for NORMAL activity, or when replace option is true
   const historyMethod = (clearParams || forceClear || skipTutorial || replace)
     ? 'replaceState'
