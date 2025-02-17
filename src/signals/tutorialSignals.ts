@@ -112,5 +112,6 @@ export const completeAllTutorials = (): void => {
   logger.debug('Completing all tutorials');
   updateCompletedTutorials(new Set(allTutorialKeys));
   setNextTutorial(null);
-  activitySignal.value = ActivityType.NORMAL;
+  // Remove this line since navigation handles the activity change
+  // activitySignal.value = ActivityType.NORMAL;
 };
