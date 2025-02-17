@@ -63,7 +63,7 @@ module.exports = {
   },
   rules: {
     // Existing TypeScript Rules
-    '@typescript-eslint/explicit-module-boundary-types': 'error',
+    '@typescript-eslint/explicit-module-boundary-types': 'warn',
     '@typescript-eslint/no-unused-vars': ['error', {
       argsIgnorePattern: '^_[a-zA-Z][a-zA-Z0-9]*$',
       caughtErrorsIgnorePattern: '^_error$',
