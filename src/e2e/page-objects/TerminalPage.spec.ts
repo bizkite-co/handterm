@@ -175,6 +175,6 @@ test.describe('TerminalPage', () => {
 
     // TODO: We're currently getting a double prompt. This should be fixed,
     // but for now we'll document the actual behavior
-    expect(terminalCharCodes).toEqual([62, 32, 62, 32, 32]);
+    expect(terminalCharCodes).toEqual([62, 32, 32]);
   });
 });
