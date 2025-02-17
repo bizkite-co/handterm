@@ -13,7 +13,6 @@ if (typeof window.Buffer === 'undefined') {
   window.Buffer = Buffer;
 }
 
-// Define 'global' if it's undefined (for browser environments)
 if (typeof global === 'undefined') {
   window.global = window;
 }
@@ -23,7 +22,6 @@ const logger: ReturnType<typeof createLogger> = createLogger({
   level: LogLevel.ERROR
 });
 
-// Expose signals for e2e testing in development/test environments
 if (import.meta.env.DEV !== undefined || import.meta.env.TEST !== undefined || process.env.PLAYWRIGHT_TEST === '1') {
   exposeSignals();
 
@@ -31,17 +29,19 @@ if (import.meta.env.DEV !== undefined || import.meta.env.TEST !== undefined || p
     void (async () => {
       const ReactDOM = await import('react-dom/client').catch((err: unknown) => {
         logger.error('Failed to load react-dom/client:', err);
-        throw err; // Re-throw the error to be caught by the outer catch block
+        throw err;
       });
       const router = (
-        <BrowserRouter>
+        <BrowserRouter future={{
+          v7_startTransition: true,
+          v7_relativeSplatPath: true
+        }}>
           <Routes>
             <Route path="/*" element={<App />} />
           </Routes>
         </BrowserRouter>
       )
 
-      // Initialize activity state from URL parameters
       initializeActivityState();
 
       ReactDOM

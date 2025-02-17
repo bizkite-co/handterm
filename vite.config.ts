@@ -30,6 +30,19 @@ export default defineConfig({
         return null;
       },
     },
+    {
+      name: 'monaco-sourcemaps',
+      enforce: 'pre',
+      transform(code, id) {
+        if (id.includes('monaco-editor')) {
+          // Remove sourceMappingURL comments
+          return {
+            code: code.replace(/\/\/# sourceMappingURL=.+/g, ''),
+            map: null
+          };
+        }
+      },
+    }
   ],
   base: '/', // Explicitly set to root for custom domain
   publicDir: 'public',
@@ -75,6 +88,7 @@ export default defineConfig({
       'canvas-confetti'
     ],
     esbuildOptions: {
+      sourcemap: false,  // Disable source maps for monaco-editor
       plugins: [
         {
           name: 'monaco-editor-css',
