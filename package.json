@@ -21,7 +21,7 @@
     "lint:fix-file": "eslint --fix",
     "lint:types": "tsc --noEmit",
     "lint:style": "prettier --check \"src/**/*.{ts,tsx,js,jsx}\"",
-    "test:unit": "vitest --run",
+    "test:vitest": "vitest --run",
     "test": "vitest --run && npm run test:e2e",
     "test:ui": "vitest --ui",
     "test:e2e": "PLAYWRIGHT_TEST=1 npx playwright test",
