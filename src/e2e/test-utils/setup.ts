@@ -1,57 +1,53 @@
 import type { Page } from '@playwright/test';
+import { initializeActivitySignal } from '../helpers/initializeSignals';
+import { TEST_CONFIG } from '../config';
+import { ActivityType } from '@handterm/types';
 
-/**
- * Sets up the test environment with completed tutorials and necessary signals.
- *
- * Note: We use simplified signal implementations for testing that don't fully
- * implement the Signal interface. This is intentional as we only need the
- * minimal functionality required for the tests to work. The application code
- * uses the full Signal implementation, but for tests we just need the value
- * property and basic update functionality.
- */
-export async function setupTestEnvironment(page: Page): Promise<void> {
-  await page.evaluate(() => {
-    // Set up completed tutorials
-    const tutorials = ['\\r', 'fdsa', 'jkl;'];
-    localStorage.setItem('completed-tutorials', JSON.stringify(tutorials));
+export async function setupTestEnvironment(page: Page) {
+	// Clear specific localStorage keys
+	await page.evaluate(() => {
+		const keysToRemove = [
+			'lastActivity',
+			'edit-content',
+			'canvasHeight',
+			'currentCommand',
+			'github_tree_items',
+			'command-history',
+			'completed-tutorials',
+			'phrasesAchieved',
+			'current_github_repo',
+			'tutorial-state',
+			'accessToken',
+			'refreshToken',
+			'expiresAt',
+			'expiresIn',
+			'idToken',
+			'githubUsername',
+      'terminalFontSize'
+		];
+		for (const key of keysToRemove) {
+			localStorage.removeItem(key);
+		}
+	});
 
-    // Set up signals with minimal implementation
-    // @ts-expect-error - Using simplified signal implementation for tests
-    window.completedTutorialsSignal = {
-      value: new Set(tutorials)
-    };
+	// Navigate to the base URL
+	await page.goto(TEST_CONFIG.baseUrl);
+	await page.waitForLoadState('domcontentloaded');
 
-    // @ts-expect-error - Using simplified signal implementation for tests
-    window.tutorialSignal = {
-      value: null
-    };
+	// Initialize signals
+	await initializeActivitySignal(page);
 
-    // @ts-expect-error - Using simplified signal implementation for tests
-    window.activityStateSignal = {
-      value: {
-        current: 'normal',
-        previous: 'tutorial',
-        transitionInProgress: false,
-        tutorialCompleted: true
-      }
-    };
+	// Ensure the application is in the NORMAL activity state
+	await page.evaluate(() => {
+		if (typeof window.setActivity === 'function') {
+			window.setActivity(ActivityType.NORMAL);
+		}
+	});
 
-    // Set up activity setter
-    window.setActivity = (activity) => {
-      window.activityStateSignal.value = {
-        ...window.activityStateSignal.value,
-        current: activity
-      };
-    };
-
-    // Set up tutorial functions
-    window.setNextTutorial = (tutorial) => {
-      window.tutorialSignal.value = tutorial;
-    };
-
-    window.setCompletedTutorial = (tutorialKey) => {
-      window.completedTutorialsSignal.value.add(tutorialKey);
-    };
+  // Wait for the handterm wrapper to be attached
+  await page.waitForSelector('#handterm-wrapper', {
+    state: 'attached',
+    timeout: TEST_CONFIG.timeout.long
   });
 }
 

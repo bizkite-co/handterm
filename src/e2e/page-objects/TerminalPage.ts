@@ -125,32 +125,32 @@ export class TerminalPage {
    * Waits for activity transition to complete
    */
   async waitForActivityTransition(timeout: number = 5000): Promise<void> {
-  	const startTime = Date.now();
+    const startTime = Date.now();
 
-  	while (Date.now() - startTime < timeout) {
-  		try {
-  			const state = await this.page.evaluate(() => {
-  				return {
-  					activity: localStorage.getItem('activity'),
-  					url: window.location.href,
-  					tutorialVisible: !!document.querySelector('.tutorial-prompt'),
-  					handtermWrapper: document.querySelector('#handterm-wrapper'),
-  				};
-  			});
+    while (Date.now() - startTime < timeout) {
+      try {
+        const state = await this.page.evaluate(() => {
+          return {
+            activity: localStorage.getItem('activity'),
+            url: window.location.href,
+            tutorialVisible: !!document.querySelector('.tutorial-prompt'),
+            handtermWrapper: document.querySelector('#handterm-wrapper'),
+          };
+        });
 
-  			// If we're no longer in tutorial mode and have a valid wrapper, consider it success
-  			if (!state.tutorialVisible && state.handtermWrapper) {
-  				return;
-  			}
+        // If we're no longer in tutorial mode and have a valid wrapper, consider it success
+        if (!state.tutorialVisible && state.handtermWrapper) {
+          return;
+        }
 
-  			// Short delay before next check
-  			await this.page.waitForTimeout(100);
-  		} catch (error) {
-  			console.error('Error checking activity transition:', error);
-  		}
-  	}
+        // Short delay before next check
+        await this.page.waitForTimeout(100);
+      } catch (error) {
+        console.error('Error checking activity transition:', error);
+      }
+    }
 
-  	throw new Error(`Activity transition timed out after ${timeout}ms`);
+    throw new Error(`Activity transition timed out after ${timeout}ms`);
   }
 
   async waitForTutorialMode(timeout = 1000000): Promise<void> {
@@ -358,10 +358,10 @@ export class TerminalPage {
     await this.waitForPrompt();
   }
 
-    /**
-   * Gets the actual terminal line content, including the prompt
-   * @returns The full terminal line content
-   */
+  /**
+ * Gets the actual terminal line content, including the prompt
+ * @returns The full terminal line content
+ */
   public async getActualTerminalLine(): Promise<string> {
     return await this.page.evaluate(() => {
       const terminal = window.terminalInstance;

@@ -53,8 +53,8 @@ export class EditorPage {
 			throw new Error('Activity signal not properly initialized');
 		}
 
-    // Wait for the activity state to change to 'edit'
-    await this.page.waitForFunction(() => window.activityStateSignal?.value?.current === 'edit');
+		// Wait for the activity state to change to 'edit'
+		await this.page.waitForFunction(() => window.activityStateSignal?.value?.current === 'edit');
 
 		await this.waitForEditor();
 	}
@@ -78,17 +78,18 @@ export class EditorPage {
 		});
 	}
 
-  async pressKey(key: string): Promise<void> {
-    await this.page.keyboard.press(key);
-  }
+	async pressKey(key: string): Promise<void> {
+		await this.page.keyboard.press(key);
+	}
 
 	async setContent(content: string, key: string = '_index.md'): Promise<void> {
-		await this.page.evaluate(
-			({ content, key, storageKeys }) => {
-				localStorage.setItem(storageKeys.editContent, JSON.stringify({ key, content }));
-			},
-			{ content, key, storageKeys: StorageKeys },
-		);
+	   await this.page.evaluate((content) => {
+	     if (window.monacoEditor) {
+	       window.monacoEditor.setValue(content);
+	     } else {
+	       console.error('Monaco editor not initialized when setting content');
+	     }
+	   }, content);
 	}
 
 	async getContent(): Promise<string> {
@@ -103,21 +104,21 @@ export class EditorPage {
 		await this.ensureMode('NORMAL');
 	}
 
-  async ensureMode(expectedMode: string): Promise<void> {
-    await this.page.waitForFunction(
-      ([mode, statusBar]) => {
-        const status = document.querySelector(statusBar ?? '');
-        return (status?.textContent ?? '').includes(mode ?? ''); // Nullish coalescing operator here
-      },
-      [expectedMode, '.vim-status-bar'],
-      { timeout: TEST_CONFIG.timeout.short },
-    );
-  }
+	async ensureMode(expectedMode: string): Promise<void> {
+		await this.page.waitForFunction(
+			([mode, statusBar]) => {
+				const status = document.querySelector(statusBar ?? '');
+				return (status?.textContent ?? '').includes(mode ?? ''); // Nullish coalescing operator here
+			},
+			[expectedMode, '.vim-status-bar'],
+			{ timeout: TEST_CONFIG.timeout.short },
+		);
+	}
 
-  async getVimMode(): Promise<string> {
-    const statusText = await this.statusBar.textContent() ?? ''; // Nullish coalescing operator here
-    return statusText;
-  }
+	async getVimMode(): Promise<string> {
+		const statusText = await this.statusBar.textContent() ?? ''; // Nullish coalescing operator here
+		return statusText;
+	}
 
 	async getCursorPosition(): Promise<{ lineNumber: number; column: number }> {
 		return await this.page.evaluate(() => {
@@ -134,6 +135,7 @@ export class EditorPage {
 	}
 
 	async isInEditMode(): Promise<boolean> {
+		await this.page.waitForFunction(() => window.activityStateSignal?.value?.current === 'edit');
 		return await this.page.evaluate(() => window.activityStateSignal?.value?.current === 'edit');
 	}
 }
