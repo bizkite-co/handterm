@@ -77,12 +77,12 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
     const unsubscribe = activitySignal.subscribe(updateActivity);
 
     return () => {
-      unsubscribe();
+    	unsubscribe();
     };
-  }, []); // Remove currentActivity from dependencies
+   }, [activitySignal.value]); // Add activitySignal.value to the dependency array
 
-  // Handle location change events
-  useEffect(() => {
+   // Handle location change events
+   useEffect(() => {
     const handleLocationChange = (event: Event) => {
       const customEvent = event as CustomEvent;
       const activity = customEvent.detail?.activity;

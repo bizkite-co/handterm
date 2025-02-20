@@ -2,7 +2,6 @@ import { test, expect } from '@playwright/test';
 import { TerminalPage } from './TerminalPage';
 import { EditorPage } from './EditorPage';
 import { TEST_CONFIG } from '../config';
-import { initializeActivitySignal } from '../helpers/initializeSignals';
 
 test.describe('EditorPage', () => {
 	let terminal: TerminalPage;
@@ -12,9 +11,6 @@ test.describe('EditorPage', () => {
 		// First navigate to the page
 		await page.goto(TEST_CONFIG.baseUrl);
 		await page.waitForLoadState('domcontentloaded');
-
-		// Initialize signals
-		await initializeActivitySignal(page);
 
 		// Initialize terminal page object
 		terminal = new TerminalPage(page);
@@ -53,20 +49,22 @@ test.describe('EditorPage', () => {
 		expect(content).toBe(testContent);
 	});
 
-	test('cursor movement works', async () => {
+	test('cursor movement works', async ({ page }) => {
 		// Set some test content
 		const testContent = 'Line 1\nLine 2\nLine 3';
 		await editor.setContent(testContent);
+		await page.waitForTimeout(1000); // Wait for content to set
 		await editor.focus();
+		await page.waitForTimeout(1000); // Wait for focus
 
 		// Move cursor using vim commands
-		await editor.sendKeys('j'); // move down one line
+		await editor.sendKeys('jj'); // move down two lines
 
-		const position = await editor.getCursorPosition();
-		expect(position.lineNumber).toBe(2);
+		const currentLine = await editor.getCurrentLineContent();
+		expect(currentLine).toBe('Line 3');
 	});
 
-	test('vim mode transitions work', async () => {  // Added ({ page })
+	test('vim mode transitions work', async () => {
 		await editor.focus();
 
 		// Should start in normal mode
@@ -81,13 +79,14 @@ test.describe('EditorPage', () => {
 		await editor.ensureMode('NORMAL');
 	});
 
-	test('handles :q! command', async () => {
+	test('handles :q! command', async ({ page }) => {
 		await editor.focus();
 
 		// Enter command mode and type :q!
 		await editor.sendKeys(':');
 		await editor.sendKeys('q!');
 		await editor.sendKeys('Enter');
+		await page.waitForTimeout(1000); // Wait for the command to be processed
 
 		// Should transition back to normal terminal mode
 		await terminal.waitForPrompt();
