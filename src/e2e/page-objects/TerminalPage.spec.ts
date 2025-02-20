@@ -3,6 +3,7 @@ import { TerminalPage } from './TerminalPage';
 import { TEST_CONFIG } from '../config';
 import { initializeActivitySignal } from '../helpers/initializeSignals';
 import { TERMINAL_CONSTANTS } from 'src/constants/terminal';
+import { setupBrowserWindow } from '../browser-setup/setupWindow';
 
 test.describe('TerminalPage', () => {
   let terminal: TerminalPage;
@@ -224,4 +225,18 @@ test.describe('TerminalPage', () => {
       .isVisible();
     expect(promptVisible, 'Expected prompt to be visible').toBe(true);
   });
+});
+
+test('should expose wrapper functions', async ({ page }) => {
+  await setupBrowserWindow(page);
+  const verification = await page.evaluate(() => {
+    return {
+      hasCallSetCompletedTutorial: typeof window.callSetCompletedTutorial === 'function',
+      hasCallGetNextTutorial: typeof window.callGetNextTutorial === 'function',
+      hasCallSetNextTutorial: typeof window.callSetNextTutorial === 'function',
+    };
+  });
+  expect(verification.hasCallSetCompletedTutorial).toBe(true);
+  expect(verification.hasCallGetNextTutorial).toBe(true);
+  expect(verification.hasCallSetNextTutorial).toBe(true);
 });
