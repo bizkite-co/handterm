@@ -48,10 +48,11 @@ export default function MonacoCore({ value, language = 'text', toggleVideo }: Mo
           vertical: 'hidden'
         },
         lineNumbersMinChars: 2,
-      });
+       });
+         window.monacoEditor = editorInstance; // Add this line
 
-      // Remove explicit height after editor creation
-      setContainerStyle({ flexGrow: 1, height: 'auto' });
+       // Remove explicit height after editor creation
+       setContainerStyle({ flexGrow: 1, height: 'auto' });
 
       // Initialize Vim mode and get Vim object
       try {
@@ -154,3 +155,4 @@ export default function MonacoCore({ value, language = 'text', toggleVideo }: Mo
     </div>
   );
 }
+

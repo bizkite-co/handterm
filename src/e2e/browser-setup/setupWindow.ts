@@ -1,44 +1,41 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import type { Page } from '@playwright/test';
 import { setActivity } from '../../signals/appSignals';
+import type { GamePhrase } from "@handterm/types";
 import {
-  tutorialSignal,
-  completedTutorialsSignal,
-  setCompletedTutorial,
-  getNextTutorial,
-  setNextTutorial
+	setCompletedTutorial,
+	getNextTutorial,
+	setNextTutorial
 } from '../../signals/tutorialSignals';
 import { createLogger } from '../../utils/Logger';
 
+declare global {
+	interface Window {
+		createLogger: (options: { prefix: string }) => {
+			log: (...args: unknown[]) => void;
+			debug: (...args: unknown[]) => void;
+			info: (...args: unknown[]) => void;
+			warn: (...args: unknown[]) => void;
+			error: (...args: unknown[]) => void;
+		};
+		callSetCompletedTutorial: (key: string) => void;
+		callGetNextTutorial: () => GamePhrase | null;
+		callSetNextTutorial: (tutorial: GamePhrase | null) => void;
+	}
+}
+
 export async function setupBrowserWindow(page: Page): Promise<void> {
-  await page.addInitScript(() => {
-    window.tutorialSignal = null;
-    window.completedTutorialsSignal = { value: new Set() };
-    window.activityStateSignal = { value: { current: 'tutorial', previous: null, transitionInProgress: false, tutorialCompleted: false } };
-  });
+	// Verify the setup.  All setup now happens BEFORE this function is called in the test.
+	const verification = await page.evaluate(() => {
+		return {
+			hasSetCompletedTutorial: typeof window.setCompletedTutorial === 'function',
+			hasSetActivity: typeof window.setActivity === 'function',
+			hasGetNextTutorial: typeof window.getNextTutorial === 'function',
+			hasSetNextTutorial: typeof window.setNextTutorial === 'function',
+		};
+	});
 
-  await page.addInitScript(`
-    window.createLogger = ${createLogger.toString()};
-    const logger = window.createLogger({ prefix: 'Window Setup' });
-
-    // Expose signals
-    window.tutorialSignal = ${JSON.stringify(tutorialSignal)};
-    window.completedTutorialsSignal = ${JSON.stringify(completedTutorialsSignal)};
-
-    // Expose functions
-    window.setCompletedTutorial = ${setCompletedTutorial.toString()};
-    window.getNextTutorial = ${getNextTutorial.toString()};
-    window.setNextTutorial = ${setNextTutorial.toString()};
-    window.setActivity = ${setActivity.toString()};
-  `);
-
-  // Verify the setup
-  const verification = await page.evaluate(() => ({
-    hasSetCompletedTutorial: typeof window.setCompletedTutorial === 'function',
-    hasSetActivity: typeof window.setActivity === 'function',
-    hasSignals: !!window.tutorialSignal && !!window.completedTutorialsSignal
-  }));
-
-  if (!verification.hasSetCompletedTutorial || !verification.hasSetActivity || !verification.hasSignals) {
-    throw new Error(`Window setup failed: ${JSON.stringify(verification)}`);
-  }
+	if (!verification.hasSetCompletedTutorial || !verification.hasSetActivity || !verification.hasGetNextTutorial || !verification.hasSetNextTutorial) {
+		throw new Error(`Window setup failed: ${JSON.stringify(verification)}`);
+	}
 }

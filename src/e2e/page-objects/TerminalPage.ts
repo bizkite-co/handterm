@@ -134,7 +134,7 @@ export class TerminalPage {
   					activity: localStorage.getItem('activity'),
   					url: window.location.href,
   					tutorialVisible: !!document.querySelector('.tutorial-prompt'),
-  					handtermWrapper: document.querySelector('#handterm-wrapper')
+  					handtermWrapper: document.querySelector('#handterm-wrapper'),
   				};
   			});
 
@@ -351,18 +351,14 @@ export class TerminalPage {
       localStorage.setItem('completed-tutorials', JSON.stringify(tutorials));
     }, allTutorialKeys);
 
-    // Check if we're in tutorial mode
-    const url = new URL(this.page.url());
-    if (url.searchParams.get('activity') === 'tutorial') {
-      await this.executeCommand('complete');
+    await this.executeCommand('complete');
 
-      // Wait for the tutorial prompt to disappear and terminal to be ready
-      await this.waitForActivityTransition();
-      await this.waitForPrompt();
-    }
+    // Wait for the tutorial prompt to disappear and terminal to be ready
+    await this.waitForActivityTransition();
+    await this.waitForPrompt();
   }
 
-  /**
+    /**
    * Gets the actual terminal line content, including the prompt
    * @returns The full terminal line content
    */

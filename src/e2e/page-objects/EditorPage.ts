@@ -53,6 +53,9 @@ export class EditorPage {
 			throw new Error('Activity signal not properly initialized');
 		}
 
+    // Wait for the activity state to change to 'edit'
+    await this.page.waitForFunction(() => window.activityStateSignal?.value?.current === 'edit');
+
 		await this.waitForEditor();
 	}
 
@@ -60,7 +63,7 @@ export class EditorPage {
 		// Wait for editor container
 		await this.container.waitFor({
 			state: 'visible',
-      timeout: TEST_CONFIG.timeout.long
+			timeout: TEST_CONFIG.timeout.long
 		});
 
 		// Wait for Monaco initialization
@@ -71,9 +74,13 @@ export class EditorPage {
 		// Wait for Vim mode initialization
 		await this.statusBar.waitFor({
 			state: 'visible',
-      timeout: TEST_CONFIG.timeout.medium
+			timeout: TEST_CONFIG.timeout.medium
 		});
 	}
+
+  async pressKey(key: string): Promise<void> {
+    await this.page.keyboard.press(key);
+  }
 
 	async setContent(content: string, key: string = '_index.md'): Promise<void> {
 		await this.page.evaluate(
@@ -96,21 +103,21 @@ export class EditorPage {
 		await this.ensureMode('NORMAL');
 	}
 
-	async ensureMode(expectedMode: string): Promise<void> {
-		await this.page.waitForFunction(
-			([mode, statusBar]) => {
-				const status = document.querySelector(statusBar);
-				return status?.textContent?.includes(mode);
-			},
-			[expectedMode, '.vim-status-bar'],
-			{ timeout: TEST_CONFIG.timeout.short },
-		);
-	}
+  async ensureMode(expectedMode: string): Promise<void> {
+    await this.page.waitForFunction(
+      ([mode, statusBar]) => {
+        const status = document.querySelector(statusBar ?? '');
+        return (status?.textContent ?? '').includes(mode ?? ''); // Nullish coalescing operator here
+      },
+      [expectedMode, '.vim-status-bar'],
+      { timeout: TEST_CONFIG.timeout.short },
+    );
+  }
 
-async getVimMode(): Promise<string> {
-	const statusText = (await this.statusBar.textContent()) ?? '';
-	return statusText;
-}
+  async getVimMode(): Promise<string> {
+    const statusText = await this.statusBar.textContent() ?? ''; // Nullish coalescing operator here
+    return statusText;
+  }
 
 	async getCursorPosition(): Promise<{ lineNumber: number; column: number }> {
 		return await this.page.evaluate(() => {

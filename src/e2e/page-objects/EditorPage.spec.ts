@@ -1,30 +1,38 @@
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 import { TerminalPage } from './TerminalPage';
 import { EditorPage } from './EditorPage';
 import { TEST_CONFIG } from '../config';
-import { ActivityType } from '@handterm/types';
+import { initializeActivitySignal } from '../helpers/initializeSignals';
 
 test.describe('EditorPage', () => {
-	let page: Page;
 	let terminal: TerminalPage;
 	let editor: EditorPage;
 
-	test.beforeEach(async ({ browser }) => {
-		page = await browser.newPage();
+	test.beforeEach(async ({ page }) => {
+		// First navigate to the page
 		await page.goto(TEST_CONFIG.baseUrl);
 		await page.waitForLoadState('domcontentloaded');
 
-		// Initialize page objects
-		terminal = new TerminalPage(page);
-		editor = new EditorPage(page);
+		// Initialize signals
+		await initializeActivitySignal(page);
 
-		// Initialize terminal
-		await terminal.initialize();
+		// Initialize terminal page object
+		terminal = new TerminalPage(page);
+
+		// Wait for the application to be ready and verify signal state
+		await page.waitForSelector('#handterm-wrapper', {
+			state: 'attached',
+			timeout: TEST_CONFIG.timeout.long
+		});
+
+		// Complete tutorials once at the beginning
+		await terminal.completeTutorials();
 		await terminal.waitForPrompt();
 
-		// Complete tutorials
-		await terminal.completeTutorials();
-		await editor.initialize();
+		await terminal.executeCommand('edit');
+
+		editor = new EditorPage(page);
+		await editor.waitForEditor();
 	});
 
 	test('initializes with correct state', async () => {
@@ -38,7 +46,6 @@ test.describe('EditorPage', () => {
 	});
 
 	test('can set and get content', async () => {
-		await editor.initialize();
 		const testContent = '# Test Content\nThis is a test.';
 		await editor.setContent(testContent);
 
@@ -47,7 +54,6 @@ test.describe('EditorPage', () => {
 	});
 
 	test('cursor movement works', async () => {
-		await editor.initialize();
 		// Set some test content
 		const testContent = 'Line 1\nLine 2\nLine 3';
 		await editor.setContent(testContent);
@@ -60,8 +66,7 @@ test.describe('EditorPage', () => {
 		expect(position.lineNumber).toBe(2);
 	});
 
-	test('vim mode transitions work', async () => {
-		await editor.initialize();
+	test('vim mode transitions work', async () => {  // Added ({ page })
 		await editor.focus();
 
 		// Should start in normal mode
@@ -72,12 +77,11 @@ test.describe('EditorPage', () => {
 		await editor.ensureMode('INSERT');
 
 		// Back to normal mode
-		await page.keyboard.press('Escape');
+		await editor.pressKey('Escape');
 		await editor.ensureMode('NORMAL');
 	});
 
 	test('handles :wq command', async () => {
-		await editor.initialize();
 		await editor.focus();
 
 		// Enter command mode and type :wq
@@ -85,17 +89,11 @@ test.describe('EditorPage', () => {
 		await editor.sendKeys('wq');
 		await editor.sendKeys('Enter');
 
-		// Should transition back to normal terminal mode
-		await page.waitForFunction(
-			() => window.activityStateSignal?.value?.current !== ActivityType.EDIT,
-			{ timeout: TEST_CONFIG.timeout.long },
-		);
-
-		// Verify terminal is active
-		// await terminal.waitForPrompt();
+		// Should transition back to normal terminal mode and verify terminal is active
+		await terminal.waitForPrompt();
 	});
 
-	test.afterEach(async () => {
+	test.afterEach(async ({ page }) => {
 		await page.close();
 	});
 });
