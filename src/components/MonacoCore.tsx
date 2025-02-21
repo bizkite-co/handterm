@@ -108,7 +108,7 @@ export default function MonacoCore({ value, language = 'text', toggleVideo }: Mo
           } else {
             console.error('MonacoVim not initialized properly.');
           }
-        }, 100); // 100ms delay
+        }, 500); // Delay 500ms to ensure VimMode is initialized
       } catch (vimError) {
         console.error('Failed to initialize Vim mode:', vimError);
       }
