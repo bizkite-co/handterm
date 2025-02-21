@@ -50,6 +50,7 @@ export default function MonacoCore({ value, language = 'text', toggleVideo }: Mo
         lineNumbersMinChars: 2,
        });
          window.monacoEditor = editorInstance; // Add this line
+      editorInstance.focus();
 
        // Remove explicit height after editor creation
        setContainerStyle({ flexGrow: 1, height: 'auto' });
