@@ -87,7 +87,7 @@ test.describe('EditorPage', () => {
 		// Enter command mode and type :q!
 		await editor.sendKeys(':');
 		await editor.sendKeys('q!');
-		await editor.sendKeys('Enter');
+		await editor.sendKeys('\r');
 		await page.waitForTimeout(1000); // Wait for the command to be processed
 
 		// Should transition back to normal terminal mode
