@@ -51,6 +51,7 @@ test.describe('EditorPage', () => {
 
 	test('cursor movement works', async () => {
 		// Set some test content - single line to test horizontal movement
+		await editor.focus();
 		const testContent = 'This is a test line.';
 		await editor.setContent(testContent);
 
