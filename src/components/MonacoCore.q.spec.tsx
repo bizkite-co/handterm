@@ -1,6 +1,5 @@
-import { render, waitFor } from '@testing-library/react';
-import MonacoCore from './MonacoCore';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { defineVimCommands } from './MonacoCore'; // Import the named export
 import { ActivityType } from '@handterm/types';
 
 // Mock the entire monaco-editor module *once* before all tests.
@@ -12,28 +11,20 @@ vi.mock('monaco-editor/esm/vs/editor/editor.api', () => ({
 
 // Mock monaco-vim *once* before all tests. We don't actually need the real one.
 vi.mock('monaco-vim', () => ({
-  initVimMode: vi.fn((_editor: any, _statusBar: any) => {
-    // Mock implementation of initVimMode that sets up the window.MonacoVim object.
-    (window as any).MonacoVim = {
-      VimMode: {
-        Vim: {
-          defineEx: (command: string, _alias: string, func: () => void) => {
-            if (command === 'q!') {
-              if (typeof func === 'function') {
-                func();
-              }
+  initVimMode: vi.fn().mockImplementation(() => {
+        (window as any).MonacoVim = {
+            VimMode: {
+                Vim: {
+                    defineEx: vi.fn(), // Mock defineEx here
+                }
             }
-          },
-        },
-      },
-    };
-    return { dispose: () => {} };
-  }),
+        }
+        return {dispose: () => {}};
+    }),
 }));
 
-describe('MonacoCore', () => {
-  const mockContainerRef = { current: document.createElement('div') };
-  const mockStatusBarRef = { current: document.createElement('div') };
+
+describe('MonacoCore - defineVimCommands', () => { // Changed describe block
 
   beforeEach(() => {
     // Reset mock state before each test
@@ -47,39 +38,40 @@ describe('MonacoCore', () => {
       localStorage.clear();
   })
 
-    it('defines the :q! command', async () => {
-        // Local, comprehensive mock for window
-        const originalWindow = global.window;
-        const mockDefineEx = vi.fn().mockImplementation((command, alias, func) => {
-            if (typeof func === 'function') {
-                func(); // Actually call the function!
-            }
-        });
-        const mockVimMode = {
-            VimMode: {
-                Vim: {
-                    defineEx: mockDefineEx,
-                },
-            },
-        };
-        const setActivityMock = vi.fn();
+    it('defines the :q! command', () => {
+    const mockEditorRef = { current: { getValue: vi.fn() } } as any; // Cast to any
+    const mockSetActivity = vi.fn();
 
-        (global as any).window = {
-            MonacoVim: mockVimMode,
-            setActivity: setActivityMock,
-        }
+    // Local, comprehensive mock for window
+    const originalWindow = global.window;
 
-        vi.useFakeTimers();
-        await render(<MonacoCore value="" {...{containerRef: mockContainerRef, statusBarRef: mockStatusBarRef}} /> as any);
-        vi.advanceTimersByTime(1000);
-        vi.runAllTimers();
+    // We do *not* mock defineEx here.  We mock it *inside* the initVimMode mock.
+    const mockVimMode = {
+      VimMode: {
+        Vim: {
+          defineEx: vi.fn(), // This will be called by the component
+        },
+      },
+    };
+
+    (global as any).window = {
+        MonacoVim: mockVimMode, // Use the mockVimMode
+        setActivity: mockSetActivity,
+    }
 
 
-        await waitFor(() => {
-            expect(mockDefineEx).toHaveBeenCalledWith('q!', '', expect.any(Function));
-        }, { timeout: 2000 });
+    // Call the function directly
+    defineVimCommands(mockEditorRef, window, () => { return false; });
 
-        expect(setActivityMock).toHaveBeenCalledWith(ActivityType.NORMAL);
-        global.window = originalWindow; // Restore original window
-    });
+    // Assert that defineEx was called with the correct arguments
+    expect(window.MonacoVim.VimMode.Vim.defineEx).toHaveBeenCalledWith('q!', '', expect.any(Function));
+
+    // Simulate calling the q! command (get it from the mock calls)
+    const qCommand = (window.MonacoVim.VimMode.Vim.defineEx as any).mock.calls.find((call: any) => call[0] === 'q!')[2];
+    qCommand();
+
+    // Assert that setActivity was called correctly
+    expect(mockSetActivity).toHaveBeenCalledWith(ActivityType.NORMAL);
+    global.window = originalWindow; // Restore original window.
+  });
 });
