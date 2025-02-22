@@ -2,7 +2,13 @@ import { render, act } from '@testing-library/react';
 import { vi, describe, test, expect, beforeEach, afterEach } from 'vitest';
 import { HandTermWrapper } from './HandTermWrapper';
 import { activitySignal } from '../signals/appSignals';
-import { ActivityType } from '@handterm/types';
+import {
+  ActivityType,
+  type OutputElement,
+  type AuthResponse,
+  type MyResponse,
+  type IAuthProps
+} from '@handterm/types';
 import { commandTimeSignal } from '../signals/commandLineSignals';
 import { TerminalTestUtils } from '../test-utils/TerminalTestUtils';
 
