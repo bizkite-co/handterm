@@ -22,6 +22,18 @@ The current script runs only e2e tests and saves the raw output. The goal is to:
     *   Create output directories.
     *   Pass correct configuration for XML reports.
 
-**Next Steps:**
+**Improvements Implemented:**
 
-1.  Modify `commit_test_retrospector.sh` with the new logic.
+1. Direct tool invocation via npx instead of npm scripts
+2. Error handling with `|| true` to continue on test failures
+3. Force checkout/restore of original branch
+4. Separate log files for each test run
+5. Progress output with indentation
+6. Safer directory structure handling
+
+**Verification Plan:**
+
+1. Test against commits with known test configurations
+2. Verify XML reports are generated even when tests fail
+3. Check log files contain detailed execution output
+4. Confirm original branch is restored reliably
