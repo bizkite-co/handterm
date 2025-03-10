@@ -3,6 +3,28 @@ date: 2025-01-01
 title: Cline Rules
 version: 1.0.0
 ---
+* USE SPACES INSTEAD OF TABS.
+* DON'T FIX LINTING ERRORS UNTIL ALL TESTS PASS.
+* Read linting errors and _avoid making new_ linting errors, but don't fix existing linting errors until all tests pass.
+
+* USE `logging` instead of `print`.
+* Prefer unit tests over logging wherever possible.
+* Try to limit file size to about 100 lines.
+    * If they go over that size, parse functions out to other files.
+* use the repo remote address `github.com:bizkite-co/handterm` to determine the repo name and owner.
+* Use the GitHub MCP to read, add, and update GitHub issues on this repo.
+* Comments on progress should be added as comments on the Issue, not as edits to the issue.
+* Be sure to set the Issue Type: [Featur, Bug, Task], depending on it's type.
+* Add the issues to the "Handterm" project with `--owner bizkite-co`.
+* Add the Issue to the project by switching to Code mode and executing a command of this format:
+    `gh project item-add 4 --url https://github.com/bizkite-co/handterm/issues/<issue number> --owner bizkite-co`
+
+* Use the GitHub CLI for GitHub actions not available in the MCP.
+* When the Issue is complete and the user agrees, create commit with a multi-line commit message starting with `fix #<issue number> <issue title>`. That will close the issue.
+
+* Use industry standard best practice coding standards and file structure and naming conventions.
+* Break problems down into smaller problems until you can find the tiny problem that's causeing the bigger problems.
+
 
 1. Make sure any commands you execute return control of the terminl.
 2. Prefer creating a new test or assertion, instead of debug logging.
