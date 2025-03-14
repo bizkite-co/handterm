@@ -46,3 +46,5 @@ prompt-temp.md
 /blob-report/
 /playwright/.cache/
 project-types.lst
+error.txt
+scripts/inspect/
