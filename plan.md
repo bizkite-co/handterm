@@ -29,3 +29,7 @@ The following steps have been completed:
 * [ ] 3.  **Refactor command handling (potential):** Consider refactoring the command handling logic in `useCommand` to be more robust and better handle different output types.
 * [ ] 4. **Investigate Vite configuration conflicts:** If the errors in other projects persist, investigate the changes made to `vite.config.ts` and find a solution that works for all projects.
 * [ ] 5.  **Further Integration:** Once the basic functionality is stable and tested, proceed with further integration steps, such as connecting the existing terminal input to the WebContainer.
+* [ ] 6. **Implement WebContainer Context Manager:** Create React context for WebContainer lifecycle management (Issue #70)
+* [ ] 7. **Add Mode Switching:** Update CommandProvider with WebContainer/normal mode state transitions (Issue #71)
+* [ ] 8. **Modify Terminal Output Handling:** Update Xterm.js integration for raw WebContainer output streaming
+* [ ] 9. **Update Command Routing:** Implement dual pipeline support for WebContainer vs normal commands

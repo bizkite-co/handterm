@@ -36,6 +36,7 @@ eslint-results.json
 *.gz
 public/images/glitch-parallax-bg
 .env
+.envrc
 *.pem
 .aider.tags.*
 .aider.env
