@@ -4,6 +4,7 @@ import path from 'path';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
+import crossOriginIsolation from 'vite-plugin-cross-origin-isolation';
 
 export default defineConfig({
   plugins: [
@@ -42,7 +43,8 @@ export default defineConfig({
           };
         }
       },
-    }
+    },
+    crossOriginIsolation()
   ],
   base: '/', // Explicitly set to root for custom domain
   publicDir: 'public',

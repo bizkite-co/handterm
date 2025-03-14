@@ -19,6 +19,7 @@ import {
 import { createLogger, LogLevel } from '../utils/Logger';
 import { parseLocation } from '../utils/navigationUtils';
 import WebCam from '../utils/WebCam';
+import { WebContainer } from '@webcontainer/api';
 
 import { Chord } from './Chord';
 import MonacoCore from './MonacoCore';
@@ -33,7 +34,11 @@ const logger = createLogger({
 
 const getTimestamp = (date: Date): string => date.toTimeString().split(' ')[0] ?? '';
 
-const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProps>((props, forwardedRef) => {
+interface IHandTermWrapperPropsWithWebContainer extends IHandTermWrapperProps {
+    onWebContainerInit: (webcontainer: WebContainer) => void;
+}
+
+const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperPropsWithWebContainer>((props, forwardedRef) => {
   const { xtermRef, writeToTerminal, resetPrompt } = useTerminal();
   const targetWPM = 10;
   const wpmCalculator = useWPMCalculator();
@@ -52,6 +57,17 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
   const [treeItems, setTreeItems] = useState<TreeItem[]>([]);
 
   const [currentActivity, setCurrentActivity] = useState<ActivityType>(ActivityType.NORMAL);
+  const [webcontainerInstance, setWebcontainerInstance] = useState<WebContainer | null>(null);
+
+    useEffect(() => {
+    (async () => {
+      logger.info('Booting WebContainer...');
+      const webcontainer = await WebContainer.boot();
+      setWebcontainerInstance(webcontainer);
+      props.onWebContainerInit(webcontainer);
+      logger.info('WebContainer booted successfully.');
+    })();
+  }, [props.onWebContainerInit]);
 
   // Update activity state when activitySignal changes
   useEffect(() => {
@@ -230,8 +246,8 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
       return parsed ?? '';
     } catch (error) {
       logger.error('Failed to parse edit content:', error);
-      return '';
     }
+    return '';
   }, []);
 
   return (

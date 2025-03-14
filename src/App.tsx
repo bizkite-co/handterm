@@ -8,6 +8,7 @@ import { CommandProvider } from './contexts/CommandProvider';
 import { useAuth } from './hooks/useAuth';
 import { ActivityType, TerminalCssClasses, type IHandTermWrapperMethods } from '@handterm/types';
 import { parseLocation } from './utils/navigationUtils';
+import { WebContainer } from '@webcontainer/api';
 
 function isHandTermWrapperMethods(ref: React.RefObject<IHandTermWrapperMethods>): ref is React.RefObject<IHandTermWrapperMethods> & { current: IHandTermWrapperMethods } {
   return ref.current !== null && typeof ref.current.focusTerminal === 'function';
@@ -19,6 +20,7 @@ export function App(): JSX.Element {
 
   const auth = useAuth();
   const handexTermWrapperRef = useRef<IHandTermWrapperMethods>(null);
+  const [webcontainerInstance, setWebcontainerInstance] = useState<WebContainer | null>(null);
 
   const getContainerWidth = useCallback(() => {
     return containerRef.current?.clientWidth ?? 0
@@ -71,6 +73,10 @@ export function App(): JSX.Element {
     };
   }, [getContainerWidth]);
 
+  const handleWebContainerInit = useCallback((webcontainer: WebContainer) => {
+    setWebcontainerInstance(webcontainer);
+  }, []);
+
   return (
     <ActivityMediatorProvider>
       <div className='app' ref={containerRef}>
@@ -78,6 +84,7 @@ export function App(): JSX.Element {
           <CommandProvider
             auth={auth}
             handTermRef={handexTermWrapperRef}
+            webcontainerInstance={webcontainerInstance}
           >
             {parseLocation().activityKey !== ActivityType.EDIT
               && <Output />
@@ -87,6 +94,7 @@ export function App(): JSX.Element {
               auth={auth}
               terminalWidth={containerWidth}
               onOutputUpdate={() => {}}
+              onWebContainerInit={handleWebContainerInit}
             />
           </CommandProvider>
         </AppProvider>

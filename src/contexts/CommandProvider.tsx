@@ -10,15 +10,17 @@ import { type IAuthProps } from '../hooks/useAuth';
 import { useCommand } from '../hooks/useCommand';
 
 import { CommandContext } from './CommandContext';
+import { type WebContainer } from '@webcontainer/api';
 
 
 interface CommandProviderProps {
   children: React.ReactNode;
   handTermRef: React.RefObject<IHandTermWrapperMethods>;
   auth: IAuthProps;
+  webcontainerInstance: WebContainer | null;
 }
 
-export const CommandProvider: React.FC<CommandProviderProps> = ({ children, handTermRef, auth }) => {
+export const CommandProvider: React.FC<CommandProviderProps> = ({ children, handTermRef, auth, webcontainerInstance }) => {
   const {
     commandHistory,
     addToCommandHistory,
@@ -41,7 +43,8 @@ export const CommandProvider: React.FC<CommandProviderProps> = ({ children, hand
     handTermRef,
     auth,
     updateLocation: navigate,
-    executeCommand
+    executeCommand,
+    webcontainerInstance
   };
 
   return (

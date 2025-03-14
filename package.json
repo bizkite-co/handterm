@@ -47,6 +47,7 @@
     "@fortawesome/free-brands-svg-icons": "^6.6.0",
     "@fortawesome/react-fontawesome": "^0.2.2",
     "@preact/signals-react": "^2.2.0",
+    "@webcontainer/api": "^1.5.1-internal.9",
     "@xterm/addon-fit": "^0.10.0",
     "@xterm/xterm": "^5.5.0",
     "amazon-cognito-identity-js": "^6.3.12",
@@ -64,6 +65,7 @@
     "react-router-dom": "^6.27.0",
     "react-xtermjs": "^1.0.9",
     "recast": "^0.23.9",
+    "vite-plugin-cross-origin-isolation": "^0.1.6",
     "vite-plugin-monaco-editor": "^1.1.0"
   },
   "devDependencies": {

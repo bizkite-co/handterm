@@ -1,6 +1,7 @@
 // src/commands/commandRegistry.ts
 
 import { type ICommand } from '../contexts/CommandContext';
+import { wclsCommand } from './wclsCommand';
 
 export type ICommandRegistryItems = Record<string, ICommand>;
 
@@ -25,3 +26,5 @@ class CommandRegistry {
 }
 
 export const commandRegistry = new CommandRegistry();
+
+commandRegistry.register(wclsCommand);

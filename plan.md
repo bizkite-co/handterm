@@ -1,13 +1,17 @@
-I found a new library here: https://webcontainers.io/guides/quickstart 
+## Goal
 
-It says it creates a Posix-style container in the browser.
+Connect the Handterm terminal to a WebContainer instance and enable basic command execution (e.g., `ls`) within the WebContainer.
 
-I have created a separate branch on this project to pursue the posibility that we could solve some of our problems by actually creating a terminal environment in the browswer.
+## Steps
 
-This might be to dificult to reasonably speculate about, so I think the fastest way to investigate this possibility might be to try to do it.
-
-So I have created a sparate branch. There is still some possibility of creating conflict because we will be adding a new library, which will create new content in the `node_modules/`, which is not included in the git commits, so we will have to be cognizant of that when switching back to `master`, but hopefully we won't be doing that often.
-
-Can you overwrite the `plan.md` with this current plan, and then use that text to create a new Issue as per '.clinerules' (see below for file content) ?
-
-Then, we will create some subtask Issues and new subtask chats to work on task items we create in this chat.
+1.  **Install `@webcontainer/api`:** (Done) Install the `@webcontainer/api` package as a project dependency. This is a subtask of #68.
+2.  **Basic Integration:**
+    *   Import the necessary modules from `@webcontainer/api` in `src/components/HandTermWrapper.tsx`.
+    *   Create a basic WebContainer instance within the `HandTermWrapper` component.
+    *   Implement a basic command execution mechanism (e.g., a specific terminal command like `wcls` to execute `ls` in the WebContainer) that sends the command `ls` to the WebContainer.
+    *   Display the output from the WebContainer in the Handterm terminal.
+3. **Interim Tests:** Create tests after each integration step to ensure functionality:
+    *   Test the successful initialization of the WebContainer.
+    *   Test the execution of the `ls` command and verify the output.
+4. **Further Integration:** (Future steps, to be detailed later)
+    * Connect the existing terminal input to the WebContainer, allowing arbitrary command execution.
