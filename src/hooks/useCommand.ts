@@ -126,16 +126,22 @@ export const useCommand = (): {
     ): void => {
         logger.debug('Processing command output:', { command, response });
         const commandTime = new Date();
-        const outputElement = createCommandRecord(
-            command,
-            response.message,
-            response.status,
-            commandTime,
-            response.sensitive ?? false
-        );
-        appendToOutput(outputElement);
-        addToCommandHistory(command);
-    }, [createCommandRecord, addToCommandHistory]);
+        if (response.type === 'webcontainer') {
+            // Use non-null assertion here
+            context!.handTermRef.current!.writeOutput(response.message);
+        } else {
+            const outputElement = createCommandRecord(
+                command,
+                response.message,
+                response.status,
+                commandTime,
+                response.sensitive ?? false
+            );
+            appendToOutput(outputElement);
+            addToCommandHistory(command);
+        }
+
+    }, [createCommandRecord, addToCommandHistory, context]);
 
     const executeCommand = useCallback(async (parsedCommand: ParsedCommand) => {
         // Breakpoint 5: Start of command execution

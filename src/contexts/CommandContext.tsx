@@ -11,6 +11,7 @@ export interface ICommandResponse {
   message: string;
   body?: string | null;
   sensitive?: boolean; // Flag to indicate if the command response contains sensitive data
+  type?: 'text' | 'webcontainer'; // Added type field
 }
 
 export interface ICommand {
@@ -32,6 +33,7 @@ export interface ICommandContext {
   handTermRef: React.RefObject<IHandTermWrapperMethods>;
   auth: IAuthProps;
   updateLocation: (options: ParsedLocation) => void;
+  webcontainerInstance: any;
 }
 
 export const CommandContext = createContext<ICommandContext | null>(null);

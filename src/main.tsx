@@ -8,6 +8,7 @@ import { exposeSignals } from './e2e/helpers/exposeSignals';
 import { QueryProvider } from './providers/QueryProvider';
 import { createLogger, LogLevel } from './utils/Logger';
 import { initializeActivityState } from './utils/navigationUtils';
+import { WebContainer } from '@webcontainer/api';
 
 if (typeof window.Buffer === 'undefined') {
   window.Buffer = Buffer;
@@ -21,6 +22,12 @@ const logger: ReturnType<typeof createLogger> = createLogger({
   prefix: 'main',
   level: LogLevel.ERROR
 });
+
+async function initializeWebContainer() {
+    logger.info('Booting WebContainer...');
+    window.webcontainerInstance = await WebContainer.boot();
+    logger.info('WebContainer booted successfully.');
+}
 
 if (import.meta.env.DEV !== undefined || import.meta.env.TEST !== undefined || process.env.PLAYWRIGHT_TEST === '1') {
   exposeSignals();
@@ -43,6 +50,7 @@ if (import.meta.env.DEV !== undefined || import.meta.env.TEST !== undefined || p
       )
 
       initializeActivityState();
+      await initializeWebContainer();
 
       ReactDOM
         .createRoot(document.getElementById('root') as HTMLElement)

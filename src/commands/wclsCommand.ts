@@ -6,8 +6,8 @@ class WclsCommand implements ICommand {
   name = 'wcls';
   description = 'Executes `ls` in the WebContainer.';
 
-  async execute(context: ICommandContext, _parsedCommand: ParsedCommand): Promise<{ status: number; message: string }> {
-    const { webcontainerInstance } = context as any; // Temporary workaround
+  async execute(context: ICommandContext, _parsedCommand: ParsedCommand): Promise<{ status: number; message: string; type?: 'webcontainer' }> {
+    const { webcontainerInstance } = context;
 
     if (!webcontainerInstance) {
       return {
@@ -17,26 +17,27 @@ class WclsCommand implements ICommand {
     }
 
     try {
-      const process = await webcontainerInstance.spawn('ls');
-      const output = await process.output;
+      const process = await (webcontainerInstance as any).spawn('ls');
+      const output = process.output;
 
       let outputString = '';
       const decoder = new TextDecoder();
       const reader = output.getReader();
 
-      // eslint-disable-next-line no-constant-condition
       while (true) {
         const { value, done } = await reader.read();
         if (done) {
           break;
         }
-        outputString += decoder.decode(value);
+        // Explicitly type value as Uint8Array
+        outputString += decoder.decode(value as Uint8Array);
 
       }
 
       return {
         status: 0,
         message: outputString,
+        type: 'webcontainer'
       };
     } catch (error) {
       return {
