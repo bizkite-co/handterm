@@ -1,4 +1,4 @@
-import { render, act } from '@testing-library/react';
+import { render, act, waitFor } from '@testing-library/react';
 import { vi, describe, test, expect, beforeEach, afterEach } from 'vitest';
 import { HandTermWrapper } from './HandTermWrapper';
 import { activitySignal } from '../signals/appSignals';
@@ -11,6 +11,7 @@ import {
 } from '@handterm/types';
 import { commandTimeSignal } from '../signals/commandLineSignals';
 import { TerminalTestUtils } from '../test-utils/TerminalTestUtils';
+import { WebContainerContext } from '../contexts/WebContainerContext'; // Import
 
 // Add these mocks at the very top of the file, before any imports
 vi.mock('monaco-vim', () => ({
@@ -77,12 +78,27 @@ vi.mock('../components/NextCharsDisplay', () => ({
   NextCharsDisplay: () => null
 }));
 
+// Mock WebContainerContext
+const mockWebContainerContextValue = {
+    webContainer: {
+        mount: vi.fn()
+    },
+    initWebContainer: vi.fn(),
+    disposeWebContainer: vi.fn(),
+    error: null
+}
+
+vi.mock('../contexts/WebContainerContext', () => ({
+  WebContainerContext: {
+    Consumer: ({ children }: { children: (value: typeof mockWebContainerContextValue) => React.ReactNode }) => children(mockWebContainerContextValue),
+  },
+  WebContainerProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
+
 describe('HandTermWrapper', () => {
   const mockAuth: IAuthProps = {
-    isAuthenticated: false,
-    user: null,
-    loading: false,
-    error: null,
+    isLoggedIn: false,
+    isLoading: false,
     login: async (): Promise<MyResponse<AuthResponse>> => ({
       status: 200,
       data: {
@@ -125,11 +141,9 @@ describe('HandTermWrapper', () => {
       message: undefined,
       error: []
     }),
-    isLoggedIn: false,
-    isLoading: false,
+    isPending: false,
     isError: false,
     error: null,
-    isPending: false
   };
 
   const mockProps = {
@@ -242,5 +256,10 @@ describe('HandTermWrapper', () => {
     await TerminalTestUtils.waitForPrompt();
     promptCount = await TerminalTestUtils.getPromptCount();
     expect(promptCount).toBe(1);
+  });
+
+  test('should use WebContainerContext', async () => {
+      render(<HandTermWrapper {...mockProps} />);
+      await waitFor(() => expect(mockWebContainerContextValue.initWebContainer).toHaveBeenCalledTimes(1));
   });
 });
