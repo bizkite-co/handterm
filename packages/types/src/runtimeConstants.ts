@@ -17,7 +17,8 @@ export const ActivityType = {
   GITHUB: 'github',
   TREE: 'tree',
   TUTORIAL: 'tutorial',
-  GAME: 'game'
+  GAME: 'game',
+  WEBCONTAINER: 'webcontainer'
 } as const;
 
 export type ActivityType = typeof ActivityType[keyof typeof ActivityType];

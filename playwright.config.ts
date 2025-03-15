@@ -20,14 +20,9 @@ declare global {
 export default defineConfig({
   // Run setup file before all tests
   globalSetup: PLAYWRIGHT_SETUP,
-  testDir: './src/e2e',
-  testIgnore: [
-    '**/__tests__/**', // Exclude Vitest tests
-    '**/*.test.ts' // Exclude .test files
-  ],
-  timeout: 30 * 1000, // Global timeout of 30 seconds
-  /* Run tests in files in parallel */
-  fullyParallel: true,
+  testDir: './src/e2e/scenarios', // Point to the directory containing feature files
+  testMatch: '**/*.feature', // Match only feature files
+  fullyParallel: false, // Cucumber tests should not be run in parallel
   /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: (process.env.CI ?? '') !== '',
   /* Retry on CI only */
@@ -35,7 +30,13 @@ export default defineConfig({
   /* Opt out of parallel tests on CI. */
   workers: process.env.CI ? 1 : undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: [['list'], ['html', { open: 'never' }], ['junit' ]],
+    reporter: [
+    ['list'],
+    ['html', { open: 'never', outputFolder: 'playwright-report' }], // HTML reporter
+    ['cucumber-json', {  // Cucumber JSON reporter
+      outputFile: 'cucumber-report/cucumber_report.json'
+    }]
+  ],
   outputDir: 'test-results',
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {

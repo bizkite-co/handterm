@@ -10,7 +10,7 @@ import {
 } from 'src/signals/gameSignals';
 import {
     setNextTutorial, resetCompletedTutorials,
-    tutorialSignal, getNextTutorial, setCompletedTutorial
+    tutorialSignal, getNextTutorial, setCompletedTutorial, completeAllTutorials
 } from 'src/signals/tutorialSignals';
 import { createLogger } from 'src/utils/Logger';
 import { navigate, parseLocation } from 'src/utils/navigationUtils';
@@ -296,6 +296,21 @@ export function useActivityMediator(): {
                     activityKey: ActivityType.EDIT,
                     contentKey: parseLocation().contentKey ?? null,
                     groupKey: null
+                });
+                result = true;
+                break;
+            }
+            case 'complete': {
+                completeAllTutorials();
+                navigate({
+                    activityKey: ActivityType.NORMAL,
+                    contentKey: null,
+                    groupKey: null,
+                    clearParams: true // Clear any existing parameters
+                },
+                {
+                    forceClear: true, // Ensure a clean URL
+                    replace: true // Avoid adding to history
                 });
                 result = true;
                 break;

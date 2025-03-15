@@ -45,6 +45,18 @@ export const useCommand = (): {
     const wpmCalculator = useWPMCalculator();
     const context = useContext(CommandContext);
 
+    // Handle wc-init and wc-exit commands
+    const handleWebContainerCommands = (command: string) => {
+        if (command === 'wc-init') {
+            context?.updateLocation({ activityKey: ActivityType.WEBCONTAINER });
+            return true;
+        } else if (command === 'wc-exit') {
+            context?.updateLocation({ activityKey: ActivityType.NORMAL });
+            return true;
+        }
+        return false;
+    }
+
     if (context === undefined) {
         throw new Error('useCommand must be used within a CommandProvider');
     }
@@ -146,6 +158,7 @@ export const useCommand = (): {
     const executeCommand = useCallback(async (parsedCommand: ParsedCommand) => {
         // Breakpoint 5: Start of command execution
         logger.debug('Executing command:', parsedCommand);
+
         const command = commandRegistry.getCommand(parsedCommand.command);
         if (command != null && context != null) {
             try {
@@ -184,6 +197,11 @@ export const useCommand = (): {
         });
 
         setCommandTime(new Date());
+
+        // Handle webcontainer commands first
+        if (handleWebContainerCommands(parsedCommand.command)) {
+            return;
+        }
 
         // Only check tutorial progress if we're explicitly in tutorial mode
         if (initialActivity === ActivityType.TUTORIAL) {
