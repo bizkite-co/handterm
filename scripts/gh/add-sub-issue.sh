@@ -1,0 +1,1 @@
+curl -L -X POST -H "Accept: application/vnd.github+json" -H "Authorization: Bearer $GITHUB_PERSONAL_ACCESS_TOKEN_HANDTERM" -H "X-GitHub-Api-Version: 2022-11-28" https://api.github.com/repos/bizkite-co/handterm/issues/$args{2}/sub_issues -d '{"sub_issue_id":$args{3}}'

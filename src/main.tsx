@@ -1,4 +1,3 @@
-import { StrictMode } from 'react';
 import './commands';
 
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
@@ -55,11 +54,11 @@ if (import.meta.env.DEV !== undefined || import.meta.env.TEST !== undefined || p
       ReactDOM
         .createRoot(document.getElementById('root') as HTMLElement)
         .render(
-          <StrictMode>
+          
             <QueryProvider>
               {router}
             </QueryProvider>
-          </StrictMode>
+          
         );
     })();
   } catch (error) {

@@ -20,6 +20,7 @@ import { createLogger, LogLevel } from '../utils/Logger';
 import { parseLocation } from '../utils/navigationUtils';
 import WebCam from '../utils/WebCam';
 import { WebContainer } from '@webcontainer/api';
+import { WebContainerContext, WebContainerProvider } from '../contexts/WebContainerContext'; // Import
 
 import { Chord } from './Chord';
 import MonacoCore from './MonacoCore';
@@ -53,18 +54,18 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
   const [treeItems, setTreeItems] = useState<TreeItem[]>([]);
 
   const [currentActivity, setCurrentActivity] = useState<ActivityType>(ActivityType.NORMAL);
-  const webcontainerInstance = useRef<WebContainer | null>(null);
+  // const webcontainerInstance = useRef<WebContainer | null>(null); // No longer needed
 
-    useEffect(() => {
-        // Only boot WebContainer if it hasn't been initialized yet
-        if (!webcontainerInstance.current) {
-            (async () => {
-                logger.info('Booting WebContainer...');
-                webcontainerInstance.current = await WebContainer.boot();
-                logger.info('WebContainer booted successfully.');
-            })();
-        }
-  }, []);
+  //   useEffect(() => {
+  //       // Only boot WebContainer if it hasn't been initialized yet
+  //       if (!webcontainerInstance.current) {
+  //           (async () => {
+  //               logger.info('Booting WebContainer...');
+  //               webcontainerInstance.current = await WebContainer.boot();
+  //               logger.info('WebContainer booted successfully.');
+  //           })();
+  //       }
+  // }, []);
 
   // Update activity state when activitySignal changes
   useEffect(() => {
@@ -248,71 +249,73 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
   }, []);
 
   return (
-    <div id='handterm-wrapper'>
-      {currentActivity === ActivityType.GAME && (
-        <Game
-          ref={gameHandleRef}
-          canvasHeight={canvasHeight}
-          canvasWidth={props.terminalWidth}
-        />
-      )}
-      {currentActivity === ActivityType.GAME && (
-        <NextCharsDisplay
-          ref={nextCharsDisplayRef}
-          isInPhraseMode={true}
-          onPhraseSuccess={handlePhraseSuccess}
-          onError={handlePhraseErrorState}
-        />
-      )}
-      {lastTypedCharacter !== null && (
-        <Chord displayChar={lastTypedCharacter} />
-      )}
-      {currentActivity === ActivityType.TUTORIAL && tutorialSignal.value != null && (
-        <TutorialManager
-          tutorial={tutorialSignal.value}
-        />
-      )}
-
-      {/* Always show terminal unless in EDIT or TREE mode */}
-      {currentActivity !== ActivityType.EDIT && currentActivity !== ActivityType.TREE && (
-        <div id="prompt-and-terminal">
-          <PromptHeader
-            username={userName ?? 'guest'}
-            domain={domain ?? 'handterm.com'}
-            githubUsername={githubUsername}
-            timestamp={getTimestamp(commandTime.value)}
+    <WebContainerProvider>
+      <div id='handterm-wrapper'>
+        {currentActivity === ActivityType.GAME && (
+          <Game
+            ref={gameHandleRef}
+            canvasHeight={canvasHeight}
+            canvasWidth={props.terminalWidth}
           />
-          <div
-            ref={xtermRef}
-            id="xtermRef"
+        )}
+        {currentActivity === ActivityType.GAME && (
+          <NextCharsDisplay
+            ref={nextCharsDisplayRef}
+            isInPhraseMode={true}
+            onPhraseSuccess={handlePhraseSuccess}
+            onError={handlePhraseErrorState}
           />
-        </div>
-      )}
+        )}
+        {lastTypedCharacter !== null && (
+          <Chord displayChar={lastTypedCharacter} />
+        )}
+        {currentActivity === ActivityType.TUTORIAL && tutorialSignal.value != null && (
+          <TutorialManager
+            tutorial={tutorialSignal.value}
+          />
+        )}
 
-      {currentActivity === ActivityType.EDIT && (
-        <MonacoCore
-          key={currentActivity}
-          value={getStoredContent()}
-          language="markdown"
-          toggleVideo={() => {
-            isShowVideoSignal.value = !isShowVideoSignal.value;
-            return isShowVideoSignal.value;
-          }}
-        />
-      )}
-      {currentActivity === ActivityType.TREE && treeItems.length > 0 && (
-        <MonacoCore
-          key={currentActivity}
-          value=""
-          language="plaintext"
-        />
-      )}
-      {isShowVideoSignal.value !== null && (
-        <WebCam
-          setOn={isShowVideoSignal.value}
-        />
-      )}
-    </div>
+        {/* Always show terminal unless in EDIT or TREE mode */}
+        {currentActivity !== ActivityType.EDIT && currentActivity !== ActivityType.TREE && (
+          <div id="prompt-and-terminal">
+            <PromptHeader
+              username={userName ?? 'guest'}
+              domain={domain ?? 'handterm.com'}
+              githubUsername={githubUsername}
+              timestamp={getTimestamp(commandTime.value)}
+            />
+            <div
+              ref={xtermRef}
+              id="xtermRef"
+            />
+          </div>
+        )}
+
+        {currentActivity === ActivityType.EDIT && (
+          <MonacoCore
+            key={currentActivity}
+            value={getStoredContent()}
+            language="markdown"
+            toggleVideo={() => {
+              isShowVideoSignal.value = !isShowVideoSignal.value;
+              return isShowVideoSignal.value;
+            }}
+          />
+        )}
+        {currentActivity === ActivityType.TREE && treeItems.length > 0 && (
+          <MonacoCore
+            key={currentActivity}
+            value=""
+            language="plaintext"
+          />
+        )}
+        {isShowVideoSignal.value !== null && (
+          <WebCam
+            setOn={isShowVideoSignal.value}
+          />
+        )}
+      </div>
+    </WebContainerProvider>
   );
 });
 

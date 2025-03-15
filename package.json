@@ -15,7 +15,6 @@
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx --report-unused-disable-directives --max-warnings 0",
     "lint:file": "eslint $1 --ext .js,.jsx,.ts,.tsx --report-unused-disable-directives --max-warnings 0",
     "lint:save": "eslint . --ext .js,.jsx,.ts,.tsx --report-unused-disable-directives --max-warnings 0 -f json > eslint-results.json",
-    "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx --fix",
     "lint:get-files": "jq -c '[.[] | select(.errorCount > 0 or .warningCount > 0) | { filePath: .filePath, errorCount: .errorCount, warningCount: .warningCount }]' eslint-files.json > eslint-files.json",
     "lint:get-files-csv": "jq -r 'sort_by(.errorCount) | reverse | .[] | select(.errorCount > 0) | [.errorCount, .filePath] | @csv' eslint-files.json > eslint-files.csv",
     "lint:save-files": "npm run lint:save; sleep 2 && npm run lint:get-files && npm run lint:get-files-csv",
