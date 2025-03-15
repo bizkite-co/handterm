@@ -114,7 +114,7 @@ async function inspect() {
   console.log("Inspection complete. Check the 'scripts/inspect' directory for results.");
   console.log("\n--- Browser Console Log ---");
   console.log(consoleLogText);
-  console.log("--- End of Browser Console Log ---");
+  console.log("--- End of Browser Console Log ---\n");
 }
 
 inspect().catch(err => {
