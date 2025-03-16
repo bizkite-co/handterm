@@ -12,7 +12,7 @@ describe('Prompt', () => {
 
   test('renders single prompt', () => {
     const { container } = render(<PromptHeader {...defaultProps} />);
-    const promptElements = container.querySelectorAll(TerminalCssClasses.promptHeader);
+    const promptElements = container.querySelectorAll('#' + TerminalCssClasses.promptHeader);
     expect(promptElements.length).toBe(1);
   });
 
@@ -22,7 +22,7 @@ describe('Prompt', () => {
     // Update props
     rerender(<PromptHeader {...defaultProps} timestamp="12:00:01" />);
 
-    const promptElements = container.querySelectorAll(TerminalCssClasses.promptHeader);
+    const promptElements = container.querySelectorAll('#' + TerminalCssClasses.promptHeader);
     expect(promptElements.length).toBe(1);
   });
 });

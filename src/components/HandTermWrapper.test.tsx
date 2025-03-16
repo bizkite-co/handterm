@@ -128,7 +128,6 @@ describe('HandTermWrapper', () => {
     isLoggedIn: false,
     isLoading: false,
     isError: false,
-    error: null,
     isPending: false
   };
 
