@@ -20,6 +20,9 @@ const logger = createLogger({
 
 const currentOutputKey = 'current-output';
 export const activitySignal = signal<ActivityType>(ActivityType.NORMAL);
+activitySignal.subscribe(value => {
+  console.log('activitySignal changed in appSignals:', value);
+});
 export const notificationSignal = signal<string | null>(null);
 export const isEditModeSignal = signal<boolean>(false);
 export const isShowVideoSignal = signal<boolean>(false);

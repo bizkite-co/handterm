@@ -25,6 +25,7 @@ import MonacoCore from './MonacoCore';
 import NextCharsDisplay, { type NextCharsDisplayHandle } from './NextCharsDisplay';
 import { PromptHeader } from './PromptHeader';
 import { TutorialManager } from './TutorialManager';
+import { activitySignal } from '../signals/appSignals';
 
 const logger = createLogger({
   prefix: 'HandTermWrapper',
@@ -51,61 +52,11 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
   const commandTime = useComputed(() => commandTimeSignal.value);
   const [treeItems, setTreeItems] = useState<TreeItem[]>([]);
 
-  // const [currentActivity, setCurrentActivity] = useState<ActivityType>(ActivityType.NORMAL);
-  const currentActivity = useMemo(() => parseLocation().activityKey, [location.search]);
+  const [currentActivity, setCurrentActivity] = useState<ActivityType>(ActivityType.NORMAL);
 
-  // // Update activity state when activitySignal changes
-  // useEffect(() => {
-  //   const updateActivity = () => {
-  //     // Only update if different to prevent unnecessary rerenders
-  //     if (currentActivity !== activitySignal.value) {
-  //       setCurrentActivity(activitySignal.value);
-
-  //       // Log when transitioning from TUTORIAL to GAME
-  //       if (currentActivity === ActivityType.TUTORIAL && activitySignal.value === ActivityType.GAME) {
-  //         logger.debug('Transitioning from TUTORIAL to GAME', {
-  //           tutorialSignal: tutorialSignal.value,
-  //           activitySignal: activitySignal.value
-  //         });
-  //       }
-  //     }
-  //   };
-
-  //   // Initial sync
-  //   updateActivity();
-
-  //   // Subscribe to signal changes
-  //   const unsubscribe = activitySignal.subscribe(updateActivity);
-
-  //   return () => {
-  //     unsubscribe();
-  //   };
-  //  }, [activitySignal.value]); // Add activitySignal.value to the dependency array
-
-  // // Handle location change events
-  // useEffect(() => {
-  //   const handleLocationChange = (event: Event) => {
-  //     const customEvent = event as CustomEvent;
-  //     const activity = customEvent.detail?.activity;
-  //     if (activity) {
-  //       activitySignal.value = activity;
-  //     }
-  //   };
-
-  //   window.addEventListener('locationchange', handleLocationChange);
-  //   return () => window.removeEventListener('locationchange', handleLocationChange);
-  // }, []);
-
-  // useEffect(() => {
-
-  //   // When tutorial signal changes to null, check if we should transition to GAME
-  //   if (tutorialSignal.value === null) {
-  //     // Only transition if we're currently in TUTORIAL mode
-  //     if (currentActivity === ActivityType.TUTORIAL) {
-  //       activitySignal.value = ActivityType.GAME;
-  //     }
-  //   }
-  // }, [currentActivity]);
+  useEffect(() => {
+    setCurrentActivity(activitySignal.value);
+  }, [activitySignal.value]);
 
   // Declare handlePhraseComplete with all its dependencies
   const handlePhraseComplete = useCallback(() => {
@@ -236,7 +187,7 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
   }, []);
 
   return (
-    <div id='handterm-wrapper'>
+    <div id='handterm-wrapper' data-testid='handterm-wrapper'>
       {currentActivity === ActivityType.GAME && (
         <Game
           ref={gameHandleRef}

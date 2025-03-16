@@ -12,22 +12,22 @@ export class TerminalTestUtils {
   }
 
   static async getPromptCount() {
-    const content = await this.getTerminalContent();
-    return (content.match(new RegExp(TERMINAL_CONSTANTS.PROMPT, 'g')) || []).length;
+      const terminal = await screen.findByTestId('xtermRef');
+      return (terminal.textContent?.match(/> /g) || []).length;
   }
 
   static async waitForPrompt() {
-    const terminal = await this.waitForTerminal();
     // Wait for the prompt to appear
     return new Promise<void>((resolve) => {
       const observer = new MutationObserver(async () => {
-        if (await this.getPromptCount() > 0) {
+        const terminal = screen.queryByTestId('xtermRef'); // Use queryByTestId here
+        if (terminal && terminal.textContent?.includes('> ')) {
           observer.disconnect();
           resolve();
         }
       });
-      
-      observer.observe(terminal, {
+
+      observer.observe(document.body, { // Observe the entire body
         childList: true,
         subtree: true,
         characterData: true

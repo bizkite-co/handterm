@@ -21,6 +21,7 @@
     "lint:fix-file": "eslint --fix",
     "lint:types": "tsc --noEmit",
     "lint:style": "prettier --check \"src/**/*.{ts,tsx,js,jsx}\"",
+    "pretest": "bash scripts/check_jsdoc_removals.sh",
     "test": "npm run test:unit; npm run test:e2e",
     "test:unit": "mkdir -p vitest-output; rm -rf vitest-output/*; vitest --run",
     "test:unit-save": "mkdir -p vitest-output; rm -rf vitest-output/*; vitest --run --reporter=json --outputFile=./vitest-output/vitest.json",
@@ -126,7 +127,6 @@
     "vite": "^6.2.2",
     "vite-plugin-node-polyfills": "^0.23.0",
     "vite-plugin-static-copy": "^2.3.0",
-    "vite-tsconfig-paths": "^5.1.4",
     "vitest": "latest"
   },
   "peerDependencies": {

@@ -27,8 +27,7 @@ export default defineConfig({
     server: {
       deps: {
         inline: [
-          'monaco-editor',
-          'monaco-vim'
+          'monaco-editor'
         ]
       }
     }
