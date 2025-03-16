@@ -43,27 +43,15 @@ export const useTerminal = (): { xtermRef: React.RefObject<HTMLDivElement>; writ
   }, [instance]);
 
   const getCurrentCommand = useCallback((): string => {
-    if (instance == null) return '';
-    const buffer = instance.buffer.active;
-    let command = '';
-    for (let i = 0; i <= buffer.cursorY; i++) {
-      const line = buffer.getLine(i);
-      if (line != null) {
-        command += line.translateToString(true);
-      }
-    }
-    const promptEndIndex = command.indexOf(TERMINAL_CONSTANTS.PROMPT) + TERMINAL_CONSTANTS.PROMPT_LENGTH;
-    const currentCommand = command.substring(promptEndIndex).trimStart();
-    logger.debug('Getting current command:', currentCommand);
-    return currentCommand;
-  }, [instance]);
+    return commandLine.value;
+  }, [commandLine]);
 
   const resetPrompt = useCallback((): void => {
     if (instance == null) return;
     logger.debug('Resetting prompt');
 
     // Get current content before reset
-    const currentContent = getCurrentCommand();
+    // const currentContent = getCurrentCommand(); // No longer needed
 
     // Reset terminal
     instance.reset();
@@ -71,9 +59,9 @@ export const useTerminal = (): { xtermRef: React.RefObject<HTMLDivElement>; writ
     _setCommandLineState('');
 
     // Write prompt only if needed
-    if (!currentContent.includes(TERMINAL_CONSTANTS.PROMPT)) {
-      instance.write(TERMINAL_CONSTANTS.PROMPT);
-    }
+    // if (!currentContent.includes(TERMINAL_CONSTANTS.PROMPT)) { // Removed this block
+    instance.write(TERMINAL_CONSTANTS.PROMPT);
+    // }
 
     instance.scrollToBottom();
   }, [instance, getCurrentCommand]);

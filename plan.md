@@ -1,26 +1,29 @@
-# Plan to Fix Failing Tests in `src/__tests__/commands/editCommand.test.ts`
+# Plan to Fix Failing Test in `src/hooks/useTerminal.test.ts`
 
 ## Goal
 
-Fix the failing tests in `src/__tests__/commands/editCommand.test.ts`.
+Fix the failing test "should maintain single prompt through complete lifecycle" in `src/hooks/useTerminal.test.ts`.
 
 ## Problem
 
-The tests in `src/__tests__/commands/editCommand.test.ts` are failing because they are asserting on the wrong function. The `editCommand` calls `context.updateLocation` to change the activity, but the tests are asserting on a mocked `window.setActivity` function, which is never called by the command.
+The test fails because the prompt is being written twice. The issue lies in the `useTerminal` hook, specifically in the `resetPrompt` and `getCurrentCommand` functions. The `resetPrompt` function unnecessarily checks if the prompt is already present before writing it, and the `getCurrentCommand` function uses an overly complex and error-prone method to retrieve the current command.
 
 ## Approach
 
-1.  **Update Assertions:** Modify the tests in `src/__tests__/commands/editCommand.test.ts` to assert on `mockContext.updateLocation` instead of `mockSetActivity`.
+1.  **Simplify `getCurrentCommand`:** Modify the `getCurrentCommand` function in `src/hooks/useTerminal.ts` to return the value of the `commandLineSignal` directly. This signal already tracks the current command.
+2.  **Remove Prompt Check in `resetPrompt`:** Remove the conditional check in the `resetPrompt` function (line 74 in `src/hooks/useTerminal.ts`) that prevents the prompt from being written if it's already present. The prompt should always be written after a reset.
+3.  **Update the Test (if needed):** The test's mock `write` function can likely remain as is, but the assertions might need slight adjustments to reflect the expected behavior after these changes.
 
 ## Steps
 
-1.  Open `src/__tests__/commands/editCommand.test.ts`.
-2.  Replace `expect(mockSetActivity).toHaveBeenCalledWith(ActivityType.EDIT);` with `expect(mockContext.updateLocation).toHaveBeenCalledWith({ activityKey: ActivityType.EDIT, contentKey: '_index.md', groupKey: null });` in the "should handle edit command with default filename" test.
-3.  Replace `expect(mockSetActivity).toHaveBeenCalledWith(ActivityType.EDIT);` with `expect(mockContext.updateLocation).toHaveBeenCalledWith({ activityKey: ActivityType.EDIT, contentKey: 'test.md', groupKey: null });` in the "should handle edit command with specific filename" test.
-4.  Remove the lines related to mocking and setting `window.setActivity` as they are not needed.
-5.  Run the tests to verify the fix.
+1.  Open `src/hooks/useTerminal.ts`.
+2.  Replace the implementation of `getCurrentCommand` with `return commandLine.value;`.
+3.  Remove the `if (!currentContent.includes(TERMINAL_CONSTANTS.PROMPT)) { ... }` block from the `resetPrompt` function.
+4.  Open `src/hooks/useTerminal.test.ts`.
+5.  Review and adjust the assertions in the "should maintain single prompt through complete lifecycle" test as needed.
+6.  Run the tests to verify the fix.
 
 ## GitHub Issue and Subtask
 
 *   **Parent Issue:** #79 (Fix Failing Vitest Tests)
-*   **Subtask:** Fix failing tests in `src/__tests__/commands/editCommand.test.ts`
+*   **Subtask:** Fix failing test in `useTerminal.test.ts`
