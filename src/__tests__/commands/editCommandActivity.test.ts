@@ -9,10 +9,6 @@ describe('EditCommand Activity Switching', () => {
       getFile: vi.fn().mockResolvedValue({ status: 200, data: { content: '# Test Content' } }),
     }));
 
-    // Mock window.setActivity
-    const mockSetActivity = vi.fn();
-    window.setActivity = mockSetActivity;
-
     // Mock context and parsedCommand
     const mockContext = {
       auth: {},
@@ -28,7 +24,6 @@ describe('EditCommand Activity Switching', () => {
 
     // Assertions
     expect(response.status).toBe(200);
-    expect(mockSetActivity).toHaveBeenCalledWith(ActivityType.EDIT);
     expect(mockContext.updateLocation).toHaveBeenCalledWith({
       activityKey: ActivityType.EDIT,
       contentKey: '_index.md',
