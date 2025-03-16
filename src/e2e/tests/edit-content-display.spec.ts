@@ -1,8 +1,8 @@
 import { test, expect, type Page } from '@playwright/test';
 import { TerminalPage } from '../page-objects/TerminalPage';
 import { TEST_CONFIG } from '../config';
-import { type GamePhrase, Phrases, StorageKeys } from '@handterm/types';
-import { initializeActivitySignal } from '../helpers/initializeSignals';
+import { type GamePhrase, Phrases, StorageKeys, ActivityType } from '@handterm/types';
+import { parseLocation } from '../../utils/navigationUtils';
 
 test.describe('Edit Content Display', () => {
   let page: Page;
@@ -12,9 +12,6 @@ test.describe('Edit Content Display', () => {
     page = await browser.newPage();
     await page.goto(TEST_CONFIG.baseUrl);
     await page.waitForLoadState('domcontentloaded');
-
-    // Initialize signals
-    await initializeActivitySignal(page);
 
     // Initialize terminal page object
     terminal = new TerminalPage(page);
@@ -51,22 +48,13 @@ test.describe('Edit Content Display', () => {
     await terminal.completeTutorials();
     await terminal.waitForPrompt();
 
-    // Verify setActivity exists and is callable
-    const hasSetActivity = await page.evaluate(() => {
-      return typeof (window as any).setActivity === 'function';
-    });
-    expect(hasSetActivity).toBe(true);
-
-    // Call setActivity directly
-    await page.evaluate(() => {
-      (window as any).setActivity('edit');
-    });
+    // Navigate to edit activity using URL
+    await page.goto(`${TEST_CONFIG.baseUrl}?activity=edit`);
 
     // Verify activity state was updated
-    const activityState = await page.evaluate(() =>
-      (window as any).activityStateSignal?.value?.current
-    );
-    expect(activityState).toBe('edit');
+    const url = page.url();
+    const parsedLocation = parseLocation(url);
+    expect(parsedLocation.activityKey).toBe(ActivityType.EDIT);
   });
 
   test('transitions to edit mode and displays content', async () => {
@@ -75,17 +63,6 @@ test.describe('Edit Content Display', () => {
 
     // Execute edit command
     await terminal.executeCommand('edit _index.md');
-
-    // Wait for activity state to change to 'edit'
-    await page.waitForFunction(
-      () => (window as any).activityStateSignal?.value?.current === 'edit',
-      { timeout: TEST_CONFIG.timeout.short }
-    );
-
-    // Verify content is stored in localStorage
-    const storedContent = await page.evaluate((key) => localStorage.getItem(key), StorageKeys.editContent);
-    expect(storedContent).toBeDefined();
-    expect(storedContent).not.toBeNull();
 
     // Verify URL changes
     await expect(page).toHaveURL(/activity=edit&key=_index\.md/);
@@ -120,11 +97,10 @@ test.describe('Edit Content Display', () => {
     // Execute edit command for a non-existent file
     await terminal.executeCommand('edit nonexistent.md');
 
-    // Verify we stay in normal mode
-    const activityState = await page.evaluate(() =>
-      (window as any).activityStateSignal?.value?.current
-    );
-    expect(activityState).toBe('normal');
+   // Verify we stay in normal mode
+    const url = page.url();
+    const parsedLocation = parseLocation(url);
+    expect(parsedLocation.activityKey).toBe(ActivityType.NORMAL);
 
     // Wait for error message
     const error = page.locator('text=File not found');

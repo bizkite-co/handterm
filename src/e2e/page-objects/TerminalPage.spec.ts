@@ -1,7 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { TerminalPage } from './TerminalPage';
 import { TEST_CONFIG } from '../config';
-import { initializeActivitySignal } from '../helpers/initializeSignals';
 import { TERMINAL_CONSTANTS } from 'src/constants/terminal';
 import { setupBrowserWindow } from '../browser-setup/setupWindow';
 
@@ -12,9 +11,6 @@ test.describe('TerminalPage', () => {
     // First navigate to the page
     await page.goto(TEST_CONFIG.baseUrl);
     await page.waitForLoadState('domcontentloaded');
-
-    // Initialize signals
-    await initializeActivitySignal(page);
 
     // Initialize terminal page object
     terminal = new TerminalPage(page);
@@ -183,9 +179,6 @@ test.describe('TerminalPage', () => {
     // First navigate to the page
     await page.goto(TEST_CONFIG.baseUrl);
     await page.waitForLoadState('domcontentloaded');
-
-    // Initialize signals
-    await initializeActivitySignal(page);
 
     // Initialize terminal page object
     const terminal = new TerminalPage(page);

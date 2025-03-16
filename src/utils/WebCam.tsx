@@ -1,5 +1,6 @@
 import type React from 'react';
 import { useRef, useEffect } from 'react';
+import type { JSX } from 'react';
 
 export interface WebCamProps {
     setOn: boolean;
@@ -57,9 +58,7 @@ const WebCam: React.FC<WebCamProps> = ({ setOn }): JSX.Element => {
     }, [setOn]);
 
     return (
-      <video ref={videoRef} style={{ width: '100%', height: 'auto' }}>
-        <track kind="captions" src="" label="No captions available" />
-      </video>
+      <video ref={videoRef} style={{ width: '100%', height: 'auto' }} />
     );
 };
 

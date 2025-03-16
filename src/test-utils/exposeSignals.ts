@@ -20,7 +20,6 @@
 
 import { signal } from '@preact/signals-core';
 import { commandLineSignal } from '../signals/commandLineSignals';
-import { activityState } from '../utils/activityState';
 import { createPersistentSignal } from '../utils/signalPersistence';
 import {
   type WindowExtensions,
@@ -45,11 +44,9 @@ function isWindowWithSignals(win: unknown): win is Window & WindowExtensions {
   const winWithSignals = win as Window & Partial<WindowExtensions>;
 
   const requiredProperties = [
-    'activityStateSignal',
     'commandLineSignal',
     'tutorialSignals',
     'ActivityType',
-    'setActivity',
     'tutorialSignal',
     'completedTutorialsSignal',
     'setNextTutorial',
@@ -84,9 +81,6 @@ function initializeWindow(): void {
   }
 
   try {
-    // Create activity signal using @preact/signals-core
-    const activityStateSignal = signal(activityState.value);
-
     // Create tutorial signals using persistent storage
     const { signal: completedTutorialsSignal, update: updateCompletedTutorials } = createPersistentSignal({
       key: 'completed-tutorials',
@@ -121,7 +115,6 @@ function initializeWindow(): void {
 
     // Initialize window properties with proper descriptors
     const signalsToAttach = {
-      activityStateSignal,
       commandLineSignal,
       ActivityType,
       tutorialSignals,
@@ -134,15 +127,6 @@ function initializeWindow(): void {
       getNextTutorial,
       setCompletedTutorial,
       updateCompletedTutorials,
-      setActivity: (activity: ActivityType) => {
-        const currentState = activityStateSignal.value;
-        activityStateSignal.value = {
-          current: activity,
-          previous: currentState.current,
-          transitionInProgress: false,
-          tutorialCompleted: currentState.tutorialCompleted
-        };
-      },
       executeCommand: async (command: string): Promise<void> => {
         console.log('[exposeSignals] Executing command:', command);
         commandLineSignal.value = command;
@@ -151,7 +135,6 @@ function initializeWindow(): void {
     };
 
     console.log('[exposeSignals] Attaching signals:', {
-      activityStateSignal: !!signalsToAttach.activityStateSignal,
       commandLineSignal: !!signalsToAttach.commandLineSignal,
       tutorialSignals: !!signalsToAttach.tutorialSignals
     });

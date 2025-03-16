@@ -4,6 +4,7 @@ export const TEST_CONFIG = {
     short: 2000,
     medium: 4000,
     long: 8000,
-    extraLong: 12_000
+    extraLong: 12_000,
+    transition: 5000
   }
 };

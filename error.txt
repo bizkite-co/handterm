@@ -1,23 +1,13 @@
-WebContainerContext.tsx:21 
- initWebContainer called Error Component Stack
-    at WebContainerProvider (WebContainerContext.tsx:15:74)
-    at HandTermWrapper.tsx:39:54
-    at CommandProvider (CommandProvider.tsx:20:67)
+hook.js:608 
+ An empty string ("") was passed to the src attribute. This may cause the browser to download the whole page again over the network. To fix this, either do not render the element at all or pass null to src instead of an empty string. Error Component Stack
+    at track (<anonymous>)
+    at video (<anonymous>)
+    at WebCam (WebCam.tsx:8:42)
+    at div (<anonymous>)
+    at HandTermWrapper (HandTermWrapper.tsx:37:54)
+    at CommandProvider (CommandProvider.tsx:21:67)
     at AppProvider (AppContext.tsx:29:72)
     at div (<anonymous>)
     at ActivityMediatorProvider (ActivityMediatorContext.tsx:22:85)
     at App (App.tsx:17:24)
     at QueryProvider (QueryProvider.tsx:21:33)
-WebContainerContext.tsx:21 
- initWebContainer called
-WebContainerContext.tsx:34 
- Failed to initialize WebContainer: Error: Only a single WebContainer instance can be booted
-    at WebContainerContext.tsx:27:37
-    at WebContainerContext.tsx:47:5
-WebContainerContext.tsx:34 
- Failed to initialize WebContainer: Error: Only a single WebContainer instance can be booted
-    at WebContainerContext.tsx:27:37
-    at WebContainerContext.tsx:47:5
-headless:1 
- The resource https://w-corp-staticblitz.com/fetch.worker.eb2a6bdc.js was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.
-﻿

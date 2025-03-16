@@ -1,37 +1,28 @@
 import { test, expect } from '@playwright/test';
 import { ActivityType } from '@handterm/types';
-import { initializeActivitySignal } from '../helpers/initializeSignals';
+import { parseLocation } from '../../utils/navigationUtils';
 
 test.describe('Signal Initialization', () => {
-  test('should initialize activity signal', async ({ page }) => {
+  test('should initialize activity from URL', async ({ page }) => {
     await page.goto('/');
     await page.waitForLoadState('domcontentloaded');
 
-    await initializeActivitySignal(page);
+    const url = page.url();
+    const parsedLocation = parseLocation(url);
 
-    const signalState = await page.evaluate(() => ({
-      hasSignal: !!window.activityStateSignal,
-      current: window.activityStateSignal?.value?.current
-    }));
-
-    expect(signalState.hasSignal).toBe(true);
-    expect(signalState.current).toBe(ActivityType.TUTORIAL);
+    expect(parsedLocation.activityKey).toBe(ActivityType.NORMAL);
   });
 
-  test('should handle multiple signal initializations', async ({ page }) => {
+  test('should handle multiple navigations', async ({ page }) => {
     await page.goto('/');
     await page.waitForLoadState('domcontentloaded');
 
-    // Initialize twice
-    await initializeActivitySignal(page);
-    await initializeActivitySignal(page);
+    // Navigate twice
+    await page.goto('/?activity=edit');
+    await page.goto('/?activity=tree');
 
-    const signalState = await page.evaluate(() => ({
-      hasSignal: !!window.activityStateSignal,
-      current: window.activityStateSignal?.value?.current
-    }));
-
-    expect(signalState.hasSignal).toBe(true);
-    expect(signalState.current).toBe(ActivityType.TUTORIAL);
+    const url = page.url();
+    const parsedLocation = parseLocation(url);
+    expect(parsedLocation.activityKey).toBe(ActivityType.TREE);
   });
 });

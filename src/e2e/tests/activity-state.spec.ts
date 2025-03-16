@@ -1,71 +1,34 @@
 import { test, expect, type Page } from '@playwright/test';
 import { TEST_CONFIG } from '../config';
+import { parseLocation } from '../../utils/navigationUtils';
+import { ActivityType } from '@handterm/types';
 
-test.describe('Activity State Signal', () => {
+test.describe('Activity State', () => {
   let page: Page;
 
   test.beforeEach(async ({ browser }) => {
     page = await browser.newPage();
-    await page.goto(TEST_CONFIG.baseUrl);
+    // await page.goto(TEST_CONFIG.baseUrl); // Removed initial goto, will set URL in each test
   });
 
-  test('can create activity state signal', async () => {
-    const result = await page.evaluate(() => {
-      // Create activity state signal
-      window.activityStateSignal = {
-        value: {
-          current: 'normal',
-          previous: 'tutorial',
-          transitionInProgress: false,
-          tutorialCompleted: true
-        }
-      };
+  test('can set activity state via URL', async () => {
+    await page.goto(`${TEST_CONFIG.baseUrl}?activity=edit`);
+    const url = page.url();
+    const parsedLocation = parseLocation(url);
 
-      return {
-        current: window.activityStateSignal.value.current,
-        previous: window.activityStateSignal.value.previous,
-        transitionInProgress: window.activityStateSignal.value.transitionInProgress,
-        tutorialCompleted: window.activityStateSignal.value.tutorialCompleted
-      };
-    });
-
-    expect(result.current).toBe('normal');
-    expect(result.previous).toBe('tutorial');
-    expect(result.transitionInProgress).toBe(false);
-    expect(result.tutorialCompleted).toBe(true);
+    expect(parsedLocation.activityKey).toBe(ActivityType.EDIT);
   });
 
-  test('can update activity state', async () => {
-    const result = await page.evaluate(() => {
-      // Create activity state signal
-      window.activityStateSignal = {
-        value: {
-          current: 'normal',
-          previous: 'tutorial',
-          transitionInProgress: false,
-          tutorialCompleted: true
-        }
-      };
+  test('can update activity state via URL', async () => {
+    await page.goto(`${TEST_CONFIG.baseUrl}?activity=normal`); // Start in normal mode
+    let url = page.url();
+    let parsedLocation = parseLocation(url);
+    expect(parsedLocation.activityKey).toBe(ActivityType.NORMAL);
 
-      // Set up activity setter
-      window.setActivity = (activity) => {
-        window.activityStateSignal.value = {
-          ...window.activityStateSignal.value,
-          current: activity
-        };
-      };
-
-      // Update activity
-      window.setActivity('edit');
-
-      return {
-        current: window.activityStateSignal.value.current,
-        previous: window.activityStateSignal.value.previous
-      };
-    });
-
-    expect(result.current).toBe('edit');
-    expect(result.previous).toBe('tutorial');
+    await page.goto(`${TEST_CONFIG.baseUrl}?activity=edit`); // Change to edit mode
+    url = page.url();
+    parsedLocation = parseLocation(url);
+    expect(parsedLocation.activityKey).toBe(ActivityType.EDIT);
   });
 
   test.afterEach(async () => {

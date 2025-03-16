@@ -6,14 +6,6 @@ import { type IStandaloneCodeEditor, type ActivityType } from '@handterm/types';
 declare global {
 	interface Window {
 		monacoEditor?: IStandaloneCodeEditor;
-		activityStateSignal: {
-			value: {
-				current: ActivityType;
-				previous: ActivityType | null;
-				transitionInProgress: boolean;
-				tutorialCompleted: boolean;
-			};
-		};
 	}
 }
 
@@ -42,19 +34,12 @@ export class EditorPage {
 		// Verify editor-specific functions and state
 		const verification = await this.page.evaluate(() => ({
 			hasMonacoEditor: typeof window.monacoEditor !== 'undefined',
-			hasActivitySignal: !!window.activityStateSignal,
-			currentActivity: window.activityStateSignal?.value?.current,
 		}));
 
 		if (!verification.hasMonacoEditor) {
 			throw new Error('Monaco editor not properly initialized');
 		}
-		if (!verification.hasActivitySignal) {
-			throw new Error('Activity signal not properly initialized');
-		}
 
-		// Wait for the activity state to change to 'edit'
-		await this.page.waitForFunction(() => window.activityStateSignal?.value?.current === 'edit');
 		await this.waitForEditor();
 	}
 

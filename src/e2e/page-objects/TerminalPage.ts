@@ -7,27 +7,18 @@ import type { ActivityType, GamePhrase, IHandTermWrapperMethods, ActionType, Par
 import { TEST_CONFIG } from '../config';
 import { setupBrowserWindow } from '../browser-setup/setupWindow';
 import { type Terminal } from '@xterm/xterm';
+import { parseLocation } from '../../utils/navigationUtils';
 
 // Extend Window interface for our signals and ref
 declare global {
   interface Window {
     tutorialSignal: Signal<GamePhrase | null>;
-    activitySignal: Signal<ActivityType>;
     handtermRef: React.RefObject<IHandTermWrapperMethods>;
-    activityStateSignal: {
-      value: {
-        current: ActivityType;
-        previous: ActivityType | null;
-        transitionInProgress: boolean;
-        tutorialCompleted: boolean;
-      };
-    };
     completedTutorialsSignal: {
       value: Set<string>;
     };
     TERMINAL_CONSTANTS: typeof TERMINAL_CONSTANTS;
     terminalInstance: Terminal// or more specific type from xterm.js
-    setActivity: (activity: ActivityType) => void;
     setCompletedTutorial: (key: string) => void;
   }
 }
@@ -57,18 +48,14 @@ export class TerminalPage {
     // Verify window functions are properly exposed
     const verification = await this.page.evaluate(() => ({
       hasSetCompletedTutorial: typeof window.setCompletedTutorial === 'function',
-      hasSetActivity: typeof window.setActivity === 'function',
-      hasSignals: !!window.activityStateSignal
+      hasSignals: !!window.completedTutorialsSignal // Only check for completedTutorialsSignal
     }));
 
     if (!verification.hasSetCompletedTutorial) {
       throw new Error('Required window function setCompletedTutorial was not properly exposed');
     }
-    if (!verification.hasSetActivity) {
-      throw new Error('Required window function setActivity was not properly exposed');
-    }
     if (!verification.hasSignals) {
-      throw new Error('Required activity signal was not properly exposed');
+      throw new Error('Required completedTutorialsSignal was not properly exposed');
     }
 
     // Navigate to the page and wait for terminal
@@ -118,7 +105,7 @@ export class TerminalPage {
    * Focuses the terminal
    */
   public async focus(): Promise<void> {
-    await this.terminal.focus();
+    await this.terminal.click();
   }
 
   /**
@@ -130,9 +117,11 @@ export class TerminalPage {
     while (Date.now() - startTime < timeout) {
       try {
         const state = await this.page.evaluate(() => {
+          const url = window.location.href;
+          const parsedLocation = parseLocation(url);
           return {
-            activity: localStorage.getItem('activity'),
-            url: window.location.href,
+            activity: parsedLocation.activityKey,
+            url: url,
             tutorialVisible: !!document.querySelector('.tutorial-prompt'),
             handtermWrapper: document.querySelector('#handterm-wrapper'),
           };
@@ -323,25 +312,6 @@ export class TerminalPage {
     await this.terminal.click();
     await this.page.keyboard.press('Control+C');
     await this.waitForPrompt();
-  }
-
-  public async getActivityMediator(): Promise<{
-    isInGameMode: boolean;
-    isInTutorial: boolean;
-    isInEdit: boolean;
-    isInNormal: boolean;
-    checkTutorialProgress: (command: string | null) => void;
-    heroAction: ActionType;
-    zombie4Action: ActionType;
-    handleCommandExecuted: (parsedCommand: ParsedCommand) => boolean;
-    setHeroAction: React.Dispatch<React.SetStateAction<ActionType>>;
-    setZombie4Action: React.Dispatch<React.SetStateAction<ActionType>>;
-    checkGameProgress: (successPhrase: GamePhrase) => void;
-    setActivity: (activity: ActivityType) => void;
-  } | undefined> {
-    return await this.page.evaluate(() => {
-      return window.handtermRef?.current?.activityMediator;
-    });
   }
 
   async completeTutorials(): Promise<void> {

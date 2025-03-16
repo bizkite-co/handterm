@@ -6,9 +6,8 @@ import { TEST_CONFIG } from '../config';
 declare global {
   interface Window {
     completedTutorialsSignal: { value: Set<string> };
-    tutorialSignal: Signal<GamePhrase | null>;
-    activityStateSignal: { value: { current: ActivityType; previous: string | null; transitionInProgress: boolean; tutorialCompleted: boolean; } };
-    setNextTutorial: (tutorial: string | null) => void;
+    tutorialSignal: any; // Simplified type
+    setNextTutorial: (tutorial: GamePhrase | null) => void; // Updated type
     setCompletedTutorial: (key: string) => void;
     localStorage: any;
     Phrases: string[];
@@ -25,7 +24,7 @@ const TIMEOUTS = {
   short: TEST_CONFIG.timeout.short,
   medium: TEST_CONFIG.timeout.medium,
   long: TEST_CONFIG.timeout.long,
-  transition: TEST_CONFIG.timeout.transition
+  transition: TEST_CONFIG.timeout.transition // Keep transition timeout
 } as const;
 
 /**
@@ -54,7 +53,6 @@ async function logVisibleElements(page: Page, context: string): Promise<void> {
 // Type guards and interfaces
 interface TutorialSignalState {
   tutorialSignal: unknown;
-  activitySignal: unknown;
   completedTutorials: string | null;
   tutorialState: string | null;
 }
@@ -139,42 +137,35 @@ async function completeTutorial(page: Page, input: string): Promise<void> {
 /**
  * Helper function to log tutorial state
  */
-async function logTutorialState(page: Page, label: string): Promise<void> {
-  const state = await page.evaluate((): TutorialSignalState => {
-    // Mock signal implementation (duplicated for each evaluate call)
-    function createSignal<T>(initialValue: T) {
-      let value = initialValue;
-      const subscribers = new Set<(newValue: T) => void>();
+// async function logTutorialState(page: Page, label: string): Promise<void> {
+//   const state = await page.evaluate((): TutorialSignalState => {
+//     // Mock signal implementation (duplicated for each evaluate call)
+//     function createSignal<T>(initialValue: T) {
+//       let value = initialValue;
+//       const subscribers = new Set<(newValue: T) => void>();
 
-      return {
-        get value() { return value; },
-        set value(newValue: T) {
-          value = newValue;
-          subscribers.forEach(fn => fn(value));
-        },
-        subscribe(fn: (newValue: T) => void) {
-          subscribers.add(fn);
-          return () => subscribers.delete(fn);
-        }
-      };
-    }
-    window.completedTutorialsSignal = createSignal(new Set<string>());
-    window.tutorialSignal = createSignal(null);
-    window.activityStateSignal = createSignal({
-      current: 'TUTORIAL',
-      previous: null,
-      transitionInProgress: false,
-      tutorialCompleted: false
-    });
-    return {
-      tutorialSignal: window.tutorialSignal.value,
-      activitySignal: window.activityStateSignal.value,
-      completedTutorials: localStorage.getItem('completed-tutorials'),
-      tutorialState: localStorage.getItem('tutorial-state')
-    };
-  });
-  console.log(`[${label}]`, state);
-}
+//       return {
+//         get value() { return value; },
+//         set value(newValue: T) {
+//           value = newValue;
+//           subscribers.forEach(fn => fn(value));
+//         },
+//         subscribe(fn: (newValue: T) => void) {
+//           subscribers.add(fn);
+//           return () => subscribers.delete(fn);
+//         }
+//       };
+//     }
+//     window.completedTutorialsSignal = createSignal(new Set<string>());
+//     window.tutorialSignal = createSignal(null);
+//     return {
+//       tutorialSignal: window.tutorialSignal.value,
+//       completedTutorials: localStorage.getItem('completed-tutorials'),
+//       tutorialState: localStorage.getItem('tutorial-state')
+//     };
+//   });
+//   console.log(`[${label}]`, state);
+// }
 
 test.describe('Tutorial Mode', () => {
   test.describe('tutorial progression', () => { // Changed to test.describe (parallel execution)
@@ -183,7 +174,7 @@ test.describe('Tutorial Mode', () => {
 
       // Mock localStorage
       await page.evaluate(() => {
-        const localStorageMock = {
+        const localStorageMock: { [key: string]: string } = { // Updated type
           storage: {},
           getItem: function (key: string) {
             return this.storage[key] ?? null;
@@ -198,38 +189,24 @@ test.describe('Tutorial Mode', () => {
             this.storage = {};
           }
         };
-        window.localStorage = localStorageMock;
+        (window as any).localStorage = localStorageMock; // Type assertion
       });
 
       // Mock signal and function implementations
       await page.evaluate(() => {
-        window.completedTutorialsSignal = { value: new Set() };
-        window.tutorialSignal = { value: null };
-        window.activityStateSignal = {
-          value: {
-            current: 'TUTORIAL',
-            previous: null,
-            transitionInProgress: false,
-            tutorialCompleted: false
-          }
-        };
-        window.setActivity = (activity) => {
-          console.log('[Test Setup] Setting activity:', activity);
-          window.activityStateSignal.value.current = activity;
-        };
-        window.setNextTutorial = (tutorial) => {
+        (window as any).completedTutorialsSignal = { value: new Set() };
+        (window as any).tutorialSignal = { value: null }; // Simplified mock
+        (window as any).setNextTutorial = (tutorial: GamePhrase | null) => { // Updated type
           console.log('[Test Setup] Setting tutorial:', tutorial);
           window.tutorialSignal.value = tutorial;
         };
 
-        window.setCompletedTutorial = (key) => {
+        (window as any).setCompletedTutorial = (key: string) => {
           console.log('[Test Setup] Completing tutorial:', key);
           window.completedTutorialsSignal.value.add(key);
         }
         console.log("[Test Setup] window.completedTutorialsSignal:", window.completedTutorialsSignal);
         console.log("[Test Setup] window.tutorialSignal:", window.tutorialSignal);
-        console.log("[Test Setup] window.activityStateSignal:", window.activityStateSignal);
-        console.log("[Test Setup] window.setActivity:", window.setActivity);
         console.log("[Test Setup] window.setNextTutorial:", window.setNextTutorial);
         console.log("[Test Setup] window.setCompletedTutorial:", window.setCompletedTutorial);
 
@@ -270,7 +247,7 @@ test.describe('Tutorial Mode', () => {
         throw error;
       }
 
-      await logTutorialState(page, 'Before Enter');
+      // await logTutorialState(page, 'Before Enter');
 
       // Complete \r tutorial
       try {
@@ -294,7 +271,7 @@ test.describe('Tutorial Mode', () => {
       });
       expect(isCompleted, 'Tutorial \\r should be completed').toBe(true);
 
-      await logTutorialState(page, 'After Enter');
+      // await logTutorialState(page, 'After Enter');
     });
 
     test('should complete fdsa tutorial', async ({ page }) => {
@@ -302,11 +279,11 @@ test.describe('Tutorial Mode', () => {
       await terminalPage.waitForTutorialMode();
       await expect(terminalPage.tutorialMode).toBeVisible({ timeout: TIMEOUTS.medium });
       await completeTutorial(page, '');
-      await logTutorialState(page, 'After completing \\r');
+      // await logTutorialState(page, 'After completing \\r');
 
       // Now complete fdsa tutorial
       await completeTutorial(page, 'fdsa');
-      await logTutorialState(page, 'After completing fdsa');
+      // await logTutorialState(page, 'After completing fdsa');
 
       // Verify both tutorials are completed
       const completedTutorials = await page.evaluate(() => {
@@ -323,11 +300,11 @@ test.describe('Tutorial Mode', () => {
       await terminalPage.waitForTutorialMode();
       await completeTutorial(page, '');
       await completeTutorial(page, 'fdsa');
-      await logTutorialState(page, 'After completing prerequisites');
+      // await logTutorialState(page, 'After completing prerequisites');
 
       // Now complete jkl; tutorial
       await completeTutorial(page, 'jkl;');
-      await logTutorialState(page, 'After completing jkl;');
+      // await logTutorialState(page, 'After completing jkl;');
 
       // Verify all tutorials are completed in order
       const completedTutorials = await page.evaluate(() => {
@@ -348,7 +325,7 @@ test.describe('Tutorial Mode', () => {
             ? parsed as string[]
             : [] as string[];
         } catch {
-          return [];
+          return [] as string[];
         }
       });
       expect(completed, 'Unexpected completed tutorials before game transition').toEqual(['\\r', 'fdsa']);
@@ -356,7 +333,7 @@ test.describe('Tutorial Mode', () => {
       await terminalPage.waitForActivityTransition();
       await expect(terminalPage.tutorialMode, 'Tutorial mode still visible after transition').not.toBeVisible({ timeout: TIMEOUTS.transition });
       await expect(terminalPage.gameMode, 'Game mode not visible after transition').toBeVisible({ timeout: TIMEOUTS.transition });
-      await logTutorialState(page, 'After Game Transition');
+      // await logTutorialState(page, 'After Game Transition');
     });
 
     test('should complete game phrase and return to tutorial', async ({ page }) => {
@@ -386,7 +363,7 @@ test.describe('Tutorial Mode', () => {
       // Verify return to tutorial
       await expect(terminalPage.gameMode, 'Game mode still visible after completion').not.toBeVisible({ timeout: TIMEOUTS.transition });
       await expect(terminalPage.tutorialMode, 'Tutorial mode not visible after completion').toBeVisible({ timeout: TIMEOUTS.transition });
-      await logTutorialState(page, 'Final State');
+      // await logTutorialState(page, 'Final State');
     });
 
     test('test isTutorialCompleted', async ({ page }) => { // New basic test for isTutorialCompleted

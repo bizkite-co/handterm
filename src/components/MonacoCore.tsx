@@ -2,6 +2,8 @@ import { useRef, useEffect, useState } from 'react';
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 import { initVimMode } from 'monaco-vim';
 import { ActivityType, StorageKeys } from '@handterm/types';
+import { navigate } from '../utils/navigationUtils';
+import type { JSX } from 'react';
 
 declare global {
   interface Window {
@@ -33,16 +35,18 @@ export function defineVimCommands(editorRef: React.MutableRefObject<monaco.edito
         });
 
         Vim.defineEx('q', '', () => {
-        if (typeof window.setActivity === 'function') {
-            window.setActivity(ActivityType.NORMAL);
-        }
+        // if (typeof window.setActivity === 'function') {
+        //     window.setActivity(ActivityType.NORMAL);
+        // }
+        navigate({ activityKey: ActivityType.NORMAL });
         localStorage.removeItem(StorageKeys.editContent);
         });
 
         Vim.defineEx('q!', '', () => {
-        if (typeof window.setActivity === 'function') {
-            window.setActivity(ActivityType.NORMAL);
-        }
+        // if (typeof window.setActivity === 'function') {
+        //     window.setActivity(ActivityType.NORMAL);
+        // }
+        navigate({ activityKey: ActivityType.NORMAL });
         localStorage.removeItem(StorageKeys.editContent);
         });
 
@@ -51,9 +55,10 @@ export function defineVimCommands(editorRef: React.MutableRefObject<monaco.edito
             const content = editorRef.current.getValue();
             localStorage.setItem(StorageKeys.editContent, JSON.stringify(content));
         }
-        if (typeof window.setActivity === 'function') {
-            window.setActivity(ActivityType.NORMAL);
-        }
+        // if (typeof window.setActivity === 'function') {
+        //     window.setActivity(ActivityType.NORMAL);
+        // }
+        navigate({ activityKey: ActivityType.NORMAL });
         localStorage.removeItem(StorageKeys.editContent);
         });
         Vim.defineEx('vid', '', () => {

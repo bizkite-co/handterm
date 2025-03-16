@@ -38,14 +38,7 @@ test.describe('Edit Content Vim Navigation', () => {
       const win = window as any;
       win.completedTutorialsSignal = { value: new Set(allTutorialKeys) };
       win.tutorialSignal = { value: null };
-      win.activityStateSignal = {
-        value: {
-          current: 'normal' as ActivityType,
-          previous: 'tutorial' as ActivityType,
-          transitionInProgress: false,
-          tutorialCompleted: true
-        }
-      };
+      // Remove activityStateSignal mock
     }, Phrases);
 
     // Wait for application to be ready

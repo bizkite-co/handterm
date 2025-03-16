@@ -1,10 +1,10 @@
-import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState, useMemo } from 'react';
 import { useComputed } from '@preact/signals-react';
 import { Game, type IGameHandle } from '../game/Game';
 import { useActivityMediator } from '../hooks/useActivityMediator';
 import { useTerminal } from '../hooks/useTerminal';
 import { useWPMCalculator } from '../hooks/useWPMCaculator';
-import { activitySignal, isShowVideoSignal } from '../signals/appSignals';
+import { isShowVideoSignal } from '../signals/appSignals';
 import { commandTimeSignal } from '../signals/commandLineSignals';
 import { setGamePhrase } from '../signals/gameSignals';
 import { tutorialSignal } from '../signals/tutorialSignals';
@@ -17,7 +17,7 @@ import {
   type IHandTermWrapperMethods
 } from '@handterm/types';
 import { createLogger, LogLevel } from '../utils/Logger';
-import { parseLocation } from '../utils/navigationUtils';
+import { parseLocation, navigate } from '../utils/navigationUtils';
 import WebCam from '../utils/WebCam';
 
 import { Chord } from './Chord';
@@ -51,60 +51,61 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
   const commandTime = useComputed(() => commandTimeSignal.value);
   const [treeItems, setTreeItems] = useState<TreeItem[]>([]);
 
-  const [currentActivity, setCurrentActivity] = useState<ActivityType>(ActivityType.NORMAL);
+  // const [currentActivity, setCurrentActivity] = useState<ActivityType>(ActivityType.NORMAL);
+  const currentActivity = useMemo(() => parseLocation().activityKey, [location.search]);
 
-  // Update activity state when activitySignal changes
-  useEffect(() => {
-    const updateActivity = () => {
-      // Only update if different to prevent unnecessary rerenders
-      if (currentActivity !== activitySignal.value) {
-        setCurrentActivity(activitySignal.value);
+  // // Update activity state when activitySignal changes
+  // useEffect(() => {
+  //   const updateActivity = () => {
+  //     // Only update if different to prevent unnecessary rerenders
+  //     if (currentActivity !== activitySignal.value) {
+  //       setCurrentActivity(activitySignal.value);
 
-        // Log when transitioning from TUTORIAL to GAME
-        if (currentActivity === ActivityType.TUTORIAL && activitySignal.value === ActivityType.GAME) {
-          logger.debug('Transitioning from TUTORIAL to GAME', {
-            tutorialSignal: tutorialSignal.value,
-            activitySignal: activitySignal.value
-          });
-        }
-      }
-    };
+  //       // Log when transitioning from TUTORIAL to GAME
+  //       if (currentActivity === ActivityType.TUTORIAL && activitySignal.value === ActivityType.GAME) {
+  //         logger.debug('Transitioning from TUTORIAL to GAME', {
+  //           tutorialSignal: tutorialSignal.value,
+  //           activitySignal: activitySignal.value
+  //         });
+  //       }
+  //     }
+  //   };
 
-    // Initial sync
-    updateActivity();
+  //   // Initial sync
+  //   updateActivity();
 
-    // Subscribe to signal changes
-    const unsubscribe = activitySignal.subscribe(updateActivity);
+  //   // Subscribe to signal changes
+  //   const unsubscribe = activitySignal.subscribe(updateActivity);
 
-    return () => {
-      unsubscribe();
-    };
-   }, [activitySignal.value]); // Add activitySignal.value to the dependency array
+  //   return () => {
+  //     unsubscribe();
+  //   };
+  //  }, [activitySignal.value]); // Add activitySignal.value to the dependency array
 
-  // Handle location change events
-  useEffect(() => {
-    const handleLocationChange = (event: Event) => {
-      const customEvent = event as CustomEvent;
-      const activity = customEvent.detail?.activity;
-      if (activity) {
-        activitySignal.value = activity;
-      }
-    };
+  // // Handle location change events
+  // useEffect(() => {
+  //   const handleLocationChange = (event: Event) => {
+  //     const customEvent = event as CustomEvent;
+  //     const activity = customEvent.detail?.activity;
+  //     if (activity) {
+  //       activitySignal.value = activity;
+  //     }
+  //   };
 
-    window.addEventListener('locationchange', handleLocationChange);
-    return () => window.removeEventListener('locationchange', handleLocationChange);
-  }, []);
+  //   window.addEventListener('locationchange', handleLocationChange);
+  //   return () => window.removeEventListener('locationchange', handleLocationChange);
+  // }, []);
 
-  useEffect(() => {
+  // useEffect(() => {
 
-    // When tutorial signal changes to null, check if we should transition to GAME
-    if (tutorialSignal.value === null) {
-      // Only transition if we're currently in TUTORIAL mode
-      if (currentActivity === ActivityType.TUTORIAL) {
-        activitySignal.value = ActivityType.GAME;
-      }
-    }
-  }, [currentActivity]);
+  //   // When tutorial signal changes to null, check if we should transition to GAME
+  //   if (tutorialSignal.value === null) {
+  //     // Only transition if we're currently in TUTORIAL mode
+  //     if (currentActivity === ActivityType.TUTORIAL) {
+  //       activitySignal.value = ActivityType.GAME;
+  //     }
+  //   }
+  // }, [currentActivity]);
 
   // Declare handlePhraseComplete with all its dependencies
   const handlePhraseComplete = useCallback(() => {
@@ -134,7 +135,7 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
     if (key === '' || value === '') {
       return;
     }
-    logger.debug('handlePhraseSuccess called with phrase:', key, 'Activity:', activitySignal.value);
+    logger.debug('handlePhraseSuccess called with phrase:', key, 'Activity:', currentActivity);
     const wpms = wpmCalculator.getWPMs();
     const wpmAverage = wpms.wpmAverage;
 
@@ -152,7 +153,7 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
       return game !== null;
     }
     handlePhraseComplete();
-  }, [wpmCalculator, activityMediator, handlePhraseComplete, gameHandleRef, targetWPM]);
+  }, [wpmCalculator, activityMediator, handlePhraseComplete, gameHandleRef, targetWPM, currentActivity]);
 
   // Load tree items when entering tree view mode
   useEffect(() => {
@@ -213,10 +214,10 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
 
   // Initialize window methods
   useEffect(() => {
-    window.setActivity = (activity: ActivityType) => {
-      activitySignal.value = activity;
-    };
-    window.setNextTutorial = (tutorial: string | null) => {
+    // window.setActivity = (activity: ActivityType) => {
+    //   activitySignal.value = activity;
+    // };
+    window.setNextTutorial = (tutorial: GamePhrase | null) => {
       tutorialSignal.value = tutorial as unknown as GamePhrase | null;
     };
     window.ActivityType = ActivityType;
