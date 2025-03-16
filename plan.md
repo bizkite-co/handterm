@@ -1,33 +1,26 @@
-# Plan to Fix Failing Tests in `src/components/HandTermWrapper.test.tsx`
+---
+title: fix #87 Failing Test in awsApiClient.test.ts
+---
 
 ## Goal
 
-Fix the failing tests in `src/components/HandTermWrapper.test.tsx`.
+Fix the failing test in `src/__tests__/utils/awsApiClient.test.ts`.
 
 ## Problem
 
-The tests are failing with the error `Error: Unable to find an element by: [data-testid="xtermRef"]`. This is because the mock `xtermRef` provided by the mocked `useTerminal` hook doesn't include the `data-testid="xtermRef"` attribute, which is used by `TerminalTestUtils.waitForPrompt()` to find the terminal element.
+The test fails with the error "mockRequest is not defined". This is because the `vi.mock('axios', ...)` call, which defines the mock for the `axios` library, is placed inside the `beforeEach` block. Vitest hoists `vi.mock` calls to the top of the file, so `mockRequest` is not defined at the time the mock is being created.
 
 ## Approach
 
-1.  **Fix Mock `xtermRef`:** Modify the mock `xtermRef` in the `useTerminal` mock within `src/components/HandTermWrapper.test.tsx` to include the `data-testid="xtermRef"` attribute.
+1.  **Move Mock:** Move the `vi.mock('axios', ...)` call to the top of the file, outside of the `beforeEach` block.
 
 ## Steps
 
-1.  Open `src/components/HandTermWrapper.test.tsx`.
-2.  Modify the `useTerminal` mock (lines 67-73) to include the `data-testid` attribute:
-    ```typescript
-    vi.mock('../hooks/useTerminal', () => ({
-      useTerminal: () => ({
-        xtermRef: { current: Object.assign(document.createElement('div'), { dataset: { testid: 'xtermRef' } }) },
-        writeToTerminal: vi.fn(),
-        resetPrompt: vi.fn(),
-      })
-    }));
-    ```
+1.  Open `src/__tests__/utils/awsApiClient.test.ts`.
+2.  Move the code block from lines 17-28 to before the `describe` block (before line 5).
 3.  Run the tests to verify the fix.
 
 ## GitHub Issue and Subtask
 
 *   **Parent Issue:** #79 (Fix Failing Vitest Tests)
-*   **Subtask:** Fix failing tests in `HandTermWrapper.test.tsx`
+*   **Subtask:** Fix failing test in `awsApiClient.test.ts`

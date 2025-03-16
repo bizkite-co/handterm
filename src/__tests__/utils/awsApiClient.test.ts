@@ -1,31 +1,18 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { getFile } from '../../utils/awsApiClient';
 import type { IAuthProps } from '../../types/HandTerm';
+import axios from 'axios';
 
 describe('AWS API Client', () => {
     let mockAuth: IAuthProps;
-    let mockRequest: ReturnType<typeof vi.fn>;
+    let mockRequest: any;
 
     beforeEach(() => {
         // Reset mocks
         vi.clearAllMocks();
 
-        // Create mock request function
-        mockRequest = vi.fn();
-
-        // Mock axios
-        vi.mock('axios', () => ({
-            default: {
-                create: () => ({
-                    request: mockRequest,
-                    defaults: {
-                        headers: {
-                            common: {}
-                        }
-                    }
-                })
-            }
-        }));
+        // Mock the request method of the axios instance
+        mockRequest = vi.spyOn(axios.create(), 'request');
 
         // Create mock auth object with successful token validation
         mockAuth = {
