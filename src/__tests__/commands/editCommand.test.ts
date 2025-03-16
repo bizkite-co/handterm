@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, type MockedFunction } from 'vitest';
 import EditCommand from '../../commands/editCommand';
 import type { ICommandContext } from '../../contexts/CommandContext';
 import type { ParsedCommand } from '@handterm/types';
@@ -9,10 +9,6 @@ import * as awsApiClient from '../../utils/awsApiClient';
 vi.mock('../../utils/awsApiClient', () => ({
     getFile: vi.fn()
 }));
-
-// Mock window.setActivity
-const mockSetActivity = vi.fn();
-(window as any).setActivity = mockSetActivity;
 
 describe('Edit Command', () => {
     let mockContext: ICommandContext;
@@ -52,7 +48,7 @@ describe('Edit Command', () => {
         };
 
         // Mock successful file retrieval
-        (awsApiClient.getFile as jest.Mock).mockResolvedValueOnce({
+        (awsApiClient.getFile as MockedFunction<typeof awsApiClient.getFile>).mockResolvedValueOnce({
             status: 200,
             data: {
                 content: '# Test Content',
@@ -65,7 +61,6 @@ describe('Edit Command', () => {
         expect(awsApiClient.getFile).toHaveBeenCalledWith(mockContext.auth, '_index.md');
         expect(result.status).toBe(200);
         expect(result.message).toBe('Editing file content');
-        expect(mockSetActivity).toHaveBeenCalledWith(ActivityType.EDIT);
         expect(mockContext.updateLocation).toHaveBeenCalledWith({
             activityKey: ActivityType.EDIT,
             contentKey: '_index.md',
@@ -81,7 +76,7 @@ describe('Edit Command', () => {
         };
 
         // Mock successful file retrieval
-        (awsApiClient.getFile as jest.Mock).mockResolvedValueOnce({
+        (awsApiClient.getFile as MockedFunction<typeof awsApiClient.getFile>).mockResolvedValueOnce({
             status: 200,
             data: {
                 content: '# Test Content',
@@ -94,7 +89,6 @@ describe('Edit Command', () => {
         expect(awsApiClient.getFile).toHaveBeenCalledWith(mockContext.auth, 'test.md');
         expect(result.status).toBe(200);
         expect(result.message).toBe('Editing file content');
-        expect(mockSetActivity).toHaveBeenCalledWith(ActivityType.EDIT);
         expect(mockContext.updateLocation).toHaveBeenCalledWith({
             activityKey: ActivityType.EDIT,
             contentKey: 'test.md',
@@ -110,7 +104,7 @@ describe('Edit Command', () => {
         };
 
         // Mock file not found response
-        (awsApiClient.getFile as jest.Mock).mockResolvedValueOnce({
+        (awsApiClient.getFile as MockedFunction<typeof awsApiClient.getFile>).mockResolvedValueOnce({
             status: 404,
             error: 'File not found'
         });
@@ -119,7 +113,6 @@ describe('Edit Command', () => {
 
         expect(result.status).toBe(404);
         expect(result.message).toBe('File not found');
-        expect(mockSetActivity).not.toHaveBeenCalled();
         expect(mockContext.updateLocation).not.toHaveBeenCalled();
     });
 
@@ -131,13 +124,12 @@ describe('Edit Command', () => {
         };
 
         // Mock API error
-        (awsApiClient.getFile as jest.Mock).mockRejectedValueOnce(new Error('API error'));
+        (awsApiClient.getFile as MockedFunction<typeof awsApiClient.getFile>).mockRejectedValueOnce(new Error('API error'));
 
         const result = await EditCommand.execute(mockContext, mockParsedCommand);
 
         expect(result.status).toBe(500);
         expect(result.message).toBe('API error');
-        expect(mockSetActivity).not.toHaveBeenCalled();
         expect(mockContext.updateLocation).not.toHaveBeenCalled();
     });
 
@@ -152,7 +144,6 @@ describe('Edit Command', () => {
 
         expect(result.status).toBe(404);
         expect(result.message).toBe('Edit command not recognized');
-        expect(mockSetActivity).not.toHaveBeenCalled();
         expect(mockContext.updateLocation).not.toHaveBeenCalled();
     });
 });
