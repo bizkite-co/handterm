@@ -4,6 +4,7 @@ import path from 'path';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
+import crossOriginIsolation from 'vite-plugin-cross-origin-isolation';
 
 export default defineConfig({
   plugins: [
@@ -42,7 +43,8 @@ export default defineConfig({
           };
         }
       },
-    }
+    },
+    crossOriginIsolation()
   ],
   base: '/', // Explicitly set to root for custom domain
   publicDir: 'public',
@@ -85,7 +87,8 @@ export default defineConfig({
       'chunk-NDUKVSJZ',
       'chunk-3TFVT2CW',
       'chunk-4MBMRILA',
-      'canvas-confetti'
+      'canvas-confetti',
+      '@testing-library/jest-dom'
     ],
     esbuildOptions: {
       sourcemap: false,  // Disable source maps for monaco-editor
