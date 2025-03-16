@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { defineVimCommands } from './MonacoCore'; // Import the named export
 import { ActivityType } from '@handterm/types';
+import { navigate } from '../utils/navigationUtils';
 
 // Mock the entire monaco-editor module *once* before all tests.
 vi.mock('monaco-editor/esm/vs/editor/editor.api', () => ({
@@ -23,6 +24,9 @@ vi.mock('monaco-vim', () => ({
     }),
 }));
 
+vi.mock('../utils/navigationUtils', () => ({
+  navigate: vi.fn(),
+}));
 
 describe('MonacoCore - defineVimCommands', () => { // Changed describe block
 
@@ -40,7 +44,6 @@ describe('MonacoCore - defineVimCommands', () => { // Changed describe block
 
     it('defines the :q! command', () => {
     const mockEditorRef = { current: { getValue: vi.fn() } } as any; // Cast to any
-    const mockSetActivity = vi.fn();
 
     // Local, comprehensive mock for window
     const originalWindow = global.window;
@@ -54,11 +57,26 @@ describe('MonacoCore - defineVimCommands', () => { // Changed describe block
       },
     };
 
+      // Mock window.location
     (global as any).window = {
-        MonacoVim: mockVimMode, // Use the mockVimMode
-        setActivity: mockSetActivity,
-    }
-
+      MonacoVim: mockVimMode,
+      location: {
+        pathname: '/mock-path',
+        origin: 'http://mock-origin',
+        toString: () => 'http://mock-origin/mock-path',
+        reload: vi.fn(),
+        ancestorOrigins: {} as DOMStringList,
+        hash: '',
+        host: 'mock-host',
+        hostname: 'mock-hostname',
+        href: 'http://mock-origin/mock-path',
+        port: '',
+        protocol: 'http:',
+        search: '',
+        assign: vi.fn(),
+        replace: vi.fn(),
+      },
+    };
 
     // Call the function directly
     defineVimCommands(mockEditorRef, window, () => { return false; });
@@ -70,8 +88,8 @@ describe('MonacoCore - defineVimCommands', () => { // Changed describe block
     const qCommand = (window.MonacoVim.VimMode.Vim.defineEx as any).mock.calls.find((call: any) => call[0] === 'q!')[2];
     qCommand();
 
-    // Assert that setActivity was called correctly
-    expect(mockSetActivity).toHaveBeenCalledWith(ActivityType.NORMAL);
+    // Assert that navigate was called correctly
+    expect(navigate).toHaveBeenCalledWith({ activityKey: ActivityType.NORMAL });
     global.window = originalWindow; // Restore original window.
   });
 });
