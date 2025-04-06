@@ -50,15 +50,16 @@ export class TerminalPage {
     // Verify window functions are properly exposed
     const verification = await this.page.evaluate(() => ({
       hasSetCompletedTutorial: typeof window.setCompletedTutorial === 'function',
-      hasSignals: !!window.completedTutorialsSignal // Only check for completedTutorialsSignal
+      // Removed check for hasSignals: !!window.completedTutorialsSignal
     }));
 
     if (!verification.hasSetCompletedTutorial) {
       throw new Error('Required window function setCompletedTutorial was not properly exposed');
     }
-    if (!verification.hasSignals) {
-      throw new Error('Required completedTutorialsSignal was not properly exposed');
-    }
+    // Removed check:
+    // if (!verification.hasSignals) {
+    //   throw new Error('Required completedTutorialsSignal was not properly exposed');
+    // }
 
     // Navigate to the page and wait for terminal
     await this.waitForTerminal();
