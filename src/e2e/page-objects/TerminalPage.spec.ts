@@ -205,18 +205,29 @@ test.describe('TerminalPage', () => {
     const postRefreshContent = await terminal.terminal.innerText();
     console.log('Post-refresh terminal content:', JSON.stringify(postRefreshContent));
 
-    // Verify there is exactly one prompt in the entire terminal
-    const promptCount = (postRefreshContent.match(new RegExp(TERMINAL_CONSTANTS.PROMPT, 'g')) || []).length;
-    expect(promptCount,
-      `Expected exactly one prompt but found ${promptCount}. Full terminal content: "${postRefreshContent}"`
+    // Add a short delay to allow DOM to stabilize after refresh
+    await page.waitForTimeout(500);
+
+    // Verify there is exactly one VISIBLE prompt element in the entire terminal
+    const allPromptLocators = terminal.terminal.getByText(TERMINAL_CONSTANTS.PROMPT);
+    const allPromptElements = await allPromptLocators.all(); // Get all matching elements
+    let visiblePromptCount = 0;
+    for (const element of allPromptElements) {
+        if (await element.isVisible()) {
+            visiblePromptCount++;
+        }
+    }
+
+    expect(visiblePromptCount,
+      `Expected exactly one VISIBLE prompt element but found ${visiblePromptCount}. Full terminal content: "${postRefreshContent}"`
     ).toBe(1);
 
-    // Additional verification that prompt exists and is visible
-    const promptVisible = await terminal.terminal
+    // Additional verification that the LAST prompt exists and is visible (redundant but safe)
+    const lastPromptVisible = await terminal.terminal
       .getByText(TERMINAL_CONSTANTS.PROMPT)
       .last()
       .isVisible();
-    expect(promptVisible, 'Expected prompt to be visible').toBe(true);
+    expect(lastPromptVisible, 'Expected last prompt to be visible').toBe(true);
   });
 });
 

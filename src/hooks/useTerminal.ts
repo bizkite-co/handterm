@@ -46,25 +46,23 @@ export const useTerminal = (): { xtermRef: React.RefObject<HTMLDivElement>; writ
     return commandLine.value;
   }, [commandLine]);
 
+  // Use instance.reset() as it seems most reliable overall
   const resetPrompt = useCallback((): void => {
     if (instance == null) return;
-    logger.debug('Resetting prompt');
+    logger.debug('Resetting prompt using instance.reset()');
 
-    // Get current content before reset
-    // const currentContent = getCurrentCommand(); // No longer needed
-
-    // Reset terminal
+    // Reset terminal state using the instance method
     instance.reset();
+
+    // Reset command line signal state
     setCommandLine('');
     _setCommandLineState('');
 
-    // Write prompt only if needed
-    // if (!currentContent.includes(TERMINAL_CONSTANTS.PROMPT)) { // Removed this block
+    // Write the prompt after resetting
     instance.write(TERMINAL_CONSTANTS.PROMPT);
-    // }
 
     instance.scrollToBottom();
-  }, [instance, getCurrentCommand]);
+  }, [instance]);
 
   const lastTypedCharacterRef = useRef<string | null>(null);
   const setLastTypedCharacter = (value: string | null) => {
@@ -79,12 +77,13 @@ export const useTerminal = (): { xtermRef: React.RefObject<HTMLDivElement>; writ
     writeOutputInternal: writeToTerminal,
   });
 
-  const clearCurrentLine = useCallback((): void => {
-    if (instance == null) return;
-    logger.debug('Clearing current line');
-    instance.write('\x1b[2K\r'); // Clear the current line
-    instance.write(TERMINAL_CONSTANTS.PROMPT); // Rewrite prompt
-  }, [instance]);
+  // Keep this commented out as resetPrompt should handle clearing
+  // const clearCurrentLine = useCallback((): void => {
+  //   if (instance == null) return;
+  //   logger.debug('Clearing current line');
+  //   instance.write('\x1b[2K\r'); // Clear the current line
+  //   instance.write(TERMINAL_CONSTANTS.PROMPT); // Rewrite prompt
+  // }, [instance]);
 
   const navigateHistory = useCallback((direction: 'up' | 'down'): void => {
     if (instance == null || (commandHistory.length === 0)) return;
@@ -93,35 +92,28 @@ export const useTerminal = (): { xtermRef: React.RefObject<HTMLDivElement>; writ
 
     if (direction === 'up') {
       if (newIndex === -1) {
-        const currentCommand = getCurrentCommand();
-        if (currentCommand != null) {
-          setCommandLine(currentCommand);
-          _setCommandLineState(currentCommand);
-        }
+        // Store current line content temporarily if needed, but don't modify state yet
+        // const currentCommand = getCurrentCommand();
       }
       newIndex = newIndex === -1 ? commandHistory.length - 1 : Math.max(0, newIndex - 1);
-    } else {
+    } else { // direction === 'down'
       newIndex = newIndex === -1 ? -1 : Math.min(commandHistory.length - 1, newIndex + 1);
       if (newIndex === -1) {
-        clearCurrentLine();
-        const savedCommand = commandLine.value;
-        if (savedCommand != null) {
-          instance.write(savedCommand);
-          setCommandLine(savedCommand);
-          _setCommandLineState(savedCommand);
-        }
+        resetPrompt(); // Clear screen and show prompt
+        // Restore saved command logic could go here if needed
         setCommandHistoryIndex(newIndex);
         return;
       }
     }
 
-    clearCurrentLine();
+    // For valid history index, reset prompt and write historical command
+    resetPrompt(); // Use resetPrompt to clear screen first
     const historicalCommand = commandHistory[newIndex] ?? '';
-    instance.write(historicalCommand);
+    instance.write(historicalCommand); // Write command after prompt
     setCommandLine(historicalCommand);
     _setCommandLineState(historicalCommand);
     setCommandHistoryIndex(newIndex);
-  }, [instance, commandHistory, commandHistoryIndex, getCurrentCommand, clearCurrentLine, setCommandHistoryIndex, commandLine, _setCommandLineState]);
+  }, [instance, commandHistory, commandHistoryIndex, getCurrentCommand, resetPrompt, setCommandHistoryIndex]); // Use resetPrompt
 
   useEffect(() => {
     if (instance == null) return;
@@ -133,8 +125,9 @@ export const useTerminal = (): { xtermRef: React.RefObject<HTMLDivElement>; writ
 
     instance.loadAddon(fitAddon.current);
     fitAddon.current.fit();
-    resetPrompt();
-  }, [instance, resetPrompt]);
+    // Write initial prompt on load
+    instance.write(TERMINAL_CONSTANTS.PROMPT);
+  }, [instance]);
 
   useEffect(() => {
     if (instance == null) return;
@@ -146,8 +139,8 @@ export const useTerminal = (): { xtermRef: React.RefObject<HTMLDivElement>; writ
           setCommandLine('');
           _setCommandLineState('');
           setActivity(ActivityType.NORMAL);
-          instance?.write('^C');
-          resetPrompt();
+          instance?.write('^C\r\n'); // Add newline after ^C
+          resetPrompt(); // Reset prompt after Ctrl+C
           return true;
 
         case '\r': // Enter key
@@ -180,6 +173,9 @@ export const useTerminal = (): { xtermRef: React.RefObject<HTMLDivElement>; writ
     const handleEnterKey = () => {
       if (instance == null) return;
 
+      // Write newline before processing command
+      instance.write('\r\n');
+
       if (isInLoginProcessSignal.value) {
         const loginCommand = parseCommand([
           'login',
@@ -207,14 +203,14 @@ export const useTerminal = (): { xtermRef: React.RefObject<HTMLDivElement>; writ
         logger.debug('Processing command:', currentCommand);
         const parsedCommand = parseCommand(currentCommand === '' ? '\r' : currentCommand);
         logger.debug('Parsed command:', parsedCommand);
-        instance?.write('\r\n');
+        // instance?.write('\r\n'); // Moved newline write earlier
         setCommandLine('');
         _setCommandLineState('');
         handleCommand(parsedCommand).catch(console.error);
         wpmCalculator.clearKeystrokes();
       }
       setCommandHistoryIndex(-1); // Reset history index after command execution
-      resetPrompt(); // The prompt will be written by resetPrompt, no need to write it here
+      resetPrompt(); // Reset prompt after command execution
     };
 
     const handleBackspace = (cursorX: number) => {

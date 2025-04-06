@@ -3,11 +3,13 @@ import { allTutorialKeys } from '@handterm/types';
 
 import { TERMINAL_CONSTANTS } from 'src/constants/terminal';
 import type { Signal } from '@preact/signals-react';
-import type { ActivityType, GamePhrase, IHandTermWrapperMethods, ActionType, ParsedCommand } from '@handterm/types';
+// Remove unused import of parseLocation from utils
+// import { parseLocation } from '../../utils/navigationUtils';
+import type { ActivityType as ActivityTypeEnum, GamePhrase, IHandTermWrapperMethods, ActionType, ParsedCommand } from '@handterm/types';
 import { TEST_CONFIG } from '../config';
 import { setupBrowserWindow } from '../browser-setup/setupWindow';
 import { type Terminal } from '@xterm/xterm';
-import { parseLocation } from '../../utils/navigationUtils';
+
 
 // Extend Window interface for our signals and ref
 declare global {
@@ -117,8 +119,43 @@ export class TerminalPage {
     while (Date.now() - startTime < timeout) {
       try {
         const state = await this.page.evaluate(() => {
+          // --- Injected Definitions Start ---
+          const ActivityType = {
+            NORMAL: 'normal',
+            EDIT: 'edit',
+            GITHUB: 'github',
+            TREE: 'tree',
+            TUTORIAL: 'tutorial',
+            GAME: 'game'
+          } as const;
+          type ActivityType = typeof ActivityType[keyof typeof ActivityType];
+
+          function parseActivityType(activityString: string): ActivityType {
+            const normalizedActivity = (activityString ?? '').toUpperCase();
+            const activity = (ActivityType as any)[normalizedActivity]; // Use any for browser context simplicity
+            return activity ?? ActivityType.NORMAL;
+          }
+
+          type ParsedLocation = {
+            activityKey: ActivityType;
+            contentKey?: string | null;
+            groupKey?: string | null;
+            clearParams?: boolean;
+          };
+
+          function parseLocation(location: string = window.location.toString()): ParsedLocation {
+            const urlParams = new URL(location);
+            return {
+              activityKey: parseActivityType(urlParams.searchParams.get('activity') ?? ''),
+              contentKey: decodeURIComponent(urlParams.searchParams.get('key') ?? ''),
+              groupKey: urlParams.searchParams.get('group') ?? null,
+              clearParams: urlParams.searchParams.has('clearParams')
+            };
+          }
+          // --- Injected Definitions End ---
+
           const url = window.location.href;
-          const parsedLocation = parseLocation(url);
+          const parsedLocation = parseLocation(url); // Use the injected function
           return {
             activity: parsedLocation.activityKey,
             url: url,
