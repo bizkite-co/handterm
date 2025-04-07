@@ -6,16 +6,7 @@ import {
   setNextTutorial
 } from '../../signals/tutorialSignals'; // Import tutorial functions
 
-// Extend Window interface for the exposed functions
-declare global {
-  interface Window {
-    commandLineSignal: typeof commandLineSignal;
-    setActivity: typeof setActivity;
-    setCompletedTutorial: typeof setCompletedTutorial;
-    getNextTutorial: typeof getNextTutorial;
-    setNextTutorial: typeof setNextTutorial;
-  }
-}
+// REMOVED declare global block - types are now in packages/types/src/window.ts
 
 /**
  * Exposes signals and helper functions to the window object for e2e testing

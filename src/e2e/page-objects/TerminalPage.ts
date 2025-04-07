@@ -11,19 +11,7 @@ import { setupBrowserWindow } from '../browser-setup/setupWindow';
 import { type Terminal } from '@xterm/xterm';
 
 
-// Extend Window interface for our signals and ref
-declare global {
-  interface Window {
-    tutorialSignal: Signal<GamePhrase | null>;
-    handtermRef: React.RefObject<IHandTermWrapperMethods>;
-    completedTutorialsSignal: {
-      value: Set<string>;
-    };
-    TERMINAL_CONSTANTS: typeof TERMINAL_CONSTANTS;
-    terminalInstance: Terminal// or more specific type from xterm.js
-    setCompletedTutorial: (key: string) => void;
-  }
-}
+// REMOVED declare global block - types are now in packages/types/src/window.ts
 
 export class TerminalPage {
   readonly page: Page;
@@ -298,7 +286,7 @@ export class TerminalPage {
 
     // Get the text from the terminal's active buffer
     const terminalText = await this.page.evaluate((promptString) => {
-      const terminal = window.terminalInstance;
+      const terminal = (window as any).terminalInstance; // Use type assertion if needed
       if (!terminal) return '';
 
       // Get the current line from the buffer
@@ -326,14 +314,15 @@ export class TerminalPage {
    * Waits for specific text to appear in the next chars display
    * @param text The text to wait for
    */
-  public async waitForNextChars(text: string): Promise<void> {
+  public async waitForNextChars(text: string, options?: { timeout?: number }): Promise<void> {
     // First wait for the element to exist
-    await this.nextChars.waitFor({ state: 'attached' });
+    await this.nextChars.waitFor({ state: 'attached', timeout: options?.timeout ?? TEST_CONFIG.timeout.short });
 
     // Then wait for the specific text
-    await this.nextChars.waitFor({ state: 'visible' });
-    await expect(this.nextChars).toHaveText(text, { timeout: TEST_CONFIG.timeout.long });
+    await this.nextChars.waitFor({ state: 'visible', timeout: options?.timeout ?? TEST_CONFIG.timeout.short });
+    await expect(this.nextChars).toHaveText(text, { timeout: options?.timeout ?? TEST_CONFIG.timeout.long });
   }
+
 
   /**
    * Waits for the prompt to appear, indicating the terminal is ready
@@ -372,7 +361,7 @@ export class TerminalPage {
  */
   public async getActualTerminalLine(): Promise<string> {
     return await this.page.evaluate(() => {
-      const terminal = window.terminalInstance;
+      const terminal = (window as any).terminalInstance; // Use type assertion if needed
       if (!terminal) return '';
       const buffer = terminal.buffer.active;
       const currentLine = buffer.getLine(buffer.cursorY);

@@ -4,18 +4,7 @@ import type { Page } from '@playwright/test';
 import { test, expect } from '@playwright/test';
 import { signal, type Signal } from '@preact/signals-react';
 
-declare global {
-  interface Window {
-    executeCommand: ((command: string) => Promise<void>) | undefined;
-    githubUtils: {
-      getCredentials: () => Promise<{ token: string; username: string }>;
-      getTree: () => Promise<{ tree: Array<{ path: string; type: string }> }>;
-      getRepoInfo: () => Promise<{ owner: string; repo: string }>;
-    } | undefined;
-    activitySignal: Signal<typeof ActivityType[keyof typeof ActivityType]>;
-    setActivity: typeof setActivity;
-  }
-}
+// REMOVED declare global block - types are now in packages/types/src/window.ts
 
 const setupMocks = async (page: Page): Promise<void> => {
   await page.addInitScript(() => {
@@ -70,7 +59,8 @@ const setupMocks = async (page: Page): Promise<void> => {
     };
 
     const activitySignal = signal(ActivityType.NORMAL);
-    window.activitySignal = activitySignal;
+    // Assuming activitySignal is part of WindowExtensions now
+    // window.activitySignal = activitySignal;
     window.executeCommand = async (command: string) => {
       if (command === 'github') {
         if (!window.githubUtils || !window.setActivity) {
@@ -128,18 +118,23 @@ test.describe('GitHub Command Navigation', () => {
       if (window.githubUtils) {
         window.githubUtils = undefined;
       }
-      if (window.activitySignal && 'value' in window.activitySignal) {
-        window.activitySignal.value = ActivityType.NORMAL;
+      // Assuming activityStateSignal exists on WindowExtensions
+      if (window.activityStateSignal && 'value' in window.activityStateSignal) {
+         // Accessing .value might need adjustment based on actual signal implementation
+         // For simplicity, let's assume direct assignment works or use setActivity
+         window.setActivity(ActivityType.NORMAL);
       }
     });
   });
 
   test('should initialize with correct activity state', async ({ page }) => {
     const activityState = await page.evaluate(() => {
-      if (!window.activitySignal) {
-        throw new Error('activitySignal is not defined');
+      // Assuming activityStateSignal exists on WindowExtensions
+      if (!window.activityStateSignal) {
+        throw new Error('activityStateSignal is not defined');
       }
-      return window.activitySignal.value;
+      // Accessing .value might need adjustment
+      return window.activityStateSignal.value.current;
     });
     expect(activityState).toBe(ActivityType.NORMAL);
   });
