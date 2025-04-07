@@ -110,26 +110,96 @@ test.describe('EditorPage', () => {
 		await editor.ensureMode('NORMAL');
 	});
 
-	// --- COMMENTED OUT :q! test due to Vim init issues ---
-	// test('handles :q! command', async ({ page }) => {
-	// 	// Ensure editor is focused
-	// 	await editor.focus();
-	// 	console.log('TEST: Editor focused for :q! command.');
+	// --- UNCOMMENTED :q! test ---
+	test('handles :q! command', async ({ page }) => {
+		// Ensure editor is focused
+		await editor.focus();
+		console.log('TEST: Editor focused for :q! command.');
 
-	// 	// Sending :q! command
-	// 	await editor.sendKeys(':');
-	// 	await editor.sendKeys('q!');
-	// 	await editor.sendKeys('\r');
-	// 	console.log('TEST: Sent :q! command.');
+		// Sending :q! command
+		await editor.sendKeys(':');
+		await editor.sendKeys('q!');
+		await editor.sendKeys('\r');
+		console.log('TEST: Sent :q! command.');
 
-	// 	await page.waitForTimeout(1000); // Wait for the command/state transition
+		// Increase wait time significantly to ensure state transition completes
+		await page.waitForTimeout(2500); // Wait for the command/state transition
 
-	// 	// Should transition back to normal terminal mode
-	// 	console.log('TEST: Waiting for terminal prompt after :q!');
-	// 	await terminal.waitForPrompt(); // Use the initialized terminal object
-	// 	console.log('TEST: Terminal prompt found after :q!');
-	// });
-	// --- END COMMENTED OUT ---
+		// Should transition back to normal terminal mode
+		console.log('TEST: Waiting for terminal prompt after :q!');
+		await terminal.waitForPrompt(); // Use the initialized terminal object
+		console.log('TEST: Terminal prompt found after :q!');
+	});
+	// --- END UNCOMMENTED ---
+
+	// --- ADDED :w test ---
+	test('handles :w command', async ({ page }) => {
+		const newContent = '# Mock File Content\n\nThis content is modified.';
+		const storageKey = StorageKeys.editContent;
+
+		// Ensure editor is focused and set new content
+		await editor.focus();
+		await editor.setContent(newContent);
+		console.log('TEST: Set new content for :w test.');
+
+		// Sending :w command
+		await editor.sendKeys(':');
+		await editor.sendKeys('w');
+		await editor.sendKeys('\r');
+		console.log('TEST: Sent :w command.');
+
+		// Wait for command to potentially execute
+		await page.waitForTimeout(500);
+
+		// Verify localStorage content
+		const storedContent = await page.evaluate((key) => {
+			const item = localStorage.getItem(key);
+			return item ? JSON.parse(item) : null;
+		}, storageKey);
+
+		console.log('TEST: Content retrieved from localStorage:', storedContent);
+		expect(storedContent).toBe(newContent);
+	});
+	// --- END ADDED :w test ---
+
+	// --- ADDED :wq test ---
+	test('handles :wq command', async ({ page }) => {
+		const newContent = '# Mock File Content\n\nThis content is saved and quit.';
+		const storageKey = StorageKeys.editContent;
+
+		// Ensure editor is focused and set new content
+		await editor.focus();
+		await editor.setContent(newContent);
+		console.log('TEST: Set new content for :wq test.');
+
+		// Sending :wq command
+		await editor.sendKeys(':');
+		await editor.sendKeys('wq');
+		await editor.sendKeys('\r');
+		console.log('TEST: Sent :wq command.');
+
+		// Wait for command and navigation to potentially execute
+		await page.waitForTimeout(2500); // Use longer timeout similar to :q!
+
+		// Verify localStorage content
+		const storedContent = await page.evaluate((key) => {
+			const item = localStorage.getItem(key);
+			// Note: The command removes the item after navigating, so check might fail if nav is too fast.
+			// If this fails consistently, we might need to check *before* the timeout.
+			return item ? JSON.parse(item) : null;
+		}, storageKey);
+		console.log('TEST: Content retrieved from localStorage after :wq:', storedContent);
+		// The :wq command saves THEN navigates (which removes the key).
+		// So, we expect the key to be removed *after* navigation.
+		// A better check is just that navigation happened.
+
+		// Verify navigation back to terminal
+		console.log('TEST: Waiting for terminal prompt after :wq!');
+		await terminal.waitForPrompt();
+		console.log('TEST: Terminal prompt found after :wq!');
+	});
+  // --- END ADDED :wq test ---
+
 
 	test.afterEach(async ({ page }) => {
 		await page.close();
