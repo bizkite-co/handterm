@@ -19,13 +19,14 @@ import {
 import { createLogger, LogLevel } from '../utils/Logger';
 import { parseLocation, navigate } from '../utils/navigationUtils';
 import WebCam from '../utils/WebCam';
+import GamePhrases from '../utils/GamePhrases'; // Import GamePhrases
 
 import { Chord } from './Chord';
 import MonacoCore from './MonacoCore';
 import NextCharsDisplay, { type NextCharsDisplayHandle } from './NextCharsDisplay';
 import { PromptHeader } from './PromptHeader';
 import { TutorialManager } from './TutorialManager';
-import { activitySignal } from '../signals/appSignals';
+import { activitySignal } from '../signals/appSignals'; // Import activitySignal
 
 const logger = createLogger({
   prefix: 'HandTermWrapper',
@@ -51,12 +52,12 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
   const [userName] = useState<string | null>(null);
   const commandTime = useComputed(() => commandTimeSignal.value);
   const [treeItems, setTreeItems] = useState<TreeItem[]>([]);
+  // REMOVED isEditReady state
 
-  const [currentActivity, setCurrentActivity] = useState<ActivityType>(ActivityType.NORMAL);
+  // Read signal value directly
+  const currentActivityValue = activitySignal.value;
 
-  useEffect(() => {
-    setCurrentActivity(activitySignal.value);
-  }, [activitySignal.value]);
+  // REMOVED useEffect for isEditReady
 
   // Declare handlePhraseComplete with all its dependencies
   const handlePhraseComplete = useCallback(() => {
@@ -86,7 +87,7 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
     if (key === '' || value === '') {
       return;
     }
-    logger.debug('handlePhraseSuccess called with phrase:', key, 'Activity:', currentActivity);
+    logger.debug('handlePhraseSuccess called with phrase:', key, 'Activity:', activitySignal.value);
     const wpms = wpmCalculator.getWPMs();
     const wpmAverage = wpms.wpmAverage;
 
@@ -104,11 +105,11 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
       return game !== null;
     }
     handlePhraseComplete();
-  }, [wpmCalculator, activityMediator, handlePhraseComplete, gameHandleRef, targetWPM, currentActivity]);
+  }, [wpmCalculator, activityMediator, handlePhraseComplete, gameHandleRef, targetWPM]);
 
   // Load tree items when entering tree view mode
   useEffect(() => {
-    if (currentActivity === ActivityType.TREE) {
+    if (activitySignal.value === ActivityType.TREE) {
       logger.info('Loading tree items in TREE mode');
       const storedItems = localStorage.getItem('github_tree_items')?.trim() ?? '';
       if (storedItems === '') {
@@ -127,18 +128,18 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
         logger.error('Error parsing tree items:', error);
       }
     }
-  }, [currentActivity]);
+  }, [activitySignal.value]);
 
   // Reset terminal when returning to normal mode
   useEffect(() => {
-    if (currentActivity === ActivityType.NORMAL) {
+    if (activitySignal.value === ActivityType.NORMAL) {
       const term = xtermRef.current;
       if (term !== null && typeof term.focus === 'function') {
         term.focus();
       }
       resetPrompt();
     }
-  }, [currentActivity, xtermRef, resetPrompt]);
+  }, [activitySignal.value, xtermRef, resetPrompt]);
 
   const handlePhraseErrorState = useCallback((errorIndex: number | undefined) => {
     setErrorCharIndex(errorIndex);
@@ -165,11 +166,9 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
 
   // Initialize window methods
   useEffect(() => {
-    // window.setActivity = (activity: ActivityType) => {
-    //   activitySignal.value = activity;
-    // };
-    window.setNextTutorial = (tutorial: GamePhrase | null) => {
-      tutorialSignal.value = tutorial as unknown as GamePhrase | null;
+    window.setNextTutorial = (tutorialKey: string | null) => {
+      const tutorial = tutorialKey ? GamePhrases.getGamePhraseByKey(tutorialKey) : null;
+      tutorialSignal.value = tutorial;
     };
     window.ActivityType = ActivityType;
   }, []);
@@ -188,14 +187,14 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
 
   return (
     <div id='handterm-wrapper' data-testid='handterm-wrapper'>
-      {currentActivity === ActivityType.GAME && (
+      {currentActivityValue === ActivityType.GAME && (
         <Game
           ref={gameHandleRef}
           canvasHeight={canvasHeight}
           canvasWidth={props.terminalWidth}
         />
       )}
-      {currentActivity === ActivityType.GAME && (
+      {currentActivityValue === ActivityType.GAME && (
         <NextCharsDisplay
           ref={nextCharsDisplayRef}
           isInPhraseMode={true}
@@ -206,14 +205,14 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
       {lastTypedCharacter !== null && (
         <Chord displayChar={lastTypedCharacter} />
       )}
-      {currentActivity === ActivityType.TUTORIAL && tutorialSignal.value != null && (
+      {currentActivityValue === ActivityType.TUTORIAL && tutorialSignal.value != null && (
         <TutorialManager
           tutorial={tutorialSignal.value}
         />
       )}
 
       {/* Always show terminal unless in EDIT or TREE mode */}
-      {currentActivity !== ActivityType.EDIT && currentActivity !== ActivityType.TREE && (
+      {currentActivityValue !== ActivityType.EDIT && currentActivityValue !== ActivityType.TREE && (
         <div id="prompt-and-terminal">
           <PromptHeader
             username={userName ?? 'guest'}
@@ -228,9 +227,10 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
         </div>
       )}
 
-      {currentActivity === ActivityType.EDIT && (
+      {/* Render editor only when activity is EDIT */}
+      {currentActivityValue === ActivityType.EDIT && (
         <MonacoCore
-          key={currentActivity}
+          key={ActivityType.EDIT} // Static key
           value={getStoredContent()}
           language="markdown"
           toggleVideo={() => {
@@ -239,9 +239,10 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
           }}
         />
       )}
-      {currentActivity === ActivityType.TREE && treeItems.length > 0 && (
+      {/* Render tree view only when activity is TREE */}
+      {currentActivityValue === ActivityType.TREE && treeItems.length > 0 && (
         <MonacoCore
-          key={currentActivity}
+          key={ActivityType.TREE} // Static key
           value=""
           language="plaintext"
         />

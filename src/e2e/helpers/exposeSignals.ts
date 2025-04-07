@@ -5,6 +5,7 @@ import {
   getNextTutorial,
   setNextTutorial
 } from '../../signals/tutorialSignals'; // Import tutorial functions
+// Removed import of commandRegistry
 
 // REMOVED declare global block - types are now in packages/types/src/window.ts
 
@@ -12,9 +13,10 @@ import {
  * Exposes signals and helper functions to the window object for e2e testing
  */
 export function exposeSignals(): void {
-  window.commandLineSignal = commandLineSignal;
-  window.setActivity = setActivity;
-  window.setCompletedTutorial = setCompletedTutorial;
-  window.getNextTutorial = getNextTutorial;
-  window.setNextTutorial = setNextTutorial;
+  (window as any).commandLineSignal = commandLineSignal;
+  (window as any).setActivity = setActivity;
+  (window as any).setCompletedTutorial = setCompletedTutorial;
+  (window as any).getNextTutorial = getNextTutorial;
+  (window as any).setNextTutorial = setNextTutorial;
+  // Removed exposure of commandRegistry
 }

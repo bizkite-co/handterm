@@ -1,5 +1,6 @@
 // src/utils/navigationUtils.ts
 import { ActivityType, type ParsedLocation } from '@handterm/types';
+// Removed logger import
 
 // Parse location from query parameters
 export function parseLocation(location: string = window.location.toString()): ParsedLocation {
@@ -42,7 +43,6 @@ interface NavigationOptions {
 
 // Global navigation function that can be used outside of React components
 export function navigate(options: ParsedLocation, navOptions: boolean | NavigationOptions = false): void {
-  // Handle legacy boolean parameter
   const forceClear = typeof navOptions === 'boolean' ? navOptions : navOptions.forceClear ?? false;
   const replace = typeof navOptions === 'boolean' ? false : navOptions.replace ?? false;
   const skipTutorial = typeof navOptions === 'boolean' ? false : navOptions.skipTutorial ?? false;
@@ -51,69 +51,51 @@ export function navigate(options: ParsedLocation, navOptions: boolean | Navigati
   const newGroupKey = options.groupKey ?? null;
   const clearParams = options.clearParams ?? false;
 
-  // Normalize path and remove any trailing slashes
   const path = window.location.pathname.replace(/\/+/g, '/').replace(/\/+$/, '');
   const baseUrl = window.location.origin + (path || '/');
-  const url = new URL(baseUrl);
+  let finalUrl = baseUrl;
 
   if (newActivity === ActivityType.NORMAL || clearParams || forceClear || skipTutorial) {
-    // Clear all parameters for NORMAL activity, when clearParams/forceClear is true, or when skipping tutorial
-    url.search = '';
-    // Use replaceState to avoid creating new history entries when clearing params
-    window.history.replaceState({}, '', url.toString());
-    // Dispatch event with NORMAL activity to reset state
+    // Keep URL as baseUrl (no search params)
+    window.history.replaceState({}, '', finalUrl); // Use replaceState for clearing
     window.dispatchEvent(new CustomEvent('locationchange', {
-      detail: {
-        activity: ActivityType.NORMAL,
-        key: null,
-        group: null,
-        clearParams: true
-      }
+      detail: { activity: ActivityType.NORMAL, key: null, group: null, clearParams: true }
     }));
-    // Force clear any remaining params by reloading the page
     if (window.location.search) {
       window.location.reload();
     }
-    return; // Early return to prevent setting any params
+    return;
   } else {
-    // Set activity parameter
-    url.searchParams.set('activity', newActivity.toLowerCase());
+    const params = new URLSearchParams();
+    params.set('activity', newActivity.toLowerCase());
 
-    // Set key parameter
+    // Explicitly delete 'key' before setting, just in case
+    params.delete('key');
     if (newPhraseKey != null) {
-      url.searchParams.set('key', encodeURIComponent(newPhraseKey));
-    } else {
-      url.searchParams.delete('key');
+      params.set('key', encodeURIComponent(newPhraseKey));
     }
+    // No need for an else block here, as delete already happened
 
-    // Set group parameter
     if (newGroupKey != null) {
-      url.searchParams.set('group', newGroupKey);
+      params.set('group', newGroupKey);
     } else {
-      url.searchParams.delete('group');
+       params.delete('group'); // Ensure group is deleted if null
     }
 
-    // Set clearParams if specified
     if (clearParams) {
-      url.searchParams.set('clearParams', 'true');
+      params.set('clearParams', 'true');
     } else {
-      url.searchParams.delete('clearParams');
+       params.delete('clearParams'); // Ensure clearParams is deleted if false
     }
+
+    const searchString = params.toString();
+    finalUrl = `${baseUrl}?${searchString}`;
   }
 
-  // Use replaceState when clearing params, for NORMAL activity, or when replace option is true
-  const historyMethod = (clearParams || forceClear || skipTutorial || replace)
-    ? 'replaceState'
-    : 'pushState';
-  window.history[historyMethod]({}, '', url.toString());
+  const historyMethod = (clearParams || forceClear || skipTutorial || replace) ? 'replaceState' : 'pushState';
+  window.history[historyMethod]({}, '', finalUrl);
 
-  // Always dispatch location change event
   window.dispatchEvent(new CustomEvent('locationchange', {
-    detail: {
-      activity: newActivity,
-      key: newPhraseKey,
-      group: newGroupKey,
-      clearParams
-    }
+    detail: { activity: newActivity, key: newPhraseKey, group: newGroupKey, clearParams }
   }));
 }

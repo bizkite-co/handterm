@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState, type RefObject } from 'react'; // Explicitly import React and RefObject
 
 import { HandTermWrapper } from './components/HandTermWrapper';
 import { Output } from './components/Output';
@@ -8,8 +8,12 @@ import { CommandProvider } from './contexts/CommandProvider';
 import { useAuth } from './hooks/useAuth';
 import { ActivityType, TerminalCssClasses, type IHandTermWrapperMethods } from '@handterm/types';
 import { parseLocation } from './utils/navigationUtils';
+import { createLogger } from './utils/Logger'; // Import logger
 
-function isHandTermWrapperMethods(ref: React.RefObject<IHandTermWrapperMethods>): ref is React.RefObject<IHandTermWrapperMethods> & { current: IHandTermWrapperMethods } {
+const logger = createLogger({ prefix: 'App' }); // Create logger instance
+
+// Adjusted type guard to accept potentially null ref current
+function isHandTermWrapperMethods(ref: RefObject<IHandTermWrapperMethods | null>): ref is RefObject<IHandTermWrapperMethods> & { current: IHandTermWrapperMethods } {
   return ref.current !== null && typeof ref.current.focusTerminal === 'function';
 }
 
@@ -18,7 +22,7 @@ export function App(): JSX.Element {
   const [containerWidth, setContainerWidth] = useState<number>(0);
 
   const auth = useAuth();
-  const handexTermWrapperRef = useRef<IHandTermWrapperMethods>(null);
+  const handexTermWrapperRef = useRef<IHandTermWrapperMethods>(null); // Type remains IHandTermWrapperMethods | null
 
   const getContainerWidth = useCallback(() => {
     return containerRef.current?.clientWidth ?? 0
@@ -39,19 +43,21 @@ export function App(): JSX.Element {
     setContainerWidth(w);
 
     const handleOutsideTerminalClick = (event: MouseEvent | TouchEvent) => {
+      // No change needed here, guard handles the check
       const currentRef = handexTermWrapperRef.current;
       if (currentRef === null) return;
 
       // Check if the click is outside of the terminal area and if event.target is an HTMLElement
       if (event.target instanceof HTMLElement && event.target.id !== TerminalCssClasses.terminal) {
         event.stopPropagation();
-        currentRef.focusTerminal();
+        currentRef.focusTerminal(); // Already know currentRef is not null here
 
         if (
           event instanceof MouseEvent ||
           (event instanceof TouchEvent && event.touches.length === 1)
         ) {
           setTimeout(() => {
+            // Use the type guard here before accessing current
             if (isHandTermWrapperMethods(handexTermWrapperRef)) {
               handexTermWrapperRef.current.focusTerminal();
             }
@@ -70,6 +76,12 @@ export function App(): JSX.Element {
       document.body.removeEventListener('touchstart', handleOutsideTerminalClick);
     };
   }, [getContainerWidth]);
+
+  // ADDED: Effect to signal app readiness for Playwright
+  useEffect(() => {
+    logger.debug('App component mounted, signaling appReady.');
+    (window as any).appReady = true;
+  }, []); // Empty dependency array ensures this runs only once after initial mount
 
   return (
     <ActivityMediatorProvider>

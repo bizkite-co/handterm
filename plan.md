@@ -1,44 +1,44 @@
 ---
-title: Fix Playwright Test Failure - completedTutorialsSignal Exposure
+title: Resolve Playwright Failures Due to Command Registration Timing
 issue: 91
 ---
 
 ## Goal
 
-Investigate and fix the primary Playwright test failure: `Error: Required completedTutorialsSignal was not properly exposed`, which originates from `src/e2e/page-objects/TerminalPage.ts:60` and causes numerous test failures across the suite.
+Investigate and resolve Playwright test failures (primarily timeouts and command-not-found errors) caused by tests attempting to execute commands before they are fully registered by the application's dynamic loading mechanism (`import.meta.glob` in `src/commands/index.ts`).
 
 ## Problem
 
-Multiple Playwright tests fail because the `completedTutorialsSignal` object, expected to be available in the browser's `window` context during tests, is not being correctly exposed or accessed. This prevents tests from interacting with or verifying tutorial completion state.
+Despite refining Playwright wait logic, tests like those in `src/e2e/edit-command.spec.ts` continue to fail. The suspected root cause is a timing issue: tests execute commands (e.g., `edit`) before the asynchronous `import.meta.glob` process in `src/commands/index.ts` has completed, meaning the command isn't yet registered within the application instance being tested.
 
-## Investigation Plan
+## Investigation & Solution Plan
 
-1.  **Analyze Error Origin:**
-    *   [ ] Examine the code around `src/e2e/page-objects/TerminalPage.ts:60` to understand how `completedTutorialsSignal` is expected to be accessed.
-2.  **Review Signal Exposure Logic:**
-    *   [ ] Analyze the helper function responsible for exposing signals to the window context (likely `src/e2e/helpers/exposeSignals.ts` or similar).
-    *   [ ] Review how this helper is invoked in the Playwright test setup (e.g., within `beforeEach` hooks or using `page.addInitScript`). Pay attention to timing and execution context.
-3.  **Examine Signal Definition:**
-    *   [ ] Check how `completedTutorialsSignal` is defined and initialized in the main application code (e.g., `src/signals/` directory).
-4.  **Targeted Test Execution:**
-    *   [ ] Select a single, representative test that fails with this specific error (e.g., `src/e2e/edit-command.spec.ts:23:3`).
-    *   [ ] Run this single test repeatedly (`npx playwright test src/e2e/edit-command.spec.ts -g "should navigate to edit activity with default file"`) while debugging the exposure mechanism.
-5.  **Consult Documentation (if needed):**
-    *   [ ] Review Playwright documentation for `addInitScript`, `exposeFunction`, and execution contexts if the cause is unclear.
-6.  **Propose Fix:**
-    *   [ ] Based on the findings, determine the cause (e.g., timing issue, incorrect context, problem with the signal object itself).
-    *   [ ] Formulate a specific code change to fix the signal exposure.
+1.  **Analyze Command Registration (`src/commands/index.ts`):**
+    *   [ ] Understand the timing and asynchronous nature of `import.meta.glob`. How and when does it populate the command registry?
+    *   [ ] Is there any event or state change that signals when registration is complete?
+2.  **Analyze Test Execution Flow (`edit-command.spec.ts`, etc.):**
+    *   [ ] Review `beforeEach` hooks and test steps. How soon after page load do tests attempt to execute commands?
+3.  **Explore Solutions for Test Environment Synchronization:**
+    *   [ ] **Explicit Wait:** Can tests reliably wait for command registration?
+        *   *Idea:* Add a mechanism (e.g., a `window` flag, a custom event, a specific console log) in the application code (`src/commands/index.ts` or related init logic) that signals when commands are ready. Tests would then wait for this signal before proceeding.
+    *   [ ] **Configuration:** Research Vite/Playwright options related to `import.meta.glob` handling in test environments. Can eager loading be forced?
+    *   [ ] **Test Setup Modification:** Can the test setup somehow ensure command registration completes before test logic runs? (e.g., adding delays - less ideal, triggering registration manually if possible).
+4.  **Implement Preferred Solution:**
+    *   [ ] Choose the most robust and maintainable solution (likely an explicit wait mechanism).
+    *   [ ] Implement the necessary changes in both application code (to signal readiness) and test code (to wait for the signal).
+5.  **Targeted Verification:**
+    *   [ ] Focus on `src/e2e/edit-command.spec.ts`.
+    *   [ ] Run these tests individually after implementing the solution to confirm the command registration issue is resolved.
 
 ## Implementation & Verification
 
-1.  **Implement Fix:** Apply the proposed code changes.
+1.  **Implement Solution:** Apply code changes to the application and/or test setup.
 2.  **Verify Fix:**
-    *   [ ] Re-run the single targeted test to confirm it passes.
-    *   [ ] Re-run a broader set of tests previously failing with this error (e.g., all tests in `src/e2e/edit-command.spec.ts`) to ensure the fix is robust.
-    *   [ ] Consider running the full suite (`npx playwright test`) if time permits, or defer that to the main tracking issue (#91).
+    *   [ ] Confirm the targeted tests in `edit-command.spec.ts` pass consistently.
+    *   [ ] Run the full test suite (`npx playwright test`) to assess the overall impact on the remaining failing tests. Document the new failure count.
 
 ## Next Steps (Post-Fix)
 
 *   Commit the fix, referencing this subtask and the main issue (#91).
-*   Report completion back to the Architect mode chat.
-*   Proceed to the next failing test pattern identified in issue #91.
+*   Report completion and the updated test failure count back to the Architect mode chat.
+*   Analyze any remaining failures.

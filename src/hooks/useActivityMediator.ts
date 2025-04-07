@@ -47,15 +47,45 @@ export function useActivityMediator(): {
     const activity = useComputed(() => activitySignal.value).value;
     const currentTutorialRef = useRef<GamePhrase | null>(null);
 
+    // Effect to listen for locationchange events dispatched by navigate()
+    useEffect(() => {
+        const handleLocationChange = (event: Event) => {
+            const customEvent = event as CustomEvent<{ activity: ActivityType }>;
+            const newActivity = customEvent.detail?.activity;
+            if (newActivity) {
+                if (activitySignal.peek() !== newActivity) {
+                    logger.debug(`locationchange event received, updating activitySignal from ${activitySignal.peek()} to: ${newActivity}`);
+                    activitySignal.value = newActivity;
+                } else {
+                    logger.debug(`locationchange event received, but activitySignal already ${newActivity}`);
+                }
+            } else {
+                logger.warn('locationchange event received without valid detail.activity');
+            }
+        };
+
+        logger.debug('Adding locationchange event listener');
+        window.addEventListener('locationchange', handleLocationChange);
+
+        const currentLocation = parseLocation();
+        logger.debug(`Initial location check after listener setup. Current URL activity: ${currentLocation.activityKey}, Current signal: ${activitySignal.peek()}`);
+        if (activitySignal.peek() !== currentLocation.activityKey) {
+           logger.debug(`Synchronizing activitySignal to current URL activity: ${currentLocation.activityKey}`);
+           activitySignal.value = currentLocation.activityKey;
+        }
+
+        return () => {
+            logger.debug('Removing locationchange event listener');
+            window.removeEventListener('locationchange', handleLocationChange);
+        };
+    }, []);
+
     const transitionToGame = useCallback((contentKey?: string | null, groupKey?: string | null): void => {
-        // First initialize game if group key is provided
         if (groupKey != null) {
             initializeGame(groupKey, contentKey);
         } else {
             initializeGame();
         }
-        // Then update activity and navigate
-        activitySignal.value = ActivityType.GAME;
         navigate({
             activityKey: ActivityType.GAME,
             contentKey: contentKey ?? null,
@@ -114,11 +144,10 @@ export function useActivityMediator(): {
 
         const nextGamePhrase = getNextGamePhrase();
         if (nextGamePhrase != null) {
-            setGamePhrase(nextGamePhrase);
+            setGamePhrase(getNextGamePhrase());
             transitionToGame(nextGamePhrase.key, nextGamePhrase.tutorialGroup);
             return;
         }
-        activitySignal.value = ActivityType.NORMAL;
         navigate({ activityKey: ActivityType.NORMAL })
     }, [displayAsActivity, displayAsKey, getIncompleteTutorialsInGroup, transitionToGame]);
 
@@ -137,7 +166,6 @@ export function useActivityMediator(): {
         }
 
         const groupKey = parseLocation().groupKey ?? null;
-        // Normalize command for Enter key
         const commandOrReturn = command === '' ? '\r' : command;
         if (commandOrReturn != null) {
             if (currentTutorialRef.current?.value == null) {
@@ -157,7 +185,6 @@ export function useActivityMediator(): {
                 setCompletedTutorial(currentTutorialRef.current.key);
                 logger.debug('Tutorial unlocked:', commandOrReturn);
 
-                //TODO: Check if tutorial has related games.
                 if (groupKey != null) {
                     const firstIncompletePhraseInGroup = getIncompletePhrasesByTutorialGroup(groupKey)[0];
                     if (firstIncompletePhraseInGroup != null) {
@@ -166,11 +193,9 @@ export function useActivityMediator(): {
                     return;
                 }
 
-                // Check if there are more tutorials in this group
                 const nextTutorial = getNextTutorial();
                 if (nextTutorial?.value != null) {
                     logger.debug('Transitioning to next tutorial:', nextTutorial);
-                    activitySignal.value = ActivityType.TUTORIAL;
                     setNextTutorial(nextTutorial);
                     navigate({
                         activityKey: ActivityType.TUTORIAL,
@@ -180,7 +205,6 @@ export function useActivityMediator(): {
                     return;
                 }
 
-                // If no more tutorials, check if tutorial is complete
                 const isTutorialComplete = getNextTutorial() === null;
 
                 if (isTutorialComplete) {
@@ -188,10 +212,8 @@ export function useActivityMediator(): {
                         currentActivity: activitySignal.value,
                         nextActivity: ActivityType.NORMAL
                     });
-                    activitySignal.value = ActivityType.NORMAL;
                     navigate({ activityKey: ActivityType.NORMAL });
                 } else {
-                    // Only transition to game mode if tutorial is not complete
                     logger.debug('Tutorial not complete - transitioning to game mode', {
                         nextTutorial,
                         activitySignal: activitySignal.value,
@@ -206,14 +228,12 @@ export function useActivityMediator(): {
                             currentActivity: activitySignal.value,
                             nextActivity: ActivityType.GAME
                         });
-                        activitySignal.value = ActivityType.GAME;
                         transitionToGame(nextGamePhrase.key, groupKey);
                     } else {
                         logger.debug('No game phrase found - transitioning to NORMAL mode', {
                             currentActivity: activitySignal.value,
                             nextActivity: ActivityType.NORMAL
                         });
-                        activitySignal.value = ActivityType.NORMAL;
                         navigate({ activityKey: ActivityType.NORMAL });
                     }
                 }
@@ -282,22 +302,17 @@ export function useActivityMediator(): {
                 break;
             }
             case 'edit': {
-                // Only transition to edit mode if tutorials are complete
+                // REVERTED: Only check if tutorials are complete. Navigation is handled by editCommand.tsx
                 const completedTutorials = localStorage.getItem(StorageKeys.completedTutorials);
                 if (!completedTutorials) {
-                    logger.debug('Tutorials not complete, staying in current mode\rTo bypass the tutorial execute h `complete` command.');
-                    result = false;
-                    break;
+                    logger.debug('Tutorials not complete, edit command blocked by mediator.');
+                    setNotification('Complete tutorials before using edit command. Use `complete` to bypass.');
+                    result = false; // Command blocked
+                } else {
+                    logger.debug('Tutorials complete, allowing edit command transition (initiated by command).');
+                    // REMOVED redundant navigate call
+                    result = true; // Command allowed, navigation handled elsewhere
                 }
-
-                logger.debug('Tutorials complete, transitioning to edit mode');
-                activitySignal.value = ActivityType.EDIT;
-                navigate({
-                    activityKey: ActivityType.EDIT,
-                    contentKey: parseLocation().contentKey ?? null,
-                    groupKey: null
-                });
-                result = true;
                 break;
             }
             default:
@@ -322,11 +337,7 @@ export function useActivityMediator(): {
 
         if (completedTutorials) {
             logger.debug('Found completed tutorials - transitioning to NORMAL mode');
-
-            // First clear tutorial state
             resetCompletedTutorials();
-
-            // Set NORMAL activity and clear all URL params
             logger.debug('Setting NORMAL activity and clearing URL params');
             navigate({
                 activityKey: ActivityType.NORMAL,
@@ -338,17 +349,11 @@ export function useActivityMediator(): {
                 replace: true,
                 skipTutorial: true
             });
-
-            // Update state after navigation
-            activitySignal.value = ActivityType.NORMAL;
         } else {
             logger.debug('No completed tutorials found - checking for next tutorial');
             const nextTutorial = getNextTutorial();
             logger.debug(`Next tutorial found: ${nextTutorial ? nextTutorial.key : 'none'}`);
-
             const initialActivity = nextTutorial ? ActivityType.TUTORIAL : ActivityType.NORMAL;
-            activitySignal.value = initialActivity;
-
             logger.debug(`Navigating to initial activity: ${initialActivity}`);
             navigate({
                 activityKey: initialActivity,
@@ -360,7 +365,6 @@ export function useActivityMediator(): {
 
     const setActivity = useCallback((newActivity: ActivityType) => {
         logger.debug('Setting activity:', newActivity);
-        activitySignal.value = newActivity;
         navigate({
             activityKey: newActivity,
             contentKey: parseLocation().contentKey ?? null,
