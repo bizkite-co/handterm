@@ -29,13 +29,20 @@ import { useWPMCalculator } from './useWPMCaculator';
 
 const logger = createLogger({ prefix: 'useTerminal' });
 
-export const useTerminal = (): { xtermRef: React.RefObject<HTMLDivElement>; writeToTerminal: (data: string) => void; resetPrompt: () => void } => {
+// --- MODIFIED: Update return type ---
+export const useTerminal = (): {
+	xtermRef: React.RefObject<HTMLDivElement>;
+	writeToTerminal: (data: string) => void;
+	resetPrompt: () => void;
+	fitAddon: React.RefObject<FitAddon>; // Add fitAddon to return type
+} => {
+// --- END MODIFIED ---
   const { instance, ref: xtermRef } = useXTerm({ options: XtermAdapterConfig });
   const { handleCommand, commandHistory, commandHistoryIndex, setCommandHistoryIndex } = useCommand();
   const wpmCalculator = useWPMCalculator();
   const commandLine = useComputed(() => commandLineSignal.value);
   const [_commandLineState, _setCommandLineState] = useState('');
-  const fitAddon = useRef(new FitAddon());
+  const fitAddon = useRef(new FitAddon()); // Keep the ref initialization
 
   const writeToTerminal = useCallback((data: string): void => {
     logger.debug('Writing to terminal:', data);
@@ -46,21 +53,20 @@ export const useTerminal = (): { xtermRef: React.RefObject<HTMLDivElement>; writ
     return commandLine.value;
   }, [commandLine]);
 
-  // Use instance.reset() as it seems most reliable overall
   const resetPrompt = useCallback((): void => {
-    if (instance == null) return;
+    console.log('[useTerminal] resetPrompt called. Stack:', new Error().stack);
     logger.debug('Resetting prompt using instance.reset()');
 
-    // Reset terminal state using the instance method
-    instance.reset();
+    if (instance == null) {
+      console.log('[useTerminal] resetPrompt: instance is null, returning.');
+      logger.warn('resetPrompt called with null instance');
+      return;
+    }
 
-    // Reset command line signal state
+    instance.reset();
     setCommandLine('');
     _setCommandLineState('');
-
-    // Write the prompt after resetting
     instance.write(TERMINAL_CONSTANTS.PROMPT);
-
     instance.scrollToBottom();
   }, [instance]);
 
@@ -77,14 +83,6 @@ export const useTerminal = (): { xtermRef: React.RefObject<HTMLDivElement>; writ
     writeOutputInternal: writeToTerminal,
   });
 
-  // Keep this commented out as resetPrompt should handle clearing
-  // const clearCurrentLine = useCallback((): void => {
-  //   if (instance == null) return;
-  //   logger.debug('Clearing current line');
-  //   instance.write('\x1b[2K\r'); // Clear the current line
-  //   instance.write(TERMINAL_CONSTANTS.PROMPT); // Rewrite prompt
-  // }, [instance]);
-
   const navigateHistory = useCallback((direction: 'up' | 'down'): void => {
     if (instance == null || (commandHistory.length === 0)) return;
 
@@ -92,40 +90,35 @@ export const useTerminal = (): { xtermRef: React.RefObject<HTMLDivElement>; writ
 
     if (direction === 'up') {
       if (newIndex === -1) {
-        // Store current line content temporarily if needed, but don't modify state yet
         // const currentCommand = getCurrentCommand();
       }
       newIndex = newIndex === -1 ? commandHistory.length - 1 : Math.max(0, newIndex - 1);
     } else { // direction === 'down'
       newIndex = newIndex === -1 ? -1 : Math.min(commandHistory.length - 1, newIndex + 1);
       if (newIndex === -1) {
-        resetPrompt(); // Clear screen and show prompt
-        // Restore saved command logic could go here if needed
+        resetPrompt();
         setCommandHistoryIndex(newIndex);
         return;
       }
     }
 
-    // For valid history index, reset prompt and write historical command
-    resetPrompt(); // Use resetPrompt to clear screen first
+    resetPrompt();
     const historicalCommand = commandHistory[newIndex] ?? '';
-    instance.write(historicalCommand); // Write command after prompt
+    instance.write(historicalCommand);
     setCommandLine(historicalCommand);
     _setCommandLineState(historicalCommand);
     setCommandHistoryIndex(newIndex);
-  }, [instance, commandHistory, commandHistoryIndex, getCurrentCommand, resetPrompt, setCommandHistoryIndex]); // Use resetPrompt
+  }, [instance, commandHistory, commandHistoryIndex, getCurrentCommand, resetPrompt, setCommandHistoryIndex]);
 
   useEffect(() => {
     if (instance == null) return;
 
-    // Expose terminal instance for testing
     if (process.env.NODE_ENV !== 'production') {
       (window as any).terminalInstance = instance;
     }
 
     instance.loadAddon(fitAddon.current);
     fitAddon.current.fit();
-    // Write initial prompt on load
     instance.write(TERMINAL_CONSTANTS.PROMPT);
   }, [instance]);
 
@@ -139,8 +132,8 @@ export const useTerminal = (): { xtermRef: React.RefObject<HTMLDivElement>; writ
           setCommandLine('');
           _setCommandLineState('');
           setActivity(ActivityType.NORMAL);
-          instance?.write('^C\r\n'); // Add newline after ^C
-          resetPrompt(); // Reset prompt after Ctrl+C
+          instance?.write('^C\r\n');
+          resetPrompt();
           return true;
 
         case '\r': // Enter key
@@ -173,7 +166,6 @@ export const useTerminal = (): { xtermRef: React.RefObject<HTMLDivElement>; writ
     const handleEnterKey = () => {
       if (instance == null) return;
 
-      // Write newline before processing command
       instance.write('\r\n');
 
       if (isInLoginProcessSignal.value) {
@@ -203,14 +195,13 @@ export const useTerminal = (): { xtermRef: React.RefObject<HTMLDivElement>; writ
         logger.debug('Processing command:', currentCommand);
         const parsedCommand = parseCommand(currentCommand === '' ? '\r' : currentCommand);
         logger.debug('Parsed command:', parsedCommand);
-        // instance?.write('\r\n'); // Moved newline write earlier
         setCommandLine('');
         _setCommandLineState('');
         handleCommand(parsedCommand).catch(console.error);
         wpmCalculator.clearKeystrokes();
       }
-      setCommandHistoryIndex(-1); // Reset history index after command execution
-      resetPrompt(); // Reset prompt after command execution
+      setCommandHistoryIndex(-1);
+      resetPrompt();
     };
 
     const handleBackspace = (cursorX: number) => {
@@ -237,10 +228,9 @@ export const useTerminal = (): { xtermRef: React.RefObject<HTMLDivElement>; writ
         return;
       }
 
-      // Handle regular character input
       if (isInLoginProcessSignal.value || isInSignUpProcessSignal.value) {
         tempPasswordSignal.value += data;
-        handleCharacter(data); // This will handle masking
+        handleCharacter(data);
       } else {
         const newCommandLine = _commandLineState + data;
         instance.write(data);
@@ -265,9 +255,12 @@ export const useTerminal = (): { xtermRef: React.RefObject<HTMLDivElement>; writ
     };
   }, [instance, getCurrentCommand, resetPrompt, wpmCalculator, commandLine, navigateHistory, handleCharacter, _commandLineState, handleCommand, setCommandHistoryIndex]);
 
+  // --- MODIFIED: Update return value ---
   return {
     xtermRef,
     writeToTerminal,
     resetPrompt,
+    fitAddon, // Return fitAddon ref
   };
+  // --- END MODIFIED ---
 };

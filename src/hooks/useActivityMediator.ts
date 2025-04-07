@@ -50,8 +50,15 @@ export function useActivityMediator(): {
     // Effect to listen for locationchange events dispatched by navigate()
     useEffect(() => {
         const handleLocationChange = (event: Event) => {
+            const currentUrl = window.location.href;
+            const parsed = parseLocation(currentUrl);
+            logger.debug(`handleLocationChange triggered. Current URL: ${currentUrl}, Parsed Activity: ${parsed.activityKey}, Current Signal: ${activitySignal.peek()}`);
+
             const customEvent = event as CustomEvent<{ activity: ActivityType }>;
             const newActivity = customEvent.detail?.activity;
+
+            logger.debug(`Event detail activity: ${newActivity}`);
+
             if (newActivity) {
                 if (activitySignal.peek() !== newActivity) {
                     logger.debug(`locationchange event received, updating activitySignal from ${activitySignal.peek()} to: ${newActivity}`);
@@ -60,25 +67,28 @@ export function useActivityMediator(): {
                     logger.debug(`locationchange event received, but activitySignal already ${newActivity}`);
                 }
             } else {
-                logger.warn('locationchange event received without valid detail.activity');
+                logger.warn(`locationchange event received without valid detail.activity. Event detail:`, customEvent.detail);
             }
         };
 
         logger.debug('Adding locationchange event listener');
         window.addEventListener('locationchange', handleLocationChange);
 
-        const currentLocation = parseLocation();
-        logger.debug(`Initial location check after listener setup. Current URL activity: ${currentLocation.activityKey}, Current signal: ${activitySignal.peek()}`);
-        if (activitySignal.peek() !== currentLocation.activityKey) {
-           logger.debug(`Synchronizing activitySignal to current URL activity: ${currentLocation.activityKey}`);
-           activitySignal.value = currentLocation.activityKey;
+        // Initial sync logic on mount
+        const currentLocationOnLoad = parseLocation();
+        logger.debug(`Initial location check after listener setup. URL activity: ${currentLocationOnLoad.activityKey}, Signal: ${activitySignal.peek()}`);
+        if (activitySignal.peek() !== currentLocationOnLoad.activityKey) {
+           logger.warn(`Initial Sync: Signal (${activitySignal.peek()}) differs from URL (${currentLocationOnLoad.activityKey}). Synchronizing signal.`);
+           activitySignal.value = currentLocationOnLoad.activityKey; // Sync signal to URL
+        } else {
+           logger.debug(`Initial Sync: Signal matches URL activity. No change needed.`);
         }
 
         return () => {
             logger.debug('Removing locationchange event listener');
             window.removeEventListener('locationchange', handleLocationChange);
         };
-    }, []);
+    }, []); // Empty dependency array means this runs once on mount
 
     const transitionToGame = useCallback((contentKey?: string | null, groupKey?: string | null): void => {
         if (groupKey != null) {
@@ -331,37 +341,44 @@ export function useActivityMediator(): {
 
     // Initial activity determination - runs once on mount
     useEffect(() => {
-        logger.debug('Initial activity determination - starting');
-        const completedTutorials = localStorage.getItem(StorageKeys.completedTutorials);
-        logger.debug(`Found completed tutorials in localStorage: ${completedTutorials}`);
+        const initialUrl = window.location.href;
+        const initialParsedLocation = parseLocation(initialUrl);
+        logger.debug(`Initial activity determination - starting. URL: ${initialUrl}, Parsed Activity: ${initialParsedLocation.activityKey}, Current Signal: ${activitySignal.peek()}`);
 
-        if (completedTutorials) {
-            logger.debug('Found completed tutorials - transitioning to NORMAL mode');
-            resetCompletedTutorials();
-            logger.debug('Setting NORMAL activity and clearing URL params');
-            navigate({
-                activityKey: ActivityType.NORMAL,
-                contentKey: null,
-                groupKey: null,
-                clearParams: true
-            }, {
-                forceClear: true,
-                replace: true,
-                skipTutorial: true
-            });
+        // --- MODIFIED: Only run tutorial logic if loading at base URL ---
+        if (initialParsedLocation.activityKey === ActivityType.NORMAL && !initialParsedLocation.contentKey && !initialParsedLocation.groupKey) {
+            logger.debug('Initial load at base URL, checking tutorial status.');
+            const completedTutorials = localStorage.getItem(StorageKeys.completedTutorials);
+            logger.debug(`Found completed tutorials in localStorage: ${completedTutorials}`);
+
+            if (completedTutorials) {
+                logger.debug('Found completed tutorials - ensuring NORMAL mode');
+                resetCompletedTutorials(); // Still reset this if found
+                // No navigation needed, already at NORMAL base URL
+                logger.debug('Initial activity determination - completed (tutorials were complete, already at NORMAL).');
+            } else {
+                logger.debug('No completed tutorials found - checking for next tutorial');
+                const nextTutorial = getNextTutorial();
+                logger.debug(`Next tutorial found: ${nextTutorial ? nextTutorial.key : 'none'}`);
+                const initialActivity = nextTutorial ? ActivityType.TUTORIAL : ActivityType.NORMAL;
+                if (initialActivity === ActivityType.TUTORIAL) {
+                    logger.debug(`Navigating to initial activity: ${initialActivity}`);
+                    navigate({
+                        activityKey: initialActivity,
+                        contentKey: null, // Let tutorial logic handle contentKey
+                        groupKey: null
+                    });
+                } else {
+                    logger.debug('Initial activity is NORMAL, no navigation needed.');
+                }
+                logger.debug('Initial activity determination - completed (tutorials were not complete).');
+            }
         } else {
-            logger.debug('No completed tutorials found - checking for next tutorial');
-            const nextTutorial = getNextTutorial();
-            logger.debug(`Next tutorial found: ${nextTutorial ? nextTutorial.key : 'none'}`);
-            const initialActivity = nextTutorial ? ActivityType.TUTORIAL : ActivityType.NORMAL;
-            logger.debug(`Navigating to initial activity: ${initialActivity}`);
-            navigate({
-                activityKey: initialActivity,
-                contentKey: null,
-                groupKey: null
-            });
+            logger.debug(`Initial load has specific activity/key/group in URL (${initialParsedLocation.activityKey}), skipping tutorial determination logic.`);
+            // Rely on the locationchange listener effect to sync the signal if needed
         }
-    }, []);
+        // --- END MODIFIED ---
+    }, []); // Empty dependency array ensures this runs only once
 
     const setActivity = useCallback((newActivity: ActivityType) => {
         logger.debug('Setting activity:', newActivity);

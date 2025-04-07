@@ -35,10 +35,10 @@ export default defineConfig({
   /* Opt out of parallel tests on CI. */
   workers: process.env.CI ? 1 : undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: [['list'], ['junit' ]],
+  reporter: [['list'], ['junit', { outputFile: 'test-results/results.xml' } ]], // Ensure JUnit output file is specified
   outputDir: 'test-results',
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
-  use: {
+  use: { // This is the top-level shared 'use' block
     /* Force headless mode */
     headless: true,
     /* Base URL to use in actions like `await page.goto('/')`. */
@@ -88,7 +88,7 @@ export default defineConfig({
         }
       ]
     } as const,
-    permissions: ['clipboard-read', 'clipboard-write']
+    permissions: ['clipboard-read', 'clipboard-write'],
   },
 
   /* Configure web server to run before tests */
@@ -103,10 +103,11 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      use: {
+      use: { // This is the project-specific 'use' block
         ...devices['Desktop Chrome'],
         viewport: { width: 1536, height: 1400 },
         headless: !(process.env.DEBUG_PW ?? ''),
+        // REMOVED onConsoleMessage from here
       },
     },
   ],

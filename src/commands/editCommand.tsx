@@ -1,9 +1,9 @@
 import type { ICommand, ICommandResponse, ICommandContext } from '../contexts/CommandContext';
-import { type ParsedCommand, StorageKeys } from '@handterm/types';
+import { type ParsedCommand, StorageKeys, ActivityType } from '@handterm/types'; // Added ActivityType
 import { getFile } from '../utils/awsApiClient';
-// Removed logger import
+import { createLogger } from '../utils/Logger'; // Re-added logger import
 
-// Removed logger instantiation
+const logger = createLogger({ prefix: 'EditCommand' }); // Re-added logger instantiation
 
 const EditCommand: ICommand = {
     name: 'edit',
@@ -12,53 +12,54 @@ const EditCommand: ICommand = {
         context: ICommandContext,
         parsedCommand: ParsedCommand,
     ): Promise<ICommandResponse> => {
-        // Removed log
+        logger.debug('Executing edit command:', parsedCommand); // Log start
         if (parsedCommand.command.toLowerCase() === 'edit') {
             const filename = parsedCommand.args[0] ?? '_index.md';
-            // Removed log
+            logger.debug(`Editing filename: ${filename}`); // Log filename
 
             try {
                 // Check if file exists using AWS API
-                // Removed log
+                logger.debug(`Calling getFile for: ${filename}`); // Log before getFile
                 const response = await getFile(context.auth, filename);
-                // Removed log
+                logger.debug(`getFile response received:`, { status: response.status, hasData: !!response.data, hasContent: !!response.data?.content }); // Log after getFile
 
                 if (response.status !== 200 || !response.data) {
-                    // Removed log
+                    logger.warn(`File not found or error: ${response.status}`, response.error); // Log file not found
                     return {
                         status: response.status,
                         message: response.error ?? "File not found"
                     };
                 }
-                // Removed log
+                logger.debug('File found, proceeding.'); // Log success
 
                 // Store content in local storage
                 if (response.data != null && response.data.content != null ) {
                     const contentObj = JSON.stringify(response.data.content)
+                    logger.debug('Setting editContent in localStorage...'); // Log before localStorage set
                     localStorage.setItem(
                         StorageKeys.editContent,
                         contentObj
                     );
-                    // Removed log
+                    logger.debug('localStorage set.'); // Log after localStorage set
                 } else {
-                     // Removed log
+                     logger.warn('getFile response data or content is null/undefined.'); // Log missing content
                 }
 
                 // Update location to trigger activity mediator
-                // Removed log
+                logger.debug('Calling context.updateLocation to switch activity to EDIT...'); // Log before updateLocation
                 context.updateLocation({
-                    activityKey: 'edit',
+                    activityKey: ActivityType.EDIT, // Use ActivityType enum
                     contentKey: filename,
                     groupKey: null
                 });
-                // Removed log
+                logger.debug('context.updateLocation called.'); // Log after updateLocation
 
                 return {
                     status: 200,
                     message: "Editing file content" // This message goes to #output-container
                 };
             } catch (error) {
-                // Removed log
+                logger.error('Error during edit command execution:', error); // Log caught error
                 // Handle any unexpected errors
                 return {
                     status: 500,
@@ -67,7 +68,7 @@ const EditCommand: ICommand = {
             }
         }
 
-        // Removed log
+        logger.warn('Edit command name did not match "edit".'); // Log non-match
         return {
             status: 404,
             message: "Edit command not recognized"

@@ -1,41 +1,43 @@
 ---
-title: Resolve Playwright Failures Due to Command Registration Timing
+title: Fix Editor Exit Command (:q!) and Double Prompt Issue
 issue: 91
 ---
 
 ## Goal
 
-Investigate and resolve Playwright test failures (primarily timeouts and command-not-found errors) caused by tests attempting to execute commands before they are fully registered by the application's dynamic loading mechanism (`import.meta.glob` in `src/commands/index.ts`).
+Investigate and fix the issues preventing editor commands (specifically starting with `:q!`) from working correctly and resolve the reappearance of the double prompt (`> > `) after exiting the editor.
 
 ## Problem
 
-Despite refining Playwright wait logic, tests like those in `src/e2e/edit-command.spec.ts` continue to fail. The suspected root cause is a timing issue: tests execute commands (e.g., `edit`) before the asynchronous `import.meta.glob` process in `src/commands/index.ts` has completed, meaning the command isn't yet registered within the application instance being tested.
+Users report that editor commands like `:q!` are not functioning as expected. Furthermore, after attempting to exit the editor (presumably via such commands), the terminal displays a double prompt instead of a single one. This indicates problems with both the editor's command handling and the state transition logic back to the normal terminal mode.
 
-## Investigation & Solution Plan
+## Investigation & Fix Plan
 
-1.  **Analyze Command Registration (`src/commands/index.ts`):**
-    *   [ ] Understand the timing and asynchronous nature of `import.meta.glob`. How and when does it populate the command registry?
-    *   [ ] Is there any event or state change that signals when registration is complete?
-2.  **Analyze Test Execution Flow (`edit-command.spec.ts`, etc.):**
-    *   [ ] Review `beforeEach` hooks and test steps. How soon after page load do tests attempt to execute commands?
-3.  **Explore Solutions for Test Environment Synchronization:**
-    *   [ ] **Explicit Wait:** Can tests reliably wait for command registration?
-        *   *Idea:* Add a mechanism (e.g., a `window` flag, a custom event, a specific console log) in the application code (`src/commands/index.ts` or related init logic) that signals when commands are ready. Tests would then wait for this signal before proceeding.
-    *   [ ] **Configuration:** Research Vite/Playwright options related to `import.meta.glob` handling in test environments. Can eager loading be forced?
-    *   [ ] **Test Setup Modification:** Can the test setup somehow ensure command registration completes before test logic runs? (e.g., adding delays - less ideal, triggering registration manually if possible).
-4.  **Implement Preferred Solution:**
-    *   [ ] Choose the most robust and maintainable solution (likely an explicit wait mechanism).
-    *   [ ] Implement the necessary changes in both application code (to signal readiness) and test code (to wait for the signal).
+1.  **Analyze `:q!` Test (`EditorPage.spec.ts`):**
+    *   [ ] Examine the `handles :q! command` test in `src/e2e/page-objects/EditorPage.spec.ts` (line ~85).
+    *   [ ] Understand how it simulates the command input and what assertions it makes about the application state after exit (e.g., visibility of terminal prompt, absence of editor).
+2.  **Analyze Editor Command Handling (`MonacoCore.tsx` / related):**
+    *   [ ] Review the code responsible for capturing and processing colon (`:`) commands within the Monaco editor instance.
+    *   [ ] Trace the logic for the `:q!` command. Is it correctly triggering an exit action?
+3.  **Analyze Editor Exit Transition Logic:**
+    *   [ ] Investigate the code that handles switching from the `EDIT` activity back to `NORMAL`. This likely involves:
+        *   `navigationUtils.ts` (calling `navigate` to change URL state).
+        *   State machines or hooks listening for activity changes (`useActivityMediator.ts`?).
+        *   `useTerminal.ts` (logic to clear editor state and reset/display the terminal prompt).
+    *   [ ] Identify why the prompt might be rendered twice during this transition.
+4.  **Implement Fixes:**
+    *   [ ] Correct the editor command handling logic to ensure `:q!` triggers the exit process reliably.
+    *   [ ] Modify the exit transition and/or `useTerminal.ts` prompt logic to prevent the double prompt from appearing. Ensure the terminal state is cleanly reset.
 5.  **Targeted Verification:**
-    *   [ ] Focus on `src/e2e/edit-command.spec.ts`.
-    *   [ ] Run these tests individually after implementing the solution to confirm the command registration issue is resolved.
+    *   [ ] Run the `handles :q! command` test individually (`npx playwright test src/e2e/page-objects/EditorPage.spec.ts -g "handles :q! command"`) to confirm it passes.
+    *   [ ] Manually verify or add assertions to the test to explicitly check for a *single* prompt after exit.
 
 ## Implementation & Verification
 
-1.  **Implement Solution:** Apply code changes to the application and/or test setup.
+1.  **Implement Solution:** Apply code changes to editor command handling and exit transition logic.
 2.  **Verify Fix:**
-    *   [ ] Confirm the targeted tests in `edit-command.spec.ts` pass consistently.
-    *   [ ] Run the full test suite (`npx playwright test`) to assess the overall impact on the remaining failing tests. Document the new failure count.
+    *   [ ] Confirm the targeted `:q!` test passes, including the single prompt check.
+    *   [ ] Run the full test suite (`npx playwright test`) to assess the overall impact, as fixing this transition might resolve other seemingly unrelated timeouts or errors. Document the new failure count.
 
 ## Next Steps (Post-Fix)
 

@@ -36,7 +36,7 @@ const logger = createLogger({
 const getTimestamp = (date: Date): string => date.toTimeString().split(' ')[0] ?? '';
 
 const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProps>((props, forwardedRef) => {
-  const { xtermRef, writeToTerminal, resetPrompt } = useTerminal();
+  const { xtermRef, writeToTerminal, resetPrompt, fitAddon } = useTerminal();
   const targetWPM = 10;
   const wpmCalculator = useWPMCalculator();
   const gameHandleRef = useRef<IGameHandle>(null);
@@ -52,14 +52,11 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
   const [userName] = useState<string | null>(null);
   const commandTime = useComputed(() => commandTimeSignal.value);
   const [treeItems, setTreeItems] = useState<TreeItem[]>([]);
-  // REMOVED isEditReady state
 
-  // Read signal value directly
   const currentActivityValue = activitySignal.value;
+  logger.debug(`HandTermWrapper rendering with activity: ${currentActivityValue}`);
 
-  // REMOVED useEffect for isEditReady
 
-  // Declare handlePhraseComplete with all its dependencies
   const handlePhraseComplete = useCallback(() => {
     localStorage.setItem('currentCommand', '');
     setGamePhrase(null);
@@ -78,7 +75,6 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
     resetPrompt();
   }, [nextCharsDisplayRef, gameHandleRef, resetPrompt]);
 
-  // Then use it in handlePhraseSuccess
   const handlePhraseSuccess = useCallback((phrase: GamePhrase | null) => {
     if (phrase === null) return;
 
@@ -107,7 +103,6 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
     handlePhraseComplete();
   }, [wpmCalculator, activityMediator, handlePhraseComplete, gameHandleRef, targetWPM]);
 
-  // Load tree items when entering tree view mode
   useEffect(() => {
     if (activitySignal.value === ActivityType.TREE) {
       logger.info('Loading tree items in TREE mode');
@@ -130,22 +125,29 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
     }
   }, [activitySignal.value]);
 
-  // Reset terminal when returning to normal mode
+  // --- MODIFIED: useEffect for NORMAL activity ---
   useEffect(() => {
     if (activitySignal.value === ActivityType.NORMAL) {
-      const term = xtermRef.current;
-      if (term !== null && typeof term.focus === 'function') {
-        term.focus();
-      }
-      resetPrompt();
+      logger.debug('Activity changed to NORMAL. Focusing terminal and ensuring fit.');
+      // Use setTimeout to ensure the terminal container is likely rendered
+      setTimeout(() => {
+        const termContainer = document.getElementById('xtermRef');
+        if (termContainer && xtermRef.current) {
+           logger.debug('Terminal container found, calling fitAddon.fit() and focusing.');
+           fitAddon.current.fit(); // Call fit addon
+           xtermRef.current.focus(); // Focus terminal
+        } else {
+           logger.warn('Terminal container or xtermRef not ready for focus/fit.');
+        }
+      }, 200); // Increased delay
     }
-  }, [activitySignal.value, xtermRef, resetPrompt]);
+  }, [activitySignal.value, xtermRef, fitAddon]); // Added fitAddon dependency
+  // --- END MODIFIED ---
 
   const handlePhraseErrorState = useCallback((errorIndex: number | undefined) => {
     setErrorCharIndex(errorIndex);
   }, []);
 
-  // Initialize component methods
   useImperativeHandle(forwardedRef, () => ({
     writeOutput: writeToTerminal,
     prompt: () => { },
@@ -164,7 +166,6 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
     activityMediator: activityMediator,
   }), [writeToTerminal, xtermRef, activityMediator]);
 
-  // Initialize window methods
   useEffect(() => {
     window.setNextTutorial = (tutorialKey: string | null) => {
       const tutorial = tutorialKey ? GamePhrases.getGamePhraseByKey(tutorialKey) : null;
@@ -185,6 +186,7 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
     }
   }, []);
 
+  logger.debug(`Rendering check: Activity=${currentActivityValue}`);
   return (
     <div id='handterm-wrapper' data-testid='handterm-wrapper'>
       {currentActivityValue === ActivityType.GAME && (
@@ -212,7 +214,8 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
       )}
 
       {/* Always show terminal unless in EDIT or TREE mode */}
-      {currentActivityValue !== ActivityType.EDIT && currentActivityValue !== ActivityType.TREE && (
+      {currentActivityValue !== ActivityType.EDIT && currentActivityValue !== ActivityType.TREE &&
+        ((() => { logger.debug("Rendering Terminal Container"); return true; })()) &&
         <div id="prompt-and-terminal">
           <PromptHeader
             username={userName ?? 'guest'}
@@ -225,10 +228,11 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
             id="xtermRef"
           />
         </div>
-      )}
+      }
 
       {/* Render editor only when activity is EDIT */}
-      {currentActivityValue === ActivityType.EDIT && (
+      {currentActivityValue === ActivityType.EDIT &&
+        ((() => { logger.debug("Rendering MonacoCore (Editor)"); return true; })()) &&
         <MonacoCore
           key={ActivityType.EDIT} // Static key
           value={getStoredContent()}
@@ -238,15 +242,16 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
             return isShowVideoSignal.value;
           }}
         />
-      )}
+      }
       {/* Render tree view only when activity is TREE */}
-      {currentActivityValue === ActivityType.TREE && treeItems.length > 0 && (
+      {currentActivityValue === ActivityType.TREE && treeItems.length > 0 &&
+        ((() => { logger.debug("Rendering MonacoCore (Tree)"); return true; })()) &&
         <MonacoCore
           key={ActivityType.TREE} // Static key
           value=""
           language="plaintext"
         />
-      )}
+      }
       {isShowVideoSignal.value !== null && (
         <WebCam
           setOn={isShowVideoSignal.value}

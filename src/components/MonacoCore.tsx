@@ -1,6 +1,6 @@
 import { useRef, useEffect, useState } from 'react';
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
-import { initVimMode } from 'monaco-vim';
+import { initVimMode } from 'monaco-vim'; // Restore
 import { ActivityType, StorageKeys, type IStandaloneCodeEditor } from '@handterm/types'; // Import IStandaloneCodeEditor
 import { navigate } from '../utils/navigationUtils';
 import type { JSX } from 'react';
@@ -21,8 +21,10 @@ interface MonacoCoreProps {
 type WindowWithVim = Window & { MonacoVim?: any };
 
 export function defineVimCommands(editorRef: React.MutableRefObject<monaco.editor.IStandaloneCodeEditor | null>, window: WindowWithVim, toggleVideo?: () => boolean) {
-    if (window.MonacoVim && window.MonacoVim.VimMode && window.MonacoVim.VimMode.Vim) {
+    console.log("Attempting to define Vim commands...");
+    if (window.MonacoVim && window.MonacoVim.VimMode && window.MonacoVim.VimMode.Vim) { // Restore check
         const Vim = window.MonacoVim.VimMode.Vim;
+        console.log("Vim API found. Defining commands.");
 
         Vim.defineEx('w', '', () => {
         if (editorRef.current) {
@@ -32,13 +34,17 @@ export function defineVimCommands(editorRef: React.MutableRefObject<monaco.edito
         });
 
         Vim.defineEx('q', '', () => {
+        console.log('[MonacoCore] :q command triggered. Calling navigate...');
         navigate({ activityKey: ActivityType.NORMAL });
+        console.log('[MonacoCore] :q command: navigate called. Removing editContent from localStorage.');
         localStorage.removeItem(StorageKeys.editContent);
         });
 
         Vim.defineEx('q!', '', () => {
-        navigate({ activityKey: ActivityType.NORMAL });
-        localStorage.removeItem(StorageKeys.editContent);
+          console.log('[MonacoCore] :q! command triggered. Calling navigate...');
+          navigate({ activityKey: ActivityType.NORMAL });
+          console.log('[MonacoCore] :q! command: navigate called. Removing editContent from localStorage.');
+          localStorage.removeItem(StorageKeys.editContent);
         });
 
         Vim.defineEx('wq', '', () => {
@@ -54,29 +60,34 @@ export function defineVimCommands(editorRef: React.MutableRefObject<monaco.edito
             toggleVideo();
         }
         });
-    } else {
-        console.error('MonacoVim not initialized properly.');
-    }
+        console.log("Vim commands defined successfully.");
+    } else { // Restore else
+        console.error('MonacoVim not initialized properly when trying to define commands.');
+    } // Restore else
 }
 
 export default function MonacoCore({ value, language = 'text', toggleVideo }: MonacoCoreProps): JSX.Element {
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const statusBarRef = useRef<HTMLDivElement>(null);
-  // Start with auto height to avoid initial large size causing layout shifts
+  const statusBarRef = useRef<HTMLDivElement>(null); // Restore ref
   const [containerStyle, setContainerStyle] = useState({ flexGrow: 1, height: 'auto' });
 
   // Editor initialization and cleanup
   useEffect(() => {
+    // Restore status bar ref check
     if (!containerRef.current || !statusBarRef.current) {
         console.warn("MonacoCore: Container or status bar ref not available yet.");
         return;
     }
+    console.log("MonacoCore: Refs are available. Proceeding with initialization.");
+    console.log("MonacoCore: containerRef.current:", containerRef.current);
+    console.log("MonacoCore: statusBarRef.current:", statusBarRef.current); // Restore log
+
 
     let editorInstance: monaco.editor.IStandaloneCodeEditor | null = null;
-    let vimMode: { dispose: () => void } | null = null;
+    let vimMode: { dispose: () => void } | null = null; // Restore
     let resizeObserver: ResizeObserver | null = null;
-    let vimDefineTimeoutId: NodeJS.Timeout | null = null; // Store timeout ID
+    // REMOVED setTimeout ID again
 
     try {
       console.log("MonacoCore: Before editor creation");
@@ -84,7 +95,7 @@ export default function MonacoCore({ value, language = 'text', toggleVideo }: Mo
         value,
         language,
         minimap: { enabled: false },
-        automaticLayout: true, // Should handle layout changes
+        automaticLayout: true,
         scrollBeyondLastLine: false,
         readOnly: false,
         theme: 'vs-dark',
@@ -94,61 +105,67 @@ export default function MonacoCore({ value, language = 'text', toggleVideo }: Mo
         },
         lineNumbersMinChars: 2,
       });
-      // Use type assertion for window assignment if WindowExtensions isn't automatically applied globally
+      console.log("MonacoCore: monaco.editor.create completed.");
+
       (window as any).monacoEditor = editorInstance;
-      editorRef.current = editorInstance; // Assign to ref
-      console.log("MonacoCore: After editor creation");
+      editorRef.current = editorInstance;
+      console.log("MonacoCore: After editor creation (refs assigned)");
 
-      // Initialize Vim mode
+      // Restore Vim initialization
       console.log("MonacoCore: Before initVimMode");
-      vimMode = initVimMode(editorInstance, statusBarRef.current);
-      console.log("MonacoCore: After initVimMode");
-      editorInstance.focus(); // Focus after Vim mode init
+      if (statusBarRef.current) { // Restore check
+        try {
+          vimMode = initVimMode(editorInstance, statusBarRef.current);
+          console.log("MonacoCore: initVimMode completed successfully.");
+        } catch (vimError) {
+           console.error("MonacoCore: Error during initVimMode:", vimError);
+        }
+      } else {
+        console.warn("MonacoCore: statusBarRef not available, skipping initVimMode.");
+      }
 
-      // Define Vim commands after a short delay
-      vimDefineTimeoutId = setTimeout(() => {
-          console.log("MonacoCore: Defining Vim commands");
-          // Use type assertion for window here as well
-          defineVimCommands(editorRef, window as WindowWithVim, toggleVideo);
-          vimDefineTimeoutId = null; // Clear timeout ID after execution
-      }, 100); // Reduced delay
+      // --- REVERTED: Define Vim commands immediately ---
+      console.log("MonacoCore: Defining Vim commands immediately after initVimMode.");
+      defineVimCommands(editorRef, window as WindowWithVim, toggleVideo);
+      // --- END REVERTED ---
+
+      console.log("MonacoCore: After initVimMode and defineVimCommands");
+      editorInstance.focus();
+      console.log("MonacoCore: editorInstance.focus() called.");
+
 
       // Handle window resize using ResizeObserver
       resizeObserver = new ResizeObserver(() => {
         // automaticLayout should handle this
       });
-      if (containerRef.current) { // Check if ref is still valid
+      if (containerRef.current) {
         resizeObserver.observe(containerRef.current);
+        console.log("MonacoCore: ResizeObserver observing containerRef.");
       }
 
     } catch (error) {
-      console.error('MonacoCore: Editor initialization failed:', error);
+      console.error('MonacoCore: Editor initialization failed inside try block:', error);
     }
 
     // Cleanup function
     return () => {
       console.log("MonacoCore: Cleanup effect running");
-      if (vimDefineTimeoutId) {
-        clearTimeout(vimDefineTimeoutId);
-        console.log("MonacoCore: Cleared Vim define timeout");
-      }
-      if (resizeObserver && containerRef.current) { // Check ref before unobserving
+      // REMOVED Timeout clearing logic
+      if (resizeObserver && containerRef.current) {
         resizeObserver.unobserve(containerRef.current);
       }
-      resizeObserver?.disconnect(); // Disconnect observer
+      resizeObserver?.disconnect();
       console.log("MonacoCore: ResizeObserver disconnected");
 
-      vimMode?.dispose();
-      console.log("MonacoCore: Vim mode disposed");
+      vimMode?.dispose(); // Restore dispose
+      console.log("MonacoCore: Vim mode disposed"); // Restore log
 
-      // Check editorInstance before disposing
       if (editorInstance) {
           editorInstance.dispose();
           console.log("MonacoCore: Editor instance disposed");
       }
 
       editorRef.current = null;
-      // Use type assertion for window assignment
       (window as any).monacoEditor = undefined;
       console.log("MonacoCore: Refs and window properties cleared");
     };
@@ -173,6 +190,7 @@ export default function MonacoCore({ value, language = 'text', toggleVideo }: Mo
   return (
     <div data-testid="monaco-editor-container" className="monaco-editor-container" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <div ref={containerRef} style={containerStyle} />
+      {/* Restore status bar */}
       <div ref={statusBarRef} className="vim-status-bar" style={{ height: '20px', flexShrink: 0 }} />
     </div>
   );
