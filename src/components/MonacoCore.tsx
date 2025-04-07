@@ -91,7 +91,7 @@ export default function MonacoCore({ value, language = 'text', toggleVideo }: Mo
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const statusBarRef = useRef<HTMLDivElement>(null);
-  const [containerStyle, setContainerStyle] = useState({ flexGrow: 1, height: 'auto' });
+  const [containerStyle, setContainerStyle] = useState({ flexGrow: 1, height: '100%', minHeight: '300px' });
   const vimModeRef = useRef<any>(null); // Holds return of initVimMode
   const initRan = useRef(false); // StrictMode flag
   const defineCommandsTimeoutRef = useRef<NodeJS.Timeout | null>(null); // Ref for the timeout
@@ -230,7 +230,7 @@ export default function MonacoCore({ value, language = 'text', toggleVideo }: Mo
   }, [value, editorRef.current]); // Depend on value and editor instance
 
   return (
-    <div data-testid="monaco-editor-container" className="monaco-editor-container" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+    <div data-testid="monaco-editor-container" className="monaco-editor-container" style={{ display: 'flex', flexDirection: 'column', height: '100%', flex: '1 1 auto' }}>
       <div ref={containerRef} style={containerStyle} />
       <div ref={statusBarRef} className="vim-status-bar" style={{ height: '20px', flexShrink: 0 }} />
     </div>

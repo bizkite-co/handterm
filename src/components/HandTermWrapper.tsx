@@ -56,7 +56,6 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
   const currentActivityValue = activitySignal.value;
   logger.debug(`HandTermWrapper rendering with activity: ${currentActivityValue}`);
 
-
   const handlePhraseComplete = useCallback(() => {
     localStorage.setItem('currentCommand', '');
     setGamePhrase(null);
@@ -72,8 +71,8 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
     function isGameHandle(game: IGameHandle | null): game is IGameHandle {
       return game !== null;
     }
-    resetPrompt();
-  }, [nextCharsDisplayRef, gameHandleRef, resetPrompt]);
+    // Removed redundant resetPrompt() call
+  }, [nextCharsDisplayRef, gameHandleRef]);
 
   const handlePhraseSuccess = useCallback((phrase: GamePhrase | null) => {
     if (phrase === null) return;
@@ -101,7 +100,8 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
       return game !== null;
     }
     handlePhraseComplete();
-  }, [wpmCalculator, activityMediator, handlePhraseComplete, gameHandleRef, targetWPM]);
+    resetPrompt(); // Add resetPrompt here to ensure it's called once
+  }, [wpmCalculator, activityMediator, handlePhraseComplete, gameHandleRef, targetWPM, resetPrompt]);
 
   useEffect(() => {
     if (activitySignal.value === ActivityType.TREE) {
@@ -125,24 +125,42 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
     }
   }, [activitySignal.value]);
 
-  // --- MODIFIED: useEffect for NORMAL activity ---
+  // ENHANCED: Terminal Initialization and Visibility Logic
   useEffect(() => {
-    if (activitySignal.value === ActivityType.NORMAL) {
-      logger.debug('Activity changed to NORMAL. Focusing terminal and ensuring fit.');
-      // Use setTimeout to ensure the terminal container is likely rendered
-      setTimeout(() => {
+    const isTerminalRelevantActivity =
+      currentActivityValue === ActivityType.NORMAL;
+
+    if (isTerminalRelevantActivity) {
+      logger.debug('Terminal Initialization: Preparing terminal for activity', {
+        activity: currentActivityValue,
+        xtermRefExists: !!xtermRef.current,
+        fitAddonExists: !!fitAddon.current
+      });
+
+      const initializeTerminal = () => {
         const termContainer = document.getElementById('xtermRef');
-        if (termContainer && xtermRef.current) {
-           logger.debug('Terminal container found, calling fitAddon.fit() and focusing.');
-           fitAddon.current.fit(); // Call fit addon
-           xtermRef.current.focus(); // Focus terminal
+
+        if (termContainer && xtermRef.current && fitAddon.current) {
+          try {
+            logger.debug('Terminal Initialization: Fitting and focusing');
+            fitAddon.current.fit();
+            xtermRef.current.focus();
+          } catch (error) {
+            logger.error('Terminal Initialization Error', { error });
+          }
         } else {
-           logger.warn('Terminal container or xtermRef not ready for focus/fit.');
+          logger.warn('Terminal Initialization: Missing required elements', {
+            termContainer: !!termContainer,
+            xtermRef: !!xtermRef.current,
+            fitAddon: !!fitAddon.current
+          });
         }
-      }, 200); // Increased delay
+      };
+
+      // Use requestAnimationFrame for more reliable rendering
+      requestAnimationFrame(initializeTerminal);
     }
-  }, [activitySignal.value, xtermRef, fitAddon]); // Added fitAddon dependency
-  // --- END MODIFIED ---
+  }, [currentActivityValue, xtermRef, fitAddon]);
 
   const handlePhraseErrorState = useCallback((errorIndex: number | undefined) => {
     setErrorCharIndex(errorIndex);
@@ -186,6 +204,26 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
     }
   }, []);
 
+  // Define toggleVideoCallback using useCallback
+  const toggleVideoCallback = useCallback(() => {
+    isShowVideoSignal.value = !isShowVideoSignal.value;
+    return isShowVideoSignal.value;
+  }, []); // No dependencies needed if it only uses signals
+
+  // Memoize the editor component with stable dependencies
+  const editorComponent = useMemo(() => {
+    logger.debug("Memoizing MonacoCore (Editor) component instance");
+    return (
+      <MonacoCore
+        key={ActivityType.EDIT} // Use a constant key
+        value={getStoredContent()}
+        language="markdown"
+        toggleVideo={toggleVideoCallback} // Pass the stable callback
+      />
+    );
+    // Dependencies are stable callbacks/values
+  }, [getStoredContent, toggleVideoCallback]);
+
   logger.debug(`Rendering check: Activity=${currentActivityValue}`);
   return (
     <div id='handterm-wrapper' data-testid='handterm-wrapper'>
@@ -213,10 +251,21 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
         />
       )}
 
-      {/* Always show terminal unless in EDIT or TREE mode */}
+      {/* ENHANCED: Terminal Visibility Logic */}
       {currentActivityValue !== ActivityType.EDIT && currentActivityValue !== ActivityType.TREE &&
-        ((() => { logger.debug("Rendering Terminal Container"); return true; })()) &&
-        <div id="prompt-and-terminal">
+        ((() => {
+          logger.debug("Rendering Terminal Container");
+          return true;
+        })()) &&
+        <div
+          id="prompt-and-terminal"
+          style={{
+            display: 'block',
+            visibility: 'visible',
+            height: '100%',
+            width: '100%'
+          }}
+        >
           <PromptHeader
             username={userName ?? 'guest'}
             domain={domain ?? 'handterm.com'}
@@ -226,30 +275,29 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
           <div
             ref={xtermRef}
             id="xtermRef"
+            style={{
+              height: '100%',
+              width: '100%',
+              display: 'block',
+              visibility: 'visible'
+            }}
           />
         </div>
       }
 
       {/* Render editor only when activity is EDIT */}
       {currentActivityValue === ActivityType.EDIT &&
-        ((() => { logger.debug("Rendering MonacoCore (Editor)"); return true; })()) &&
-        <MonacoCore
-          key={ActivityType.EDIT} // Static key
-          value={getStoredContent()}
-          language="markdown"
-          toggleVideo={() => {
-            isShowVideoSignal.value = !isShowVideoSignal.value;
-            return isShowVideoSignal.value;
-          }}
-        />
+        ((() => { logger.debug("Rendering Memoized MonacoCore (Editor)"); return true; })()) &&
+        editorComponent // Use the memoized component
       }
       {/* Render tree view only when activity is TREE */}
       {currentActivityValue === ActivityType.TREE && treeItems.length > 0 &&
         ((() => { logger.debug("Rendering MonacoCore (Tree)"); return true; })()) &&
         <MonacoCore
-          key={ActivityType.TREE} // Static key
-          value=""
+          key={ActivityType.TREE} // Use a constant key
+          value="" // Tree view doesn't need initial value from storage
           language="plaintext"
+          // No toggleVideo needed for tree view? If needed, add the callback
         />
       }
       {isShowVideoSignal.value !== null && (
