@@ -25,7 +25,6 @@ version: 1.0.0
 * Use industry standard best practice coding standards and file structure and naming conventions.
 * Break problems down into smaller problems until you can find the tiny problem that's causeing the bigger problems.
 
-
 1. Make sure any commands you execute return control of the terminl.
 2. Prefer creating a new test or assertion, instead of debug logging.
    1. Testing is more robust than debug logging because it can be run at design time and doesn't need to be removed.
@@ -39,18 +38,5 @@ version: 1.0.0
 7. Read `CONVENTIONS.md` at the start of each chat.
 8. Read `./.eslintrc.cjs` and follow the rules. Avoid creating warnings.
     a. For instance, don't violate `eslint@typescript-eslint/strict-boolean-expressions` when writing code.
-9. Use a `./docs/worklog/` directory for all planning and worklog purposes.
-    1. If the user passes you a `./docs/worklog/` directory, use that directory for all planning and worklog purposes.
-    2. If the user does not pass you a `./docs/worklog/` directory, create a worklog file starting with todays date in the name in `./docs/worklog/`.
-    3. Use the `date-server` MCP server to get the current date.
-    4. State the task you are working on.
-    5. State your understanding of the problem.
-    6. State your plan to solve the problem.
-    7. State your next steps.
-    8. Add `// TODO:` comments to your code to indicate the changes that need to be made and the plan document that describes the change.
-    9. Implement your next step in code while observing the linting rules and warnings.
-    10. Whenever you create a measurable improvement, commit the change with a multi-line commit message.
-    11. If you are stuck, state your current problem and ask for help.
-    12. Perioically review your last three comments to make sure you're not stuck in a non-productive loop.
 10. Assume 'npm run dev' is already running and available at `http://localhost:5173/`.
 11. DO NOT RUN `npm run dev`. You can assume it is already running.
