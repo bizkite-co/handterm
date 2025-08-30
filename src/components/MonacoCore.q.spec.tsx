@@ -11,18 +11,44 @@ vi.mock('monaco-editor/esm/vs/editor/editor.api', () => ({
 }));
 
 // Mock monaco-vim *once* before all tests. We don't actually need the real one.
-vi.mock('monaco-vim', () => ({
-  initVimMode: vi.fn().mockImplementation(() => {
-        (window as any).MonacoVim = {
-            VimMode: {
-                Vim: {
-                    defineEx: vi.fn(), // Mock defineEx here
-                }
-            }
-        }
-        return {dispose: () => {}};
-    }),
-}));
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { defineVimCommands } from './MonacoCore';
+import { ActivityType } from '@handterm/types';
+import { navigate } from '../utils/navigationUtils';
+import * as monacoVim from 'monaco-vim';
+
+vi.mock('monaco-vim');
+vi.mock('../utils/navigationUtils');
+
+describe('MonacoCore - defineVimCommands', () => {
+  let mockEditorRef: any;
+
+  beforeEach(() => {
+    mockEditorRef = { current: { getValue: vi.fn() } };
+    localStorage.clear();
+    vi.clearAllMocks();
+  });
+
+  it('defines the :q! command', () => {
+    const defineExSpy = vi.fn();
+    (monacoVim as any).VimMode = {
+      Vim: {
+        defineEx: defineExSpy,
+      },
+    };
+
+    defineVimCommands(mockEditorRef);
+
+    expect(defineExSpy).toHaveBeenCalledWith('q!', '', expect.any(Function));
+
+    const qCommandCallback = defineExSpy.mock.calls.find(call => call[0] === 'q!')[2];
+    qCommandCallback();
+
+    expect(navigate).toHaveBeenCalledWith({ activityKey: ActivityType.NORMAL });
+    expect(localStorage.getItem('editContent')).toBeNull();
+  });
+});
+
 
 vi.mock('../utils/navigationUtils', () => ({
   navigate: vi.fn(),

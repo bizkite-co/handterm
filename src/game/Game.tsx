@@ -1,5 +1,5 @@
 // TerminalGame.ts
-import { useState, useEffect, useRef, useImperativeHandle, useCallback, useMemo, forwardRef } from 'react';
+import React, { useState, useEffect, useRef, useImperativeHandle, useCallback, useMemo, forwardRef } from 'react';
 
 import confetti from 'canvas-confetti';
 
@@ -42,7 +42,7 @@ interface IGameHandle {
   levelUp: (setLevelValue?: number | null) => void;
 }
 
-function GameFunction(props: IGameProps, ref: React.ForwardedRef<IGameHandle>): JSX.Element {
+function GameFunction(props: IGameProps, ref: React.ForwardedRef<IGameHandle>): React.JSX.Element {
   const {
     canvasHeight,
     canvasWidth,
@@ -266,6 +266,7 @@ function GameFunction(props: IGameProps, ref: React.ForwardedRef<IGameHandle>): 
   }, [context, startAnimationLoop]);
 
   const completeGame = useCallback(() => {
+    logger.debug('completeGame called.');
     setZombie4ToDeathThenResetPosition();
     triggerConfettiCannon();
     setIsPhraseComplete(true);

@@ -4,6 +4,7 @@ import { useComputed } from '@preact/signals-react';
 import { FitAddon } from '@xterm/addon-fit';
 import { useXTerm } from 'react-xtermjs';
 import { Terminal } from '@xterm/xterm'; // Import Terminal type
+import type { RefObject } from 'react'; // Import RefObject
 
 import { TERMINAL_CONSTANTS } from 'src/constants/terminal';
 import { XtermAdapterConfig } from '../components/XtermAdapterConfig';
@@ -27,26 +28,22 @@ import { createLogger, LogLevel } from 'src/utils/Logger';
 import { useCharacterHandler } from './useCharacterHandler';
 import { useCommand } from './useCommand';
 import { useWPMCalculator } from './useWPMCaculator';
+import type { ITerminalAdapter } from 'src/types/terminal';
 
 const logger = createLogger({ prefix: 'useTerminal' });
 
-// --- MODIFIED: Update return type ---
-export const useTerminal = (): {
-	xtermRef: React.RefObject<HTMLDivElement>;
-	writeToTerminal: (data: string) => void;
-	resetPrompt: () => void;
-	fitAddon: React.RefObject<FitAddon>;
-  instance: Terminal | null; // Add instance to return type
-} => {
-// --- END MODIFIED ---
-  const { instance, ref: xtermRef } = useXTerm({ options: XtermAdapterConfig });
+export const useTerminal = (externalRef?: RefObject<HTMLDivElement | null>): ITerminalAdapter => {
+  const internalRef = useRef<HTMLDivElement>(null);
+  const ref = externalRef ?? internalRef; // Use external ref if provided, otherwise internal
+
+  const { instance, ref: xtermRefInternal } = useXTerm({ options: XtermAdapterConfig });
   const { handleCommand, commandHistory, commandHistoryIndex, setCommandHistoryIndex } = useCommand();
   const wpmCalculator = useWPMCalculator();
   const commandLine = useComputed(() => commandLineSignal.value);
   const [_commandLineState, _setCommandLineState] = useState('');
-  const fitAddon = useRef(new FitAddon()); // Keep the ref initialization
+  const fitAddon = useRef(new FitAddon());
 
-  const writeToTerminal = useCallback((data: string): void => {
+  const write = useCallback((data: string): void => {
     logger.debug('Writing to terminal:', data);
     instance?.write(data);
   }, [instance]);
@@ -55,7 +52,6 @@ export const useTerminal = (): {
     return commandLine.value;
   }, [commandLine]);
 
-  // ENHANCED: Add detailed logging to resetPrompt
   const resetPrompt = useCallback((): void => {
     logger.debug('resetPrompt called.');
     if (instance == null) {
@@ -74,7 +70,10 @@ export const useTerminal = (): {
     instance.scrollToBottom();
     logger.debug('resetPrompt: Completed.');
   }, [instance]);
-  // END ENHANCED
+
+  const focus = useCallback(() => {
+    instance?.focus();
+  }, [instance]);
 
   const lastTypedCharacterRef = useRef<string | null>(null);
   const setLastTypedCharacter = (value: string | null) => {
@@ -86,7 +85,7 @@ export const useTerminal = (): {
   } = useCharacterHandler({
     setLastTypedCharacter,
     isInSvgMode: false,
-    writeOutputInternal: writeToTerminal,
+    writeOutputInternal: write,
   });
 
   const navigateHistory = useCallback((direction: 'up' | 'down'): void => {
@@ -127,6 +126,14 @@ export const useTerminal = (): {
     fitAddon.current.fit();
     instance.write(TERMINAL_CONSTANTS.PROMPT);
   }, [instance]);
+
+  const onData = useCallback((callback: (data: string) => void) => {
+    const disposable = instance?.onData(callback);
+    return {
+      dispose: () => disposable?.dispose(),
+    };
+  }, [instance]);
+
 
   useEffect(() => {
     if (instance == null) return;
@@ -253,21 +260,19 @@ export const useTerminal = (): {
     };
     window.addEventListener('resize', resizeHandler);
 
-    const dataHandler = instance.onData(handleData);
+    const dataHandler = onData(handleData);
 
     return () => {
       window.removeEventListener('resize', resizeHandler);
       dataHandler.dispose();
     };
-  }, [instance, getCurrentCommand, resetPrompt, wpmCalculator, commandLine, navigateHistory, handleCharacter, _commandLineState, handleCommand, setCommandHistoryIndex]);
+  }, [instance, getCurrentCommand, resetPrompt, wpmCalculator, commandLine, navigateHistory, handleCharacter, _commandLineState, handleCommand, setCommandHistoryIndex, onData]);
 
-  // --- MODIFIED: Update return value ---
   return {
-    xtermRef,
-    writeToTerminal,
+    ref: xtermRefInternal,
+    write,
     resetPrompt,
-    fitAddon,
-    instance, // Return instance
+    focus,
+    onData,
   };
-  // --- END MODIFIED ---
 };

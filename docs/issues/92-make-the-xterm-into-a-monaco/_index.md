@@ -1,13 +1,15 @@
+---
 title:	Make the XTerm into a Monaco
 state:	OPEN
 author:	InTEGr8or
-labels:	
+labels:
 comments:	0
-assignees:	
-projects:	
-milestone:	
+assignees:
+projects:
+milestone:
 number:	92
---
+---
+
 I don't think we need to have two different types of text panes. This is speculative, but I think we can simplify things A LOT by getting rid of XTerm and using Monaco for the prompt. One thing it would do is allow a persistent auto-saved prompt. The biggest hurdle would probably be making the Enter key send()
 
 ---
@@ -18,7 +20,7 @@ This document outlines the phased approach for replacing the XTerm.js terminal w
 
 ### Phase 1: Abstraction & Preparation
 
-*   **Status:** Not Started
+*   **Status:** In Progress
 *   **Details:** [Phase 1: Abstraction & Preparation](./phase-1-abstraction.md)
 
 The goal of this phase is to refactor the existing code to isolate the terminal's implementation details behind a generic, strictly-typed interface using `Effect Schema`.

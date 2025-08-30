@@ -1,5 +1,6 @@
 // ActionTypes.ts
 import { type  ActionType } from '@handterm/types';
+export type { ActionType };
 import { HeroAnimations } from '../characters/hero/HeroAnimations';
 import { Zombie4Animations } from '../characters/zombie4/Zombie4Animations';
 

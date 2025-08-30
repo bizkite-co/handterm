@@ -22,8 +22,10 @@ export default defineConfig({
       '**/playwright/**',
       'tests-examples/**',
       '**/e2e/**', // Exclude Playwright tests
-      '**/*.spec.ts' // Exclude .spec files
     ],
+    alias: {
+      "\\.css$": "<rootDir>/src/__mocks__/styleMock.js"
+    },
     server: {
       deps: {
         inline: [

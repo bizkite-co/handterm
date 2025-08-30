@@ -31,12 +31,12 @@ export function safelyAccessProperty<T, K extends keyof T>(
 export function safelyCallMethodOnRef<T, K extends keyof T>(
     ref: React.RefObject<T>,
     methodName: K,
-    ...args: T[K] extends (...args: infer P) => unknown ? P : never[]
+    ...args: any[] // Use any[] for more flexibility in arguments
 ): void {
     const method = ref.current?.[methodName];
     if (method !== null && method !== undefined && typeof method === 'function') {
-        const typedMethod = method as T[K] extends (...args: infer P) => unknown ? (...args: P) => unknown : never;
-        typedMethod(...args);
+        // Cast to Function to allow calling with any arguments
+        (method as Function)(...args);
     }
 }
 

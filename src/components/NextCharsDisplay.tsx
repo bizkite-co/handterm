@@ -11,14 +11,16 @@ import {
 
 import { commandLineSignal } from 'src/signals/commandLineSignals';
 import { setCompletedGamePhrase } from 'src/signals/gameSignals';
-import { type GamePhrase, TerminalCssClasses } from '@handterm/types'
+import { type GamePhrase } from '@handterm/types';
+import { TerminalCssClasses } from 'packages/types/src/TerminalTypes';
 import { parseLocation } from 'src/utils/navigationUtils';
 
 import { Phrase } from '../utils/Phrase';
+import GamePhrases from '../utils/GamePhrases';
 
 import ErrorDisplay from './ErrorDisplay';
 import Timer, { type TimerHandle } from './Timer';
-import { createSafeCaller, isNullOrEmptyString } from 'src/utils/typeSafetyUtils';
+import { isNullOrEmptyString } from 'src/utils/typeSafetyUtils';
 
 export interface INextCharsDisplayProps {
     isInPhraseMode: boolean;
@@ -47,7 +49,7 @@ const NextCharsDisplay = forwardRef<NextCharsDisplayHandle, INextCharsDisplayPro
     const timerRef = useRef<TimerHandle>(null);
 
     // Create a specialized caller for timerRef
-    const safeTimerCaller = createSafeCaller(timerRef);
+
     const wpmRef = useRef<HTMLSpanElement>(null);
     const commandLine = useComputed(() => commandLineSignal.value);
 
@@ -106,23 +108,31 @@ const NextCharsDisplay = forwardRef<NextCharsDisplayHandle, INextCharsDisplayPro
     }, [_gamePhrase, onPhraseSuccess]);
 
     const stopTimer = useCallback(() => {
-        safeTimerCaller('stop');
-    }, [safeTimerCaller]);
+        if (timerRef.current) {
+            timerRef.current.stop();
+        }
+    }, []);
 
     const startOrContinueTimer = useCallback(() => {
-        safeTimerCaller('start');
-    }, [safeTimerCaller]);
+        if (timerRef.current) {
+            timerRef.current.start();
+        }
+    }, []);
 
     const resetTimer = useCallback(() => {
-        safeTimerCaller('reset');
-    }, [safeTimerCaller]);
+        if (timerRef.current) {
+            timerRef.current.reset();
+        }
+    }, []);
 
     const cancelTimer = useCallback(() => {
-        safeTimerCaller('reset');
+        if (timerRef.current) {
+            timerRef.current.reset();
+        }
         if (nextCharsRef.current !== null && nextCharsRef.current !== undefined) {
             nextCharsRef.current.innerText = _phrase.value.join('');
         }
-    }, [_phrase.value, safeTimerCaller]);
+    }, [_phrase.value]);
 
     const handleCommandLineChange = useCallback((stringBeingTested: string) => {
         startOrContinueTimer();
@@ -185,7 +195,7 @@ const NextCharsDisplay = forwardRef<NextCharsDisplayHandle, INextCharsDisplayPro
         const { activityKey, contentKey } = currentLocation;
         if (activityKey === null || activityKey === undefined || isNullOrEmptyString(contentKey)) return;
 
-        const foundPhrase = GamePhrases.default.getGamePhraseByKey(contentKey);
+        const foundPhrase = GamePhrases.getGamePhraseByKey(contentKey);
         if (foundPhrase === null || foundPhrase === undefined) return;
 
         // Prevent unnecessary state updates
@@ -207,7 +217,7 @@ const NextCharsDisplay = forwardRef<NextCharsDisplayHandle, INextCharsDisplayPro
     return (
         (currentLocation !== null && currentLocation !== undefined && !isNullOrEmptyString(currentLocation.contentKey) &&
             <div
-                id={TerminalCssClasses.NextChars}
+                id={TerminalCssClasses.nextChars}
                 hidden={!isInPhraseMode}
             >
                 {_mismatchedChar !== null && _mismatchedChar !== '' && _mismatchedIsVisible && (
@@ -217,9 +227,9 @@ const NextCharsDisplay = forwardRef<NextCharsDisplayHandle, INextCharsDisplayPro
                     />
                 )}
                 <Timer ref={timerRef} />
-                <div id={TerminalCssClasses.NextCharsRate} ref={nextCharsRateRef}></div>
-                <span id={TerminalCssClasses.WPM} ref={wpmRef}></span>
-                <pre id={TerminalCssClasses.NextChars} ref={nextCharsRef}>
+                <div id={TerminalCssClasses.nextCharsRate} ref={nextCharsRateRef}></div>
+                <span id={TerminalCssClasses.wpm} ref={wpmRef}></span>
+                <pre id={TerminalCssClasses.nextChars} ref={nextCharsRef}>
                     {_nextChars}
                 </pre>
             </div>
