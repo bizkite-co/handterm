@@ -7,8 +7,9 @@ import { AppProvider } from './contexts/AppContext';
 import { CommandProvider } from './contexts/CommandProvider';
 import { useAuth } from './hooks/useAuth';
 import { ActivityType, TerminalCssClasses, type IHandTermWrapperMethods } from '@handterm/types';
-import { parseLocation } from './utils/navigationUtils';
+import { parseLocation, navigate } from './utils/navigationUtils'; // Import navigate
 import { createLogger } from './utils/Logger'; // Import logger
+import ErrorBoundary from './components/ErrorBoundary'; // Import ErrorBoundary
 
 const logger = createLogger({ prefix: 'App' }); // Create logger instance
 
@@ -17,7 +18,9 @@ function isHandTermWrapperMethods(ref: RefObject<IHandTermWrapperMethods | null>
   return ref.current !== null && typeof ref.current.focusTerminal === 'function';
 }
 
-export function App(): JSX.Element {
+// ENHANCED: Remove explicit JSX.Element return type annotation
+export function App() {
+// END ENHANCED
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState<number>(0);
 
@@ -39,9 +42,6 @@ export function App(): JSX.Element {
   }, [getContainerWidth]);
 
   useEffect(() => {
-    const w = getContainerWidth();
-    setContainerWidth(w);
-
     const handleOutsideTerminalClick = (event: MouseEvent | TouchEvent) => {
       // No change needed here, guard handles the check
       const currentRef = handexTermWrapperRef.current;
@@ -83,6 +83,9 @@ export function App(): JSX.Element {
     (window as any).appReady = true;
   }, []); // Empty dependency array ensures this runs only once after initial mount
 
+  // Expose navigate function for Playwright tests (unconditionally)
+  (window as any).navigate = navigate;
+
   return (
     <ActivityMediatorProvider>
       <div className='app' ref={containerRef}>
@@ -94,12 +97,16 @@ export function App(): JSX.Element {
             {parseLocation().activityKey !== ActivityType.EDIT
               && <Output />
             }
-            <HandTermWrapper
-              ref={handexTermWrapperRef}
-              auth={auth}
-              terminalWidth={containerWidth}
-              onOutputUpdate={() => {}}
-            />
+            {/* ENHANCED: Wrap HandTermWrapper with ErrorBoundary */}
+            <ErrorBoundary>
+              <HandTermWrapper
+                ref={handexTermWrapperRef}
+                auth={auth}
+                terminalWidth={containerWidth}
+                onOutputUpdate={() => {}}
+              />
+            </ErrorBoundary>
+            {/* END ENHANCED */}
           </CommandProvider>
         </AppProvider>
       </div>

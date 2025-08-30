@@ -2,13 +2,9 @@ import { type Page, type Locator, expect } from '@playwright/test';
 import { allTutorialKeys } from '@handterm/types';
 
 import { TERMINAL_CONSTANTS } from 'src/constants/terminal';
-import type { Signal } from '@preact/signals-react';
-// Remove unused import of parseLocation from utils
-// import { parseLocation } from '../../utils/navigationUtils';
-import type { ActivityType as ActivityTypeEnum, GamePhrase, IHandTermWrapperMethods, ActionType, ParsedCommand } from '@handterm/types';
 import { TEST_CONFIG } from '../config';
 import { setupBrowserWindow } from '../browser-setup/setupWindow';
-import { type Terminal } from '@xterm/xterm';
+import { getDefaultAutoSelectFamilyAttemptTimeout } from 'net';
 
 
 // REMOVED declare global block - types are now in packages/types/src/window.ts
@@ -16,6 +12,7 @@ import { type Terminal } from '@xterm/xterm';
 export class TerminalPage {
   readonly page: Page;
   readonly terminal: Locator;
+  readonly terminalElementId = 'xtermRef';
   readonly output: Locator;
   readonly tutorialMode: Locator;
   readonly gameMode: Locator;
@@ -24,7 +21,7 @@ export class TerminalPage {
 
   constructor(page: Page) {
     this.page = page;
-    this.terminal = page.locator('#xtermRef');
+    this.terminal = page.locator('#' + this.terminalElementId);
     this.output = page.locator('#output-container');
     this.tutorialMode = page.locator('.tutorial-component');
     this.gameMode = page.locator('#terminal-game');
@@ -52,16 +49,25 @@ export class TerminalPage {
     await this.waitForPrompt();
   }
 
-  // UPDATED METHOD: Wait for app readiness signal
+  public async getOutput() {
+    return this.output.allInnerTexts();
+  }
+
+  // UPDATED METHOD: Wait for app readiness signal with duration logging
   async waitForAppReady(timeout: number = TEST_CONFIG.timeout.medium): Promise<void> {
+    const startTime = Date.now();
     try {
       // Wait for the flag set in App.tsx's useEffect
       await this.page.waitForFunction(() => (window as any).appReady === true, null, { timeout });
+      const duration = Date.now() - startTime;
+      console.log(`[waitForAppReady] Completed in ${duration}ms (timeout: ${timeout}ms)`);
     } catch (error) {
-      console.error('Timeout waiting for window.appReady flag.');
+      const duration = Date.now() - startTime;
+      console.error(`[waitForAppReady] Timed out after ${duration}ms (timeout: ${timeout}ms)`);
       throw new Error(`Timeout waiting for app readiness signal after ${timeout}ms`);
     }
   }
+  // END UPDATED METHOD
 
   // REMOVED waitForCommandsRegistered method as it's replaced by waitForAppReady
 
@@ -84,29 +90,36 @@ export class TerminalPage {
    * Does NOT guarantee the prompt is visible yet.
    */
   public async waitForTerminalContainer(): Promise<void> {
-    // Wait for application wrapper to load
-    // Increased timeout slightly for initial load robustness
-    await this.page.waitForSelector('#handterm-wrapper', { state: 'attached', timeout: TEST_CONFIG.timeout.medium });
+    const startTime = Date.now();
+    try {
+      // Wait for application wrapper to load
+      // Increased timeout slightly for initial load robustness
+      await this.page.waitForSelector('#handterm-wrapper', { state: 'attached', timeout: TEST_CONFIG.timeout.medium });
+      console.log(`[waitForTerminalContainer] #handterm-wrapper attached in ${Date.now() - startTime}ms (timeout: ${TEST_CONFIG.timeout.medium}ms)`);
 
-    // Wait for terminal element container
-    const xtermRef = await this.page.$('#xtermRef');
-    if (!xtermRef) {
-      throw new Error('Terminal element (#xtermRef) not found');
-    }
 
-    // Check if #xtermRef is visible
-    const isVisible = await xtermRef.isVisible();
-    if (!isVisible) {
-      throw new Error('Terminal element (#xtermRef) is not visible');
-    }
-
-    // Check if #xtermRef has children.
-    if (!await this.terminalHasChildren()) {
-      // Add a small delay and retry once, sometimes children take a moment
-      await this.page.waitForTimeout(200);
-      if (!await this.terminalHasChildren()) {
-        throw new Error('Terminal element (#xtermRef) has no children after retry');
+      // Wait for terminal element container
+      const xtermRef = await this.page.$('#xtermRef');
+      if (!xtermRef) {
+        throw new Error('Terminal element (#xtermRef) not found');
       }
+      console.log(`[waitForTerminalContainer] #xtermRef found in ${Date.now() - startTime}ms`);
+
+
+      // Check if #xtermRef has children.
+      if (!await this.terminalHasChildren()) {
+        // Add a small delay and retry once, sometimes children take a moment
+        await this.page.waitForTimeout(200);
+        if (!await this.terminalHasChildren()) {
+          throw new Error('Terminal element (#xtermRef) has no children after retry');
+        }
+      }
+       console.log(`[waitForTerminalContainer] #xtermRef has children in ${Date.now() - startTime}ms`);
+
+    } catch (error) {
+       const duration = Date.now() - startTime;
+       console.error(`[waitForTerminalContainer] Timed out after ${duration}ms`);
+       throw error;
     }
   }
 
@@ -114,7 +127,7 @@ export class TerminalPage {
    * Focuses the terminal
    */
   public async focus(): Promise<void> {
-    await this.waitForPrompt(); // Ensure ready before focus
+    await this.waitForPrompt(); // Ensure prompt is ready before focus
     await this.terminal.click();
   }
 
@@ -174,8 +187,24 @@ export class TerminalPage {
 
         // If we're no longer in tutorial mode and have a valid wrapper, consider it success
         if (!state.tutorialVisible && state.handtermWrapper) {
+          // NEW: Wait for the terminal container to be visible
+          await this.page.waitForSelector('#prompt-and-terminal', { state: 'visible', timeout: timeout });
+          console.log(`[waitForActivityTransition] #prompt-and-terminal visible in ${Date.now() - startTime}ms`);
+          // END NEW
+
+          // NEW: Wait for the URL to change back to the base URL
+          const baseUrl = this.page.url().split('?')[0];
+          await this.page.waitForURL(baseUrl ?? '', { timeout: timeout });
+          console.log(`[waitForActivityTransition] URL changed back to base URL in ${Date.now() - startTime}ms`);
+          // END NEW
+
+          // Add a small delay to allow rendering to catch up
+          await this.page.waitForTimeout(500); // Add a small delay after URL change
+          console.log(`[waitForActivityTransition] Added 500ms delay after URL change`);
+
           // Also ensure the terminal prompt is back after transition
           await this.waitForPrompt();
+          console.log(`[waitForActivityTransition] Completed in ${Date.now() - startTime}ms (timeout: ${timeout}ms)`);
           return;
         }
 
@@ -190,146 +219,8 @@ export class TerminalPage {
       }
     }
 
-    throw new Error(`Activity transition timed out after ${timeout}ms`);
-  }
-
-  async waitForTutorialMode(timeout = 1000000): Promise<void> {
-    try {
-      await this.logNodeChildrenWithIds('div#handterm-wrapper');
-      // Wait for tutorial component to be attached
-      await this.page.waitForSelector('.tutorial-component', { state: 'attached', timeout });
-
-
-      // Wait for tutorial content to be loaded (tutorial-prompt only appears when content is set)
-      await this.page.waitForSelector('.tutorial-prompt', { state: 'visible', timeout });
-
-      // Verify tutorial content is actually set
-      const tutorialContent = await this.page.locator('.tutorial-prompt').textContent();
-      if (!tutorialContent) {
-        throw new Error('Tutorial content is empty');
-      }
-    } catch (error) {
-      // Enhanced error logging: Log specific DOM elements and full page content on failure
-      const html = await this.page.content();
-      const tutorialComponent = await this.tutorialMode.evaluate(el => el?.outerHTML);
-      const tutorialPrompt = await this.page.locator('.tutorial-prompt').evaluate(el => el?.outerHTML);
-      console.log('[waitForTutorialMode] Error:', (error instanceof Error) ? error.message : 'Unknown error'); // Check if error is an instance of Error
-      console.log('[waitForTutorialMode] Tutorial Component:', tutorialComponent);
-      console.log('[waitForTutorialMode] Tutorial Prompt:', tutorialPrompt);
-      console.log('[waitForTutorialMode] Full Page Content:', html);
-      throw error;
-    }
-  }
-
-  /**
-   * Logs the tag name and id of all child nodes with IDs for a given node selector.
-   * @param nodeSelector CSS selector for the node to inspect.
-   */
-  private async logNodeChildrenWithIds(nodeSelector: string, isDebug: boolean = false): Promise<void> {
-    if (isDebug) return;
-    try {
-      const wrapperNodesWithIds = await this.page.evaluate(
-        (selector) => {
-          const wrapper = document.querySelector(selector);
-          if (!wrapper) {
-            return `${selector} not found`;
-          }
-          const elementsWithIds = Array.from(wrapper.querySelectorAll('*[id]'));
-          return elementsWithIds.map((element) => ({
-            tagName: element.tagName,
-            id: element.id,
-          }));
-        },
-        nodeSelector,
-      );
-
-      // Only print if we're in debug mode.
-      if (isDebug) console.log(`[DOM Nodes with IDs in ${nodeSelector}]`, wrapperNodesWithIds);
-    } catch (error) {
-      console.error(`ERROR in logNodeChildrenWithIds for selector ${nodeSelector}:`, error);
-    }
-  }
-
-  public async goto(): Promise<void> {
-    await this.page.goto(TEST_CONFIG.baseUrl);
-    // initialize() is called in beforeEach, which now waits for appReady and prompt
-    // No need to duplicate waits here
-  }
-
-  /**
-   * Types a command into the terminal
-   * @param command The command to type
-   */
-  public async typeCommand(command: string): Promise<void> {
-    await this.waitForPrompt(); // Ensure prompt is ready before typing
-    await this.terminal.click(); // Click to ensure focus
-    await this.page.keyboard.type(command);
-  }
-
-  /**
-   * Types a sequence of keys without executing a command
-   * @param keys The keys to type
-   */
-  public async typeKeys(keys: string): Promise<void> {
-    await this.waitForPrompt(); // Ensure prompt is ready before typing
-    await this.terminal.click(); // Click to ensure focus
-    await this.page.keyboard.type(keys);
-  }
-
-  /**
-   * Presses the Enter key
-   */
-  public async pressEnter(): Promise<void> {
-    await this.waitForPrompt(); // Ensure prompt is ready before pressing Enter
-    await this.page.keyboard.press('Enter');
-  }
-
-  /**
-   * Executes a command by typing it and pressing Enter.
-   * NOTE: This method does NOT wait for the command to finish processing.
-   * Test cases should add appropriate waits (e.g., waitForOutput, waitForURL, waitForPrompt)
-   * after calling this method based on the expected command outcome.
-   * @param command The command to execute
-   */
-  public async executeCommand(command: string): Promise<void> {
-    await this.typeCommand(command); // This now waits for prompt before typing
-    await this.pressEnter(); // This now waits for prompt before pressing Enter
-  }
-
-  /**
-   * Gets the current terminal output from the dedicated output container.
-   * May not include the most recent command's output if it hasn't rendered yet.
-   * @returns The text content of the output container
-   */
-  public async getOutput(): Promise<string> {
-    // Wait for the container itself to be present
-    await this.output.waitFor({ state: 'attached', timeout: TEST_CONFIG.timeout.short });
-    return await this.output.textContent() ?? '';
-  }
-
-  /**
-   * Gets the current command line text (without the prompt)
-   * @returns The current command line text
-   */
-  public async getCurrentCommand(): Promise<string> {
-    await this.waitForPrompt(); // Ensure prompt is ready
-
-    // Get the text from the terminal's active buffer
-    const terminalText = await this.page.evaluate((promptString) => {
-      const terminal = (window as any).terminalInstance; // Use type assertion if needed
-      if (!terminal) return '';
-
-      // Get the current line from the buffer
-      const buffer = terminal.buffer.active;
-      const currentLine = buffer.getLine(buffer.cursorY);
-      if (!currentLine) return '';
-
-      const lineText = currentLine.translateToString();
-      // Remove the prompt from the beginning of the line
-      return lineText.substring(promptString.length).trimStart();
-    }, this.prompt);
-
-    return terminalText;
+    const duration = Date.now() - startTime;
+    throw new Error(`Activity transition timed out after ${duration}ms (timeout: ${timeout}ms)`);
   }
 
   /**
@@ -339,7 +230,19 @@ export class TerminalPage {
    * @param text The text to wait for
    */
   public async waitForOutput(text: string): Promise<void> {
-    await this.output.getByText(text, { exact: false }).waitFor({ timeout: TEST_CONFIG.timeout.long });
+    const startTime = Date.now();
+    try {
+      // Wait for the container itself to be present
+      await this.output.waitFor({ state: 'attached', timeout: TEST_CONFIG.timeout.short });
+      // Then wait for the specific text
+      await this.output.getByText(text, { exact: false }).waitFor({ timeout: TEST_CONFIG.timeout.long });
+      const duration = Date.now() - startTime;
+      console.log(`[waitForOutput] Text "${text}" appeared in ${duration}ms (timeout: ${TEST_CONFIG.timeout.long}ms)`);
+    } catch (error) {
+      const duration = Date.now() - startTime;
+      console.error(`[waitForOutput] Timed out waiting for text "${text}" after ${duration}ms (timeout: ${TEST_CONFIG.timeout.long}ms)`);
+      throw error;
+    }
   }
 
   /**
@@ -347,13 +250,27 @@ export class TerminalPage {
    * @param text The text to wait for
    */
   public async waitForNextChars(text: string, options?: { timeout?: number }): Promise<void> {
-    await this.waitForPrompt(); // Ensure terminal is generally ready
-    // First wait for the element to exist
-    await this.nextChars.waitFor({ state: 'attached', timeout: options?.timeout ?? TEST_CONFIG.timeout.short });
+    const timeout = options?.timeout ?? TEST_CONFIG.timeout.short;
+    const longTimeout = options?.timeout ?? TEST_CONFIG.timeout.long;
+    const startTime = Date.now();
+    try {
+      await this.waitForPrompt(); // Ensure terminal is generally ready
+      // First wait for the element to exist
+      await this.nextChars.waitFor({ state: 'attached', timeout });
+      console.log(`[waitForNextChars] Element attached in ${Date.now() - startTime}ms (timeout: ${timeout}ms)`);
 
-    // Then wait for the specific text
-    await this.nextChars.waitFor({ state: 'visible', timeout: options?.timeout ?? TEST_CONFIG.timeout.short });
-    await expect(this.nextChars).toHaveText(text, { timeout: options?.timeout ?? TEST_CONFIG.timeout.long });
+      // Then wait for the specific text
+      await this.nextChars.waitFor({ state: 'visible', timeout });
+      console.log(`[waitForNextChars] Element visible in ${Date.now() - startTime}ms (timeout: ${timeout}ms)`);
+
+      await expect(this.nextChars).toHaveText(text, { timeout: longTimeout });
+      const duration = Date.now() - startTime;
+      console.log(`[waitForNextChars] Text "${text}" appeared in ${duration}ms (timeout: ${longTimeout}ms)`);
+    } catch (error) {
+      const duration = Date.now() - startTime;
+      console.error(`[waitForNextChars] Timed out waiting for text "${text}" after ${duration}ms (timeout: ${longTimeout}ms)`);
+      throw error;
+    }
   }
 
 
@@ -362,54 +279,80 @@ export class TerminalPage {
    * output on that line to stabilize, indicating readiness for input.
    */
   public async waitForPrompt(stabilityTimeout: number = 300, overallTimeout: number = TEST_CONFIG.timeout.long): Promise<void> {
-    // First ensure the main container is loaded
-    await this.waitForTerminalContainer();
-    // Wait for the prompt text itself to appear
-    await this.terminal.getByText(this.prompt).last().waitFor({ timeout: overallTimeout });
-
     const startTime = Date.now();
-    let stable = false;
-    let lastLineContent = '';
+    try {
+      // Ensure the main terminal container is visible and ready
+      // This is now handled in waitForActivityTransition before this is called.
+      // We can add a check here for the terminal instance itself being ready.
+      await this.page.waitForFunction(
+        () => (window as any).terminalInstance
+          ?.buffer?.active,
+        null,
+        { timeout: overallTimeout }
+      );
+      console.log(`[waitForPrompt] Terminal instance buffer ready in ${Date.now() - startTime}ms`);
 
-    while (Date.now() - startTime < overallTimeout && !stable) {
-      const currentLineContent = await this.page.evaluate(() => {
-        const term = (window as any).terminalInstance;
-        if (!term) return null;
-        const buffer = term.buffer.active;
-        // Get the line where the cursor currently is
-        const line = buffer.getLine(buffer.cursorY);
-        return line ? line.translateToString(true) : null; // Get trimmed line content
-      });
+      // Wait for the prompt string to appear in the terminal's innerText
+      await this.page.waitForFunction((args: (string | undefined)[]) => {
+        const terminalElement = document.getElementById(this.terminalElementId);
+        if (!terminalElement) return false;
+        return terminalElement.innerText.includes(TERMINAL_CONSTANTS.PROMPT);
+      }, [this.prompt, 'xtermRef'], { timeout: overallTimeout });
+      console.log(`[waitForPrompt] Prompt string found in innerText in ${Date.now() - startTime}ms`);
 
-      if (currentLineContent === null) {
-        // Add a small delay and retry if terminal instance wasn't ready
-        await this.page.waitForTimeout(100);
-        continue;
-        // throw new Error('waitForPrompt: Could not get terminal line content.');
+
+      let stable = false;
+      let lastLineContent = '';
+      const stabilityStartTime = Date.now();
+
+      while (Date.now() - stabilityStartTime < overallTimeout && !stable) {
+        const currentLineContent = await this.page.evaluate(() => {
+          const term = (window as any).terminalInstance;
+          if (!term) return null;
+          const buffer = term.buffer.active;
+          // Get the line where the cursor currently is
+          const line = buffer.getLine(buffer.cursorY);
+          return line ? line.translateToString(true) : null; // Get trimmed line content
+        });
+
+        if (currentLineContent === null) {
+          // Add a small delay and retry if terminal instance wasn't ready
+          await this.page.waitForTimeout(100);
+          continue;
+          // throw new Error('waitForPrompt: Could not get terminal line content.');
+        }
+
+        // Check if content contains the prompt and hasn't changed since last check
+        if (currentLineContent.includes(this.prompt) && currentLineContent === lastLineContent) {
+          stable = true;
+        } else {
+          lastLineContent = currentLineContent;
+          // Wait for the stability period before checking again
+          await this.page.waitForTimeout(stabilityTimeout);
+        }
       }
 
-      // Check if content contains the prompt and hasn't changed since last check
-      if (currentLineContent.includes(this.prompt) && currentLineContent === lastLineContent) {
-        stable = true;
-      } else {
-        lastLineContent = currentLineContent;
-        // Wait for the stability period before checking again
-        await this.page.waitForTimeout(stabilityTimeout);
+      if (!stable) {
+        const finalLineContent = await this.page.evaluate(() => {
+          const term = (window as any).terminalInstance;
+          if (!term) return null;
+          const buffer = term.buffer.active;
+          const line = buffer.getLine(buffer.cursorY);
+          return line ? line.translateToString(true) : null;
+        });
+        const duration = Date.now() - startTime;
+        throw new Error(`waitForPrompt timed out after ${duration}ms (overallTimeout: ${overallTimeout}ms) waiting for stability. Last line content: "${finalLineContent}"`);
       }
-    }
+      const duration = Date.now() - startTime;
+      console.log(`[waitForPrompt] Stability achieved in ${duration}ms (overallTimeout: ${overallTimeout}ms)`);
 
-    if (!stable) {
-      const finalLineContent = await this.page.evaluate(() => {
-         const term = (window as any).terminalInstance;
-         if (!term) return null;
-         const buffer = term.buffer.active;
-         const line = buffer.getLine(buffer.cursorY);
-         return line ? line.translateToString(true) : null;
-      });
-      throw new Error(`waitForPrompt timed out after ${overallTimeout}ms waiting for stability. Last line content: "${finalLineContent}"`);
+      // Optional: Add a very small final delay just in case, though stability check should cover it.
+      // await this.page.waitForTimeout(50);
+    } catch (error) {
+      const duration = Date.now() - startTime;
+      console.error(`[waitForPrompt] Timed out after ${duration}ms (overallTimeout: ${overallTimeout}ms)`);
+      throw error;
     }
-     // Optional: Add a very small final delay just in case, though stability check should cover it.
-     // await this.page.waitForTimeout(50);
   }
 
 
@@ -461,5 +404,24 @@ export class TerminalPage {
   public async getFullTerminalContent(): Promise<string> {
     await this.waitForPrompt(); // Ensure prompt is ready
     return await this.terminal.innerText();
+  }
+
+  // Restored executeCommand method
+  public async executeCommand(command: string): Promise<void> {
+    await this.typeCommand(command);
+    await this.pressEnter();
+  }
+
+  // Restored typeCommand method
+  public async typeCommand(command: string): Promise<void> {
+    await this.waitForPrompt(); // Ensure prompt is ready before typing
+    await this.terminal.click(); // Click to ensure focus
+    await this.page.keyboard.type(command);
+  }
+
+  // Restored pressEnter method
+  public async pressEnter(): Promise<void> {
+    await this.waitForPrompt(); // Ensure prompt is ready before pressing Enter
+    await this.page.keyboard.press('Enter');
   }
 }
