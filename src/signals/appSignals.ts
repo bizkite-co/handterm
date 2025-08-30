@@ -72,17 +72,19 @@ export { outputElementsSignal };
 export const isInGameModeSignal = computed(() => activitySignal.value === ActivityType.GAME);
 export const isInTutorialModeSignal = computed(() => activitySignal.value === ActivityType.TUTORIAL);
 
-import { navigate } from 'src/utils/navigationUtils';
+import { navigate } from 'src/utils/navigationUtils'; // Removed parseLocation import
 
+// REVERTED: setActivity now updates activitySignal directly and calls navigate
 export const setActivity = (activity: ActivityType): void => {
-    activitySignal.value = activity;
-    logger.debug(activitySignal.value);
+    logger.debug(`setActivity called with: ${activity}`);
+    activitySignal.value = activity; // Direct update
     navigate({
         activityKey: activity,
         contentKey: null,
         groupKey: null
     });
 };
+// END REVERTED
 
 export const appendToOutput = (element: OutputElement): void => {
     updateOutput(prevOutput => {
@@ -116,8 +118,9 @@ export const setUserName = (name: string | null): void => {
     userNameSignal.value = name;
 };
 
-// Expose activity functions on window for testing
+// REVERTED: Removed locationchange event listener
 if (typeof window != 'undefined') {
     window.setActivity = setActivity;
     window.ActivityType = ActivityType;
 }
+// END REVERTED

@@ -4,14 +4,34 @@ import { ActivityType, type ParsedLocation } from '@handterm/types';
 
 // Parse location from query parameters
 export function parseLocation(location: string = window.location.toString()): ParsedLocation {
-  const urlParams = new URL(location);
+  // Add check for empty or invalid location string
+  if (!location || typeof location !== 'string') {
+    return {
+      activityKey: ActivityType.NORMAL,
+      contentKey: '',
+      groupKey: null,
+      clearParams: false
+    };
+  }
+  try {
+    const urlParams = new URL(location);
 
-  return {
-    activityKey: parseActivityType(urlParams.searchParams.get('activity') ?? ''),
-    contentKey: decodeURIComponent(urlParams.searchParams.get('key') ?? ''),
-    groupKey: urlParams.searchParams.get('group') ?? null,
-    clearParams: urlParams.searchParams.has('clearParams')
-  };
+    return {
+      activityKey: parseActivityType(urlParams.searchParams.get('activity') ?? ''),
+      contentKey: decodeURIComponent(urlParams.searchParams.get('key') ?? ''),
+      groupKey: urlParams.searchParams.get('group') ?? null,
+      clearParams: urlParams.searchParams.has('clearParams')
+    };
+  } catch (error) {
+    // Handle potential errors during URL construction
+    console.error('Error parsing location:', error);
+    return {
+      activityKey: ActivityType.NORMAL,
+      contentKey: '',
+      groupKey: null,
+      clearParams: false
+    };
+  }
 }
 
 // Helper function to parse activity type
@@ -42,7 +62,9 @@ interface NavigationOptions {
 }
 
 // Global navigation function that can be used outside of React components
-export function navigate(options: ParsedLocation, navOptions: boolean | NavigationOptions = false): void {
+// ENHANCED: Add small delay after dispatching locationchange event
+export async function navigate(options: ParsedLocation, navOptions: boolean | NavigationOptions = false): Promise<void> {
+// END ENHANCED
   const forceClear = typeof navOptions === 'boolean' ? navOptions : navOptions.forceClear ?? false;
   const replace = typeof navOptions === 'boolean' ? false : navOptions.replace ?? false;
   const skipTutorial = typeof navOptions === 'boolean' ? false : navOptions.skipTutorial ?? false;
@@ -61,6 +83,9 @@ export function navigate(options: ParsedLocation, navOptions: boolean | Navigati
     window.dispatchEvent(new CustomEvent('locationchange', {
       detail: { activity: ActivityType.NORMAL, key: null, group: null, clearParams: true }
     }));
+    // ENHANCED: Add small delay after dispatching event
+    await new Promise(resolve => setTimeout(resolve, 50));
+    // END ENHANCED
     if (window.location.search) {
       window.location.reload();
     }
@@ -98,4 +123,7 @@ export function navigate(options: ParsedLocation, navOptions: boolean | Navigati
   window.dispatchEvent(new CustomEvent('locationchange', {
     detail: { activity: newActivity, key: newPhraseKey, group: newGroupKey, clearParams }
   }));
+  // ENHANCED: Add small delay after dispatching event
+  await new Promise(resolve => setTimeout(resolve, 50));
+  // END ENHANCED
 }

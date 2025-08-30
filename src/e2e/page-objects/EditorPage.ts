@@ -44,22 +44,42 @@ export class EditorPage {
 	}
 
 	async waitForEditor(): Promise<void> {
-		// Wait for editor container
-		await this.container.waitFor({
-			state: 'visible',
-			timeout: TEST_CONFIG.timeout.long
-		});
+		const startTime = Date.now();
+		try {
+			// Wait for editor container to be attached
+			await this.container.waitFor({
+				state: 'attached',
+				timeout: TEST_CONFIG.timeout.long
+			});
+			console.log(`[waitForEditor] Container attached in ${Date.now() - startTime}ms (timeout: ${TEST_CONFIG.timeout.long}ms)`);
 
-		// Wait for Monaco initialization
-		await this.page.waitForFunction(() => window.monacoEditor !== undefined, {
-			timeout: TEST_CONFIG.timeout.medium
-		});
+			// Wait for editor container to be visible
+			await this.container.waitFor({
+				state: 'visible',
+				timeout: TEST_CONFIG.timeout.long
+			});
+			console.log(`[waitForEditor] Container visible in ${Date.now() - startTime}ms (timeout: ${TEST_CONFIG.timeout.long}ms)`);
 
-		// Wait for Vim mode initialization
-		await this.statusBar.waitFor({
-			state: 'visible',
-			timeout: TEST_CONFIG.timeout.medium
-		});
+
+			// Wait for Monaco initialization
+			await this.page.waitForFunction(() => window.monacoEditor !== undefined, {
+				timeout: TEST_CONFIG.timeout.medium
+			});
+			console.log(`[waitForEditor] Monaco initialized in ${Date.now() - startTime}ms (timeout: ${TEST_CONFIG.timeout.medium}ms)`);
+
+			// Wait for Vim mode initialization
+			await this.statusBar.waitFor({
+				state: 'visible',
+				timeout: TEST_CONFIG.timeout.medium
+			});
+			console.log(`[waitForEditor] Vim status bar visible in ${Date.now() - startTime}ms (timeout: ${TEST_CONFIG.timeout.medium}ms)`);
+
+			console.log(`[waitForEditor] Completed in ${Date.now() - startTime}ms`);
+		} catch (error) {
+			const duration = Date.now() - startTime;
+			console.error(`[waitForEditor] Timed out after ${duration}ms`);
+			throw error;
+		}
 	}
 
 	async pressKey(key: string): Promise<void> {
@@ -89,14 +109,23 @@ export class EditorPage {
 	}
 
 	async ensureMode(expectedMode: string): Promise<void> {
-		await this.page.waitForFunction(
-			([mode, statusBar]) => {
-				const status = document.querySelector(statusBar ?? '');
-				return (status?.textContent ?? '').includes(mode ?? ''); // Nullish coalescing operator here
-			},
-			[expectedMode, '.vim-status-bar'],
-			{ timeout: TEST_CONFIG.timeout.short },
-		);
+		const startTime = Date.now();
+		try {
+			await this.page.waitForFunction(
+				([mode, statusBar]) => {
+					const status = document.querySelector(statusBar ?? '');
+					return (status?.textContent ?? '').includes(mode ?? ''); // Nullish coalescing operator here
+				},
+				[expectedMode, '.vim-status-bar'],
+				{ timeout: TEST_CONFIG.timeout.short },
+			);
+			const duration = Date.now() - startTime;
+			console.log(`[ensureMode] Mode "${expectedMode}" confirmed in ${duration}ms (timeout: ${TEST_CONFIG.timeout.short}ms)`);
+		} catch (error) {
+			const duration = Date.now() - startTime;
+			console.error(`[ensureMode] Timed out waiting for mode "${expectedMode}" after ${duration}ms (timeout: ${TEST_CONFIG.timeout.short}ms)`);
+			throw error;
+		}
 	}
 
 	async getVimMode(): Promise<string> {
@@ -106,7 +135,16 @@ export class EditorPage {
 
 	async getCursorPosition(): Promise<{ lineNumber: number; column: number }> {
 		return await this.page.evaluate(() => {
-			const position = window.monacoEditor?.getPosition() || { lineNumber: 0, column: 0 };
+			const editor = window.monacoEditor;
+			if (!editor) {
+				console.error('Monaco editor not initialized when getting cursor position');
+				return { lineNumber: 0, column: 0 };
+			}
+			const position = editor.getPosition();
+			if (!position) {
+				console.error('Monaco editor position is null when getting cursor position');
+				return { lineNumber: 0, column: 0 };
+			}
 			console.log('Cursor position:', position); // Add logging
 			return position;
 		});

@@ -97,14 +97,12 @@ export class TerminalPage {
       await this.page.waitForSelector('#handterm-wrapper', { state: 'attached', timeout: TEST_CONFIG.timeout.medium });
       console.log(`[waitForTerminalContainer] #handterm-wrapper attached in ${Date.now() - startTime}ms (timeout: ${TEST_CONFIG.timeout.medium}ms)`);
 
-
       // Wait for terminal element container
       const xtermRef = await this.page.$('#xtermRef');
       if (!xtermRef) {
         throw new Error('Terminal element (#xtermRef) not found');
       }
       console.log(`[waitForTerminalContainer] #xtermRef found in ${Date.now() - startTime}ms`);
-
 
       // Check if #xtermRef has children.
       if (!await this.terminalHasChildren()) {
@@ -114,12 +112,12 @@ export class TerminalPage {
           throw new Error('Terminal element (#xtermRef) has no children after retry');
         }
       }
-       console.log(`[waitForTerminalContainer] #xtermRef has children in ${Date.now() - startTime}ms`);
+      console.log(`[waitForTerminalContainer] #xtermRef has children in ${Date.now() - startTime}ms`);
 
     } catch (error) {
-       const duration = Date.now() - startTime;
-       console.error(`[waitForTerminalContainer] Timed out after ${duration}ms`);
-       throw error;
+      const duration = Date.now() - startTime;
+      console.error(`[waitForTerminalContainer] Timed out after ${duration}ms`);
+      throw error;
     }
   }
 
@@ -294,10 +292,12 @@ export class TerminalPage {
 
       // Wait for the prompt string to appear in the terminal's innerText
       await this.page.waitForFunction((args: (string | undefined)[]) => {
-        const terminalElement = document.getElementById(this.terminalElementId);
+        const prompt = args[0];
+        const terminalElementId = args[1];
+        const terminalElement = document.getElementById(terminalElementId);
         if (!terminalElement) return false;
-        return terminalElement.innerText.includes(TERMINAL_CONSTANTS.PROMPT);
-      }, [this.prompt, 'xtermRef'], { timeout: overallTimeout });
+        return terminalElement.innerText.includes(prompt);
+      }, [this.prompt, this.terminalElementId], { timeout: overallTimeout });
       console.log(`[waitForPrompt] Prompt string found in innerText in ${Date.now() - startTime}ms`);
 
 

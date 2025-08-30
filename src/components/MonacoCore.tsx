@@ -41,32 +41,50 @@ export function defineVimCommands(
         }
         });
 
-        // --- Restore :q definition ---
+        // --- Restore :q definition with error handling ---
         Vim.defineEx('q', '', () => {
-        logger.debug(':q command triggered. Calling navigate...');
-        navigate({ activityKey: ActivityType.NORMAL });
-        logger.debug(':q command: navigate called. Removing editContent from localStorage.');
-        localStorage.removeItem(StorageKeys.editContent);
+          logger.debug(':q command triggered. Attempting to navigate...');
+          try {
+            navigate({ activityKey: ActivityType.NORMAL });
+            logger.debug(':q command: navigate called. Removing editContent from localStorage.');
+            localStorage.removeItem(StorageKeys.editContent);
+          } catch (error) {
+            logger.error(':q command: Error during navigation or localStorage removal', { error });
+          }
         });
         // --- End Restore :q ---
 
+        // ENHANCED: Add error handling to :q! definition
         Vim.defineEx('q!', '', () => {
-          logger.debug(':q! command triggered. Calling navigate...');
-          navigate({ activityKey: ActivityType.NORMAL });
-          logger.debug(':q! command: navigate called. Removing editContent from localStorage.');
-          localStorage.removeItem(StorageKeys.editContent);
+          logger.debug(':q! command triggered. Attempting to navigate...');
+          try {
+            navigate({ activityKey: ActivityType.NORMAL });
+            logger.debug(':q! command: navigate called. Removing editContent from localStorage.');
+            localStorage.removeItem(StorageKeys.editContent);
+          } catch (error) {
+            logger.error(':q! command: Error during navigation or localStorage removal', { error });
+          }
         });
+        // END ENHANCED
 
+        // ENHANCED: Add error handling to :wq definition
         Vim.defineEx('wq', '', () => {
-        if (editorRef.current) {
-            const content = editorRef.current.getValue();
-            localStorage.setItem(StorageKeys.editContent, JSON.stringify(content));
-            logger.debug(':wq command executed, content saved.');
-        }
-        navigate({ activityKey: ActivityType.NORMAL });
-        logger.debug(':wq command: navigate called. Removing editContent from localStorage.');
-        localStorage.removeItem(StorageKeys.editContent);
+          logger.debug(':wq command triggered. Attempting to save and navigate...');
+          try {
+            if (editorRef.current) {
+                const content = editorRef.current.getValue();
+                localStorage.setItem(StorageKeys.editContent, JSON.stringify(content));
+                logger.debug(':wq command: content saved.');
+            }
+            navigate({ activityKey: ActivityType.NORMAL });
+            logger.debug(':wq command: navigate called. Removing editContent from localStorage.');
+            localStorage.removeItem(StorageKeys.editContent);
+          } catch (error) {
+            logger.error(':wq command: Error during save, navigation, or localStorage removal', { error });
+          }
         });
+        // END ENHANCED
+
         Vim.defineEx('vid', '', () => {
         if (toggleVideo) {
             logger.debug(':vid command triggered.');

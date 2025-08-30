@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useComputed } from '@preact/signals-react';
 import { FitAddon } from '@xterm/addon-fit';
 import { useXTerm } from 'react-xtermjs';
+import { Terminal } from '@xterm/xterm'; // Import Terminal type
 
 import { TERMINAL_CONSTANTS } from 'src/constants/terminal';
 import { XtermAdapterConfig } from '../components/XtermAdapterConfig';
@@ -22,7 +23,7 @@ import {
 import { addKeystroke, commandLineSignal, setCommandLine } from 'src/signals/commandLineSignals';
 import { ActivityType } from '@handterm/types';
 import { parseCommand } from 'src/utils/commandUtils';
-import { createLogger } from 'src/utils/Logger';
+import { createLogger, LogLevel } from 'src/utils/Logger';
 import { useCharacterHandler } from './useCharacterHandler';
 import { useCommand } from './useCommand';
 import { useWPMCalculator } from './useWPMCaculator';
@@ -34,7 +35,8 @@ export const useTerminal = (): {
 	xtermRef: React.RefObject<HTMLDivElement>;
 	writeToTerminal: (data: string) => void;
 	resetPrompt: () => void;
-	fitAddon: React.RefObject<FitAddon>; // Add fitAddon to return type
+	fitAddon: React.RefObject<FitAddon>;
+  instance: Terminal | null; // Add instance to return type
 } => {
 // --- END MODIFIED ---
   const { instance, ref: xtermRef } = useXTerm({ options: XtermAdapterConfig });
@@ -53,22 +55,26 @@ export const useTerminal = (): {
     return commandLine.value;
   }, [commandLine]);
 
+  // ENHANCED: Add detailed logging to resetPrompt
   const resetPrompt = useCallback((): void => {
-    console.log('[useTerminal] resetPrompt called. Stack:', new Error().stack);
-    logger.debug('Resetting prompt using instance.reset()');
-
+    logger.debug('resetPrompt called.');
     if (instance == null) {
-      console.log('[useTerminal] resetPrompt: instance is null, returning.');
-      logger.warn('resetPrompt called with null instance');
+      logger.warn('resetPrompt: instance is null, returning.');
       return;
     }
 
+    logger.debug('resetPrompt: Clearing terminal content.');
     instance.reset();
+    logger.debug('resetPrompt: Resetting command line signals.');
     setCommandLine('');
     _setCommandLineState('');
+    logger.debug('resetPrompt: Writing prompt to terminal.');
     instance.write(TERMINAL_CONSTANTS.PROMPT);
+    logger.debug('resetPrompt: Scrolling to bottom.');
     instance.scrollToBottom();
+    logger.debug('resetPrompt: Completed.');
   }, [instance]);
+  // END ENHANCED
 
   const lastTypedCharacterRef = useRef<string | null>(null);
   const setLastTypedCharacter = (value: string | null) => {
@@ -260,7 +266,8 @@ export const useTerminal = (): {
     xtermRef,
     writeToTerminal,
     resetPrompt,
-    fitAddon, // Return fitAddon ref
+    fitAddon,
+    instance, // Return instance
   };
   // --- END MODIFIED ---
 };

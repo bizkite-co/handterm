@@ -4,7 +4,7 @@ import { Game, type IGameHandle } from '../game/Game';
 import { useActivityMediator } from '../hooks/useActivityMediator';
 import { useTerminal } from '../hooks/useTerminal';
 import { useWPMCalculator } from '../hooks/useWPMCaculator';
-import { isShowVideoSignal } from '../signals/appSignals';
+import { isShowVideoSignal, activitySignal } from '../signals/appSignals'; // Import activitySignal
 import { commandTimeSignal } from '../signals/commandLineSignals';
 import { setGamePhrase } from '../signals/gameSignals';
 import { tutorialSignal } from '../signals/tutorialSignals';
@@ -20,13 +20,15 @@ import { createLogger, LogLevel } from '../utils/Logger';
 import { parseLocation, navigate } from '../utils/navigationUtils';
 import WebCam from '../utils/WebCam';
 import GamePhrases from '../utils/GamePhrases'; // Import GamePhrases
+import { useLocation } from 'react-router-dom'; // Import useLocation
 
 import { Chord } from './Chord';
 import MonacoCore from './MonacoCore';
 import NextCharsDisplay, { type NextCharsDisplayHandle } from './NextCharsDisplay';
 import { PromptHeader } from './PromptHeader';
 import { TutorialManager } from './TutorialManager';
-import { activitySignal } from '../signals/appSignals'; // Import activitySignal
+// Removed activitySignal import
+// import { activitySignal } from '../signals/appSignals'; // Import activitySignal
 
 const logger = createLogger({
   prefix: 'HandTermWrapper',
@@ -36,12 +38,13 @@ const logger = createLogger({
 const getTimestamp = (date: Date): string => date.toTimeString().split(' ')[0] ?? '';
 
 const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProps>((props, forwardedRef) => {
-  const { xtermRef, writeToTerminal, resetPrompt, fitAddon } = useTerminal();
+  const { xtermRef, writeToTerminal, resetPrompt, fitAddon, instance } = useTerminal(); // Destructure instance
   const targetWPM = 10;
   const wpmCalculator = useWPMCalculator();
   const gameHandleRef = useRef<IGameHandle>(null);
   const nextCharsDisplayRef = useRef<NextCharsDisplayHandle>(null);
   const activityMediator = useActivityMediator();
+  const location = useLocation(); // Get location from react-router-dom
 
   const [domain] = useState('handterm.com');
   const initialCanvasHeight = localStorage.getItem('canvasHeight')?.trim() ?? '100';
@@ -53,8 +56,11 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
   const commandTime = useComputed(() => commandTimeSignal.value);
   const [treeItems, setTreeItems] = useState<TreeItem[]>([]);
 
+  // NEW: Directly use activitySignal value
   const currentActivityValue = activitySignal.value;
   logger.debug(`HandTermWrapper rendering with activity: ${currentActivityValue}`);
+  // END NEW
+
 
   const handlePhraseComplete = useCallback(() => {
     localStorage.setItem('currentCommand', '');
@@ -82,7 +88,7 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
     if (key === '' || value === '') {
       return;
     }
-    logger.debug('handlePhraseSuccess called with phrase:', key, 'Activity:', activitySignal.value);
+    logger.debug('handlePhraseSuccess called with phrase:', key, 'Activity:', currentActivityValue); // Use derived activity
     const wpms = wpmCalculator.getWPMs();
     const wpmAverage = wpms.wpmAverage;
 
@@ -101,10 +107,10 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
     }
     handlePhraseComplete();
     resetPrompt(); // Add resetPrompt here to ensure it's called once
-  }, [wpmCalculator, activityMediator, handlePhraseComplete, gameHandleRef, targetWPM, resetPrompt]);
+  }, [wpmCalculator, activityMediator, handlePhraseComplete, gameHandleRef, targetWPM, resetPrompt, currentActivityValue]); // Add derived activity to dependencies
 
   useEffect(() => {
-    if (activitySignal.value === ActivityType.TREE) {
+    if (currentActivityValue === ActivityType.TREE) { // Use derived activity
       logger.info('Loading tree items in TREE mode');
       const storedItems = localStorage.getItem('github_tree_items')?.trim() ?? '';
       if (storedItems === '') {
@@ -123,44 +129,111 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
         logger.error('Error parsing tree items:', error);
       }
     }
-  }, [activitySignal.value]);
+  }, [currentActivityValue]); // Depend on derived activity
 
-  // ENHANCED: Terminal Initialization and Visibility Logic
+  // NEW EFFECT: Handle terminal fitting and focusing when instance and addon are ready and activity is NORMAL
   useEffect(() => {
-    const isTerminalRelevantActivity =
-      currentActivityValue === ActivityType.NORMAL;
+    const isTerminalRelevantActivity = currentActivityValue === ActivityType.NORMAL;
 
-    if (isTerminalRelevantActivity) {
-      logger.debug('Terminal Initialization: Preparing terminal for activity', {
-        activity: currentActivityValue,
-        xtermRefExists: !!xtermRef.current,
-        fitAddonExists: !!fitAddon.current
+    logger.debug('Terminal Ready Effect triggered', {
+       activity: currentActivityValue,
+       instanceExists: !!instance,
+       fitAddonExists: !!fitAddon.current
+    });
+
+    if (isTerminalRelevantActivity && instance && fitAddon.current) {
+      const terminalElement = instance.element;
+      const containerElement = document.getElementById('prompt-and-terminal');
+
+      logger.debug('Terminal Ready Effect: Checking element presence and visibility', {
+         terminalElement: !!terminalElement,
+         containerElement: !!containerElement,
+         containerContains: containerElement ? document.body.contains(containerElement) : false,
+         containerOffsetParent: containerElement ? containerElement.offsetParent !== null : false
       });
 
-      const initializeTerminal = () => {
-        const termContainer = document.getElementById('xtermRef');
 
-        if (termContainer && xtermRef.current && fitAddon.current) {
+      if (terminalElement && containerElement && document.body.contains(containerElement) && containerElement.offsetParent !== null) {
+        logger.debug('Terminal Ready Effect: Attempting fit and focus for NORMAL activity with delay');
+        // Add a small delay to allow the DOM to update and render the terminal
+        setTimeout(() => {
           try {
-            logger.debug('Terminal Initialization: Fitting and focusing');
             fitAddon.current.fit();
-            xtermRef.current.focus();
+            instance.focus();
+            // Add logging for dimensions after fit
+            logger.debug('Terminal Ready Effect: Fit and focus completed successfully after delay.', {
+                containerWidth: containerElement.offsetWidth,
+                containerHeight: containerElement.offsetHeight,
+                terminalCols: instance.cols,
+                terminalRows: instance.rows
+            });
           } catch (error) {
-            logger.error('Terminal Initialization Error', { error });
+            logger.error('Terminal Ready Effect Error after delay', { error });
           }
-        } else {
-          logger.warn('Terminal Initialization: Missing required elements', {
-            termContainer: !!termContainer,
-            xtermRef: !!xtermRef.current,
-            fitAddon: !!fitAddon.current
-          });
-        }
-      };
-
-      // Use requestAnimationFrame for more reliable rendering
-      requestAnimationFrame(initializeTerminal);
+        }, 50); // 50ms delay
+      } else {
+         logger.debug('Terminal Ready Effect: Skipping fit/focus, elements not attached or visible.');
+      }
+    } else if (!isTerminalRelevantActivity && instance && fitAddon.current) {
+       // If not terminal activity, just ensure fit is attempted if needed (e.g., window resize)
+       // This might still be necessary if the container size changes while the terminal is hidden
+       logger.debug('Terminal Ready Effect: Attempting fit for non-terminal activity');
+       try {
+          fitAddon.current.fit();
+       } catch (error) {
+          logger.error('Terminal Fit Error in non-terminal activity', { error });
+       }
+    } else {
+       logger.debug('Terminal Ready Effect: Skipping fit/focus, instance, fitAddon missing, or not NORMAL activity', {
+          instanceExists: !!instance,
+          fitAddonExists: !!fitAddon.current,
+          activity: currentActivityValue
+       });
     }
-  }, [currentActivityValue, xtermRef, fitAddon]);
+
+  }, [currentActivityValue, instance, fitAddon]); // Depend on derived activity and other refs/instances
+  // END NEW EFFECT
+
+  // Existing effect for resize observer (kept separate as it depends only on instance and fitAddon)
+  useEffect(() => {
+    logger.debug('Resize Observer Effect triggered', {
+       instanceExists: !!instance,
+       fitAddonExists: !!fitAddon.current
+    });
+    const resizeObserver = new ResizeObserver(() => {
+        logger.debug('ResizeObserver callback triggered');
+        if (instance && fitAddon.current) {
+            logger.debug('ResizeObserver: Fitting terminal');
+            try {
+                fitAddon.current.fit();
+            } catch (error) {
+                logger.error('ResizeObserver Fit Error', { error });
+            }
+        } else {
+           logger.debug('ResizeObserver: Skipping fit, instance or fitAddon missing', {
+              instanceExists: !!instance,
+              fitAddonExists: !!fitAddon.current
+           });
+        }
+    });
+
+    const containerElementForObserver = document.getElementById('prompt-and-terminal');
+    logger.debug('Resize Observer Effect: Checking for container element', {
+       containerElement: !!containerElementForObserver
+    });
+    if (containerElementForObserver) {
+        resizeObserver.observe(containerElementForObserver);
+        logger.debug('Resize Observer Effect: Observing container element.');
+    } else {
+       logger.debug('Resize Observer Effect: Skipping observation, container element not found.');
+    }
+
+    return () => {
+        logger.debug('Resize Observer Effect cleanup');
+        resizeObserver.disconnect();
+    };
+  }, [instance, fitAddon]);
+
 
   const handlePhraseErrorState = useCallback((errorIndex: number | undefined) => {
     setErrorCharIndex(errorIndex);
@@ -171,7 +244,7 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
     prompt: () => { },
     saveCommandResponseHistory: () => '',
     focusTerminal: () => {
-      const term = xtermRef.current;
+      const term = instance; // Use instance
       if (term !== null && term !== undefined && typeof term.focus === 'function') {
         term.focus();
       }
@@ -182,9 +255,10 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
     setEditMode: () => { },
     handleEditSave: () => { },
     activityMediator: activityMediator,
-  }), [writeToTerminal, xtermRef, activityMediator]);
+  }), [writeToTerminal, instance, activityMediator]); // Use instance in dependencies
 
   useEffect(() => {
+    logger.debug('Window setNextTutorial effect triggered.');
     window.setNextTutorial = (tutorialKey: string | null) => {
       const tutorial = tutorialKey ? GamePhrases.getGamePhraseByKey(tutorialKey) : null;
       tutorialSignal.value = tutorial;
@@ -193,10 +267,15 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
   }, []);
 
   const getStoredContent = useCallback((): string => {
+    logger.debug('getStoredContent called.');
     const content = localStorage.getItem(StorageKeys.editContent);
-    if (content == null) return '';
+    if (content == null) {
+       logger.debug('getStoredContent: No content found in localStorage.');
+       return '';
+    }
     try {
       const parsed = JSON.parse(content);
+      logger.debug('getStoredContent: Content parsed successfully.');
       return parsed ?? '';
     } catch (error) {
       logger.error('Failed to parse edit content:', error);
@@ -206,6 +285,7 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
 
   // Define toggleVideoCallback using useCallback
   const toggleVideoCallback = useCallback(() => {
+    logger.debug('toggleVideoCallback called.');
     isShowVideoSignal.value = !isShowVideoSignal.value;
     return isShowVideoSignal.value;
   }, []); // No dependencies needed if it only uses signals
@@ -224,7 +304,11 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
     // Dependencies are stable callbacks/values
   }, [getStoredContent, toggleVideoCallback]);
 
-  logger.debug(`Rendering check: Activity=${currentActivityValue}`);
+  // NEW: Test-specific flag to force editor rendering
+  const forceEditActivity = (window as any).__FORCE_EDIT_ACTIVITY__ === true;
+  logger.debug(`HandTermWrapper rendering with activity: ${currentActivityValue}, forceEditActivity: ${forceEditActivity}`);
+  // END NEW
+
   return (
     <div id='handterm-wrapper' data-testid='handterm-wrapper'>
       {currentActivityValue === ActivityType.GAME && (
@@ -251,42 +335,34 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
         />
       )}
 
-      {/* ENHANCED: Terminal Visibility Logic */}
-      {currentActivityValue !== ActivityType.EDIT && currentActivityValue !== ActivityType.TREE &&
-        ((() => {
-          logger.debug("Rendering Terminal Container");
-          return true;
-        })()) &&
+      {/* ENHANCED: Terminal Visibility Logic - Always render, control with visibility */}
+      <div
+        id="prompt-and-terminal"
+        style={{
+          visibility: (currentActivityValue !== ActivityType.EDIT && currentActivityValue !== ActivityType.TREE && !forceEditActivity) ? 'visible' : 'hidden',
+          height: '100%',
+          width: '100%'
+        }}
+      >
+        <PromptHeader
+          username={userName ?? 'guest'}
+          domain={domain ?? 'handterm.com'}
+          githubUsername={githubUsername}
+          timestamp={getTimestamp(commandTime.value)}
+        />
         <div
-          id="prompt-and-terminal"
+          ref={xtermRef}
+          id="xtermRef"
           style={{
-            display: 'block',
-            visibility: 'visible',
             height: '100%',
-            width: '100%'
+            width: '100%',
           }}
-        >
-          <PromptHeader
-            username={userName ?? 'guest'}
-            domain={domain ?? 'handterm.com'}
-            githubUsername={githubUsername}
-            timestamp={getTimestamp(commandTime.value)}
-          />
-          <div
-            ref={xtermRef}
-            id="xtermRef"
-            style={{
-              height: '100%',
-              width: '100%',
-              display: 'block',
-              visibility: 'visible'
-            }}
-          />
-        </div>
-      }
+        />
+      </div>
+      {/* END ENHANCED */}
 
-      {/* Render editor only when activity is EDIT */}
-      {currentActivityValue === ActivityType.EDIT &&
+      {/* Render editor only when activity is EDIT or forceEditActivity is true */}
+      {(currentActivityValue === ActivityType.EDIT || forceEditActivity) &&
         ((() => { logger.debug("Rendering Memoized MonacoCore (Editor)"); return true; })()) &&
         editorComponent // Use the memoized component
       }
