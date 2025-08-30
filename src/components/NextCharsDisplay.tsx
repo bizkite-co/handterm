@@ -12,7 +12,7 @@ import {
 import { commandLineSignal } from 'src/signals/commandLineSignals';
 import { setCompletedGamePhrase } from 'src/signals/gameSignals';
 import { type GamePhrase } from '@handterm/types';
-import { TerminalCssClasses } from 'packages/types/src/TerminalTypes';
+import { TerminalCssClasses } from '@handterm/types';
 import { parseLocation } from 'src/utils/navigationUtils';
 
 import { Phrase } from '../utils/Phrase';

@@ -1,14 +1,19 @@
 
 // gameSignals.ts
 import { signal } from "@preact/signals-react";
+import { computed } from "@preact/signals";
 
-import { type ActionType, type GamePhrase, Phrases } from "@handterm/types";
+import { type ActionType, type GamePhrase, Phrases, ActivityType } from "@handterm/types";
 import { createPersistentSignal } from "src/utils/signalPersistence";
+import { activitySignal } from "src/signals/appSignals";
+import { createLogger } from "src/utils/Logger";
+
+const logger = createLogger({ prefix: 'gameSignals' });
 
 export const startGameSignal = signal<string | undefined>(undefined);
 export const gamePhraseSignal = signal<GamePhrase | null>(null);
 export const gameInitSignal = signal<boolean>(false);
-export const isInGameModeSignal = signal<boolean>(false);
+export const isInGameModeSignal = computed(() => activitySignal.value === ActivityType.GAME);
 export const currentGamePhraseSignal = signal<GamePhrase | null>(null);
 export const gameLevelSignal = signal<number | null>(null);
 export const heroActionSignal = signal<ActionType>('Idle');
@@ -58,8 +63,8 @@ export const getNextGamePhrase = (): GamePhrase | null => {
 };
 
 export const initializeGame = (tutorialGroup?: string, contentKey?: string | null): void => {
+  logger.debug('initializeGame called', { tutorialGroup, contentKey });
   gameInitSignal.value = true;
-  isInGameModeSignal.value = true;
   if (tutorialGroup != null) {
     const tutorialGroupGamePhrase = contentKey != null ? Phrases.filter(p => p.key === contentKey) :
       getIncompletePhrasesByTutorialGroup(tutorialGroup);

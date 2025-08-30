@@ -1,45 +1,53 @@
 # Revised Plan: XTerm to Monaco Migration - Phase 1 Completion
 
-The primary goal remains to complete Phase 1: Abstraction & Preparation, by fixing the failing integration tests. However, the testing strategy will be modified to accommodate existing failures and avoid running the full test suite.
+The primary goal remains to complete Phase 1: Abstraction & Preparation, by fixing the failing integration tests and the "GameMode" error.
+
+## Current Status
+
+We have successfully addressed several TypeScript errors that arose during the initial refactoring and debugging:
+
+*   **`GamePhrases` Reference Error:** Resolved by correcting the import and usage of `GamePhrases` in `src/components/NextCharsDisplay.tsx`.
+*   **`safelyCallMethodOnRef` Type Errors:** Resolved by directly accessing `timerRef.current` methods with runtime checks in `src/components/NextCharsDisplay.tsx`, bypassing the `safelyCallMethodOnRef` utility for now due to persistent type inference issues.
+*   **`ActionType` Export Error:** Resolved by explicitly re-exporting `ActionType` from `src/game/types/ActionTypes.ts`.
+*   **`JSX.Element` Error:** Resolved by explicitly importing `React` and using `React.JSX.Element` in `src/game/Game.tsx`.
+*   **`useTerminal` and `HandTermWrapper` Refactoring:**
+    *   `useTerminal` in `src/hooks/useTerminal.ts` now correctly accepts a nullable `RefObject<HTMLDivElement | null>`.
+    *   `HandTermWrapper` in `src/components/HandTermWrapper.tsx` explicitly types the `terminal` variable as `ITerminalAdapter`.
+    *   The `useTerminal` mock in `src/components/HandTermWrapper.test.tsx` has been updated to reflect the `ITerminalAdapter` interface.
+
+The immediate TypeScript errors have been cleared, allowing us to proceed with debugging the "GameMode" error. I have already added logging to the `completeGame` method in `src/game/Game.tsx` as a first step in this investigation.
 
 ## Phase 1: Abstraction & Preparation (Completion)
 
-1.  **Understand the Test Failures:**
-    *   Investigate the specific failures in `HandTermWrapper.test.tsx` and `useActivityMediator.test.ts` as indicated in `docs/issues/92-make-the-xterm-into-a-monaco/phase-1-abstraction.md`. This will involve reading these test files and their corresponding implementation files (`HandTermWrapper.tsx` and `useActivityMediator.ts`).
-    *   I will use `codebase_search` to find the relevant files and then `read_file` to examine their contents.
-    *   **New Step:** Identify which of these failures are likely related to the recent refactoring to `ITerminalAdapter` and which might be pre-existing issues.
+1.  **Understand the Test Failures & "GameMode" Error:**
+    *   Investigate the specific failures in `HandTermWrapper.test.tsx` and `useActivityMediator.test.ts`.
+    *   **In Progress:** Debug the "Oops! Something went wrong." error when transitioning to "GameMode" during manual testing. Logging has been added to `src/game/Game.tsx` to aid this.
+    *   Identify which failures are related to the `ITerminalAdapter` refactoring and which are pre-existing.
 
 2.  **Reproduce and Debug Relevant Test Failures:**
-    *   **Modified Step:** Instead of running the full suite, I will run *only* the specific failing unit or integration tests identified as relevant to our changes. This will help observe the exact errors and stack traces for the issues we are addressing.
-    *   Analyze the test output to pinpoint the root cause of the regressions introduced by our changes.
-    *   **New Step:** Investigate the "Oops! Something went wrong." error when transitioning to "GameMode" during manual testing. This might be related to the `useActivityMediator` or `ITerminalAdapter` changes.
+    *   Run *only* the specific failing unit or integration tests identified as relevant to our changes.
+    *   Analyze the test output and console logs to pinpoint the root cause of the regressions and the "GameMode" error.
 
 3.  **Implement Fixes:**
-    *   Based on the debugging, modify `HandTermWrapper.tsx`, `useActivityMediator.ts`, or related files to resolve the issues introduced during the refactoring to `ITerminalAdapter`.
-    *   I will adhere to the coding standards outlined in `CONVENTIONS.md` and `./.eslintrc.cjs`. Specifically, I will ensure spaces are used instead of tabs, `logging` is preferred over `print`, and file sizes are kept around 100 lines by parsing functions out to other files if necessary.
+    *   Based on debugging, modify `HandTermWrapper.tsx`, `useActivityMediator.ts`, `Game.tsx`, `gameSignals.ts`, or related files to resolve the issues.
+    *   Adhere to coding standards outlined in `CONVENTIONS.md` and `./.eslintrc.cjs`.
 
 4.  **Verify Fixes with Individual Tests and Manual Testing:**
-    *   **Modified Step:** Run *only* the specific unit tests (`HandTermWrapper.test.tsx`, `useActivityMediator.test.ts`) that were modified or are directly related to the fixes.
-    *   **New Step:** Perform manual testing on the live dev site, specifically focusing on the terminal functionality and the "GameMode" transition, to ensure the fixes are effective and no new regressions are introduced in the areas we are touching.
+    *   Run *only* the specific unit tests that were modified or are directly related to the fixes.
+    *   Perform manual testing on the live dev site, specifically focusing on the terminal functionality and the "GameMode" transition.
 
 5.  **Update Documentation:**
-    *   Once the relevant tests pass and manual verification confirms the fixes, I will update the `docs/issues/92-make-the-xterm-into-a-monaco/phase-1-abstraction.md` file to mark the remaining task as completed.
-
-## Subsequent Phases (High-Level Overview for Context)
-
-*   **Phase 2: Monaco Implementation:** Create a new hook and component to implement the `ITerminalAdapter` interface using the Monaco Editor.
-*   **Phase 3: The Swap:** Swap the XTerm implementation with Monaco using a feature flag.
-*   **Phase 4: `Effect` State Machine & Cleanup:** Refactor state management with the `Effect` library and remove legacy XTerm code.
+    *   Once all relevant tests pass and manual verification confirms the fixes, update `docs/issues/92-make-the-xterm-into-a-monaco/phase-1-abstraction.md` to mark the remaining task as completed.
 
 ## Mermaid Diagram for Revised Phase 1 Completion
 
 ```mermaid
 graph TD
-    A[Start Phase 1 Completion] --> B{Identify Failing Tests & Their Relevance};
-    B --> C[Read HandTermWrapper.test.tsx, useActivityMediator.test.ts];
-    C --> D[Read HandTermWrapper.tsx, useActivityMediator.ts];
-    D --> E[Run Specific Vitest Tests to Reproduce Failures];
-    E --> F{Analyze Errors & Debug};
+    A[Start Phase 1 Completion] --> B{Identify Failing Tests & "GameMode" Error};
+    B --> C[Review HandTermWrapper.tsx, useActivityMediator.ts, Game.tsx, gameSignals.ts];
+    C --> D[Add Logging to Game.tsx (Done)];
+    D --> E[Run Specific Vitest Tests & Manual Testing];
+    E --> F{Analyze Logs & Debug};
     F --> G[Implement Code Fixes];
     G --> H[Run Specific Unit Tests];
     H{Specific Unit Tests Pass?} -- No --> F;

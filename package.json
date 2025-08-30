@@ -48,6 +48,7 @@
     "@fortawesome/fontawesome-svg-core": "^6.7.2",
     "@fortawesome/free-brands-svg-icons": "^6.7.2",
     "@fortawesome/react-fontawesome": "^0.2.2",
+    "@preact/signals": "^2.3.1",
     "@preact/signals-react": "^3.0.1",
     "@webcontainer/api": "^1.5.1-internal.9",
     "@xterm/addon-fit": "^0.10.0",
