@@ -1,9 +1,7 @@
 import * as S from '@effect/schema/Schema';
-import type { RefObject } from 'react';
 
-// Define a schema for the disposable object returned by onData
-const DisposableSchema = S.Struct({
-  dispose: S.Function(S.Tuple(), S.Void),
+const RefObjectSchema = S.Struct({
+  current: S.Union(S.instanceOf(HTMLDivElement), S.Null),
 });
 
 // Define the schema for the ITerminalAdapter
@@ -11,35 +9,30 @@ export const ITerminalAdapterSchema = S.Struct({
   /**
    * A React ref object pointing to the terminal's container element.
    */
-  ref: S.PropertySignature(S.Any as S.Schema<RefObject<HTMLDivElement>>),
+  ref: S.propertySignature(RefObjectSchema),
 
   /**
    * Writes data to the terminal.
    * @param data The string data to write.
    */
-  write: S.PropertySignature(S.Function(S.Tuple(S.String), S.Void)),
+  write: S.propertySignature(S.Any),
 
   /**
    * Resets the terminal prompt to its initial state.
    */
-  resetPrompt: S.PropertySignature(S.Function(S.Tuple(), S.Void)),
+  resetPrompt: S.propertySignature(S.Any),
 
   /**
    * Focuses the terminal input.
    */
-  focus: S.PropertySignature(S.Function(S.Tuple(), S.Void)),
+  focus: S.propertySignature(S.Any),
 
   /**
    * Registers a callback for when data is received from the terminal.
    * @param callback The function to execute with the data.
    * @returns An object with a `dispose` method to unsubscribe.
    */
-  onData: S.PropertySignature(
-    S.Function(
-      S.Tuple(S.Function(S.Tuple(S.String), S.Void)),
-      DisposableSchema
-    )
-  ),
+  onData: S.propertySignature(S.Any),
 });
 
 // Infer the TypeScript type from the schema

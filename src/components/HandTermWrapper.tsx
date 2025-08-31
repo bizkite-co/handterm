@@ -2,7 +2,7 @@ import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useSta
 import { useComputed } from '@preact/signals-react';
 import { Game, type IGameHandle } from '../game/Game';
 import { useActivityMediator } from '../hooks/useActivityMediator';
-import { useTerminal } from '../hooks/useTerminal';
+import { MonacoTerminal } from './MonacoTerminal';
 import { ITerminalAdapter } from 'src/types/terminal';
 import { useWPMCalculator } from '../hooks/useWPMCaculator';
 import { isShowVideoSignal, activitySignal } from '../signals/appSignals';
@@ -29,6 +29,7 @@ import MonacoCore from './MonacoCore';
 import NextCharsDisplay, { type NextCharsDisplayHandle } from './NextCharsDisplay';
 import { PromptHeader } from './PromptHeader';
 import { TutorialManager } from './TutorialManager';
+import { useMonacoTerminal } from '../hooks/useMonacoTerminal';
 
 const logger = createLogger({
   prefix: 'HandTermWrapper',
@@ -39,7 +40,7 @@ const getTimestamp = (date: Date): string => date.toTimeString().split(' ')[0] ?
 
 const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProps>((props, forwardedRef) => {
   const terminalContainerRef = useRef<HTMLDivElement>(null); // Create a ref for the terminal container
-  const terminal: ITerminalAdapter = useTerminal(terminalContainerRef); // Explicitly type terminal
+  const terminal: ITerminalAdapter = useMonacoTerminal(terminalContainerRef); // Explicitly type terminal
   const targetWPM = 10;
   const wpmCalculator = useWPMCalculator();
   const gameHandleRef = useRef<IGameHandle>(null);
@@ -260,14 +261,7 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
           githubUsername={githubUsername}
           timestamp={getTimestamp(commandTime.value)}
         />
-        <div
-          ref={terminalContainerRef}
-          id="terminal-container"
-          style={{
-            height: '100%',
-            width: '100%',
-          }}
-        />
+        <MonacoTerminal />
       </div>
 
       {(currentActivityValue === ActivityType.EDIT || forceEditActivity) &&

@@ -1,16 +1,15 @@
-import { useRef, useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import type { ITerminalAdapter } from '../types/terminal';
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 
-export const useMonacoTerminal = (): ITerminalAdapter => {
-  const ref = useRef<HTMLDivElement>(null);
+export const useMonacoTerminal = (containerRef: React.RefObject<HTMLDivElement | null>): ITerminalAdapter => {
   const [monacoEditor, setMonacoEditor] = useState<monaco.editor.IStandaloneCodeEditor | null>(null);
   const [model, setModel] = useState<monaco.editor.ITextModel | null>(null);
-  const onDataCallbacks = useRef<((data: string) => void)[]>([]);
+  const onDataCallbacks = useState<((data: string) => void)[]>([]);
 
   useEffect(() => {
-    if (ref.current && !monacoEditor) {
-      const newEditor = monaco.editor.create(ref.current, {
+    if (containerRef.current && !monacoEditor) {
+      const newEditor = monaco.editor.create(containerRef.current, {
         value: '',
         language: 'plaintext',
         readOnly: false, // Will manage read-only state for output/input
@@ -48,7 +47,7 @@ export const useMonacoTerminal = (): ITerminalAdapter => {
       newEditor.onDidChangeModelContent((event) => {
         const lastChange = event.changes[event.changes.length - 1];
         if (lastChange && lastChange.text.length > 0) {
-          onDataCallbacks.current.forEach(callback => callback(lastChange.text));
+          onDataCallbacks[0].forEach(callback => callback(lastChange.text));
         }
       });
 
@@ -59,7 +58,7 @@ export const useMonacoTerminal = (): ITerminalAdapter => {
     }
     // Ensure a cleanup function is always returned
     return () => {};
-  }, [ref, monacoEditor]);
+  }, [containerRef, monacoEditor, onDataCallbacks]);
 
   const write = useCallback((data: string) => {
     if (model) {
@@ -84,16 +83,16 @@ export const useMonacoTerminal = (): ITerminalAdapter => {
   }, [monacoEditor]);
 
   const onData = useCallback((callback: (data: string) => void) => {
-    onDataCallbacks.current.push(callback);
+    onDataCallbacks[1](prev => [...prev, callback]);
     return {
       dispose: () => {
-        onDataCallbacks.current = onDataCallbacks.current.filter(cb => cb !== callback);
+        onDataCallbacks[1](prev => prev.filter(cb => cb !== callback));
       },
     };
-  }, []);
+  }, [onDataCallbacks]);
 
   return {
-    ref,
+    ref: containerRef,
     write,
     resetPrompt,
     focus,

@@ -8,9 +8,10 @@
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
+    "exactOptionalPropertyTypes": true, // optional
     "skipLibCheck": true,
     "sourceMap": true,
-    "types": ["node"], // Removed "@testing-library/jest-dom" - should be handled by test configs
+    "types": ["node"], // Removed "monaco-editor" from global types
     "paths": {
       "'*'": [
         "./src/*"
@@ -56,9 +57,6 @@
       ],
       "@types/*": [
         "./src/types/*"
-      ],
-      "monaco-editor": [
-        "./node_modules/monaco-editor/esm/vs/editor/editor.api.js"
       ],
       "@handterm/types": [
         "./packages/types/dist/packages/types/src"

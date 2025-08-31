@@ -32,6 +32,8 @@ The goal of this phase was to refactor the existing code to isolate the terminal
 *   **Status:** In Progress (Implementation of Monaco components and hooks)
 *   **Details:** [Phase 2: Monaco Implementation](./phase-2-monaco-impl.md)
 
+*   **Current Plan:** [Phase 2: MonacoCore Refactor and Terminal Integration Plan](./phase-2-monaco-core-refactor-plan.md)
+    *   **Summary:** This plan outlines the refactoring of `MonacoCore.tsx` to support both editor and terminal modes, adapting `useMonacoTerminal.ts` to interact with it, creating `MonacoTerminal.tsx` as a wrapper, and integrating it into `HandTermWrapper.tsx` to display the terminal output.
 A new hook and component will be created to implement the `ITerminalAdapter` interface using the Monaco Editor.
 
 ### Phase 3: The Swap

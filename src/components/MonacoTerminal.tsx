@@ -1,3 +1,4 @@
+// src/components/MonacoTerminal.tsx
 import React, { useRef, useEffect } from 'react';
 import { useMonacoTerminal } from '../hooks/useMonacoTerminal'; // Adjust path as needed
 
