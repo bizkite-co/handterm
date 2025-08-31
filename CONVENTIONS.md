@@ -4,7 +4,11 @@ description: This file describes the rules that should be followed with sovling 
 version: 1.0.0
 ---
 
-This is a React/TypeScript/Vite/Vitest/Palaywright website that is deployed to GitHub Pages.
+This is a React/TypeScript/Vite/Vitest/Playwright website that is deployed to GitHub Pages.
+
+**State Management Note:** Top-level application activities (`ActivityType`) are managed via querystring parameters due to GitHub Pages limitations. Internal, faster-changing states within specific modes (e.g., Game and Tutorial) should use internal signal management or local component state, not querystring parameters.
+
+**Terminal Implementation Note:** The project is actively migrating from XTerm.js to Monaco Editor as the primary terminal interface.
 
 THIS APP IS A TUI (Text User Interface) and should not include _ANY BUTTONS_. HTML is used only for read-only ouput. All user actions should be keyboard driven.
 

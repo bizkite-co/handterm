@@ -1,6 +1,6 @@
 # Phase 3: The Swap
 
-*   **Status:** Not Started
+*   **Status:** Planned
 *   **Parent:** [_index.md](./_index.md)
 
 ## Tasks

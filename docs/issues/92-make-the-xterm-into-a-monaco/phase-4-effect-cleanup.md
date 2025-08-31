@@ -1,6 +1,6 @@
 # Phase 4: Effect State Machine & Cleanup
 
-*   **Status:** Not Started
+*   **Status:** Planned
 *   **Parent:** [_index.md](./_index.md)
 
 ## Tasks

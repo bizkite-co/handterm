@@ -35,6 +35,9 @@
 - [Configuration Files](./configuration_files.md)
 - [Ignore Patterns](./ignore_patterns.md)
 
+## Effect Library Linting (Planned)
+- [Effect Library Specific Rules](./effect_rules.md) (To be created in Phase 4 of Monaco migration)
+
 ## External References
 - [ESLint Official Documentation](https://eslint.org/docs/latest/)
 - [TypeScript ESLint Documentation](https://typescript-eslint.io/)

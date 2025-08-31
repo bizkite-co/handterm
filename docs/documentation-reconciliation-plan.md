@@ -1,113 +1,140 @@
-# Documentation Reconciliation Plan
+# Plan for Documentation Reconciliation
 
-**Goal:** Reconcile documentation in `docs/` (excluding `docs/worklog/`) with current architectural decisions and implementation progress, focusing on state management, terminal implementation (XTerm to Monaco Editor migration), and overall documentation cleanup.
+**Goal:** Reconcile the documentation in the `docs/` directory (excluding `docs/worklog/`) with current architectural decisions and implementation progress, focusing on state management, terminal implementation, and documentation cleanup.
 
-**Phase 1: Information Gathering and Initial Review (Completed)**
-*   Listed all files in `docs/` (excluding `docs/worklog/`).
-*   Identified potentially relevant documents based on the user's prompt.
-*   Clarified with the user that a comprehensive review is required.
+---
 
-**Phase 2: Detailed Document Review and Analysis**
+#### Phase 1: Document Inventory and Categorization (Completed)
 
-I will read the following documents to understand their content and identify areas for reconciliation. I will prioritize files directly related to the core issues.
+I have listed and categorized all relevant documents in the `docs/` directory (excluding `docs/worklog/`).
 
-**2.1 State Management Review:**
+**Categorized Documents:**
 
-*   **`docs/usestate-vs-signals.md`**:
-    *   **Purpose:** Understand the initial rationale for choosing signals over `useState`.
-    *   **Focus:**
-        *   Does it accurately reflect the current state management strategy?
-        *   Does it address the `ActivityType` querystring parameter approach for GitHub Pages?
-        *   Does it differentiate between querystring-based state and internal, fast states (Game/Tutorial modes)?
-        *   Does it mention the `TypeError: Cannot read properties of null (reading 'useRef')` issue and potential solutions (e.g., `Effect` library integration, non-component contexts)?
-*   **`docs/adr/arrange-component-state-hierarchy.md`**:
-    *   **Purpose:** Review decisions regarding state hierarchy.
-    *   **Focus:**
-        *   Are these decisions still valid with the current signal implementation and querystring usage?
-        *   Are there any conflicts with the current state management practices?
-*   **`src/signals/gameSignals.ts`**:
-    *   **Purpose:** Directly examine the code where the `useRef` error occurs.
-    *   **Focus:**
-        *   Understand the context of `useComputed` and its usage.
-        *   Identify how signals are being used in non-component contexts.
-        *   This will inform potential documentation updates or code changes.
-*   **`src/hooks/useActivityMediator.ts`**:
-    *   **Purpose:** Understand how `ActivityType` changes are managed.
-    *   **Focus:**
-        *   Verify the use of querystring parameters for `ActivityType`.
-        *   Confirm how different activity types are handled.
+*   **State Management:**
+    *   [`docs/usestate-vs-signals.md`](docs/usestate-vs-signals.md)
+    *   [`docs/adr/arrange-component-state-hierarchy.md`](docs/adr/arrange-component-state-hierarchy.md)
+    *   [`docs/adr/choose-commandline-state-locus.md`](docs/adr/choose-commandline-state-locus.md)
 
-**2.2 Terminal Implementation Review (XTerm to Monaco Editor Migration):**
+*   **Terminal Implementation (XTerm to Monaco Migration):**
+    *   [`docs/issues/92-make-the-xterm-into-a-monaco/_index.md`](docs/issues/92-make-the-xterm-into-a-monaco/_index.md)
+    *   [`docs/issues/92-make-the-xterm-into-a-monaco/phase-1-abstraction.md`](docs/issues/92-make-the-xterm-into-a-monaco/phase-1-abstraction.md)
+    *   [`docs/issues/92-make-the-xterm-into-a-monaco/phase-2-monaco-impl.md`](docs/issues/92-make-the-xterm-into-a-monaco/phase-2-monaco-impl.md)
+    *   [`docs/issues/92-make-the-xterm-into-a-monaco/phase-3-swap.md`](docs/issues/92-make-the-xterm-into-a-monaco/phase-3-swap.md)
+    *   [`docs/issues/92-make-the-xterm-into-a-monaco/phase-4-effect-cleanup.md`](docs/issues/92-make-the-xterm-into-a-monaco/phase-4-effect-cleanup.md)
 
-*   **`docs/issues/92-make-the-xterm-into-a-monaco/_index.md`**:
-    *   **Purpose:** Overview of the migration issue.
-    *   **Focus:** Ensure it reflects the current status and overall goals.
-*   **`docs/issues/92-make-the-xterm-into-a-monaco/phase-1-abstraction.md`**:
-    *   **Purpose:** Understand the abstraction layer for the terminal.
-    *   **Focus:** Is this abstraction still relevant or has it evolved with the Monaco migration?
-*   **`docs/issues/92-make-the-xterm-into-a-monaco/phase-1-plan.md`**:
-    *   **Purpose:** Review the initial plan for the migration.
-    *   **Focus:** Identify completed, in-progress, or abandoned steps.
-*   **`docs/issues/92-make-the-xterm-into-a-monaco/phase-2-monaco-impl.md`**:
-    *   **Purpose:** Details of Monaco implementation.
-    *   **Focus:** Verify if the implementation details are still accurate.
-*   **`docs/issues/92-make-the-xterm-into-a-monaco/phase-3-swap.md`**:
-    *   **Purpose:** Plan for swapping XTerm with Monaco.
-    *   **Focus:** Has this phase been completed? Are there any lingering XTerm references?
-*   **`docs/issues/92-make-the-xterm-into-a-monaco/phase-4-effect-cleanup.md`**:
-    *   **Purpose:** Cleanup related to the migration.
-    *   **Focus:** What cleanup was planned, and what remains to be done?
-*   **`docs/worklog/monaco-editor-reconciliation/_index.md`**:
-    *   **Purpose:** Overview of Monaco reconciliation work.
-    *   **Focus:** General status and goals.
-*   **`docs/worklog/monaco-editor-reconciliation/worklog/2025-01-15-monaco-editor-reconciliation.md`**:
-    *   **Purpose:** Specific worklog entry for Monaco reconciliation.
-    *   **Focus:** Detailed actions taken and their outcomes.
-*   **`docs/worklog/reconcile-mock-types-with-prod/migrate-from-monaco-editor-react/full-rewrite-checklist.md`**:
-    *   **Purpose:** Checklist for migration.
-    *   **Focus:** What items on this checklist are still relevant or completed?
+*   **General Project Information/Coding Standards:**
+    *   [`CONVENTIONS.md`](CONVENTIONS.md)
+    *   [`docs/coding_standards.md`](docs/coding_standards.md)
+    *   [`docs/product-specification.md`](docs/product-specification.md)
+    *   [`docs/prompt-instructions.md`](docs/prompt-instructions.md)
+    *   [`docs/lib/_index.md`](docs/lib/_index.md)
+    *   [`docs/linting/_index.md`](docs/linting/_index.md)
+    *   [`docs/linting/accessibility_rules.md`](docs/linting/accessibility_rules.md)
+    *   [`docs/linting/advanced_dependency_resolution.md`](docs/linting/advanced_dependency_resolution.md)
+    *   [`docs/linting/configuration_files.md`](docs/linting/configuration_files.md)
+    *   [`docs/linting/core_philosophy.md`](docs/linting/core_philosophy.md)
+    *   [`docs/linting/custom_eslint_rules.md`](docs/linting/custom_eslint_rules.md)
+    *   [`docs/linting/dependency_management.md`](docs/linting/dependency_management.md)
+    *   [`docs/linting/dependency_resolution_plan.md`](docs/linting/dependency_resolution_plan.md)
+    *   [`docs/linting/error_analysis.md`](docs/linting/error_analysis.md)
+    *   [`docs/linting/es_module_compatibility.md`](docs/linting/es_module_compatibility.md)
+    *   [`docs/linting/es_module_workaround.md`](docs/linting/es_module_workaround.md)
+    *   [`docs/linting/eslint_ecosystem_update_strategy.md`](docs/linting/eslint_ecosystem_update_strategy.md)
+    *   [`docs/linting/eslint_type_safety_plugins.md`](docs/linting/eslint_type_safety_plugins.md)
+    *   [`docs/linting/general_rules.md`](docs/linting/general_rules.md)
+    *   [`docs/linting/ignore_patterns.md`](docs/linting/ignore_patterns.md)
+    *   [`docs/linting/import_organization.md`](docs/linting/import_organization.md)
+    *   [`docs/linting/import_rules.md`](docs/linting/import_rules.md)
+    *   [`docs/linting/incremental_eslint_adoption.md`](docs/linting/incremental_eslint_adoption.md)
+    *   [`docs/linting/incremental_plugin_adoption.md`](docs/linting/incremental_plugin_adoption.md)
+    *   [`docs/linting/maintenance.md`](docs/linting/maintenance.md)
+    *   [`docs/linting/migration_guide.md`](docs/linting/migration_guide.md)
+    *   [`docs/linting/naming_conventions.md`](docs/linting/naming_conventions.md)
+    *   [`docs/linting/overrides.md`](docs/linting/overrides.md)
+    *   [`docs/linting/plugin_impact_analysis.md`](docs/linting/plugin_impact_analysis.md)
+    *   [`docs/linting/promise_handling.md`](docs/linting/promise_handling.md)
+    *   [`docs/linting/react_best_practices.md`](docs/linting/react_best_practices.md)
+    *   [`docs/linting/react_hooks_rules.md`](docs/linting/react_hooks_rules.md)
+    *   [`docs/linting/react_rules.md`](docs/linting/react_rules)
+    *   [`docs/linting/subtle_type_bugs.md`](docs/linting/subtle_type_bugs.md)
+    *   [`docs/linting/testing_standards.md`](docs/linting/testing_standards.md)
+    *   [`docs/linting/type_safety_encouragement.md`](docs/linting/type_safety_encouragement.md)
+    *   [`docs/linting/type_safety_strategies.md`](docs/linting/type_safety_strategies.md)
+    *   [`docs/linting/type_safety.md`](docs/linting/type_safety.md)
+    *   [`docs/linting/typescript_rules.md`](docs/linting/typescript_rules.md)
+    *   [`docs/linting/refactoring/NextCharsDisplay.md`](docs/linting/refactoring/NextCharsDisplay.md)
 
-**Phase 3: Documentation Cleanup Strategy**
+*   **Stale/Redundant (Initial Assessment):**
+    *   [`docs/linting/CREATE_LINTING_DOCS_PROMPT.md`](docs/linting/CREATE_LINTING_DOCS_PROMPT.md) (Likely a prompt for generating docs, not a doc itself).
+    *   [`docs/linting/IMPLEMENT_LINTING_RULES_FROM_DOCS.md`](docs/linting/IMPLEMENT_LINTING_RULES_FROM_DOCS.md) (Similar to above).
+    *   [`docs/issues/92-make-the-xterm-into-a-monaco/phase-1-plan.md`](docs/issues/92-make-the-xterm-into-a-monaco/phase-1-plan.md) (Detailed plan for Phase 1, now complete and summarized elsewhere).
+    *   [`docs/lib/_index.md`](docs/lib/_index.md) (Redundant as `docs/lib/` contains no other files).
+    *   [`docs/adr/_index.md`](docs/adr/_index.md) (Redundant as all ADRs are individual files).
 
-Based on the review in Phase 2, I will propose the following actions:
+---
 
-*   **Identify Redundant/Stale Documents:**
-    *   Any documents primarily focused on XTerm implementation that are no longer relevant.
-    *   Worklog entries that describe problems already solved or decisions superseded by new architecture.
-    *   Documents that have been fully integrated into other, more current documentation.
-*   **Propose Mergers/Consolidations:**
-    *   Combine related information from multiple documents into a single, authoritative source.
-    *   For example, if `phase-1-plan.md` and `phase-2-monaco-impl.md` contain overlapping or sequential information, they might be merged into a more comprehensive "Monaco Editor Migration Guide."
-*   **Update Existing Documents:**
-    *   Modify `usestate-vs-signals.md` to reflect the current state management strategy, including querystring usage and the `useRef` issue.
-    *   Update all Monaco-related documentation to reflect the current status of the migration.
-    *   Remove any outdated references to XTerm.
-    *   Add details about the `TypeError: Cannot read properties of null (reading 'useRef')` in `src/signals/gameSignals.ts` and its resolution or current status.
-*   **Create New Documents (if necessary):**
-    *   If there are significant architectural decisions or implementation details not currently documented, propose creating new ADRs or conceptual documents.
+#### Phase 2: Detailed Review and Proposed Changes (Completed)
 
-**Phase 4: Plan Approval and Execution**
+This phase involved reading the identified documents and proposing specific updates.
 
-*   Present this detailed plan to the user for review and approval.
-*   Once approved, I will proceed with the execution, starting with reading the identified documents.
+1.  **Review State Management Documents:**
+    *   **Action:** Read [`docs/usestate-vs-signals.md`](docs/usestate-vs-signals.md), [`docs/adr/arrange-component-state-hierarchy.md`](docs/adr/arrange-component-state-hierarchy.md), and [`docs/adr/choose-commandline-state-locus.md`](docs/adr/choose-commandline-state-locus.md).
+    *   **Proposed Changes:**
+        *   Updated [`docs/usestate-vs-signals.md`](docs/usestate-vs-signals.md) to clearly articulate the decision to use querystring parameters for `ActivityType` due to GitHub Pages limitations, distinguish between querystring-managed `ActivityType` and internal, fast states, and address the `TypeError: Cannot read properties of null (reading 'useRef')` issue with `useComputed`. Updated Mermaid diagrams.
+        *   Updated [`docs/adr/arrange-component-state-hierarchy.md`](docs/adr/arrange-component-state-hierarchy.md) to explicitly mention `ActivityType` and querystring parameters as a specific case for global app state, and to reflect the `ITerminalAdapter` abstraction in Mermaid diagrams.
+        *   Updated [`docs/adr/choose-commandline-state-locus.md`](docs/adr/choose-commandline-state-locus.md) to reflect the decision to move `commandLine` state into `useTerminal`.
 
-**Mermaid Diagram for Workflow:**
+2.  **Review Terminal Implementation Documents:**
+    *   **Action:** Read [`docs/issues/92-make-the-xterm-into-a-monaco/_index.md`](docs/issues/92-make-the-xterm-into-a-monaco/_index.md), `phase-1-abstraction.md`, `phase-2-monaco-impl.md`, `phase-3-swap.md`, `phase-4-effect-cleanup.md`.
+    *   **Proposed Changes:**
+        *   Updated the status of Phase 2 in [`docs/issues/92-make-the-xterm-into-a-monaco/phase-2-monaco-impl.md`](docs/issues/92-make-the-xterm-into-a-monaco/phase-2-monaco-impl.md) to "In Progress".
+        *   Updated the status of Phase 3 in [`docs/issues/92-make-the-xterm-into-a-monaco/phase-3-swap.md`](docs/issues/92-make-the-xterm-into-a-monaco/phase-3-swap.md) to "Planned".
+        *   Updated the status of Phase 4 in [`docs/issues/92-make-the-xterm-into-a-monaco/phase-4-effect-cleanup.md`](docs/issues/92-make-the-xterm-into-a-monaco/phase-4-effect-cleanup.md) to "Planned".
+        *   No changes needed for `_index.md` and `phase-1-abstraction.md` as they already reflect the current status.
+
+3.  **Review General Project Information/Coding Standards:**
+    *   **Action:** Read [`CONVENTIONS.md`](CONVENTIONS.md), [`docs/coding_standards.md`](docs/coding_standards.md), [`docs/product-specification.md`](docs/product-specification.md), [`docs/prompt-instructions.md`](docs/prompt-instructions.md), and [`docs/linting/_index.md`](docs/linting/_index.md).
+    *   **Proposed Changes:**
+        *   Updated [`CONVENTIONS.md`](CONVENTIONS.md) to reflect `ActivityType` state management and Monaco Editor as the planned terminal.
+        *   Updated [`docs/coding_standards.md`](docs/coding_standards.md) to reflect Monaco Editor as the target terminal, reinforce `ITerminalAdapter`, and add a point about the `Effect` library.
+        *   Updated [`docs/product-specification.md`](docs/product-specification.md) to reflect Monaco Editor as the target terminal, update "Current Issues", and add a note about `ActivityType` state management.
+        *   Updated [`docs/linting/_index.md`](docs/linting/_index.md) to add a section for `Effect` library linting rules.
+        *   No changes needed for `docs/prompt-instructions.md`.
+
+4.  **Propose Documentation Cleanup:**
+    *   **Action:** Based on the reviews in steps 1-3, finalized the list of documents to be removed or consolidated.
+    *   **Proposed Actions:**
+        *   **Remove:**
+            *   [`docs/linting/CREATE_LINTING_DOCS_PROMPT.md`](docs/linting/CREATE_LINTING_DOCS_PROMPT.md)
+            *   [`docs/linting/IMPLEMENT_LINTING_RULES_FROM_DOCS.md`](docs/linting/IMPLEMENT_LINTING_RULES_FROM_DOCS.md)
+            *   [`docs/issues/92-make-the-xterm-into-a-monaco/phase-1-plan.md`](docs/issues/92-make-the-xterm-into-a-monaco/phase-1-plan.md)
+            *   [`docs/lib/_index.md`](docs/lib/_index.md)
+            *   [`docs/adr/_index.md`](docs/adr/_index.md)
+
+---
+
+#### Phase 3: Plan Presentation and Approval (Completed)
+
+1.  Presented the detailed plan, including proposed changes and cleanup strategy, to the user.
+2.  Incorporated feedback from the user.
+3.  Wrote the approved plan to a markdown file.
+
+---
+
+### Mermaid Diagram for Documentation Reconciliation Plan
 
 ```mermaid
 graph TD
-    A[Start: Documentation Reconciliation] --> B{Review Docs/ Directory};
-    B --> C{Identify Relevant Docs};
-    C --> D[Detailed Review: State Management Docs];
-    C --> E[Detailed Review: Terminal Migration Docs];
-    D --> F{Analyze State Management Discrepancies};
-    E --> G{Analyze Terminal Migration Status};
-    F --> H[Propose State Management Doc Updates];
-    G --> I[Propose Terminal Migration Doc Updates];
-    H & I --> J{Identify Redundant/Stale Docs};
-    J --> K[Propose Doc Cleanup (Merge/Remove)];
-    H & I & K --> L[Consolidate Proposed Changes];
-    L --> M[Present Plan to User];
-    M --> N{User Approval?};
-    N -- Yes --> O[Execute Plan (Read, Update, Cleanup)];
-    N -- No --> M;
-    O --> P[End: Documentation Reconciled];
+    A[Start Doc Reconciliation] --> B{Phase 1: Document Inventory & Categorization};
+    B --> C[List all docs/ files (excluding worklog)];
+    C --> D[Categorize documents];
+    D --> E{Phase 2: Detailed Review & Proposed Changes};
+    E --> F[Review State Management Docs];
+    E --> G[Review Terminal Implementation Docs];
+    E --> H[Review General Project Info/Coding Standards];
+    E --> I[Propose Documentation Cleanup];
+    I --> J{Phase 3: Plan Presentation & Approval};
+    J --> K[Present Detailed Plan to User];
+    K --> L[Incorporate User Feedback];
+    L --> M[Write Approved Plan to Markdown File];
+    M --> N[End Doc Reconciliation];

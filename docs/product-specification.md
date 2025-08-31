@@ -4,11 +4,13 @@ A TUI interface for learning to use a specialized keyboard through typing practi
 
 ## Tech Stack
 
-Vite, TypeScript, React, `@xterm/xterm`, Monacaco editor, web-based TUI developed on Windows, VS Code, PowerShell.
+Vite, TypeScript, React, Monaco Editor (replacing `@xterm/xterm`), web-based TUI developed on Windows, VS Code, PowerShell.
+
+**State Management Note:** Top-level application activities (`ActivityType`) are managed via querystring parameters due to GitHub Pages limitations. Internal, faster-changing states within specific modes (e.g., Game and Tutorial) should use internal signal management or local component state, not querystring parameters.
 
 ## Priorities
 
-* Robust, expert-level React implementation. 
+* Robust, expert-level React implementation.
 * Prefer functional components and other modern React best practices.
 
 ## Text Editor
@@ -40,4 +42,4 @@ Vite, TypeScript, React, `@xterm/xterm`, Monacaco editor, web-based TUI develope
 
 * [ ] Can't resize canvas.
 * [ ] Doesn't scroll to bottom.
-* [ ] 
+* [ ]

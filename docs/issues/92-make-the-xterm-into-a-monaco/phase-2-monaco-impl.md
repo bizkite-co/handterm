@@ -1,6 +1,6 @@
 # Phase 2: Monaco Implementation
 
-*   **Status:** Not Started
+*   **Status:** In Progress
 *   **Parent:** [_index.md](./_index.md)
 
 ## Tasks

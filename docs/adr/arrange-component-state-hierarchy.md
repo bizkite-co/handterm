@@ -23,13 +23,14 @@
 
 ## State Management Selection Criteria
 
-| Scenario                          | Recommended Approach | Rationale                     |
-| --------------------------------- | -------------------- | ----------------------------- |
-| UI-only state in single component | Local useState       | Simplest, most encapsulated   |
-| Shared between parent/child       | Props                | Direct relationship           |
-| Used across component tree        | Signals/Context      | Avoid prop drilling           |
-| Global app state                  | Signals              | Reactive, easy to debug       |
-| Complex state logic               | State library        | Better state management tools |
+| Scenario                          | Recommended Approach | Rationale                                     |
+| --------------------------------- | -------------------- | --------------------------------------------- |
+| UI-only state in single component | Local useState       | Simplest, most encapsulated                   |
+| Shared between parent/child       | Props                | Direct relationship                           |
+| Used across component tree        | Signals/Context      | Avoid prop drilling                           |
+| Global app state (ActivityType)   | Querystring Params   | GitHub Pages compatibility, shareability      |
+| Global app state (other)          | Signals              | Reactive, easy to debug                       |
+| Complex state logic               | State library        | Better state management tools                 |
 ```
 
 For diagramming, I'd suggest a combination of:
@@ -39,7 +40,8 @@ For diagramming, I'd suggest a combination of:
 graph TD
     subgraph State Types
         L[Local State<br/>useState] --- P[Props<br/>parent→child]
-        G[Global State<br/>signals] --- C[Context<br/>subtree state]
+        G[Global State<br/>signals] --- Q[Global State<br/>Querystring Params]
+        C[Context<br/>subtree state]
     end
 
     subgraph Decision Points
@@ -47,7 +49,8 @@ graph TD
         D1 -->|Yes| D2{How Many?}
         D2 -->|One Level| P
         D2 -->|Multiple| D3{Scope?}
-        D3 -->|Global| G
+        D3 -->|ActivityType| Q
+        D3 -->|Global (other)| G
         D3 -->|Subtree| C
     end
 ```
