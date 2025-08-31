@@ -5,7 +5,7 @@
 
 ## Tasks
 
-*   [ ] Create `useMonacoTerminal.ts` hook implementing `ITerminalAdapter`.
+*   [x] Create `useMonacoTerminal.ts` hook implementing `ITerminalAdapter`.
 *   [ ] Create `MonacoTerminal.tsx` component.
 *   [ ] Implement prompt logic.
 *   [ ] Implement `Enter` key command submission.
@@ -14,4 +14,4 @@
 
 ## Notes & Issues
 
-*   ...
+*   The `useMonacoTerminal.ts` hook has been created. However, the terminal does not display in the web app. This needs to be investigated.
