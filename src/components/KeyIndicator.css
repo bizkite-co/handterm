@@ -1,0 +1,14 @@
+.key-indicator {
+  position: absolute;
+  bottom: 10px;
+  width: 50px;
+  height: 50px;
+}
+
+.key-indicator:first-of-type {
+  right: 70px;
+}
+
+.key-indicator:last-of-type {
+  right: 10px;
+}

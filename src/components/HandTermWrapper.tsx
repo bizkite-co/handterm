@@ -23,6 +23,7 @@ import WebCam from '../utils/WebCam';
 import GamePhrases from '../utils/GamePhrases';
 
 import { Chord } from './Chord';
+import { KeyIndicator } from './KeyIndicator';
 import MonacoCore from './MonacoCore';
 import NextCharsDisplay, { type NextCharsDisplayHandle } from './NextCharsDisplay';
 import { PromptHeader } from './PromptHeader';
@@ -219,12 +220,16 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
         />
       )}
       {currentActivityValue === ActivityType.GAME && (
-        <NextCharsDisplay
-          ref={nextCharsDisplayRef}
-          isInPhraseMode={true}
-          onPhraseSuccess={handlePhraseSuccess}
-          onError={handlePhraseErrorState}
-        />
+        <>
+          <NextCharsDisplay
+            ref={nextCharsDisplayRef}
+            isInPhraseMode={true}
+            onPhraseSuccess={handlePhraseSuccess}
+            onError={handlePhraseErrorState}
+          />
+          <KeyIndicator keyType="enter" />
+          <KeyIndicator keyType="backspace" />
+        </>
       )}
       {lastTypedCharacter !== null && (
         <Chord displayChar={lastTypedCharacter} />
