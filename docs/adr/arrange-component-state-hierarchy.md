@@ -59,7 +59,7 @@ C4Container
     Container(term, "Terminal", "Component", "Terminal interface")
     Container(login, "Login", "Component", "Login handling")
     Container(signals, "AppSignals", "State", "Global reactive state")
-    
+
     Rel(term, "reads/writes", signals, "login state")
     Rel(login, "updates", signals, "auth state")
     UpdateRelStyle(term, signals, "red", "dashed")
@@ -108,7 +108,7 @@ journey
     - Example: Form context, localization context for a section
 
 **State Libraries**:
-- **XState**: 
+- **XState**:
   - For complex state machines and workflows
   - When you need visual state charts
   - Complex business logic with many states/transitions
@@ -127,3 +127,17 @@ journey
   - Simpler alternative to Redux
   - When you need middleware but want less boilerplate
   - Modern alternative to complex state libraries
+
+## Specific State Management Considerations
+
+### ActivityType and Querystring Parameters
+
+For top-level application activities like `ActivityType`, querystring parameters are used for state management. This approach is necessary due to limitations of GitHub Pages, ensuring that the application's primary activity state is reflected in the URL for shareability and proper navigation.
+
+### Internal Game and Tutorial States
+
+Smaller, faster-changing states within specific modes (e.g., Game and Tutorial modes) should *not* rely on querystring parameters. These states are typically transient and do not require URL persistence. Instead, they should leverage internal signal management or local component state for optimal performance and responsiveness.
+
+### `useComputed` and React Component Lifecycle
+
+It is crucial to remember that React hooks, including `useComputed` from `@preact/signals-react`, must only be called from within a React function component or a custom React Hook. Calling `useComputed` outside of a component's render cycle (e.g., directly in a plain JavaScript module) will result in errors like `TypeError: Cannot read properties of null (reading 'useRef')`. When signals are consumed or derived in non-component contexts, the direct `computed` function from `@preact/signals` should be used instead. This distinction is vital for correct integration of signals within the React ecosystem.

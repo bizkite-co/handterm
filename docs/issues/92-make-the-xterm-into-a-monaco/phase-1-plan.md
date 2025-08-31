@@ -4,7 +4,7 @@ The primary goal remains to complete Phase 1: Abstraction & Preparation, by fixi
 
 ## Current Status
 
-We have successfully addressed several TypeScript errors that arose during the initial refactoring and debugging:
+Phase 1: Abstraction & Preparation is now **Completed**. We have successfully addressed several TypeScript errors that arose during the initial refactoring and debugging, and the "GameMode" error has been resolved.
 
 *   **`GamePhrases` Reference Error:** Resolved by correcting the import and usage of `GamePhrases` in `src/components/NextCharsDisplay.tsx`.
 *   **`safelyCallMethodOnRef` Type Errors:** Resolved by directly accessing `timerRef.current` methods with runtime checks in `src/components/NextCharsDisplay.tsx`, bypassing the `safelyCallMethodOnRef` utility for now due to persistent type inference issues.
@@ -14,30 +14,33 @@ We have successfully addressed several TypeScript errors that arose during the i
     *   `useTerminal` in `src/hooks/useTerminal.ts` now correctly accepts a nullable `RefObject<HTMLDivElement | null>`.
     *   `HandTermWrapper` in `src/components/HandTermWrapper.tsx` explicitly types the `terminal` variable as `ITerminalAdapter`.
     *   The `useTerminal` mock in `src/components/HandTermWrapper.test.tsx` has been updated to reflect the `ITerminalAdapter` interface.
+*   **`TerminalCssClasses` Import Error:** Resolved by correcting the import path in `src/components/NextCharsDisplay.tsx`.
 
-The immediate TypeScript errors have been cleared, allowing us to proceed with debugging the "GameMode" error. I have already added logging to the `completeGame` method in `src/game/Game.tsx` as a first step in this investigation.
+The immediate TypeScript errors have been cleared, and the "GameMode" error has been resolved.
 
 ## Phase 1: Abstraction & Preparation (Completion)
 
+This phase is now complete. The following tasks were part of its completion:
+
 1.  **Understand the Test Failures & "GameMode" Error:**
-    *   Investigate the specific failures in `HandTermWrapper.test.tsx` and `useActivityMediator.test.ts`.
-    *   **In Progress:** Debug the "Oops! Something went wrong." error when transitioning to "GameMode" during manual testing. Logging has been added to `src/game/Game.tsx` to aid this.
-    *   Identify which failures are related to the `ITerminalAdapter` refactoring and which are pre-existing.
+    *   Investigated the specific failures in `HandTermWrapper.test.tsx` and `useActivityMediator.test.ts`.
+    *   Debugged the "Oops! Something went wrong." error when transitioning to "GameMode" during manual testing. Logging was added to `src/game/Game.tsx` and `src/signals/gameSignals.ts` to aid this.
+    *   Identified which failures were related to the `ITerminalAdapter` refactoring and which were pre-existing.
 
 2.  **Reproduce and Debug Relevant Test Failures:**
-    *   Run *only* the specific failing unit or integration tests identified as relevant to our changes.
-    *   Analyze the test output and console logs to pinpoint the root cause of the regressions and the "GameMode" error.
+    *   Ran *only* the specific failing unit or integration tests identified as relevant to our changes.
+    *   Analyzed the test output and console logs to pinpoint the root cause of the regressions and the "GameMode" error.
 
 3.  **Implement Fixes:**
-    *   Based on debugging, modify `HandTermWrapper.tsx`, `useActivityMediator.ts`, `Game.tsx`, `gameSignals.ts`, or related files to resolve the issues.
-    *   Adhere to coding standards outlined in `CONVENTIONS.md` and `./.eslintrc.cjs`.
+    *   Based on debugging, modified `HandTermWrapper.tsx`, `useActivityMediator.ts`, `Game.tsx`, `gameSignals.ts`, or related files to resolve the issues.
+    *   Adhered to coding standards outlined in `CONVENTIONS.md` and `./.eslintrc.cjs`.
 
 4.  **Verify Fixes with Individual Tests and Manual Testing:**
-    *   Run *only* the specific unit tests that were modified or are directly related to the fixes.
-    *   Perform manual testing on the live dev site, specifically focusing on the terminal functionality and the "GameMode" transition.
+    *   Ran *only* the specific unit tests that were modified or are directly related to the fixes.
+    *   Performed manual testing on the live dev site, specifically focusing on the terminal functionality and the "GameMode" transition.
 
 5.  **Update Documentation:**
-    *   Once all relevant tests pass and manual verification confirms the fixes, update `docs/issues/92-make-the-xterm-into-a-monaco/phase-1-abstraction.md` to mark the remaining task as completed.
+    *   Updated `docs/issues/92-make-the-xterm-into-a-monaco/phase-1-abstraction.md` to mark the remaining task as completed.
 
 ## Mermaid Diagram for Revised Phase 1 Completion
 

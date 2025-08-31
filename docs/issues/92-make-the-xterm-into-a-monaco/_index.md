@@ -18,30 +18,32 @@ I don't think we need to have two different types of text panes. This is specula
 
 This document outlines the phased approach for replacing the XTerm.js terminal with the Monaco Editor.
 
+**Note:** This document is being reconciled with the current implementation progress. Some statuses may reflect the initial plan and will be updated. For a comprehensive overview of the reconciliation process, refer to [`docs/documentation-reconciliation-plan.md`](docs/documentation-reconciliation-plan.md).
+
 ### Phase 1: Abstraction & Preparation
 
-*   **Status:** In Progress
+*   **Status:** Completed
 *   **Details:** [Phase 1: Abstraction & Preparation](./phase-1-abstraction.md)
 
-The goal of this phase is to refactor the existing code to isolate the terminal's implementation details behind a generic, strictly-typed interface using `Effect Schema`.
+The goal of this phase was to refactor the existing code to isolate the terminal's implementation details behind a generic, strictly-typed interface using `Effect Schema`. This phase is now complete.
 
 ### Phase 2: Monaco Implementation
 
-*   **Status:** Not Started
+*   **Status:** In Progress (Implementation of Monaco components and hooks)
 *   **Details:** [Phase 2: Monaco Implementation](./phase-2-monaco-impl.md)
 
 A new hook and component will be created to implement the `ITerminalAdapter` interface using the Monaco Editor.
 
 ### Phase 3: The Swap
 
-*   **Status:** Not Started
+*   **Status:** Planned
 *   **Details:** [Phase 3: The Swap](./phase-3-swap.md)
 
 The XTerm implementation will be swapped with the Monaco implementation using a feature flag for safe integration testing.
 
 ### Phase 4: `Effect` State Machine & Cleanup
 
-*   **Status:** Not Started
+*   **Status:** Planned
 *   **Details:** [Phase 4: `Effect` State Machine & Cleanup](./phase-4-effect-cleanup.md)
 
 The terminal's internal state management will be refactored to use the `Effect` library, and all legacy XTerm code will be removed.

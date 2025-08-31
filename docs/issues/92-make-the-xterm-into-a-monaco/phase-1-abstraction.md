@@ -1,7 +1,7 @@
 # Phase 1: Abstraction & Preparation
 
-*   **Status:** In Progress
-*   **Parent:** [_index.md](./_index.md)
+*   **Status:** Completed
+*   **Parent:** [`_index.md`](./_index.md)
 
 ## Tasks
 
@@ -10,9 +10,8 @@
 *   [x] Define `ITerminalAdapter` interface using Effect Schema.
 *   [x] Refactor `useTerminal` hook to implement `ITerminalAdapter`.
 *   [x] Update `HandTermWrapper.tsx` to use the `ITerminalAdapter` interface.
-*   [ ] Run integration tests to verify no regressions.
+*   [x] Run integration tests to verify no regressions.
 
-## Notes & Issues
+## Notes
 
-*   **[Resolved]** There was a persistent issue with the `vitest` configuration for handling CSS imports from `monaco-editor`. This was fixed by adding an esbuild plugin to `vite.config.ts` to mock the CSS files.
-*   Integration tests are still failing after the refactoring. The remaining issues are in `HandTermWrapper.test.tsx` and `useActivityMediator.test.ts`.
+Phase 1, focusing on abstraction and preparation for the Monaco Editor migration, is now complete. All tasks, including the resolution of integration test failures and the "GameMode" error, have been addressed.
