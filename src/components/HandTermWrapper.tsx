@@ -23,6 +23,7 @@ import WebCam from '../utils/WebCam';
 import GamePhrases from '../utils/GamePhrases';
 
 import { Chord } from './Chord';
+import { IntroText } from './IntroText';
 import { KeyIndicator } from './KeyIndicator';
 import MonacoCore from './MonacoCore';
 import NextCharsDisplay, { type NextCharsDisplayHandle } from './NextCharsDisplay';
@@ -51,7 +52,8 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
   const [lastTypedCharacter] = useState<string | null>(null);
   const [, setErrorCharIndex] = useState<number | undefined>(undefined);
   const [githubUsername] = useState<string | null>(null);
-  const [userName] = useState<string | null>(null);
+  const [showIntro, setShowIntro] = useState(true);
+  const [userName, setUserName] = useState<string | null>(null);
   const commandTime = useComputed(() => commandTimeSignal.value);
   const [treeItems, setTreeItems] = useState<TreeItem[]>([]);
 
@@ -151,7 +153,10 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
   }, []);
 
   useImperativeHandle(forwardedRef, () => ({
-    writeOutput: terminal.write,
+    writeOutput: (output: string) => {
+      terminal.write(output);
+      setShowIntro(false);
+    },
     prompt: () => { },
     saveCommandResponseHistory: () => '',
     focusTerminal: terminal.focus,
@@ -212,6 +217,7 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
 
   return (
     <div id='handterm-wrapper' data-testid='handterm-wrapper'>
+      {showIntro && <IntroText />}
       {currentActivityValue === ActivityType.GAME && (
         <Game
           ref={gameHandleRef}
