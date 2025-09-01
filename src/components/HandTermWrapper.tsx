@@ -1,4 +1,3 @@
-
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState, useMemo } from 'react';
 import { useComputed } from '@preact/signals-react';
 import { Game, type IGameHandle } from '../game/Game';
@@ -16,7 +15,7 @@ import {
   ActivityType,
   StorageKeys,
   type IHandTermWrapperMethods,
-  type ITerminalAdapter // Corrected import path for ITerminalAdapter
+  type ITerminalAdapter
 } from '@handterm/types';
 import { createLogger, LogLevel } from '../utils/Logger';
 // Removed: import { navigate } from '../utils/navigationUtils';
@@ -37,7 +36,7 @@ const logger = createLogger({
   level: LogLevel.DEBUG
 });
 
-const getTimestamp = (date: Date): string => date.toTimeString().split(' ') ?? ''; // Corrected to take first element
+const getTimestamp = (date: Date): string => date.toTimeString().split(' ')[1] ?? '';
 
 const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProps>((props, forwardedRef) => {
   // Removed: const terminalContainerRef = useRef<HTMLDivElement>(null);
@@ -183,8 +182,8 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
     logger.debug('getStoredContent called.');
     const content = localStorage.getItem(StorageKeys.editContent);
     if (content == null) {
-       logger.debug('getStoredContent: No content found in localStorage.');
-       return '';
+      logger.debug('getStoredContent: No content found in localStorage.');
+      return '';
     }
     try {
       const parsed = JSON.parse(content);
@@ -276,7 +275,7 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
           width: '100%'
         }}
       >
-          <PromptHeader
+        <PromptHeader
           username={userName ?? 'guest'}
           domain={domain ?? 'handterm.com'}
           githubUsername={githubUsername}

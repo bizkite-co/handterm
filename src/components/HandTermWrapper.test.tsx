@@ -1,4 +1,4 @@
-import { render, act, screen, waitFor } from '@testing-library/react';
+import { render, act, screen } from '@testing-library/react';
 import { vi, describe, test, expect, beforeEach, afterEach } from 'vitest';
 import { HandTermWrapper } from './HandTermWrapper';
 import { activitySignal } from '../signals/appSignals';
@@ -10,9 +10,6 @@ import {
   type IAuthProps
 } from '@handterm/types';
 import { commandTimeSignal } from '../signals/commandLineSignals';
-import { TerminalTestUtils } from '../test-utils/TerminalTestUtils';
-import { useTerminal } from '../hooks/useTerminal.ts'; // Import useTerminal
-import React from 'react';
 
 // Add these mocks at the very top of the file, before any imports
 vi.mock('monaco-vim', () => ({

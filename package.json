@@ -7,7 +7,7 @@
   "scripts": {
     "type-check": "tsc --noEmit",
     "dev": "npm run clean && vite",
-    "build:package": "cd packages/types && rm -rf dist && npm run build && cd - && npm install",
+    "build:package": "cd packages/types && rm -rf dist && npm run build && cd - && npm install --legacy-peer-deps",
     "build": "npm run build:package && vite build",
     "clean": "rm -rf dist && npm cache verify",
     "inspect": "npx tsx scripts/inspect.ts",

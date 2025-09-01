@@ -109,12 +109,12 @@ interface MonacoCoreProps {
   onEnter?: (value: string) => void; // For terminal mode to handle Enter key
 }
 
-export default function MonacoCore({ value, language = 'text', toggleVideo, mode, onTerminalReady, onEditorReady, onEnter }: MonacoCoreProps): JSX.Element {
+export default function MonacoCore({ value, language = 'text', toggleVideo, mode, onEditorReady, onEnter }: MonacoCoreProps): JSX.Element {
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const statusBarRef = useRef<HTMLDivElement>(null);
-  const [containerStyle, setContainerStyle] = useState({ flexGrow: 1, height: '100%', minHeight: '300px' });
-  const vimModeRef = useRef<any>(null); // Holds return of initVimMode
+  const [containerStyle] = useState({ flexGrow: 1, height: '100%', minHeight: '300px' });
+  const vimModeRef = useRef<boolean>(null); // Holds return of initVimMode
   const initRan = useRef(false); // StrictMode flag
   const defineCommandsTimeoutRef = useRef<NodeJS.Timeout | null>(null); // Ref for the timeout
 

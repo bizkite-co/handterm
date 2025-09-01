@@ -1,3 +1,4 @@
+// Mock monaco-vim *once* before all tests. We don't actually need the real one.
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { defineVimCommands } from './MonacoCore'; // Import the named export
 import { ActivityType } from '@handterm/types';
@@ -10,11 +11,6 @@ vi.mock('monaco-editor/esm/vs/editor/editor.api', () => ({
   },
 }));
 
-// Mock monaco-vim *once* before all tests. We don't actually need the real one.
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { defineVimCommands } from './MonacoCore';
-import { ActivityType } from '@handterm/types';
-import { navigate } from '../utils/navigationUtils';
 import * as monacoVim from 'monaco-vim';
 
 vi.mock('monaco-vim');
@@ -39,6 +35,7 @@ describe('MonacoCore - defineVimCommands', () => {
 
     defineVimCommands(mockEditorRef);
 
+    expect(defineExSpy).toBeDefined();
     expect(defineExSpy).toHaveBeenCalledWith('q!', '', expect.any(Function));
 
     const qCommandCallback = defineExSpy.mock.calls.find(call => call[0] === 'q!')[2];

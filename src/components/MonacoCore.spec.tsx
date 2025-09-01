@@ -33,7 +33,7 @@ describe('MonacoCore', () => {
   })
 
   it('renders without crashing', () => {
-    render(<MonacoCore value="" {...{containerRef: mockContainerRef, statusBarRef: mockStatusBarRef}} /> as any);
+    render(<MonacoCore mode="editor" value="" {...{containerRef: mockContainerRef, statusBarRef: mockStatusBarRef}} /> as any);
     expect(screen.getByTestId('monaco-editor-container')).toBeInTheDocument();
   });
 
@@ -44,7 +44,7 @@ describe('MonacoCore', () => {
         getValue: vi.fn(() => ''),
       })),
     });
-    render(<MonacoCore value="" {...{containerRef: mockContainerRef, statusBarRef: mockStatusBarRef}} /> as any);
+    render(<MonacoCore mode="editor" value="" {...{containerRef: mockContainerRef, statusBarRef: mockStatusBarRef}} /> as any);
     await waitFor(() => {
       expect(monaco.editor.create).toHaveBeenCalledTimes(1);
     });
@@ -60,7 +60,7 @@ describe('MonacoCore', () => {
     (monaco.editor.create as any).mockReturnValue(mockEditor);
     (initVimMode as any).mockReturnValue({ dispose: vi.fn() });
 
-    await render(<MonacoCore value="" {...{containerRef: mockContainerRef, statusBarRef: mockStatusBarRef}} /> as any);
+    await render(<MonacoCore mode="editor" value="" {...{containerRef: mockContainerRef, statusBarRef: mockStatusBarRef}} /> as any);
 
     await waitFor(() => {
       expect(initVimMode).toHaveBeenCalledWith(mockEditor, expect.anything());
