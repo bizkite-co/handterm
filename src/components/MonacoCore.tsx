@@ -3,7 +3,7 @@ import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 // Import namespace and init function
 import { initVimMode } from 'monaco-vim';
 import * as monacoVim from 'monaco-vim'; // Import namespace
-import { ActivityType, StorageKeys, type IStandaloneCodeEditor } from '@handterm/types';
+import { ActivityType, StorageKeys, type IStandaloneCodeEditor, type ITerminalAdapter } from '@handterm/types';
 import { navigate } from '../utils/navigationUtils';
 import type { JSX } from 'react';
 import { createLogger, LogLevel } from '../utils/Logger';
@@ -103,9 +103,13 @@ interface MonacoCoreProps {
   value: string;
   language?: string;
   toggleVideo?: () => boolean;
+  mode: 'editor' | 'terminal'; // Add this prop
+  onTerminalReady?: (adapter: ITerminalAdapter) => void; // For terminal mode
+  onEditorReady?: (editor: monaco.editor.IStandaloneCodeEditor) => void; // For editor mode
+  onEnter?: (value: string) => void; // For terminal mode to handle Enter key
 }
 
-export default function MonacoCore({ value, language = 'text', toggleVideo }: MonacoCoreProps): JSX.Element {
+export default function MonacoCore({ value, language = 'text', toggleVideo, mode, onTerminalReady, onEditorReady, onEnter }: MonacoCoreProps): JSX.Element {
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const statusBarRef = useRef<HTMLDivElement>(null);
@@ -121,7 +125,7 @@ export default function MonacoCore({ value, language = 'text', toggleVideo }: Mo
         return;
     }
 
-    if (!containerRef.current || !statusBarRef.current) {
+    if (!containerRef.current || (mode === 'editor' && !statusBarRef.current)) {
         logger.warn("Initialization effect: Container or status bar ref not available yet.");
         return;
     }
@@ -132,19 +136,48 @@ export default function MonacoCore({ value, language = 'text', toggleVideo }: Mo
 
     try {
       logger.debug("Initialization effect: Before editor creation");
+
+      const getMonacoOptions = (currentMode: 'editor' | 'terminal'): monaco.editor.IEditorOptions => {
+        if (currentMode === 'terminal') {
+          return {
+            readOnly: false, // Allow input
+            lineNumbers: 'off',
+            wordWrap: 'on',
+            overviewRulerLanes: 0,
+            hideCursorInOverviewRuler: true,
+            scrollBeyondLastLine: false,
+            minimap: { enabled: false },
+            scrollbar: { vertical: 'hidden', horizontal: 'hidden' },
+            renderLineHighlight: 'none',
+            contextmenu: false,
+            quickSuggestions: false,
+            hover: { enabled: false },
+            links: false,
+            cursorStyle: 'block',
+            fontFamily: 'monospace',
+            fontSize: 14,
+            automaticLayout: true,
+          };
+        } else { // 'editor' mode
+          return {
+            minimap: { enabled: false },
+            automaticLayout: true,
+            scrollBeyondLastLine: false,
+            readOnly: false,
+            scrollbar: {
+              horizontal: 'hidden',
+              vertical: 'hidden'
+            },
+            lineNumbersMinChars: 2,
+          };
+        }
+      };
+
       editorInstance = monaco.editor.create(containerRef.current, {
         value,
         language,
-        minimap: { enabled: false },
-        automaticLayout: true,
-        scrollBeyondLastLine: false,
-        readOnly: false,
-        theme: 'vs-dark',
-        scrollbar: {
-          horizontal: 'hidden',
-          vertical: 'hidden'
-        },
-        lineNumbersMinChars: 2,
+        theme: 'vs-dark', // Apply theme here, outside of getMonacoOptions
+        ...getMonacoOptions(mode),
       });
       logger.debug("Initialization effect: monaco.editor.create completed.");
 
@@ -152,27 +185,59 @@ export default function MonacoCore({ value, language = 'text', toggleVideo }: Mo
       editorRef.current = editorInstance; // Set the ref HERE
       logger.debug("Initialization effect: Editor instance assigned to ref.");
 
-      logger.debug("Initialization effect: Before initVimMode");
-      if (statusBarRef.current) {
-        try {
-          vimModeRef.current = initVimMode(editorInstance, statusBarRef.current);
-          logger.debug(`Initialization effect: initVimMode called successfully.`);
-
-          // --- Define commands after a longer delay ---
-          logger.debug("Setting timeout to define Vim commands shortly...");
-          defineCommandsTimeoutRef.current = setTimeout(() => {
-              logger.debug("Timeout triggered: Attempting to define Vim commands now.");
-              defineVimCommands(editorRef, toggleVideo);
-              defineCommandsTimeoutRef.current = null; // Clear ref after execution
-          }, 500); // Increased Delay
-          // --- End define commands delay ---
-
-        } catch (vimError) {
-           logger.error("Initialization effect: Error during initVimMode:", vimError);
-        }
-      } else {
-        logger.warn("Initialization effect: statusBarRef not available, skipping initVimMode.");
+      if (onEditorReady) {
+        onEditorReady(editorInstance);
       }
+
+      if (mode === 'editor') {
+        logger.debug("Initialization effect: Before initVimMode for editor mode");
+        if (statusBarRef.current) {
+          try {
+            vimModeRef.current = initVimMode(editorInstance, statusBarRef.current);
+            logger.debug(`Initialization effect: initVimMode called successfully.`);
+
+            // --- Define commands after a longer delay ---
+            logger.debug("Setting timeout to define Vim commands shortly...");
+            defineCommandsTimeoutRef.current = setTimeout(() => {
+                logger.debug("Timeout triggered: Attempting to define Vim commands now.");
+                defineVimCommands(editorRef, toggleVideo);
+                defineCommandsTimeoutRef.current = null; // Clear ref after execution
+            }, 500); // Increased Delay
+            // --- End define commands delay ---
+
+          } catch (vimError) {
+             logger.error("Initialization effect: Error during initVimMode:", vimError);
+          }
+        } else {
+          logger.warn("Initialization effect: statusBarRef not available, skipping initVimMode.");
+        }
+      } else if (mode === 'terminal') {
+        // For terminal mode, we might want to always be in insert mode or handle keybindings differently
+        // For now, we'll just disable vim mode for terminal.
+        logger.debug("Terminal mode: Skipping Vim initialization.");
+
+        // Handle Enter key for terminal mode
+        editorInstance.addAction({
+          id: 'terminal-send-command',
+          label: 'Send Terminal Command',
+          keybindings: [monaco.KeyCode.Enter],
+          precondition: '', // Changed from undefined/null to empty string
+          keybindingContext: '', // Changed from undefined/null to empty string
+          contextMenuGroupId: 'navigation',
+          run: (editor) => {
+            if (onEnter) {
+              const model = editor.getModel();
+              if (model) {
+                const lastLine = model.getLineCount();
+                const lineContent = model.getLineContent(lastLine);
+                onEnter(lineContent);
+                editor.setValue(''); // Clear input after sending
+              }
+            }
+          },
+        });
+      }
+
 
       logger.debug("Initialization effect: Sequence complete.");
       editorInstance.focus();
@@ -226,7 +291,7 @@ export default function MonacoCore({ value, language = 'text', toggleVideo }: Mo
       initRan.current = false; // Reset flag on unmount
       logger.debug("Initialization cleanup: Reset initRan.current = false");
     };
-  }, [language]); // Dependency array for initialization
+  }, [language, mode, onEditorReady, onEnter, toggleVideo]); // Dependency array for initialization
 
   // Removed polling effect
 
@@ -250,7 +315,7 @@ export default function MonacoCore({ value, language = 'text', toggleVideo }: Mo
   return (
     <div data-testid="monaco-editor-container" className="monaco-editor-container" style={{ display: 'flex', flexDirection: 'column', height: '100%', flex: '1 1 auto' }}>
       <div ref={containerRef} style={containerStyle} />
-      <div ref={statusBarRef} className="vim-status-bar" style={{ height: '20px', flexShrink: 0 }} />
+      {mode === 'editor' && <div ref={statusBarRef} className="vim-status-bar" style={{ height: '20px', flexShrink: 0 }} />}
     </div>
   );
 }

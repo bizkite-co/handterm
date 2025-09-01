@@ -1,101 +1,102 @@
 import { useEffect, useState, useCallback } from 'react';
-import type { ITerminalAdapter } from '../types/terminal';
+import type { ITerminalAdapter, IStandaloneCodeEditor, IDisposable } from '@handterm/types';
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 
-export const useMonacoTerminal = (containerRef: React.RefObject<HTMLDivElement | null>): ITerminalAdapter => {
-  const [monacoEditor, setMonacoEditor] = useState<monaco.editor.IStandaloneCodeEditor | null>(null);
+export const useMonacoTerminal = (editor: IStandaloneCodeEditor | null): ITerminalAdapter => {
   const [model, setModel] = useState<monaco.editor.ITextModel | null>(null);
-  const onDataCallbacks = useState<((data: string) => void)[]>([]);
+  const [onDataCallbacks, setOnDataCallbacks] = useState<((data: string) => void)[]>([]);
+  const [onResizeCallbacks, setOnResizeCallbacks] = useState<((size: { cols: number; rows: number }) => void)[]>([]);
 
   useEffect(() => {
-    if (containerRef.current && !monacoEditor) {
-      const newEditor = monaco.editor.create(containerRef.current, {
-        value: '',
-        language: 'plaintext',
-        readOnly: false, // Will manage read-only state for output/input
-        minimap: { enabled: false },
-        lineNumbers: 'off',
-        glyphMargin: false,
-        folding: false,
-        scrollBeyondLastLine: false,
-        wordWrap: 'on',
-        overviewRulerLanes: 0,
-        hideCursorInOverviewRuler: true,
-        scrollbar: {
-          vertical: 'hidden',
-          horizontal: 'hidden',
-        },
-        // Disable editor features not needed for a terminal
-        contextmenu: false,
-        quickSuggestions: false,
-        suggestOnTriggerCharacters: false,
-        hover: { enabled: false },
-        links: false,
-        // Further customization for terminal-like behavior
-        renderLineHighlight: 'none',
-        cursorStyle: 'block',
-        fontFamily: 'monospace',
-        fontSize: 14,
-      });
-
+    if (editor) {
       const newModel = monaco.editor.createModel('', 'plaintext');
-      newEditor.setModel(newModel);
-      setMonacoEditor(newEditor);
+      editor.setModel(newModel);
       setModel(newModel);
 
-      // Handle input from Monaco Editor
-      newEditor.onDidChangeModelContent((event) => {
+      const disposable = editor.onDidChangeModelContent((event) => {
         const lastChange = event.changes[event.changes.length - 1];
         if (lastChange && lastChange.text.length > 0) {
-          onDataCallbacks[0].forEach(callback => callback(lastChange.text));
+          onDataCallbacks.forEach(callback => callback(lastChange.text));
         }
       });
 
       return () => {
-        newEditor.dispose();
+        disposable.dispose();
         newModel.dispose();
       };
     }
-    // Ensure a cleanup function is always returned
     return () => {};
-  }, [containerRef, monacoEditor, onDataCallbacks]);
+  }, [editor, onDataCallbacks]);
 
   const write = useCallback((data: string) => {
-    if (model) {
+    if (model && editor) {
       const currentContent = model.getValue();
       model.setValue(currentContent + data);
-      // Scroll to bottom
-      if (monacoEditor) {
-        monacoEditor.revealLine(model.getLineCount());
-      }
+      editor.revealLine(model.getLineCount());
     }
-  }, [model, monacoEditor]);
+  }, [model, editor]);
 
-  const resetPrompt = useCallback(() => {
-    // This will be more complex when we have a proper prompt management
+  const clear = useCallback(() => {
     if (model) {
-      model.setValue(''); // Clear all content for now
+      model.setValue('');
     }
   }, [model]);
 
   const focus = useCallback(() => {
-    monacoEditor?.focus();
-  }, [monacoEditor]);
+    editor?.focus();
+  }, [editor]);
 
-  const onData = useCallback((callback: (data: string) => void) => {
-    onDataCallbacks[1](prev => [...prev, callback]);
+  const onData = useCallback((callback: (data: string) => void): IDisposable => {
+    setOnDataCallbacks(prev => [...prev, callback]);
     return {
       dispose: () => {
-        onDataCallbacks[1](prev => prev.filter(cb => cb !== callback));
+        setOnDataCallbacks(prev => prev.filter(cb => cb !== callback));
       },
     };
-  }, [onDataCallbacks]);
+  }, []);
+
+  const onResize = useCallback((callback: (size: { cols: number; rows: number }) => void): IDisposable => {
+    setOnResizeCallbacks(prev => [...prev, callback]);
+    return {
+      dispose: () => {
+        setOnResizeCallbacks(prev => prev.filter(cb => cb !== callback));
+      },
+    };
+  }, []);
+
+  const fit = useCallback(() => {
+    if (editor) {
+      editor.layout();
+      // Monaco doesn't have a direct 'fit' method like xterm.js.
+      // Layouting should handle most of it.
+      // If specific column/row calculation is needed, it would go here.
+    }
+  }, [editor]);
+
+  const proposeGeometry = useCallback(() => {
+    if (editor) {
+      const container = editor.getContainerDomNode();
+      if (container) {
+        const fontInfo = editor.getOption(monaco.editor.EditorOption.fontInfo);
+        const lineHeight = fontInfo.lineHeight;
+        const charWidth = fontInfo.typicalHalfwidthCharacterWidth;
+
+        const rows = Math.floor(container.clientHeight / lineHeight);
+        const cols = Math.floor(container.clientWidth / charWidth);
+
+        return { cols, rows };
+      }
+    }
+    return null;
+  }, [editor]);
 
   return {
-    ref: containerRef,
     write,
-    resetPrompt,
+    clear,
     focus,
     onData,
+    onResize,
+    fit,
+    proposeGeometry,
   };
 };

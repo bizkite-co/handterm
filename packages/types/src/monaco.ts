@@ -7,6 +7,16 @@ export type IActionDescriptor = monaco.editor.IActionDescriptor;
 export type KeyCode = monaco.KeyCode;
 export type KeyMod = monaco.KeyMod;
 
+export interface ITerminalAdapter {
+  write: (text: string) => void;
+  clear: () => void;
+  focus: () => void;
+  onData: (listener: (data: string) => void) => monaco.IDisposable;
+  onResize: (listener: (size: { cols: number; rows: number }) => void) => monaco.IDisposable;
+  fit: () => void;
+  proposeGeometry: () => { cols: number; rows: number } | null;
+}
+
 declare global {
   interface Window {
     monacoEditor?: IStandaloneCodeEditor;

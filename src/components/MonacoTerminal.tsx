@@ -1,30 +1,42 @@
-// src/components/MonacoTerminal.tsx
-import React, { useRef, useEffect } from 'react';
-import { useMonacoTerminal } from '../hooks/useMonacoTerminal'; // Adjust path as needed
+import { useRef, useState, useEffect } from 'react';
+import MonacoCore from './MonacoCore';
+import { useMonacoTerminal } from '../hooks/useMonacoTerminal';
+import type { IStandaloneCodeEditor } from '@handterm/types';
+import { createLogger, LogLevel } from '../utils/Logger';
+
+const logger = createLogger({
+  prefix: 'MonacoTerminal',
+  level: LogLevel.DEBUG
+});
 
 interface MonacoTerminalProps {
-  // Define any props needed for the component, e.g., initial content, theme
+  onTerminalReady?: (adapter: ReturnType<typeof useMonacoTerminal>) => void;
+  onEnter: (value: string) => void;
 }
 
-export const MonacoTerminal: React.FC<MonacoTerminalProps> = () => {
-  const terminalRef = useRef<HTMLDivElement>(null);
-  const terminalAdapter = useMonacoTerminal(terminalRef); // Pass the ref to the hook
+export default function MonacoTerminal({ onTerminalReady, onEnter }: MonacoTerminalProps) {
+  const [editorInstance, setEditorInstance] = useState<IStandaloneCodeEditor | null>(null);
+  const terminalAdapter = useMonacoTerminal(editorInstance);
 
   useEffect(() => {
-    // Any additional setup or event listeners for the component
-    // For example, if useMonacoTerminal doesn't handle initial focus, do it here
-    terminalAdapter.focus();
-  }, [terminalAdapter]);
+    if (editorInstance && onTerminalReady) {
+      logger.debug("MonacoTerminal: Editor instance ready, calling onTerminalReady.");
+      onTerminalReady(terminalAdapter);
+    }
+  }, [editorInstance, onTerminalReady, terminalAdapter]);
+
+  const handleEditorReady = (editor: IStandaloneCodeEditor) => {
+    logger.debug("MonacoTerminal: handleEditorReady called, setting editor instance.");
+    setEditorInstance(editor);
+  };
 
   return (
-    <div
-      ref={terminalRef}
-      id="monaco-terminal-container"
-      style={{
-        height: '100%', // Ensure it fills the parent
-        width: '100%',
-        // Add any specific styling for the Monaco editor container
-      }}
+    <MonacoCore
+      value=""
+      language="plaintext"
+      mode="terminal"
+      onEditorReady={handleEditorReady}
+      onEnter={onEnter}
     />
   );
-};
+}

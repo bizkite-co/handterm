@@ -46,3 +46,4 @@ prompt-temp.md
 /playwright/.cache/
 project-types.lst
 stdout.txt
+current.patch

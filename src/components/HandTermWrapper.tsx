@@ -1,9 +1,9 @@
+
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState, useMemo } from 'react';
 import { useComputed } from '@preact/signals-react';
 import { Game, type IGameHandle } from '../game/Game';
 import { useActivityMediator } from '../hooks/useActivityMediator';
-import { MonacoTerminal } from './MonacoTerminal';
-import { ITerminalAdapter } from 'src/types/terminal';
+import MonacoTerminal from './MonacoTerminal'; // Changed to default import
 import { useWPMCalculator } from '../hooks/useWPMCaculator';
 import { isShowVideoSignal, activitySignal } from '../signals/appSignals';
 import { commandTimeSignal } from '../signals/commandLineSignals';
@@ -15,10 +15,11 @@ import {
   type TreeItem,
   ActivityType,
   StorageKeys,
-  type IHandTermWrapperMethods
+  type IHandTermWrapperMethods,
+  type ITerminalAdapter // Corrected import path for ITerminalAdapter
 } from '@handterm/types';
 import { createLogger, LogLevel } from '../utils/Logger';
-import { navigate } from '../utils/navigationUtils';
+// Removed: import { navigate } from '../utils/navigationUtils';
 import WebCam from '../utils/WebCam';
 import GamePhrases from '../utils/GamePhrases';
 
@@ -29,18 +30,18 @@ import MonacoCore from './MonacoCore';
 import NextCharsDisplay, { type NextCharsDisplayHandle } from './NextCharsDisplay';
 import { PromptHeader } from './PromptHeader';
 import { TutorialManager } from './TutorialManager';
-import { useMonacoTerminal } from '../hooks/useMonacoTerminal';
+// Removed: import { useMonacoTerminal } from '../hooks/useMonacoTerminal';
 
 const logger = createLogger({
   prefix: 'HandTermWrapper',
   level: LogLevel.DEBUG
 });
 
-const getTimestamp = (date: Date): string => date.toTimeString().split(' ')[0] ?? '';
+const getTimestamp = (date: Date): string => date.toTimeString().split(' ') ?? ''; // Corrected to take first element
 
 const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProps>((props, forwardedRef) => {
-  const terminalContainerRef = useRef<HTMLDivElement>(null); // Create a ref for the terminal container
-  const terminal: ITerminalAdapter = useMonacoTerminal(terminalContainerRef); // Explicitly type terminal
+  // Removed: const terminalContainerRef = useRef<HTMLDivElement>(null);
+  const [terminalAdapter, setTerminalAdapter] = useState<ITerminalAdapter | null>(null); // State to hold the terminal adapter
   const targetWPM = 10;
   const wpmCalculator = useWPMCalculator();
   const gameHandleRef = useRef<IGameHandle>(null);
@@ -54,7 +55,7 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
   const [, setErrorCharIndex] = useState<number | undefined>(undefined);
   const [githubUsername] = useState<string | null>(null);
   const [showIntro, setShowIntro] = useState(true);
-  const [userName, setUserName] = useState<string | null>(null);
+  const [userName] = useState<string | null>(null); // Removed setUserName as it's not used
   const commandTime = useComputed(() => commandTimeSignal.value);
   const [treeItems, setTreeItems] = useState<TreeItem[]>([]);
 
@@ -110,8 +111,8 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
       return game !== null;
     }
     handlePhraseComplete();
-    terminal.resetPrompt();
-  }, [wpmCalculator, activityMediator, handlePhraseComplete, gameHandleRef, targetWPM, terminal, currentActivityValue]);
+    terminalAdapter?.clear(); // Use optional chaining
+  }, [wpmCalculator, activityMediator, handlePhraseComplete, gameHandleRef, targetWPM, terminalAdapter, currentActivityValue]);
 
   useEffect(() => {
     if (currentActivityValue === ActivityType.TREE) {
@@ -141,13 +142,13 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
     if (isTerminalRelevantActivity) {
       setTimeout(() => {
         try {
-          terminal.focus();
+          terminalAdapter?.focus(); // Use optional chaining
         } catch (error) {
           logger.error('Terminal focus error', { error });
         }
       }, 50);
     }
-  }, [currentActivityValue, terminal]);
+  }, [currentActivityValue, terminalAdapter]);
 
   const handlePhraseErrorState = useCallback((errorIndex: number | undefined) => {
     setErrorCharIndex(errorIndex);
@@ -155,19 +156,19 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
 
   useImperativeHandle(forwardedRef, () => ({
     writeOutput: (output: string) => {
-      terminal.write(output);
+      terminalAdapter?.write(output); // Use optional chaining
       setShowIntro(false);
     },
     prompt: () => { },
     saveCommandResponseHistory: () => '',
-    focusTerminal: terminal.focus,
+    focusTerminal: () => terminalAdapter?.focus(), // Use optional chaining
     handleCharacter: () => { },
     refreshComponent: () => { },
     setHeroSummersaultAction: () => { },
     setEditMode: () => { },
     handleEditSave: () => { },
     activityMediator: activityMediator,
-  }), [terminal, activityMediator]);
+  }), [terminalAdapter, activityMediator]);
 
   useEffect(() => {
     logger.debug('Window setNextTutorial effect triggered.');
@@ -201,6 +202,13 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
     return isShowVideoSignal.value;
   }, []);
 
+  const handleTerminalEnter = useCallback((value: string) => {
+    logger.debug(`Terminal received enter with value: ${value}`);
+    // Here you would process the command, e.g., send it to a backend or a command handler
+    // For now, just write it back to the terminal as an example
+    terminalAdapter?.write(`You typed: ${value}\n`);
+  }, [terminalAdapter]);
+
   const editorComponent = useMemo(() => {
     logger.debug("Memoizing MonacoCore (Editor) component instance");
     return (
@@ -209,11 +217,24 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
         value={getStoredContent()}
         language="markdown"
         toggleVideo={toggleVideoCallback}
+        mode="editor" // Explicitly set mode
       />
     );
   }, [getStoredContent, toggleVideoCallback]);
 
-  const forceEditActivity = (window as any).__FORCE_EDIT_ACTIVITY__ === true;
+  const treeEditorComponent = useMemo(() => {
+    logger.debug("Memoizing MonacoCore (Tree) component instance");
+    return (
+      <MonacoCore
+        key={ActivityType.TREE}
+        value=""
+        language="plaintext"
+        mode="editor" // Tree view is also an editor mode
+      />
+    );
+  }, []);
+
+  const forceEditActivity = window.__FORCE_EDIT_ACTIVITY__ === true;
   logger.debug(`HandTermWrapper rendering with activity: ${currentActivityValue}, forceEditActivity: ${forceEditActivity}`);
 
   return (
@@ -255,24 +276,20 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
           width: '100%'
         }}
       >
-        <PromptHeader
+          <PromptHeader
           username={userName ?? 'guest'}
           domain={domain ?? 'handterm.com'}
           githubUsername={githubUsername}
           timestamp={getTimestamp(commandTime.value)}
         />
-        <MonacoTerminal />
+        <MonacoTerminal onTerminalReady={setTerminalAdapter} onEnter={handleTerminalEnter} />
       </div>
 
       {(currentActivityValue === ActivityType.EDIT || forceEditActivity) &&
         editorComponent
       }
       {currentActivityValue === ActivityType.TREE && treeItems.length > 0 &&
-        <MonacoCore
-          key={ActivityType.TREE}
-          value=""
-          language="plaintext"
-        />
+        treeEditorComponent
       }
       {isShowVideoSignal.value !== null && (
         <WebCam
