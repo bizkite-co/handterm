@@ -7,49 +7,30 @@
 
 Modify `MonacoCore.tsx` to be a versatile component that can function as both a code editor and a terminal, and then integrate it into `HandTermWrapper.tsx` to display the terminal output correctly.
 
-## Dependencies:
+## Guiding Principles:
 
-*   `ITerminalAdapter` interface.
-*   `useMonacoTerminal` hook.
-*   Existing `MonacoCore.tsx` and `HandTermWrapper.tsx`.
-*   `EditorPage.ts` for Playwright testing considerations.
+*   `MonacoCore` must accept a `mode` parameter (either "editor" or "terminal") to control its behavior. This parameter is now required for `MonacoCore` and has been added to relevant test specifications.
 
-## High-Level Steps:
+## Remaining High-Level Steps:
 
-1.  **Define `MonacoCore` Modes:** Introduce a `mode` prop to `MonacoCore.tsx` (e.g., `'editor'` or `'terminal'`) to control its behavior. **(Completed)**
-2.  **Abstract Monaco Configuration:** Create a utility function or object to manage Monaco Editor options based on the `mode`. **(Completed)**
-3.  **Conditional Logic in `MonacoCore`:** Implement conditional logic within `MonacoCore.tsx` to adjust its behavior (e.g., initial value, read-only state, keybindings, status bar visibility) based on the `mode` prop. **(Completed)**
-4.  **Adapt `useMonacoTerminal`:** Modify `useMonacoTerminal.ts` to accept a `MonacoCore` instance (or its ref) and expose `ITerminalAdapter` methods that interact with `MonacoCore`'s internal Monaco editor instance. **(Completed)**
-5.  **Create `MonacoTerminal.tsx` (Thin Wrapper):** Create `MonacoTerminal.tsx` as a simple wrapper that renders `MonacoCore` in `'terminal'` mode and passes the necessary props from `useMonacoTerminal`. **(Completed)**
-6.  **Integrate `MonacoTerminal` into `HandTermWrapper.tsx`:** Replace the existing XTerm integration in `HandTermWrapper.tsx` with `MonacoTerminal.tsx`. **(Completed)**
-7.  **Verify Terminal Display:** Ensure the terminal loads and displays correctly in the web app.
-8.  **Update Playwright Tests:** Review and update `EditorPage.ts` and related Playwright tests to accommodate the refactored `MonacoCore` and `MonacoTerminal`.
+1.  **Implement prompt logic.**
+2.  **Implement `Enter` key command submission.**
+3.  **Configure Vim mode to start in Insert Mode.**
+4.  **Map double-caps-lock to `Esc`.**
+5.  **Verify Terminal Display:** Ensure the terminal loads and displays correctly in the web app.
+6.  **Update Playwright Tests:** Review and update `EditorPage.ts` and related Playwright tests to accommodate the refactored `MonacoCore` and `MonacoTerminal`.
 
-## Detailed Steps:
+## Notes & Issues:
 
-*   **Step 1: Define `MonacoCore` Modes**
-    *   Modified `MonacoCoreProps` in `src/components/MonacoCore.tsx` to include `mode`, `onTerminalReady`, `onEditorReady`, and `onEnter` properties.
-
-*   **Step 2: Abstract Monaco Configuration**
-    *   Created a `getMonacoOptions` helper function in `MonacoCore.tsx` that returns `monaco.editor.IEditorOptions` based on the mode.
-
-*   **Step 3: Conditional Logic in `MonacoCore`**
-    *   Implemented conditional logic in `MonacoCore.tsx` to apply mode-specific options, conditionally render the `vim-status-bar`, and handle the `Enter` key differently for terminal mode. Vim mode initialization is now conditional on `editor` mode.
-
-*   **Step 4: Adapt `useMonacoTerminal`**
-    *   Modified `src/hooks/useMonacoTerminal.ts` to accept a `monaco.editor.IStandaloneCodeEditor` instance directly and implement `ITerminalAdapter` methods using this instance.
-
-*   **Step 5: Create `MonacoTerminal.tsx` (Thin Wrapper)**
-    *   Created `src/components/MonacoTerminal.tsx` to import `MonacoCore`, call `useMonacoTerminal`, and render `MonacoCore` in `'terminal'` mode, passing `onEditorReady` and `onEnter` callbacks.
-
-*   **Step 6: Integrate `MonacoTerminal` into `HandTermWrapper.tsx`**
-    *   In `src/components/HandTermWrapper.tsx`, removed the `useTerminal` import and usage, replaced the XTerm div with `<MonacoTerminal />`, and updated `useImperativeHandle` to use the `ITerminalAdapter` methods. Also, the `ITerminalAdapter` type is now imported directly from `@handterm/types`.
-
-*   **Step 7: Verify Terminal Display**
-    *   (Pending)
-
-*   **Step 8: Update Playwright Tests**
-    *   (Pending)
+*   The `getTimestamp` function in `src/components/HandTermWrapper.tsx` has been corrected to `date.toTimeString().split(' ')[0]`.
+*   **Persistent `ITerminalAdapter` Module Resolution Issue:** The linting error `Unable to resolve path to module '@handterm/types/monaco'` for `ITerminalAdapter` in `src/components/HandTermWrapper.tsx` persists. This indicates a deeper issue with ESLint's module resolver configuration or how the `@handterm/types` package is being consumed, despite `ITerminalAdapter` being re-exported from `packages/types/src/index.ts`.
+*   **Automated Test Failures:** Running `npm test` (Vitest unit tests) results in 4 failed suites:
+    *   `src/components/HandTermWrapper.test.tsx`: "Failed to resolve entry for package "monaco-editor"."
+    *   `src/components/MonacoCore.q.spec.tsx`: "TypeError: Unknown file extension ".css" for .../standalone-tokens.css"
+    *   `src/hooks/useTerminal.test.ts` and `src/__tests__/hooks/useActivityMediator.test.ts`: "Error: Cannot find package 'preact' imported from .../@preact/signals/dist/signals.mjs"
+    *   `src/components/MonacoCore.spec.tsx`: "AssertionError: expected "spy" to be called with arguments: \[ …(2) ]" (specifically for `initializes Vim mode`).
+*   **Browser Runtime Error:** When loading the web application, an "Uncaught Error: InstantiationService has been disposed at useMonacoTerminal.ts:13:14" occurs within the `<MonacoTerminal>` component. This suggests a lifecycle management issue with the Monaco Editor instance within the `useMonacoTerminal` hook.
+*   **Browser Warning:** "Initial Sync: Signal (normal) differs from URL (tutorial). Synchronizing signal." This indicates a state synchronization issue, possibly related to how activities are managed.
 
 ```mermaid
 graph TD
