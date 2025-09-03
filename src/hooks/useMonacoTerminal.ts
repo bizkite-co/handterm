@@ -1,12 +1,11 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import type { ITerminalAdapter, IStandaloneCodeEditor } from '@handterm/types';
-import type { IDisposable } from 'packages/types/src/monaco';
+import type { IDisposable } from 'monaco-editor/esm/vs/editor/editor.api';
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 
 export const useMonacoTerminal = (editor: IStandaloneCodeEditor | null): ITerminalAdapter => {
   const [model, setModel] = useState<monaco.editor.ITextModel | null>(null);
   const [onDataCallbacks, setOnDataCallbacks] = useState<((data: string) => void)[]>([]);
-  const [onResizeCallbacks, setOnResizeCallbacks] = useState<((size: { cols: number; rows: number }) => void)[]>([]);
 
   useEffect(() => {
     if (editor) {
@@ -56,14 +55,11 @@ export const useMonacoTerminal = (editor: IStandaloneCodeEditor | null): ITermin
     };
   }, []);
 
-  const onResize = useCallback((callback: (size: { cols: number; rows: number }) => void): IDisposable => {
-    setOnResizeCallbacks(prev => [...prev, callback]);
-    return {
-      dispose: () => {
-        setOnResizeCallbacks(prev => prev.filter(cb => cb !== callback));
-      },
-    };
-  }, []);
+
+  const onResize = useCallback(()=>{
+    console.warn("OnResize not implemented")
+    return null
+  }, [])
 
   const fit = useCallback(() => {
     if (editor) {
@@ -96,8 +92,8 @@ export const useMonacoTerminal = (editor: IStandaloneCodeEditor | null): ITermin
     clear,
     focus,
     onData,
-    onResize,
     fit,
+    onResize,
     proposeGeometry,
   }), [write, clear, focus, onData, onResize, fit, proposeGeometry]);
 };

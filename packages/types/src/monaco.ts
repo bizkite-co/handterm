@@ -12,7 +12,6 @@ export interface ITerminalAdapter {
   clear: () => void;
   focus: () => void;
   onData: (listener: (data: string) => void) => monaco.IDisposable;
-  onResize: (listener: (size: { cols: number; rows: number }) => void) => monaco.IDisposable;
   fit: () => void;
   proposeGeometry: () => { cols: number; rows: number } | null;
 }

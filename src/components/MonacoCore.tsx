@@ -166,6 +166,7 @@ export default function MonacoCore({ value, language = 'text', toggleVideo, mode
           lineNumbers: 'off',
           wordWrap: 'on',
           overviewRulerLanes: 0,
+          glyphMargin: false, // Remove gutter
           hideCursorInOverviewRuler: true,
           scrollBeyondLastLine: false,
           minimap: { enabled: false },

@@ -23,7 +23,7 @@ export default function MonacoTerminal({ onTerminalReady, onEnter }: MonacoTermi
       logger.debug("MonacoTerminal: Editor instance ready, calling onTerminalReady.");
       onTerminalReady(terminalAdapter);
     }
-  }, [editorInstance, onTerminalReady, terminalAdapter]);
+  }, [editorInstance, onTerminalReady, terminalAdapter]); // Keep dependencies for now, but focus on stability of terminalAdapter
 
   const handleEditorReady = (editor: IStandaloneCodeEditor) => {
     logger.debug("MonacoTerminal: handleEditorReady called, setting editor instance.");
