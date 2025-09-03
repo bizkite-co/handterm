@@ -11,6 +11,7 @@
     "exactOptionalPropertyTypes": true, // optional
     "skipLibCheck": true,
     "sourceMap": true,
+    "preserveConstEnums": true, // Add to preserve enum declarations during transpilation
     "types": ["node"], // Removed "monaco-editor" from global types
     "paths": {
       "'*'": [

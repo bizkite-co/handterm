@@ -24,6 +24,10 @@ declare global {
   }
 }
 
+export interface IWindowWithMonacoEditor extends Window {
+  monacoEditor?: IStandaloneCodeEditor;
+}
+
 export function isMonacoWindow(window: Window): window is Window & { monaco: typeof monaco } {
   return typeof window.monaco !== 'undefined';
 }

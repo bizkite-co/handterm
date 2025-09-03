@@ -18,7 +18,7 @@ class Logger {
 
   constructor(config: Partial<LoggerConfig> = {}) {
     this.config = {
-      level: config.level ?? LogLevel.INFO,
+      level: config.level ?? LogLevel.WARN, // Changed default from DEBUG to INFO
       prefix: config.prefix ?? 'HandTerm',
       logToConsole: config.logToConsole ?? true,
       logToFile: config.logToFile ?? false

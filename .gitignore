@@ -48,3 +48,4 @@ project-types.lst
 stdout.txt
 current.patch
 vite.pid
+urllog-output

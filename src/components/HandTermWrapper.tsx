@@ -33,7 +33,7 @@ import { TutorialManager } from './TutorialManager';
 
 const logger = createLogger({
   prefix: 'HandTermWrapper',
-  level: LogLevel.DEBUG
+  level: LogLevel.WARN
 });
 
 const getTimestamp = (date: Date): string => date.toTimeString().split(' ')[1] ?? '';

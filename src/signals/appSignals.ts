@@ -15,7 +15,7 @@ import { createPersistentSignal } from 'src/utils/signalPersistence';
 
 const logger = createLogger({
     prefix: 'AppSignals',
-    level: LogLevel.DEBUG
+    level: LogLevel.WARN
 });
 
 const currentOutputKey = 'current-output';

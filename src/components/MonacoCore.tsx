@@ -2,15 +2,15 @@ import { useRef, useEffect, useState } from 'react';
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 // Import namespace and init function
 import { initVimMode } from 'monaco-vim';
-import * as monacoVim from 'monaco-vim'; // Import namespace
-import { ActivityType, StorageKeys, type IStandaloneCodeEditor, type ITerminalAdapter } from '@handterm/types';
+import * as monacoVim from 'monaco-vim';
+import { ActivityType, StorageKeys, type IStandaloneCodeEditor, type ITerminalAdapter, type IDisposable, type IWindowWithMonacoEditor } from '@handterm/types';
 import { navigate } from '../utils/navigationUtils';
 import type { JSX } from 'react';
 import { createLogger, LogLevel } from '../utils/Logger';
 
 const logger = createLogger({
   prefix: 'MonacoCore',
-  level: LogLevel.DEBUG
+  level: LogLevel.WARN // Changed default from DEBUG to WARN
 });
 
 // Define commands checking monacoVim namespace import
@@ -18,20 +18,14 @@ export function defineVimCommands(
     editorRef: React.MutableRefObject<monaco.editor.IStandaloneCodeEditor | null>,
     toggleVideo?: () => boolean
 ): boolean {
-    logger.debug("Attempting to define Vim commands checking monacoVim namespace...");
+    logger.debug("Attempting to define Vim commands...");
 
-    let Vim: typeof monacoVim.VimMode.Vim | null = null;
-    try {
-        // Access Vim object via the namespace import, checking structure
-        Vim = monacoVim.VimMode.Vim;
-    } catch (e) {
-         logger.error("[defineVimCommands] Error accessing API via monacoVim namespace", e);
-    }
+    const Vim = monacoVim.VimMode.Vim;
 
 
     // Check if the Vim object and defineEx method exist
     if (Vim && typeof Vim.defineEx === 'function') {
-        logger.info("Vim API found via monacoVim namespace. Defining commands.");
+        logger.info("Vim API found. Defining commands.");
 
         Vim.defineEx('w', '', () => {
         if (editorRef.current) {
@@ -91,10 +85,10 @@ export function defineVimCommands(
             toggleVideo();
         }
         });
-        logger.info("Vim commands defined successfully via monacoVim namespace.");
+        logger.info("Vim commands defined successfully.");
         return true; // Indicate success
     } else {
-        logger.error('[defineVimCommands] Vim API not found via monacoVim namespace.');
+        logger.error('[defineVimCommands] Vim API not found.');
         return false; // Indicate failure
     }
 }
@@ -114,188 +108,200 @@ export default function MonacoCore({ value, language = 'text', toggleVideo, mode
   const containerRef = useRef<HTMLDivElement>(null);
   const statusBarRef = useRef<HTMLDivElement>(null);
   const [containerStyle] = useState({ flexGrow: 1, height: '100%', minHeight: '300px' });
-  const vimModeRef = useRef<boolean>(null); // Holds return of initVimMode
-  const initRan = useRef(false); // StrictMode flag
+  const vimModeRef = useRef<IDisposable | null>(null);
   const defineCommandsTimeoutRef = useRef<NodeJS.Timeout | null>(null); // Ref for the timeout
 
-  // Effect 1: Editor/Vim Initialization (runs once due to initRan flag)
+  // Effect 1: Editor Creation (runs once on mount)
   useEffect(() => {
-    if (initRan.current) {
-        logger.debug("Initialization effect: Skipping second run (StrictMode).");
-        return;
+    if (!containerRef.current) {
+      logger.warn("Editor creation effect: Container ref not available yet.");
+      return;
     }
 
-    if (!containerRef.current || (mode === 'editor' && !statusBarRef.current)) {
-        logger.warn("Initialization effect: Container or status bar ref not available yet.");
-        return;
-    }
-    logger.debug("Initialization effect: Refs available. Proceeding.");
+    logger.debug("Editor creation effect: Creating editor instance.");
+    const editorInstance = monaco.editor.create(containerRef.current, {
+      value,
+      language,
+      theme: 'vs-dark',
+      // Initial options, will be updated by another effect
+      minimap: { enabled: false },
+      automaticLayout: true,
+      scrollBeyondLastLine: false,
+      readOnly: false,
+      scrollbar: {
+        horizontal: 'hidden',
+        vertical: 'hidden'
+      },
+      lineNumbersMinChars: 2,
+    });
 
-    let editorInstance: monaco.editor.IStandaloneCodeEditor | null = null;
-    let resizeObserver: ResizeObserver | null = null;
+    editorRef.current = editorInstance;
+    (window as IWindowWithMonacoEditor).monacoEditor = editorInstance;
+    logger.debug("Editor creation effect: Editor instance assigned to ref.");
 
-    try {
-      logger.debug("Initialization effect: Before editor creation");
-
-      const getMonacoOptions = (currentMode: 'editor' | 'terminal'): monaco.editor.IEditorOptions => {
-        if (currentMode === 'terminal') {
-          return {
-            readOnly: false, // Allow input
-            lineNumbers: 'off',
-            wordWrap: 'on',
-            overviewRulerLanes: 0,
-            hideCursorInOverviewRuler: true,
-            scrollBeyondLastLine: false,
-            minimap: { enabled: false },
-            scrollbar: { vertical: 'hidden', horizontal: 'hidden' },
-            renderLineHighlight: 'none',
-            contextmenu: false,
-            quickSuggestions: false,
-            hover: { enabled: false },
-            links: false,
-            cursorStyle: 'block',
-            fontFamily: 'monospace',
-            fontSize: 14,
-            automaticLayout: true,
-          };
-        } else { // 'editor' mode
-          return {
-            minimap: { enabled: false },
-            automaticLayout: true,
-            scrollBeyondLastLine: false,
-            readOnly: false,
-            scrollbar: {
-              horizontal: 'hidden',
-              vertical: 'hidden'
-            },
-            lineNumbersMinChars: 2,
-          };
-        }
-      };
-
-      editorInstance = monaco.editor.create(containerRef.current, {
-        value,
-        language,
-        theme: 'vs-dark', // Apply theme here, outside of getMonacoOptions
-        ...getMonacoOptions(mode),
-      });
-      logger.debug("Initialization effect: monaco.editor.create completed.");
-
-      (window as any).monacoEditor = editorInstance;
-      editorRef.current = editorInstance; // Set the ref HERE
-      logger.debug("Initialization effect: Editor instance assigned to ref.");
-
-      if (onEditorReady) {
-        onEditorReady(editorInstance);
-      }
-
-      if (mode === 'editor') {
-        logger.debug("Initialization effect: Before initVimMode for editor mode");
-        if (statusBarRef.current) {
-          try {
-            vimModeRef.current = initVimMode(editorInstance, statusBarRef.current);
-            logger.debug(`Initialization effect: initVimMode called successfully.`);
-
-            // --- Define commands after a longer delay ---
-            logger.debug("Setting timeout to define Vim commands shortly...");
-            defineCommandsTimeoutRef.current = setTimeout(() => {
-                logger.debug("Timeout triggered: Attempting to define Vim commands now.");
-                defineVimCommands(editorRef, toggleVideo);
-                defineCommandsTimeoutRef.current = null; // Clear ref after execution
-            }, 500); // Increased Delay
-            // --- End define commands delay ---
-
-          } catch (vimError) {
-             logger.error("Initialization effect: Error during initVimMode:", vimError);
-          }
-        } else {
-          logger.warn("Initialization effect: statusBarRef not available, skipping initVimMode.");
-        }
-      } else if (mode === 'terminal') {
-        // For terminal mode, we might want to always be in insert mode or handle keybindings differently
-        // For now, we'll just disable vim mode for terminal.
-        logger.debug("Terminal mode: Skipping Vim initialization.");
-
-        // Handle Enter key for terminal mode
-        editorInstance.addAction({
-          id: 'terminal-send-command',
-          label: 'Send Terminal Command',
-          keybindings: [monaco.KeyCode.Enter],
-          precondition: '', // Changed from undefined/null to empty string
-          keybindingContext: '', // Changed from undefined/null to empty string
-          contextMenuGroupId: 'navigation',
-          run: (editor) => {
-            if (onEnter) {
-              const model = editor.getModel();
-              if (model) {
-                const lastLine = model.getLineCount();
-                const lineContent = model.getLineContent(lastLine);
-                onEnter(lineContent);
-                editor.setValue(''); // Clear input after sending
-              }
-            }
-          },
-        });
-      }
-
-
-      logger.debug("Initialization effect: Sequence complete.");
-      editorInstance.focus();
-      logger.debug("Initialization effect: editorInstance.focus() called.");
-
-      resizeObserver = new ResizeObserver(() => {});
-      if (containerRef.current) {
-        resizeObserver.observe(containerRef.current);
-        logger.debug("Initialization effect: ResizeObserver observing containerRef.");
-      }
-
-      initRan.current = true; // Mark as run
-      logger.debug("Initialization effect: Marked initRan.current = true");
-
-    } catch (error) {
-      logger.error('Initialization effect: Failed inside try block:', error);
+    if (onEditorReady) {
+      onEditorReady(editorInstance);
     }
 
-    // Cleanup function for Initialization effect
+    // Cleanup for editor creation
     return () => {
-      logger.debug("Cleanup effect running for Initialization");
-
-      // Clear the command definition timeout if it's still pending
-      if (defineCommandsTimeoutRef.current) {
-          logger.debug("Clearing pending defineVimCommands timeout.");
-          clearTimeout(defineCommandsTimeoutRef.current);
-          defineCommandsTimeoutRef.current = null;
-      }
-
-      if (resizeObserver && containerRef.current) {
-        resizeObserver.unobserve(containerRef.current);
-      }
-      resizeObserver?.disconnect();
-      logger.debug("Initialization cleanup: ResizeObserver disconnected");
-
-      if (vimModeRef.current && typeof vimModeRef.current.dispose === 'function') {
-          vimModeRef.current.dispose();
-          logger.debug("Initialization cleanup: Vim mode disposed");
-      }
-      vimModeRef.current = null;
-
-      if (editorRef.current) { // Use ref for disposal check
-          editorRef.current.dispose();
-          logger.debug("Initialization cleanup: Editor instance disposed");
-      }
-      editorRef.current = null; // Clear the ref
-
-      (window as any).monacoEditor = undefined;
-      logger.debug("Initialization cleanup: Refs and window properties cleared");
-
-      initRan.current = false; // Reset flag on unmount
-      logger.debug("Initialization cleanup: Reset initRan.current = false");
+      logger.debug("Editor creation cleanup: Disposing editor instance.");
+      editorRef.current?.dispose();
+      editorRef.current = null;
+      (window as IWindowWithMonacoEditor).monacoEditor = undefined;
     };
-  }, [language, mode, onEditorReady, onEnter, toggleVideo]); // Dependency array for initialization
+  }, []); // Empty dependency array: runs once on mount and once on unmount
+
+  // Effect 2: Model and Options Configuration (runs on mode/language/value changes)
+  useEffect(() => {
+    const editor = editorRef.current;
+    if (!editor) return;
+
+    logger.debug("Model/Options effect: Configuring editor based on mode/language/value.");
+
+    const getMonacoOptions = (currentMode: 'editor' | 'terminal'): monaco.editor.IEditorOptions => {
+      if (currentMode === 'terminal') {
+        return {
+          readOnly: false,
+          lineNumbers: 'off',
+          wordWrap: 'on',
+          overviewRulerLanes: 0,
+          hideCursorInOverviewRuler: true,
+          scrollBeyondLastLine: false,
+          minimap: { enabled: false },
+          scrollbar: { vertical: 'hidden', horizontal: 'hidden' },
+          renderLineHighlight: 'none',
+          contextmenu: false,
+          quickSuggestions: false,
+          hover: { enabled: false },
+          links: false,
+          cursorStyle: 'block',
+          fontFamily: 'monospace',
+          fontSize: 14,
+          automaticLayout: true,
+        };
+      } else { // 'editor' mode
+        return {
+          minimap: { enabled: false },
+          automaticLayout: true,
+          scrollBeyondLastLine: false,
+          readOnly: false,
+          scrollbar: {
+            horizontal: 'hidden',
+            vertical: 'hidden'
+          },
+          lineNumbersMinChars: 2,
+        };
+      }
+    };
+
+    editor.updateOptions(getMonacoOptions(mode));
+
+    // Handle model creation/setting for terminal mode
+    if (mode === 'terminal') {
+      if (!editor.getModel() || editor.getModel()?.getLanguageId() !== 'plaintext') {
+        const newModel = monaco.editor.createModel('', 'plaintext');
+        editor.setModel(newModel);
+      }
+    } else { // editor mode
+      // Ensure model language is correct
+      if (editor.getModel()?.getLanguageId() !== language) {
+        monaco.editor.setModelLanguage(editor.getModel()!, language!);
+      }
+    }
+
+    // Value synchronization
+    const model = editor.getModel();
+    if (model && model.getValue() !== value) {
+      logger.debug("Model/Options effect: Updating editor value.");
+      editor.setValue(value);
+    }
+
+  }, [editorRef.current, language, mode, value]); // Dependencies for model/options
+
+  // Effect 3: Vim Mode and Enter Key Handling (runs on editor instance or mode changes)
+  useEffect(() => {
+    const editor = editorRef.current;
+    if (!editor) return;
+
+    logger.debug("Vim/Enter key effect: Configuring keybindings based on mode.");
+
+    // Dispose of previous Vim mode if it exists
+    if (vimModeRef.current && typeof vimModeRef.current.dispose === 'function') {
+      vimModeRef.current.dispose();
+      vimModeRef.current = null;
+      logger.debug("Vim/Enter key effect: Disposed previous Vim mode.");
+    }
+    // Clear any pending command definition timeouts
+    if (defineCommandsTimeoutRef.current) {
+      clearTimeout(defineCommandsTimeoutRef.current);
+      defineCommandsTimeoutRef.current = null;
+      logger.debug("Vim/Enter key effect: Cleared pending Vim command timeout.");
+    }
+
+    if (mode === 'editor') {
+      logger.debug("Vim/Enter key effect: Initializing Vim mode for editor.");
+      if (statusBarRef.current) {
+        try {
+          vimModeRef.current = initVimMode(editor, statusBarRef.current);
+          logger.debug(`Vim/Enter key effect: initVimMode called successfully.`);
+
+          defineCommandsTimeoutRef.current = setTimeout(() => {
+            logger.debug("Timeout triggered: Attempting to define Vim commands now.");
+            defineVimCommands(editorRef, toggleVideo);
+            defineCommandsTimeoutRef.current = null;
+          }, 500);
+        } catch (vimError) {
+          logger.error("Vim/Enter key effect: Error during initVimMode:", vimError);
+        }
+      } else {
+        logger.warn("Vim/Enter key effect: statusBarRef not available, skipping initVimMode.");
+      }
+    } else if (mode === 'terminal') {
+      logger.debug("Vim/Enter key effect: Configuring Enter key for terminal mode.");
+      // Ensure no duplicate actions if this effect runs multiple times
+      editor.addAction({
+        id: 'terminal-send-command',
+        label: 'Send Terminal Command',
+        keybindings: [monaco.KeyCode.Enter],
+        precondition: '',
+        keybindingContext: '',
+        contextMenuGroupId: 'navigation',
+        run: (editor) => {
+          if (onEnter) {
+            const model = editor.getModel();
+            if (model) {
+              const lastLine = model.getLineCount();
+              const lineContent = model.getLineContent(lastLine);
+              onEnter(lineContent);
+              editor.setValue('');
+            }
+          }
+        },
+      });
+    }
+  }, [editorRef.current, mode, onEnter, toggleVideo]); // Dependencies for Vim/Enter key
+
+  // Effect 4: Resize Observer (runs once on mount)
+  useEffect(() => {
+    const editor = editorRef.current;
+    if (!editor || !containerRef.current) return;
+
+    logger.debug("ResizeObserver effect: Setting up ResizeObserver.");
+    const resizeObserver = new ResizeObserver(() => {
+      editor.layout();
+    });
+    resizeObserver.observe(containerRef.current);
+
+    return () => {
+      logger.debug("ResizeObserver cleanup: Disconnecting ResizeObserver.");
+      resizeObserver.disconnect();
+    };
+  }, []); // Empty dependency array: runs once on mount and once on unmount
 
   // Removed polling effect
 
-  // Effect 3: Value Synchronization
+  // Effect 5: Value Synchronization
   useEffect(() => {
     const editor = editorRef.current;
     if (!editor) return; // Check if editor exists

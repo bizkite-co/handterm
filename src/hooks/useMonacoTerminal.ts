@@ -1,5 +1,6 @@
-import { useEffect, useState, useCallback } from 'react';
-import type { ITerminalAdapter, IStandaloneCodeEditor, IDisposable } from '@handterm/types';
+import { useEffect, useState, useCallback, useMemo } from 'react';
+import type { ITerminalAdapter, IStandaloneCodeEditor } from '@handterm/types';
+import type { IDisposable } from 'packages/types/src/monaco';
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 
 export const useMonacoTerminal = (editor: IStandaloneCodeEditor | null): ITerminalAdapter => {
@@ -13,7 +14,7 @@ export const useMonacoTerminal = (editor: IStandaloneCodeEditor | null): ITermin
       editor.setModel(newModel);
       setModel(newModel);
 
-      const disposable = editor.onDidChangeModelContent((event) => {
+      const disposable = editor.onDidChangeModelContent((event: monaco.editor.IModelContentChangedEvent) => {
         const lastChange = event.changes[event.changes.length - 1];
         if (lastChange && lastChange.text.length > 0) {
           onDataCallbacks.forEach(callback => callback(lastChange.text));
@@ -90,7 +91,7 @@ export const useMonacoTerminal = (editor: IStandaloneCodeEditor | null): ITermin
     return null;
   }, [editor]);
 
-  return {
+  return useMemo(() => ({
     write,
     clear,
     focus,
@@ -98,5 +99,5 @@ export const useMonacoTerminal = (editor: IStandaloneCodeEditor | null): ITermin
     onResize,
     fit,
     proposeGeometry,
-  };
+  }), [write, clear, focus, onData, onResize, fit, proposeGeometry]);
 };

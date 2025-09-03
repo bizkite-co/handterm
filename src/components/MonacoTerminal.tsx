@@ -6,7 +6,7 @@ import { createLogger, LogLevel } from '../utils/Logger';
 
 const logger = createLogger({
   prefix: 'MonacoTerminal',
-  level: LogLevel.DEBUG
+  level: LogLevel.WARN
 });
 
 interface MonacoTerminalProps {

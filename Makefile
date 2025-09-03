@@ -78,14 +78,14 @@ lint-style: ## Check code style with Prettier
 pretest: ## Run pre-test script
 	bash scripts/check_jsdoc_removals.sh
 
-test: ## Run unit tests
-	npm run test:unit
+test: test-unit ## Run unit tests
+	@echo "Running the unit tests"
 
 test-all: ## Run all tests (unit and e2e)
 	npm run test:unit; npm run test:e2e
 
 test-unit: ## Run unit tests
-	mkdir -p vitest-output; rm -rf vitest-output/*; vitest --run
+	mkdir -p vitest-output; rm -rf vitest-output/*; npx vitest --run
 
 test-unit-save: ## Run unit tests and save results to JSON
 	mkdir -p vitest-output; rm -rf vitest-output/*; vitest --run --reporter=json --outputFile=./vitest-output/vitest.json

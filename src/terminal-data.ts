@@ -2,7 +2,7 @@ import { createLogger, LogLevel } from './utils/Logger';
 
 const logger = createLogger({
   prefix: 'TerminalData',
-  level: LogLevel.DEBUG
+  level: LogLevel.WARN
 });
 
 function openDatabase(): IDBOpenDBRequest {
