@@ -14,22 +14,30 @@ dev-prepare: ## Prepare development environment
 	npm run clean && npm install
 
 dev-watch: ## Watch for changes and recompile
-	vite
+	npx vite
 
-dev: ## Run development server in background
-	nohup vite --no-open > vite.log 2>&1 & echo $! > vite.pid
+dev: dev-stop ## Run development server in background
+	echo "Starting Vite server..."; \
+	nohup npx vite --no-open > vite.log 2>&1 & \
+	echo $$! > vite.pid; \
+	echo "Vite server started with PID $$(cat vite.pid)"; \
 
 dev-stop: ## Stop development server
-	kill $(cat vite.pid) && rm vite.pid
+	@echo "Attempting to stop all Vite processes using pkill..."
+	-pkill -f vite
+	@echo "Vite processes stopped. Checking status..."
+	echo "Vite server stopped" > vite.log 2>&1
+	@make dev-status
 
 dev-status: ## Get development server status
-	ps -p $(cat vite.pid) && cat vite.log
+	@ps aug | rg vite
+	@cat vite.log
 
 build-package: ## Build packages
 	cd packages/types && rm -rf dist && npm run build && cd - && npm install --legacy-peer-deps
 
 build: ## Build the project
-	npm run build:package && vite build
+	npm run build:package && npx vite build
 
 clean: ## Clean project artifacts
 	rm -rf dist && rm -rf node_modules && npm cache verify
@@ -107,7 +115,7 @@ format: ## Format code with Prettier
 	prettier --write "src/**/*.{ts,tsx,js,jsx}"
 
 preview: ## Preview the build locally
-	vite preview
+	npx vite preview
 
 restart-status: ## Restart status checks
 	concurrently -n 'TYPES,LINT,CHECKLIST' -c 'bgBlue.bold,bgMagenta.bold,bgGreen.bold' "npm run type-check 2>&1 | tee .type-errors.log" "npm run lint" "node scripts/checklist-status.js"

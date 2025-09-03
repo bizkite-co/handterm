@@ -20,10 +20,10 @@ export function defineVimCommands(
 ): boolean {
     logger.debug("Attempting to define Vim commands checking monacoVim namespace...");
 
-    let Vim: any = null;
+    let Vim: typeof monacoVim.VimMode.Vim | null = null;
     try {
         // Access Vim object via the namespace import, checking structure
-        Vim = (monacoVim as any)?.VimMode?.Vim;
+        Vim = monacoVim.VimMode.Vim;
     } catch (e) {
          logger.error("[defineVimCommands] Error accessing API via monacoVim namespace", e);
     }
