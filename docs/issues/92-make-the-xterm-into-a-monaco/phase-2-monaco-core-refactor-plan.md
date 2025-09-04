@@ -1,6 +1,6 @@
 # Phase 2: Monaco Implementation - Plan for MonacoCore.tsx Refactor and Terminal Integration
 
-*   **Status:** In Progress
+*   **Status:** Blocked (UI functional, but with issues; tests failing)
 *   **Parent:** [`_index.md`](./_index.md)
 
 ## Goal:
@@ -11,14 +11,19 @@ Modify `MonacoCore.tsx` to be a versatile component that can function as both a 
 
 *   `MonacoCore` must accept a `mode` parameter (either "editor" or "terminal") to control its behavior. This parameter is now required for `MonacoCore` and has been added to relevant test specifications.
 
-## Remaining High-Level Steps:
+## Remaining High-Level Steps: (Revised based on current status)
 
-1.  **Implement prompt logic.**
-2.  **Implement `Enter` key command submission.**
-3.  **Configure Vim mode to start in Insert Mode.**
-4.  **Map double-caps-lock to `Esc`.**
-5.  **Verify Terminal Display:** Ensure the terminal loads and displays correctly in the web app.
-6.  **Update Playwright Tests:** Review and update `EditorPage.ts` and related Playwright tests to accommodate the refactored `MonacoCore` and `MonacoTerminal`.
+ 1.  **Address remaining `MonacoCore.tsx` linting/TypeScript errors:**
+     *   Correct `monaco-vim` imports and usage.
+     *   Ensure `IDisposable` is imported from `monaco-editor/esm/vs/editor/editor.api`.
+     *   Ensure `IWindowWithMonacoEditor` is correctly declared globally (no import needed in `MonacoCore.tsx`).
+     *   Remove unused `initRan` ref.
+ 2.  **Address the "Gutter" Issue:** Apply Monaco Editor options (`"glyphMargin": false`, etc.) in `MonacoCore.tsx` for terminal mode.
+ 3.  **Implement Prompt Display:** Modify `MonacoTerminal.tsx` and `MonacoCore.tsx` to display the terminal prompt.
+ 4.  **Integrate `Enter` Key Command Submission:** Implement command processing for the `Enter` key in `useMonacoTerminal.ts` and `MonacoCore.tsx`, and integrate with `HandTermWrapper.tsx`.
+ 5.  **Address Slow Typing Performance:** Investigate and optimize `onData` callback in `useMonacoTerminal.ts` and other potential bottlenecks.
+ 6.  **Revisit Automated Test Failures:** (Lower priority, after UI is stable).
+ 7.  **Address Browser Warning:** "Initial Sync: Signal (normal) differs from URL (tutorial). Synchronizing signal." (Lower priority).
 
 ## Notes & Issues:
 
@@ -29,8 +34,15 @@ Modify `MonacoCore.tsx` to be a versatile component that can function as both a 
     *   `src/components/MonacoCore.q.spec.tsx`: "TypeError: Unknown file extension ".css" for .../standalone-tokens.css"
     *   `src/hooks/useTerminal.test.ts` and `src/__tests__/hooks/useActivityMediator.test.ts`: "Error: Cannot find package 'preact' imported from .../@preact/signals/dist/signals.mjs"
     *   `src/components/MonacoCore.spec.tsx`: "AssertionError: expected "spy" to be called with arguments: \[ …(2) ]" (specifically for `initializes Vim mode`).
-*   **Browser Runtime Error:** When loading the web application, an "Uncaught Error: InstantiationService has been disposed at useMonacoTerminal.ts:13:14" occurs within the `<MonacoTerminal>` component. This suggests a lifecycle management issue with the Monaco Editor instance within the `useMonacoTerminal` hook.
-*   **Browser Warning:** "Initial Sync: Signal (normal) differs from URL (tutorial). Synchronizing signal." This indicates a state synchronization issue, possibly related to how activities are managed.
+    *   Playwright E2E tests are currently paused due to persistent TypeScript transpilation issues (`SyntaxError: TypeScript enum is not supported in strip-only mode`).
+*   **Browser Runtime Error: "Uncaught Error: InstantiationService has been disposed"**: *Resolved*.
+*   **Browser Warning:** "Initial Sync: Signal (normal) differs from URL (tutorial). Synchronizing signal." This indicates a state synchronization issue, possibly related to how activities are managed. *Still present, not yet addressed.*
+*   **New UI Issues:**
+    *   Excessively verbose logging: Partially addressed in `Logger.ts`, but `createLogger` calls in components still need to be updated to `LogLevel.WARN`.
+    *   Missing prompt in the terminal.
+    *   "Gutter" of about 3 character widths on the left side.
+    *   Slow typing performance.
+    *   `Enter` key clears terminal but does not submit commands.
 
 ```mermaid
 graph TD

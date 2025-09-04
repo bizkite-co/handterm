@@ -1,9 +1,11 @@
+
 import { useRef, useEffect, useState } from 'react';
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 // Import namespace and init function
 import { initVimMode } from 'monaco-vim';
-import * as monacoVim from 'monaco-vim';
-import { ActivityType, StorageKeys, type IStandaloneCodeEditor, type ITerminalAdapter, type IDisposable, type IWindowWithMonacoEditor } from '@handterm/types';
+import * as monacoVim from 'monaco-vim'; // Import namespace
+import { ActivityType, StorageKeys, type IStandaloneCodeEditor, type ITerminalAdapter } from '@handterm/types';
+import type { IDisposable, IWindowWithMonacoEditor } from 'packages/types/src/monaco';
 import { navigate } from '../utils/navigationUtils';
 import type { JSX } from 'react';
 import { createLogger, LogLevel } from '../utils/Logger';
@@ -15,82 +17,87 @@ const logger = createLogger({
 
 // Define commands checking monacoVim namespace import
 export function defineVimCommands(
-    editorRef: React.MutableRefObject<monaco.editor.IStandaloneCodeEditor | null>,
-    toggleVideo?: () => boolean
+  editorRef: React.MutableRefObject<monaco.editor.IStandaloneCodeEditor | null>,
+  toggleVideo?: () => boolean
 ): boolean {
-    logger.debug("Attempting to define Vim commands...");
+  logger.debug("Attempting to define Vim commands...");
 
-    const Vim = monacoVim.VimMode.Vim;
+  let Vim: typeof monacoVim.VimMode.Vim | null = null;
+  try {
+    // Access Vim object via the namespace import, checking structure
+    Vim = monacoVim.VimMode.Vim;
+  } catch (e) {
+    logger.error("[defineVimCommands] Error accessing API via monacoVim namespace", e);
+  }
 
 
-    // Check if the Vim object and defineEx method exist
-    if (Vim && typeof Vim.defineEx === 'function') {
-        logger.info("Vim API found. Defining commands.");
+  // Check if the Vim object and defineEx method exist
+  if (Vim && typeof Vim.defineEx === 'function') {
+    logger.info("Vim API found. Defining commands.");
 
-        Vim.defineEx('w', '', () => {
+    Vim.defineEx('w', '', () => {
+      if (editorRef.current) {
+        const content = editorRef.current.getValue();
+        localStorage.setItem(StorageKeys.editContent, JSON.stringify(content));
+        logger.debug(':w command executed, content saved.');
+      }
+    });
+
+    // --- Restore :q definition with error handling ---
+    Vim.defineEx('q', '', () => {
+      logger.debug(':q command triggered. Attempting to navigate...');
+      try {
+        navigate({ activityKey: ActivityType.NORMAL });
+        logger.debug(':q command: navigate called. Removing editContent from localStorage.');
+        localStorage.removeItem(StorageKeys.editContent);
+      } catch (error) {
+        logger.error(':q command: Error during navigation or localStorage removal', { error });
+      }
+    });
+    // --- End Restore :q ---
+
+    // ENHANCED: Add error handling to :q! definition
+    Vim.defineEx('q!', '', () => {
+      logger.debug(':q! command triggered. Attempting to navigate...');
+      try {
+        navigate({ activityKey: ActivityType.NORMAL });
+        logger.debug(':q! command: navigate called. Removing editContent from localStorage.');
+        localStorage.removeItem(StorageKeys.editContent);
+      } catch (error) {
+        logger.error(':q! command: Error during navigation or localStorage removal', { error });
+      }
+    });
+    // END ENHANCED
+
+    // ENHANCED: Add error handling to :wq definition
+    Vim.defineEx('wq', '', () => {
+      logger.debug(':wq command triggered. Attempting to save and navigate...');
+      try {
         if (editorRef.current) {
-            const content = editorRef.current.getValue();
-            localStorage.setItem(StorageKeys.editContent, JSON.stringify(content));
-            logger.debug(':w command executed, content saved.');
+          const content = editorRef.current.getValue();
+          localStorage.setItem(StorageKeys.editContent, JSON.stringify(content));
+          logger.debug(':wq command: content saved.');
         }
-        });
+        navigate({ activityKey: ActivityType.NORMAL });
+        logger.debug(':wq command: navigate called. Removing editContent from localStorage.');
+        localStorage.removeItem(StorageKeys.editContent);
+      } catch (error) {
+        logger.error(':wq command: Error during save, navigation, or localStorage removal', { error });
+      }
+    });
+    // END ENHANCED
 
-        // --- Restore :q definition with error handling ---
-        Vim.defineEx('q', '', () => {
-          logger.debug(':q command triggered. Attempting to navigate...');
-          try {
-            navigate({ activityKey: ActivityType.NORMAL });
-            logger.debug(':q command: navigate called. Removing editContent from localStorage.');
-            localStorage.removeItem(StorageKeys.editContent);
-          } catch (error) {
-            logger.error(':q command: Error during navigation or localStorage removal', { error });
-          }
-        });
-        // --- End Restore :q ---
-
-        // ENHANCED: Add error handling to :q! definition
-        Vim.defineEx('q!', '', () => {
-          logger.debug(':q! command triggered. Attempting to navigate...');
-          try {
-            navigate({ activityKey: ActivityType.NORMAL });
-            logger.debug(':q! command: navigate called. Removing editContent from localStorage.');
-            localStorage.removeItem(StorageKeys.editContent);
-          } catch (error) {
-            logger.error(':q! command: Error during navigation or localStorage removal', { error });
-          }
-        });
-        // END ENHANCED
-
-        // ENHANCED: Add error handling to :wq definition
-        Vim.defineEx('wq', '', () => {
-          logger.debug(':wq command triggered. Attempting to save and navigate...');
-          try {
-            if (editorRef.current) {
-                const content = editorRef.current.getValue();
-                localStorage.setItem(StorageKeys.editContent, JSON.stringify(content));
-                logger.debug(':wq command: content saved.');
-            }
-            navigate({ activityKey: ActivityType.NORMAL });
-            logger.debug(':wq command: navigate called. Removing editContent from localStorage.');
-            localStorage.removeItem(StorageKeys.editContent);
-          } catch (error) {
-            logger.error(':wq command: Error during save, navigation, or localStorage removal', { error });
-          }
-        });
-        // END ENHANCED
-
-        Vim.defineEx('vid', '', () => {
-        if (toggleVideo) {
-            logger.debug(':vid command triggered.');
-            toggleVideo();
-        }
-        });
-        logger.info("Vim commands defined successfully.");
-        return true; // Indicate success
-    } else {
-        logger.error('[defineVimCommands] Vim API not found.');
-        return false; // Indicate failure
-    }
+    Vim.defineEx('vid', '', () => {
+      if (toggleVideo) {
+        logger.debug(':vid command triggered.');
+        toggleVideo();
+      }
+    });
+    logger.info("Vim commands defined successfully.");
+  } else {
+    logger.error('[defineVimCommands] Vim API not found.');
+    return false; // Indicate failure
+  }
 }
 
 interface MonacoCoreProps {
@@ -109,7 +116,7 @@ export default function MonacoCore({ value, language = 'text', toggleVideo, mode
   const statusBarRef = useRef<HTMLDivElement>(null);
   const [containerStyle] = useState({ flexGrow: 1, height: '100%', minHeight: '300px' });
   const vimModeRef = useRef<IDisposable | null>(null);
-  const defineCommandsTimeoutRef = useRef<NodeJS.Timeout | null>(null); // Ref for the timeout
+  const defineCommandsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Effect 1: Editor Creation (runs once on mount)
   useEffect(() => {
@@ -214,7 +221,7 @@ export default function MonacoCore({ value, language = 'text', toggleVideo, mode
     // Value synchronization
     const model = editor.getModel();
     if (model && model.getValue() !== value) {
-      logger.debug("Model/Options effect: Updating editor value.");
+      logger.debug("ValueSync effect: Updating editor value.");
       editor.setValue(value);
     }
 
@@ -299,8 +306,6 @@ export default function MonacoCore({ value, language = 'text', toggleVideo, mode
       resizeObserver.disconnect();
     };
   }, []); // Empty dependency array: runs once on mount and once on unmount
-
-  // Removed polling effect
 
   // Effect 5: Value Synchronization
   useEffect(() => {
