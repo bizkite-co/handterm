@@ -19,9 +19,10 @@ body {
     font-family: var(--terminal-font-family);
 }
 
-#app {
+.app {
     flex-direction: column;
     justify-content: flex-end;
+    margin: 10px;
     /* Aligns children (HandexTerm) to the bottom */
 }
 
@@ -419,7 +420,7 @@ div.cm-content {
   background-color: #0007;
 }
 
-/* Monaco editor styling */
+/* Monaco editor styling — transparent background for terminal mode via 'handterm-transparent' theme */
 
 div.monaco-editor-container {
   background: #0000;
@@ -438,18 +439,6 @@ div.monaco-editor-container > section > div > div > div.overflow-guard {
   background: #0000;
 }
 
-div.monaco-editor-container > section > div > div > div.overflow-guard > div.monaco-scrollable-element.editor-scrollable.vs-dark {
-  background: #0000;
-}
-
-div.monaco-editor-container > section > div > div > div.overflow-guard > div.monaco-scrollable-element.editor-scrollable.vs-dark > div.lines-content.monaco-editor-background {
-  background: #0000;
-}
-
-div.monaco-editor-container > section > div > div > div.overflow-guard > div.monaco-scrollable-element.editor-scrollable.vs-dark > div.lines-content.monaco-editor-background > div.view-lines.monaco-mouse-cursor-text {
-  background: #0000;
-}
-
 div.view-line {
   background: #0000;
 }
@@ -460,9 +449,43 @@ div.view-line > span {
 }
 
 div.monaco-editor-container > section > div > div > div.overflow-guard > div.margin {
-  background: #0005;
+  background: #0000;
 }
 
 div.monaco-editor-container > section > div > div > div.overflow-guard > div.minimap.slider-mouseover > canvas.minimap-decorations-layer {
   background: #0000;
+}
+
+/* Prompt header */
+pre#prompt-header {
+  margin: 0;
+  padding: 0;
+  font-size: inherit;
+  font-family: inherit;
+}
+
+pre#prompt-header .timestamp {
+  padding-right: 10px;
+  opacity: 50%;
+}
+
+/* Remove Monaco focus border/outline */
+.monaco-editor.hasFocus,
+.monaco-editor {
+  outline: none !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* Remove any padding on Monaco container */
+div.monaco-editor-container {
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* Mobile responsive app margin */
+@media (max-width: 600px) {
+  .app {
+    margin: 5px;
+  }
 }

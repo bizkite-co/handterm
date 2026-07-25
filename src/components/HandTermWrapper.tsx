@@ -53,10 +53,17 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
   const [lastTypedCharacter] = useState<string | null>(null);
   const [, setErrorCharIndex] = useState<number | undefined>(undefined);
   const [githubUsername] = useState<string | null>(null);
-  const [showIntro, setShowIntro] = useState(true);
+  const [showIntro, setShowIntro] = useState(() => !localStorage.getItem(StorageKeys.hasVisited));
   const [userName] = useState<string | null>(null); // Removed setUserName as it's not used
   const commandTime = useComputed(() => commandTimeSignal.value);
   const [treeItems, setTreeItems] = useState<TreeItem[]>([]);
+
+  // Mark user as visited so IntroText only shows on first visit
+  useEffect(() => {
+    if (showIntro) {
+      localStorage.setItem(StorageKeys.hasVisited, 'true');
+    }
+  }, []);
 
   const activity = useComputed(() => activitySignal.value);
   const currentActivityValue = activity.value;

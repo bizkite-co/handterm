@@ -2,6 +2,7 @@ import { useRef, useState, useEffect, useCallback } from 'react';
 import MonacoCore from './MonacoCore';
 import { useMonacoTerminal } from '../hooks/useMonacoTerminal';
 import type { IStandaloneCodeEditor } from '@handterm/types';
+import type { VimModeInstance } from 'monaco-vim';
 import { createLogger, LogLevel } from '../utils/Logger';
 
 const logger = createLogger({
@@ -18,7 +19,9 @@ export default function MonacoTerminal({ onTerminalReady, onEnter }: MonacoTermi
   const [editorInstance, setEditorInstance] = useState<IStandaloneCodeEditor | null>(null);
   // Tracks the current vim mode so useMonacoTerminal can defer keys to vim in normal mode.
   const currentModeRef = useRef<string>('insert');
-  const terminalAdapter = useMonacoTerminal(editorInstance, currentModeRef);
+  // Exposes the vim instance so useMonacoTerminal can trigger mode changes (e.g. Alt+S → normal).
+  const vimInstanceRef = useRef<VimModeInstance | null>(null);
+  const terminalAdapter = useMonacoTerminal(editorInstance, currentModeRef, vimInstanceRef);
 
   useEffect(() => {
     if (editorInstance && onTerminalReady) {
@@ -45,6 +48,7 @@ export default function MonacoTerminal({ onTerminalReady, onEnter }: MonacoTermi
       onEditorReady={handleEditorReady}
       onEnter={onEnter}
       onVimModeChange={handleVimModeChange}
+      vimModeInstanceRef={vimInstanceRef}
     />
   );
 }

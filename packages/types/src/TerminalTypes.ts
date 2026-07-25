@@ -72,7 +72,8 @@ export const StorageKeys = {
     gitHubUsername: 'githubUserName',
     editContent: 'editContent',
     completedTutorials: 'completed-tutorials',
-    tutorialState: 'tutorial-state'
+    tutorialState: 'tutorial-state',
+    hasVisited: 'handterm-has-visited'
 } as const;
 export type StorageKeys = (typeof StorageKeys)[keyof typeof StorageKeys];
 

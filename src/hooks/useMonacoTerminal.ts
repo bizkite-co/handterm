@@ -1,7 +1,9 @@
 import { useEffect, useState, useCallback, useMemo, useRef, type MutableRefObject } from 'react';
 import { ActivityType, type ITerminalAdapter, type IStandaloneCodeEditor } from '@handterm/types';
 import type { IDisposable } from 'monaco-editor/esm/vs/editor/editor.api';
+import type { VimModeInstance } from 'monaco-vim';
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
+import * as monacoVim from 'monaco-vim';
 import { TERMINAL_CONSTANTS } from 'src/constants/terminal';
 import {
   isInLoginProcessSignal,
@@ -23,9 +25,17 @@ import { useCharacterHandler } from './useCharacterHandler';
 import { useCommand } from './useCommand';
 import { useWPMCalculator } from './useWPMCaculator';
 
+// ── Configurable vim keybinding ──────────────────────────────────────────────
+// Which key combination exits vim insert mode (like NVim's `:imap`).
+// Set to 'Escape' for traditional vim, or 'Alt+s' to avoid Monaco stealing focus.
+// To change: update this constant, or lift to a localStorage/signal-based setting.
+const VIM_ESCAPE_KEY_COMBO = 'Alt+s';
+// ─────────────────────────────────────────────────────────────────────────────
+
 export const useMonacoTerminal = (
   editor: IStandaloneCodeEditor | null,
-  currentModeRef?: MutableRefObject<string>
+  currentModeRef?: MutableRefObject<string>,
+  vimInstanceRef?: MutableRefObject<VimModeInstance | null>
 ): ITerminalAdapter => {
   const [model, setModel] = useState<monaco.editor.ITextModel | null>(null);
   const [onDataCallbacks, setOnDataCallbacks] = useState<((data: string) => void)[]>([]);
@@ -248,6 +258,9 @@ export const useMonacoTerminal = (
       if (!currentModel || currentModel.getLanguageId() !== 'plaintext') {
           currentModel = monaco.editor.createModel(TERMINAL_CONSTANTS.PROMPT, 'plaintext');
           editor.setModel(currentModel);
+      } else if (currentModel.getValue() === '') {
+          // Editor was created with empty value — set the prompt
+          currentModel.setValue(TERMINAL_CONSTANTS.PROMPT);
       }
       setModel(currentModel);
 
@@ -259,7 +272,15 @@ export const useMonacoTerminal = (
           return;
         }
 
-        // Handle Enter
+        // Handle Shift+Enter → insert newline
+        if (e.keyCode === monaco.KeyCode.Enter && e.shiftKey) {
+          e.preventDefault();
+          e.stopPropagation();
+          handleDataRef.current('\n');
+          return;
+        }
+
+        // Handle Enter → submit command
         if (e.keyCode === monaco.KeyCode.Enter) {
           e.preventDefault();
           e.stopPropagation();
@@ -280,6 +301,24 @@ export const useMonacoTerminal = (
           e.preventDefault();
           e.stopPropagation();
           handleDataRef.current('\x03');
+          return;
+        }
+
+        // Handle configurable insert-mode exit key (Alt+S by default, like NVim's imap)
+        if (VIM_ESCAPE_KEY_COMBO === 'Alt+s' && e.browserEvent.key === 's' && e.altKey) {
+          if (currentModeRef?.current !== 'normal' && vimInstanceRef?.current) {
+            e.preventDefault();
+            e.stopPropagation();
+            try {
+              monacoVim.VimMode.Vim.handleKey(vimInstanceRef.current, '<Esc>');
+            } catch (err) {
+              logger.warn('Alt+S: could not trigger vim exit-insert', err);
+            }
+          } else {
+            // Already in normal mode — just consume the event
+            e.preventDefault();
+            e.stopPropagation();
+          }
           return;
         }
 

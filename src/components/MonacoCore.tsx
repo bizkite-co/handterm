@@ -15,6 +15,21 @@ const logger = createLogger({
   level: LogLevel.WARN // Changed default from DEBUG to WARN
 });
 
+// Custom Monaco theme with transparent background for terminal mode
+monaco.editor.defineTheme('handterm-transparent', {
+  base: 'vs-dark',
+  inherit: true,
+  rules: [],
+  colors: {
+    'editor.background': '#00000000',
+    'editor.foreground': '#d4d4d4',
+    'editorCursor.foreground': '#d4d4d4',
+    'editor.lineHighlightBackground': '#00000000',
+    'editor.selectionBackground': '#264f7866',
+    'editor.inactiveSelectionBackground': '#3a3d4100',
+  }
+});
+
 // Define commands checking monacoVim namespace import
 export function defineVimCommands(
   editorRef: React.MutableRefObject<monaco.editor.IStandaloneCodeEditor | null>,
@@ -109,9 +124,10 @@ interface MonacoCoreProps {
   onEditorReady?: (editor: monaco.editor.IStandaloneCodeEditor) => void; // For editor mode
   onEnter?: (value: string) => void; // For terminal mode to handle Enter key
   onVimModeChange?: (mode: string) => void; // Notifies caller of vim mode changes (terminal)
+  vimModeInstanceRef?: React.MutableRefObject<import('monaco-vim').VimModeInstance | null>; // Exposes vim instance to caller
 }
 
-export default function MonacoCore({ value, language = 'text', toggleVideo, mode, onEditorReady, onEnter, onVimModeChange }: MonacoCoreProps): JSX.Element {
+export default function MonacoCore({ value, language = 'text', toggleVideo, mode, onEditorReady, onEnter, onVimModeChange, vimModeInstanceRef }: MonacoCoreProps): JSX.Element {
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const statusBarRef = useRef<HTMLDivElement>(null);
@@ -130,7 +146,7 @@ export default function MonacoCore({ value, language = 'text', toggleVideo, mode
     const editorInstance = monaco.editor.create(containerRef.current, {
       value,
       language,
-      theme: 'vs-dark',
+      theme: mode === 'terminal' ? 'handterm-transparent' : 'vs-dark',
       // Initial options, will be updated by another effect
       minimap: { enabled: false },
       automaticLayout: true,
@@ -175,6 +191,9 @@ export default function MonacoCore({ value, language = 'text', toggleVideo, mode
           wordWrap: 'on',
           overviewRulerLanes: 0,
           glyphMargin: false, // Remove gutter
+          lineDecorationsWidth: 0,
+          lineNumbersMinChars: 0,
+          folding: false,
           hideCursorInOverviewRuler: true,
           scrollBeyondLastLine: false,
           minimap: { enabled: false },
@@ -185,8 +204,9 @@ export default function MonacoCore({ value, language = 'text', toggleVideo, mode
           hover: { enabled: false },
           links: false,
           cursorStyle: 'block',
-          fontFamily: 'monospace',
-          fontSize: 14,
+          fontFamily: "'Fira Code', monospace",
+          fontSize: 16,
+          fontLigatures: true,
           automaticLayout: true,
         };
       } else { // 'editor' mode
@@ -205,6 +225,9 @@ export default function MonacoCore({ value, language = 'text', toggleVideo, mode
     };
 
     editor.updateOptions(getMonacoOptions(mode));
+
+    // Apply the correct Monaco theme based on mode
+    monaco.editor.setTheme(mode === 'terminal' ? 'handterm-transparent' : 'vs-dark');
 
     // Handle model language for editor mode
     if (mode === 'editor') {
@@ -235,6 +258,7 @@ export default function MonacoCore({ value, language = 'text', toggleVideo, mode
     if (vimModeRef.current && typeof vimModeRef.current.dispose === 'function') {
       vimModeRef.current.dispose();
       vimModeRef.current = null;
+      if (vimModeInstanceRef) vimModeInstanceRef.current = null;
       logger.debug("Vim effect: Disposed previous Vim mode.");
     }
     // Clear any pending command definition timeouts
@@ -250,6 +274,7 @@ export default function MonacoCore({ value, language = 'text', toggleVideo, mode
         try {
           const vimInstance = initVimMode(editor, statusBarRef.current);
           vimModeRef.current = vimInstance;
+          if (vimModeInstanceRef) vimModeInstanceRef.current = vimInstance;
           logger.debug(`Vim effect: initVimMode called successfully.`);
 
           // Notify caller of mode changes (used by terminal to defer keys to vim in normal mode)
@@ -298,10 +323,10 @@ export default function MonacoCore({ value, language = 'text', toggleVideo, mode
     };
   }, []); // Empty dependency array: runs once on mount and once on unmount
 
-  // Effect 5: Value Synchronization
+  // Effect 5: Value Synchronization (editor mode only — terminal manages its own model)
   useEffect(() => {
     const editor = editorRef.current;
-    if (!editor) return; // Check if editor exists
+    if (!editor || mode !== 'editor') return;
 
     // Type guard for ITextModel
     function isTextModel(model: monaco.editor.ITextModel | null): model is monaco.editor.ITextModel {
@@ -313,7 +338,7 @@ export default function MonacoCore({ value, language = 'text', toggleVideo, mode
       logger.debug("ValueSync effect: Updating editor value.");
       editor.setValue(value);
     }
-  }, [value, editorRef.current]); // Depend on value and editor instance
+  }, [value, editorRef.current, mode]); // Depend on value, editor instance, and mode
 
   return (
     <div data-testid="monaco-editor-container" className="monaco-editor-container" style={{ display: 'flex', flexDirection: 'column', height: '100%', flex: '1 1 auto' }}>
