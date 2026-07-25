@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, useCallback } from 'react';
 import MonacoCore from './MonacoCore';
 import { useMonacoTerminal } from '../hooks/useMonacoTerminal';
 import type { IStandaloneCodeEditor } from '@handterm/types';
@@ -16,19 +16,26 @@ interface MonacoTerminalProps {
 
 export default function MonacoTerminal({ onTerminalReady, onEnter }: MonacoTerminalProps) {
   const [editorInstance, setEditorInstance] = useState<IStandaloneCodeEditor | null>(null);
-  const terminalAdapter = useMonacoTerminal(editorInstance);
+  // Tracks the current vim mode so useMonacoTerminal can defer keys to vim in normal mode.
+  const currentModeRef = useRef<string>('insert');
+  const terminalAdapter = useMonacoTerminal(editorInstance, currentModeRef);
 
   useEffect(() => {
     if (editorInstance && onTerminalReady) {
       logger.debug("MonacoTerminal: Editor instance ready, calling onTerminalReady.");
       onTerminalReady(terminalAdapter);
     }
-  }, [editorInstance, onTerminalReady, terminalAdapter]); // Keep dependencies for now, but focus on stability of terminalAdapter
+    // Only run when editorInstance changes from null to something
+  }, [editorInstance]);
 
   const handleEditorReady = (editor: IStandaloneCodeEditor) => {
     logger.debug("MonacoTerminal: handleEditorReady called, setting editor instance.");
     setEditorInstance(editor);
   };
+
+  const handleVimModeChange = useCallback((mode: string) => {
+    currentModeRef.current = mode;
+  }, []);
 
   return (
     <MonacoCore
@@ -37,6 +44,7 @@ export default function MonacoTerminal({ onTerminalReady, onEnter }: MonacoTermi
       mode="terminal"
       onEditorReady={handleEditorReady}
       onEnter={onEnter}
+      onVimModeChange={handleVimModeChange}
     />
   );
 }

@@ -17,10 +17,21 @@ dev-watch: ## Watch for changes and recompile
 	npx vite
 
 dev: dev-stop ## Run development server in background
-	echo "Starting Vite server..."; \
+	@echo "Starting Vite server..."; \
 	nohup npx vite --no-open > vite.log 2>&1 & \
 	echo $$! > vite.pid; \
 	echo "Vite server started with PID $$(cat vite.pid)"; \
+	url=""; \
+	for i in $$(seq 1 40); do \
+		url=$$(grep -m1 -oE 'http://localhost:[0-9]+/' vite.log 2>/dev/null || true); \
+		if [ -n "$$url" ]; then break; fi; \
+		sleep 0.25; \
+	done; \
+	if [ -n "$$url" ]; then \
+		printf '\033[36mOpen in browser: %s\033[0m\n' "$$url"; \
+	else \
+		echo "Vite did not report a URL quickly; see vite.log"; \
+	fi
 
 dev-stop: ## Stop development server
 	@echo "Attempting to stop all Vite processes using pkill..."

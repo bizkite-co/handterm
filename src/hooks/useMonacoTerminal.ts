@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
+import { useEffect, useState, useCallback, useMemo, useRef, type MutableRefObject } from 'react';
 import { ActivityType, type ITerminalAdapter, type IStandaloneCodeEditor } from '@handterm/types';
 import type { IDisposable } from 'monaco-editor/esm/vs/editor/editor.api';
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
@@ -22,75 +22,92 @@ import { createLogger, LogLevel } from 'src/utils/Logger';
 import { useCharacterHandler } from './useCharacterHandler';
 import { useCommand } from './useCommand';
 import { useWPMCalculator } from './useWPMCaculator';
-import { useComputed } from '@preact/signals-react';
 
-export const useMonacoTerminal = (editor: IStandaloneCodeEditor | null): ITerminalAdapter => {
+export const useMonacoTerminal = (
+  editor: IStandaloneCodeEditor | null,
+  currentModeRef?: MutableRefObject<string>
+): ITerminalAdapter => {
   const [model, setModel] = useState<monaco.editor.ITextModel | null>(null);
   const [onDataCallbacks, setOnDataCallbacks] = useState<((data: string) => void)[]>([]);
   const logger = createLogger({ prefix: 'useMonacoTerminal', level: LogLevel.WARN });
   const { handleCommand, commandHistory, commandHistoryIndex, setCommandHistoryIndex } = useCommand();
   const wpmCalculator = useWPMCalculator();
-  const commandLine = useComputed(() => commandLineSignal.value);
   const [_commandLineState, _setCommandLineState] = useState('');
   const lastTypedCharacterRef = useRef<string | null>(null);
-  const setLastTypedCharacter = (value: string | null) => {
+
+  // Use refs for stable adapter methods and internal values
+  const editorRef = useRef<IStandaloneCodeEditor | null>(editor);
+  const modelRef = useRef<monaco.editor.ITextModel | null>(model);
+  const commandHistoryRef = useRef(commandHistory);
+  const commandHistoryIndexRef = useRef(commandHistoryIndex);
+  const commandLineStateRef = useRef(_commandLineState);
+
+  useEffect(() => { editorRef.current = editor; }, [editor]);
+  useEffect(() => { modelRef.current = model; }, [model]);
+  useEffect(() => { commandHistoryRef.current = commandHistory; }, [commandHistory]);
+  useEffect(() => { commandHistoryIndexRef.current = commandHistoryIndex; }, [commandHistoryIndex]);
+  useEffect(() => { commandLineStateRef.current = _commandLineState; }, [_commandLineState]);
+
+  const setLastTypedCharacter = useCallback((value: string | null) => {
     lastTypedCharacterRef.current = value;
-  };
+  }, []);
+
+  const setValueAndFocusEnd = useCallback((value: string) => {
+    const m = modelRef.current;
+    const e = editorRef.current;
+    if (!m || !e) return;
+    m.setValue(value);
+    const lastLine = m.getLineCount();
+    e.setPosition({ lineNumber: lastLine, column: m.getLineMaxColumn(lastLine) });
+    e.revealLine(lastLine);
+  }, []);
+
+  const writeOutputInternal = useCallback((data: string) => {
+    const m = modelRef.current;
+    if (!m) return;
+    setValueAndFocusEnd(m.getValue() + data);
+  }, [setValueAndFocusEnd]);
+
   const { handleCharacter } = useCharacterHandler({
     setLastTypedCharacter,
     isInSvgMode: false,
-    writeOutputInternal: (data: string) => {
-      if (model && editor) {
-        const currentContent = model.getValue();
-        model.setValue(currentContent + data);
-        editor.revealLine(model.getLineCount());
-      }
-    },
+    writeOutputInternal,
   });
 
   const write = useCallback((data: string) => {
-    if (model && editor) {
-      const currentContent = model.getValue();
-      model.setValue(currentContent + data);
-      editor.revealLine(model.getLineCount());
-    }
-  }, [model, editor]);
+    writeOutputInternal(data);
+  }, [writeOutputInternal]);
 
   const getCurrentCommand = useCallback((): string => {
-    return commandLine.value;
-  }, [commandLine]);
+    return commandLineSignal.value;
+  }, []);
 
   const resetPrompt = useCallback((): void => {
-    logger.debug('resetPrompt called.');
-    if (editor == null) {
-      logger.warn('resetPrompt: editor is null, returning.');
-      return;
-    }
+    const e = editorRef.current;
+    const m = modelRef.current;
+    if (e == null) return;
 
-    logger.debug('resetPrompt: Clearing terminal content.');
-    if (model) {
-      model.setValue('');
+    if (m) {
+      setValueAndFocusEnd(TERMINAL_CONSTANTS.PROMPT);
     }
-    logger.debug('resetPrompt: Resetting command line signals.');
     setCommandLine('');
     _setCommandLineState('');
-    logger.debug('resetPrompt: Writing prompt to terminal.');
-    if (model) {
-      model.setValue(TERMINAL_CONSTANTS.PROMPT);
-      editor.revealLine(model.getLineCount());
-    }
-    logger.debug('resetPrompt: Completed.');
-  }, [editor, model, setCommandLine, _setCommandLineState, logger]);
+  }, [setCommandLine, setValueAndFocusEnd]);
 
   const navigateHistory = useCallback((direction: 'up' | 'down'): void => {
-    if (editor == null || model == null || (commandHistory.length === 0)) return;
+    const e = editorRef.current;
+    const m = modelRef.current;
+    const history = commandHistoryRef.current;
+    const index = commandHistoryIndexRef.current;
 
-    let newIndex = commandHistoryIndex;
+    if (e == null || m == null || history.length === 0) return;
+
+    let newIndex = index;
 
     if (direction === 'up') {
-      newIndex = newIndex === -1 ? commandHistory.length - 1 : Math.max(0, newIndex - 1);
+      newIndex = newIndex === -1 ? history.length - 1 : Math.max(0, newIndex - 1);
     } else { // direction === 'down'
-      newIndex = newIndex === -1 ? -1 : Math.min(commandHistory.length - 1, newIndex + 1);
+      newIndex = newIndex === -1 ? -1 : Math.min(history.length - 1, newIndex + 1);
       if (newIndex === -1) {
         resetPrompt();
         setCommandHistoryIndex(newIndex);
@@ -99,20 +116,22 @@ export const useMonacoTerminal = (editor: IStandaloneCodeEditor | null): ITermin
     }
 
     resetPrompt();
-    const historicalCommand = commandHistory[newIndex] ?? '';
-    model.setValue(model.getValue() + historicalCommand);
-    editor.revealLine(model.getLineCount());
+    const historicalCommand = history[newIndex] ?? '';
+    setValueAndFocusEnd(m.getValue() + historicalCommand);
     setCommandLine(historicalCommand);
     _setCommandLineState(historicalCommand);
     setCommandHistoryIndex(newIndex);
-  }, [editor, model, commandHistory, commandHistoryIndex, resetPrompt, setCommandHistoryIndex, setCommandLine, _setCommandLineState]);
+  }, [resetPrompt, setCommandHistoryIndex, setCommandLine, setValueAndFocusEnd, _setCommandLineState]);
 
   const handleEnterKey = useCallback(() => {
-    if (editor == null || model == null) return;
+    const e = editorRef.current;
+    const m = modelRef.current;
+    if (e == null || m == null) return;
 
-    const currentCommand = model.getLineContent(model.getLineCount());
-    editor.setValue(model.getValue() + '\n'); // Add newline for command output
-
+    const currentLine = m.getLineCount();
+    const currentCommand = m.getLineContent(currentLine).replace(TERMINAL_CONSTANTS.PROMPT, '');
+    
+    // Process the command
     if (isInLoginProcessSignal.value) {
       const loginCommand = parseCommand([
         'login',
@@ -136,38 +155,43 @@ export const useMonacoTerminal = (editor: IStandaloneCodeEditor | null): ITermin
       setTempUserName('');
       setTempEmail('');
     } else {
-      logger.debug('Processing command:', currentCommand);
       const parsedCommand = parseCommand(currentCommand === '' ? '\r' : currentCommand);
-      logger.debug('Parsed command:', parsedCommand);
       setCommandLine('');
       _setCommandLineState('');
       handleCommand(parsedCommand).catch(console.error);
       wpmCalculator.clearKeystrokes();
     }
+    
     setCommandHistoryIndex(-1);
+    
+    // Write newline and then reset prompt
+    const content = m.getValue();
+    setValueAndFocusEnd(content + '\n');
     resetPrompt();
-  }, [editor, model, isInLoginProcessSignal.value, isInSignUpProcessSignal.value, tempUserNameSignal.value, tempPasswordSignal.value, tempEmailSignal.value, handleCommand, wpmCalculator, setCommandHistoryIndex, resetPrompt, setCommandLine, _setCommandLineState, logger]);
+  }, [handleCommand, wpmCalculator, setCommandHistoryIndex, resetPrompt, setCommandLine, setValueAndFocusEnd]);
 
   const handleBackspace = useCallback(() => {
-    if (editor == null || model == null) return;
+    const m = modelRef.current;
+    if (m == null) return;
 
-    const currentLineContent = model.getLineContent(model.getLineCount());
+    const currentLineContent = m.getLineContent(m.getLineCount());
     if (isInLoginProcessSignal.value || isInSignUpProcessSignal.value) {
       if (tempPasswordSignal.value.length > 0) {
         tempPasswordSignal.value = tempPasswordSignal.value.slice(0, -1);
-        model.setValue(model.getValue().slice(0, -1)); // Remove last char from model
+        setValueAndFocusEnd(m.getValue().slice(0, -1));
       }
     } else if (currentLineContent.length > TERMINAL_CONSTANTS.PROMPT_LENGTH) {
-      model.setValue(model.getValue().slice(0, -1)); // Remove last char from model
-      const newCommandLine = _commandLineState.slice(0, -1);
+      setValueAndFocusEnd(m.getValue().slice(0, -1));
+      const newCommandLine = commandLineStateRef.current.slice(0, -1);
       setCommandLine(newCommandLine);
       _setCommandLineState(newCommandLine);
     }
-  }, [editor, model, isInLoginProcessSignal.value, isInSignUpProcessSignal.value, tempPasswordSignal.value, _commandLineState, setCommandLine, _setCommandLineState]);
+  }, [setCommandLine, setValueAndFocusEnd]);
 
   const handleData = useCallback((data: string) => {
-    if (editor == null || model == null) return;
-    logger.debug('Handling terminal data:', data);
+    const e = editorRef.current;
+    const m = modelRef.current;
+    if (e == null || m == null) return;
 
     // Handle control characters
     switch (data) {
@@ -175,9 +199,7 @@ export const useMonacoTerminal = (editor: IStandaloneCodeEditor | null): ITermin
         setCommandLine('');
         _setCommandLineState('');
         setActivity(ActivityType.NORMAL);
-        if (model) {
-          model.setValue(model.getValue() + '^C\r\n');
-        }
+        setValueAndFocusEnd(m.getValue() + '^C\r\n');
         resetPrompt();
         return;
 
@@ -187,10 +209,6 @@ export const useMonacoTerminal = (editor: IStandaloneCodeEditor | null): ITermin
 
       case '\x7F': // Backspace
         handleBackspace();
-        return;
-
-      case '\x1b[D': // Left arrow
-        // Monaco handles cursor movement internally, no need to write data
         return;
 
       case '\x1b[A': // Up arrow
@@ -206,49 +224,102 @@ export const useMonacoTerminal = (editor: IStandaloneCodeEditor | null): ITermin
         if (isInLoginProcessSignal.value || isInSignUpProcessSignal.value) {
           tempPasswordSignal.value += data;
           handleCharacter(data);
-          model.setValue(model.getValue() + data); // Add char to model
+          setValueAndFocusEnd(m.getValue() + data);
         } else {
-          const newCommandLine = _commandLineState + data;
-          model.setValue(model.getValue() + data); // Add char to model
+          const newCommandLine = commandLineStateRef.current + data;
+          setValueAndFocusEnd(m.getValue() + data);
           setCommandLine(newCommandLine);
           _setCommandLineState(newCommandLine);
           addKeystroke(data);
         }
         return;
     }
-  }, [editor, model, isInLoginProcessSignal.value, isInSignUpProcessSignal.value, tempPasswordSignal.value, _commandLineState, setCommandLine, _setCommandLineState, addKeystroke, handleCharacter, handleEnterKey, handleBackspace, resetPrompt, setActivity, navigateHistory, logger]);
+  }, [handleCharacter, handleEnterKey, handleBackspace, resetPrompt, navigateHistory, setCommandLine, setValueAndFocusEnd]);
+
+  // Use a ref for handleData to keep the keydown listener stable
+  const handleDataRef = useRef(handleData);
+  useEffect(() => {
+    handleDataRef.current = handleData;
+  }, [handleData]);
 
   useEffect(() => {
     if (editor) {
-      const newModel = monaco.editor.createModel('', 'plaintext');
-      editor.setModel(newModel);
-      setModel(newModel);
+      let currentModel = editor.getModel();
+      if (!currentModel || currentModel.getLanguageId() !== 'plaintext') {
+          currentModel = monaco.editor.createModel(TERMINAL_CONSTANTS.PROMPT, 'plaintext');
+          editor.setModel(currentModel);
+      }
+      setModel(currentModel);
 
-      const disposable = editor.onDidChangeModelContent((event: monaco.editor.IModelContentChangedEvent) => {
-        const lastChange = event.changes[event.changes.length - 1];
-        if (lastChange && lastChange.text.length > 0) {
-          onDataCallbacks.forEach(callback => callback(lastChange.text));
-          handleData(lastChange.text); // Explicitly call handleData here
+      // Listen to key down events to handle terminal input
+      const disposable = editor.onKeyDown((e) => {
+        // In vim NORMAL mode, defer entirely to vim so navigation/edit commands
+        // (i/a/o to re-enter insert, w/b/dw/cw motions, etc.) work unhindered.
+        if (currentModeRef?.current === 'normal') {
+          return;
+        }
+
+        // Handle Enter
+        if (e.keyCode === monaco.KeyCode.Enter) {
+          e.preventDefault();
+          e.stopPropagation();
+          handleDataRef.current('\r');
+          return;
+        }
+
+        // Handle Backspace
+        if (e.keyCode === monaco.KeyCode.Backspace) {
+          e.preventDefault();
+          e.stopPropagation();
+          handleDataRef.current('\x7F');
+          return;
+        }
+
+        // Handle Ctrl+C
+        if (e.keyCode === monaco.KeyCode.KeyC && e.ctrlKey) {
+          e.preventDefault();
+          e.stopPropagation();
+          handleDataRef.current('\x03');
+          return;
+        }
+
+        // Handle Arrow Keys
+        if (e.keyCode === monaco.KeyCode.UpArrow) {
+          e.preventDefault();
+          e.stopPropagation();
+          handleDataRef.current('\x1b[A');
+          return;
+        }
+        if (e.keyCode === monaco.KeyCode.DownArrow) {
+          e.preventDefault();
+          e.stopPropagation();
+          handleDataRef.current('\x1b[B');
+          return;
+        }
+
+        // For regular characters, we intercept and handle it ourselves to avoid model loops
+        if (e.browserEvent.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+          e.preventDefault();
+          e.stopPropagation();
+          handleDataRef.current(e.browserEvent.key);
         }
       });
-
+      
       return () => {
         disposable.dispose();
-        newModel.dispose();
       };
     }
     return () => {};
-  }, [editor, onDataCallbacks, handleData]); // Add handleData to dependencies
+  }, [editor]); // Stable: only depends on editor
 
   const clear = useCallback(() => {
-    if (model) {
-      model.setValue('');
-    }
-  }, [model]);
+    const m = modelRef.current;
+    if (m) setValueAndFocusEnd('');
+  }, [setValueAndFocusEnd]);
 
   const focus = useCallback(() => {
-    editor?.focus();
-  }, [editor]);
+    editorRef.current?.focus();
+  }, []);
 
   const onData = useCallback((callback: (data: string) => void): IDisposable => {
     setOnDataCallbacks(prev => [...prev, callback]);
@@ -259,37 +330,25 @@ export const useMonacoTerminal = (editor: IStandaloneCodeEditor | null): ITermin
     };
   }, []);
 
-
-  const onResize = useCallback(() => {
-    console.warn("OnResize not implemented");
-    return null;
-  }, []);
+  const onResize = useCallback(() => null, []);
 
   const fit = useCallback(() => {
-    if (editor) {
-      editor.layout();
-      // Monaco doesn't have a direct 'fit' method like xterm.js.
-      // Layouting should handle most of it.
-      // If specific column/row calculation is needed, it would go here.
-    }
-  }, [editor]);
+    editorRef.current?.layout();
+  }, []);
 
   const proposeGeometry = useCallback(() => {
-    if (editor) {
-      const container = editor.getContainerDomNode();
+    const e = editorRef.current;
+    if (e) {
+      const container = e.getContainerDomNode();
       if (container) {
-        const fontInfo = editor.getOption(monaco.editor.EditorOption.fontInfo);
-        const lineHeight = fontInfo.lineHeight;
-        const charWidth = fontInfo.typicalHalfwidthCharacterWidth;
-
-        const rows = Math.floor(container.clientHeight / lineHeight);
-        const cols = Math.floor(container.clientWidth / charWidth);
-
+        const fontInfo = e.getOption(monaco.editor.EditorOption.fontInfo);
+        const rows = Math.floor(container.clientHeight / fontInfo.lineHeight);
+        const cols = Math.floor(container.clientWidth / fontInfo.typicalHalfwidthCharacterWidth);
         return { cols, rows };
       }
     }
     return null;
-  }, [editor]);
+  }, []);
 
   return useMemo(() => ({
     write,

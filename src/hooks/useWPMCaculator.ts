@@ -1,7 +1,7 @@
 // src/hooks/useWPMCalculator.ts
 
 import { useComputed } from '@preact/signals-react';
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 
 import { keystrokesSignal, addKeystroke, clearKeystrokes } from 'src/signals/commandLineSignals';
 
@@ -50,10 +50,10 @@ export const useWPMCalculator = (): {
     };
   }, [keystrokes]);
 
-  return {
+  return useMemo(() => ({
     addKeystroke,
     getWPMs, // Return the memoized value
     clearKeystrokes,
     keystrokeCount: keystrokes.value.length // Add this for debugging
-  };
+  }), [getWPMs, keystrokes.value.length]);
 };

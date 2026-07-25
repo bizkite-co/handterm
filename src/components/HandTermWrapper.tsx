@@ -58,7 +58,8 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
   const commandTime = useComputed(() => commandTimeSignal.value);
   const [treeItems, setTreeItems] = useState<TreeItem[]>([]);
 
-  const currentActivityValue = activitySignal.value;
+  const activity = useComputed(() => activitySignal.value);
+  const currentActivityValue = activity.value;
   logger.debug(`HandTermWrapper rendering with activity: ${currentActivityValue}`);
 
   const handlePhraseComplete = useCallback(() => {
@@ -270,7 +271,7 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
       <div
         id="prompt-and-terminal"
         style={{
-          visibility: (currentActivityValue !== ActivityType.EDIT && currentActivityValue !== ActivityType.TREE && !forceEditActivity) ? 'visible' : 'hidden',
+          display: (currentActivityValue !== ActivityType.EDIT && currentActivityValue !== ActivityType.TREE && !forceEditActivity) ? 'block' : 'none',
           height: '100%',
           width: '100%'
         }}

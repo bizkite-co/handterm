@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "task_agent": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--project",
+        "/home/mstouffer/repos/handterm-proj/handterm",
+        "ta",
+        "mcp"
+      ],
+      "trust": true
+    }
+  }
+}

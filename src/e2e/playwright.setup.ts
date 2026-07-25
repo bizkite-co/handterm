@@ -5,7 +5,8 @@ import { TEST_CONFIG } from './config';
 import { assert } from 'console';
 
 async function globalSetup(_config: FullConfig): Promise<void> {
-  const browser = await chromium.launch();
+  const executablePath = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH || '/usr/bin/chromium-browser';
+  const browser = await chromium.launch({ executablePath });
   const page = await browser.newPage();
 
   // Add console listener for debugging

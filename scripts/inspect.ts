@@ -48,7 +48,8 @@ async function inspect() {
   // Create the directory
   fs.mkdirSync(inspectDir, { recursive: true });
 
-  const browser = await chromium.launch();
+  const executablePath = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH || '/usr/bin/chromium-browser';
+  const browser = await chromium.launch({ executablePath });
   const page = await browser.newPage();
 
   // Capture console output

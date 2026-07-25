@@ -1,27 +1,31 @@
 import { defineConfig, devices } from '@playwright/test';
-
-// Custom test environment to avoid Vitest matcher conflicts
-process.env.NODE_OPTIONS = '--no-experimental-fetch';
+import { TEST_CONFIG } from './src/e2e/config';
 
 export default defineConfig({
-  testDir: './src/e2e',
-  fullyParallel: true,
-  forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
-  reporter: 'html',
-  use: {
-    trace: 'on-first-retry',
-  },
-  projects: [
-    {
-      name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+    globalSetup: './src/e2e/playwright.setup.ts',
+    testDir: './src/e2e',
+    fullyParallel: true,
+    forbidOnly: !!process.env.CI,
+    retries: process.env.CI ? 2 : 0,
+    workers: process.env.CI ? 1 : undefined,
+    reporter: 'html',
+    use: {
+        trace: 'on-first-retry',
+        baseURL: TEST_CONFIG.baseUrl,
     },
-  ],
-  webServer: {
-    command: 'npm run dev',
-    url: 'http://localhost:5173',
-    reuseExistingServer: !process.env.CI,
-  },
+    webServer: {
+        command: 'vite',
+        url: TEST_CONFIG.baseUrl,
+        reuseExistingServer: !process.env.CI,
+        timeout: 15 * 1000
+    },
+    projects: [
+        {
+            name: 'chromium',
+            use: { 
+                ...devices['Desktop Chrome'],
+                executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH || '/usr/bin/chromium-browser'
+            },
+        },
+    ],
 });

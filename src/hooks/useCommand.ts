@@ -1,7 +1,7 @@
 // src/hooks/useCommand.ts
 import { useComputed } from '@preact/signals-react';
 import type React from 'react';
-import { useContext, useState, useCallback, useEffect } from 'react';
+import { useContext, useState, useCallback, useEffect, useMemo } from 'react';
 
 import { activitySignal, appendToOutput } from 'src/signals/appSignals';
 import { setCommandTime } from 'src/signals/commandLineSignals';
@@ -209,7 +209,7 @@ export const useCommand = (): {
         });
     }, [currentActivity.value, executeCommand, checkTutorialProgress]);
 
-    return {
+    return useMemo(() => ({
         output,
         resetOutput,
         commandHistory,
@@ -222,5 +222,18 @@ export const useCommand = (): {
         setCommandHistoryFilter,
         appendToOutput,
         executeCommand
-    };
+    }), [
+        output,
+        resetOutput,
+        commandHistory,
+        addToCommandHistory,
+        getCommandResponseHistory,
+        handleCommand,
+        commandHistoryIndex,
+        setCommandHistoryIndex,
+        commandHistoryFilter,
+        setCommandHistoryFilter,
+        appendToOutput,
+        executeCommand
+    ]);
 };

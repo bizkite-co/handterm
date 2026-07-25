@@ -108,9 +108,10 @@ interface MonacoCoreProps {
   onTerminalReady?: (adapter: ITerminalAdapter) => void; // For terminal mode
   onEditorReady?: (editor: monaco.editor.IStandaloneCodeEditor) => void; // For editor mode
   onEnter?: (value: string) => void; // For terminal mode to handle Enter key
+  onVimModeChange?: (mode: string) => void; // Notifies caller of vim mode changes (terminal)
 }
 
-export default function MonacoCore({ value, language = 'text', toggleVideo, mode, onEditorReady, onEnter }: MonacoCoreProps): JSX.Element {
+export default function MonacoCore({ value, language = 'text', toggleVideo, mode, onEditorReady, onEnter, onVimModeChange }: MonacoCoreProps): JSX.Element {
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const statusBarRef = useRef<HTMLDivElement>(null);
@@ -205,90 +206,80 @@ export default function MonacoCore({ value, language = 'text', toggleVideo, mode
 
     editor.updateOptions(getMonacoOptions(mode));
 
-    // Handle model creation/setting for terminal mode
-    if (mode === 'terminal') {
-      if (!editor.getModel() || editor.getModel()?.getLanguageId() !== 'plaintext') {
-        const newModel = monaco.editor.createModel('', 'plaintext');
-        editor.setModel(newModel);
-      }
-    } else { // editor mode
-      // Ensure model language is correct
+    // Handle model language for editor mode
+    if (mode === 'editor') {
       if (editor.getModel()?.getLanguageId() !== language) {
         monaco.editor.setModelLanguage(editor.getModel()!, language!);
       }
     }
 
-    // Value synchronization
-    const model = editor.getModel();
-    if (model && model.getValue() !== value) {
-      logger.debug("ValueSync effect: Updating editor value.");
-      editor.setValue(value);
+    // Value synchronization for editor mode
+    if (mode === 'editor') {
+      const model = editor.getModel();
+      if (model && model.getValue() !== value) {
+        logger.debug("ValueSync effect: Updating editor value.");
+        editor.setValue(value);
+      }
     }
 
   }, [editorRef.current, language, mode, value]); // Dependencies for model/options
 
-  // Effect 3: Vim Mode and Enter Key Handling (runs on editor instance or mode changes)
+  // Effect 3: Vim Mode (runs on editor instance or mode changes)
   useEffect(() => {
     const editor = editorRef.current;
     if (!editor) return;
 
-    logger.debug("Vim/Enter key effect: Configuring keybindings based on mode.");
+    logger.debug("Vim effect: Configuring Vim based on mode.");
 
     // Dispose of previous Vim mode if it exists
     if (vimModeRef.current && typeof vimModeRef.current.dispose === 'function') {
       vimModeRef.current.dispose();
       vimModeRef.current = null;
-      logger.debug("Vim/Enter key effect: Disposed previous Vim mode.");
+      logger.debug("Vim effect: Disposed previous Vim mode.");
     }
     // Clear any pending command definition timeouts
     if (defineCommandsTimeoutRef.current) {
       clearTimeout(defineCommandsTimeoutRef.current);
       defineCommandsTimeoutRef.current = null;
-      logger.debug("Vim/Enter key effect: Cleared pending Vim command timeout.");
+      logger.debug("Vim effect: Cleared pending Vim command timeout.");
     }
 
-    if (mode === 'editor') {
-      logger.debug("Vim/Enter key effect: Initializing Vim mode for editor.");
+    if (mode === 'editor' || mode === 'terminal') {
+      logger.debug(`Vim effect: Initializing Vim mode for ${mode}.`);
       if (statusBarRef.current) {
         try {
-          vimModeRef.current = initVimMode(editor, statusBarRef.current);
-          logger.debug(`Vim/Enter key effect: initVimMode called successfully.`);
+          const vimInstance = initVimMode(editor, statusBarRef.current);
+          vimModeRef.current = vimInstance;
+          logger.debug(`Vim effect: initVimMode called successfully.`);
 
-          defineCommandsTimeoutRef.current = setTimeout(() => {
-            logger.debug("Timeout triggered: Attempting to define Vim commands now.");
-            defineVimCommands(editorRef, toggleVideo);
-            defineCommandsTimeoutRef.current = null;
-          }, 500);
-        } catch (vimError) {
-          logger.error("Vim/Enter key effect: Error during initVimMode:", vimError);
-        }
-      } else {
-        logger.warn("Vim/Enter key effect: statusBarRef not available, skipping initVimMode.");
-      }
-    } else if (mode === 'terminal') {
-      logger.debug("Vim/Enter key effect: Configuring Enter key for terminal mode.");
-      // Ensure no duplicate actions if this effect runs multiple times
-      editor.addAction({
-        id: 'terminal-send-command',
-        label: 'Send Terminal Command',
-        keybindings: [monaco.KeyCode.Enter],
-        precondition: '',
-        keybindingContext: '',
-        contextMenuGroupId: 'navigation',
-        run: (editor) => {
-          if (onEnter) {
-            const model = editor.getModel();
-            if (model) {
-              const lastLine = model.getLineCount();
-              const lineContent = model.getLineContent(lastLine);
-              onEnter(lineContent);
-              editor.setValue('');
+          // Notify caller of mode changes (used by terminal to defer keys to vim in normal mode)
+          vimInstance.on('vim-mode-change', (modeInfo: { mode: string; subMode?: string }) => {
+            onVimModeChange?.(modeInfo.mode);
+          });
+
+          if (mode === 'editor') {
+            defineCommandsTimeoutRef.current = setTimeout(() => {
+              logger.debug("Timeout triggered: Attempting to define Vim commands now.");
+              defineVimCommands(editorRef, toggleVideo);
+              defineCommandsTimeoutRef.current = null;
+            }, 500);
+          } else {
+            // Terminal should start in insert mode so the user can type commands
+            try {
+              monacoVim.VimMode.Vim.handleKey(vimInstance, 'i');
+              onVimModeChange?.('insert');
+            } catch (e) {
+              logger.warn("Vim effect: could not enter initial insert mode for terminal", e);
             }
           }
-        },
-      });
+        } catch (vimError) {
+          logger.error("Vim effect: Error during initVimMode:", vimError);
+        }
+      } else {
+        logger.warn("Vim effect: statusBarRef not available, skipping initVimMode.");
+      }
     }
-  }, [editorRef.current, mode, onEnter, toggleVideo]); // Dependencies for Vim/Enter key
+  }, [editorRef.current, mode, toggleVideo, onVimModeChange]); // Dependencies for Vim mode
 
   // Effect 4: Resize Observer (runs once on mount)
   useEffect(() => {
@@ -327,7 +318,7 @@ export default function MonacoCore({ value, language = 'text', toggleVideo, mode
   return (
     <div data-testid="monaco-editor-container" className="monaco-editor-container" style={{ display: 'flex', flexDirection: 'column', height: '100%', flex: '1 1 auto' }}>
       <div ref={containerRef} style={containerStyle} />
-      {mode === 'editor' && <div ref={statusBarRef} className="vim-status-bar" style={{ height: '20px', flexShrink: 0 }} />}
+      <div ref={statusBarRef} className="vim-status-bar" style={{ height: '20px', flexShrink: 0 }} />
     </div>
   );
 }

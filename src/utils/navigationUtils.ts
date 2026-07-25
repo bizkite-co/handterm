@@ -86,9 +86,6 @@ export async function navigate(options: ParsedLocation, navOptions: boolean | Na
     // ENHANCED: Add small delay after dispatching event
     await new Promise(resolve => setTimeout(resolve, 50));
     // END ENHANCED
-    if (window.location.search) {
-      window.location.reload();
-    }
     return;
   } else {
     const params = new URLSearchParams();
