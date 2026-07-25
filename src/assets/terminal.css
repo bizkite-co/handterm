@@ -416,6 +416,10 @@ pre#prompt {
   visibility: visible !important;
 }
 
+.vim-status-bar {
+  opacity: 50%;
+}
+
 div.cm-content {
   background-color: #0007;
 }

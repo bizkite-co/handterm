@@ -184,13 +184,17 @@ export const useMonacoTerminal = (
     const m = modelRef.current;
     if (m == null) return;
 
-    const currentLineContent = m.getLineContent(m.getLineCount());
+    const lastLineNum = m.getLineCount();
+    const currentLineContent = m.getLineContent(lastLineNum);
     if (isInLoginProcessSignal.value || isInSignUpProcessSignal.value) {
       if (tempPasswordSignal.value.length > 0) {
         tempPasswordSignal.value = tempPasswordSignal.value.slice(0, -1);
         setValueAndFocusEnd(m.getValue().slice(0, -1));
       }
-    } else if (currentLineContent.length > TERMINAL_CONSTANTS.PROMPT_LENGTH) {
+    } else if (lastLineNum === 1 && currentLineContent.length <= TERMINAL_CONSTANTS.PROMPT_LENGTH) {
+      // On the prompt line — don't backspace past the prompt
+      return;
+    } else {
       setValueAndFocusEnd(m.getValue().slice(0, -1));
       const newCommandLine = commandLineStateRef.current.slice(0, -1);
       setCommandLine(newCommandLine);
