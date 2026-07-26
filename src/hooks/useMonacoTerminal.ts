@@ -237,8 +237,7 @@ export const useMonacoTerminal = (
         // Regular character input
         if (isInLoginProcessSignal.value || isInSignUpProcessSignal.value) {
           tempPasswordSignal.value += data;
-          handleCharacter(data);
-          setValueAndFocusEnd(m.getValue() + data);
+          handleCharacter(data); // writes '*' to the editor via writeOutputInternal
         } else {
           const newCommandLine = commandLineStateRef.current + data;
           setValueAndFocusEnd(m.getValue() + data);
