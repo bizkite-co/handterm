@@ -28,12 +28,17 @@ export const isEditModeSignal = signal<boolean>(false);
 export const isShowVideoSignal = signal<boolean>(false);
 export const isInLoginProcessSignal = signal<boolean>(false);
 export const isInSignUpProcessSignal = signal<boolean>(false);
+export const isInVerifyProcessSignal = signal<boolean>(false);
 export const tempUserNameSignal = signal<string>('');
 export const tempPasswordSignal = signal<string>('');
 export const tempEmailSignal = signal<string>('');
 
 export const setIsInSignUpProcess = (value: boolean): void => {
     isInSignUpProcessSignal.value = value;
+};
+
+export const setIsInVerifyProcess = (value: boolean): void => {
+    isInVerifyProcessSignal.value = value;
 };
 
 export const setTempEmail = (value: string): void => {

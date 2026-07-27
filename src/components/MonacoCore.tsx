@@ -22,11 +22,12 @@ monaco.editor.defineTheme('handterm-transparent', {
   rules: [],
   colors: {
     'editor.background': '#00000000',
-    'editor.foreground': '#d4d4d4',
-    'editorCursor.foreground': '#d4d4d4',
+    'editor.foreground': '#ffffff',
+    'editorCursor.foreground': '#ffffff',
     'editor.lineHighlightBackground': '#00000000',
-    'editor.selectionBackground': '#264f7866',
-    'editor.inactiveSelectionBackground': '#3a3d4100',
+    'editor.selectionBackground': '#000000',
+    'editor.inactiveSelectionBackground': '#00000000',
+    'editor.selectionForeground': '#808080',
   }
 });
 
@@ -204,9 +205,10 @@ export default function MonacoCore({ value, language = 'text', toggleVideo, mode
           hover: { enabled: false },
           links: false,
           cursorStyle: 'block',
-          fontFamily: "'Fira Code', monospace",
+          fontFamily: '"Fira Code", Menlo, "DejaVu Sans Mono", "Lucida Console", monospace',
           fontSize: 16,
           fontLigatures: true,
+          cursorBlinking: 'blink',
           automaticLayout: true,
         };
       } else { // 'editor' mode

@@ -1,5 +1,5 @@
 :root {
-    --terminal-font-family: 'Fira Code', monospace;
+    --terminal-font-family: "Fira Code", Menlo, "DejaVu Sans Mono", "Lucida Console", monospace;
     --terminal-font-size: 16px;
     --terminal-line-height: 1.5em;
     color: white;

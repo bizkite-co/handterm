@@ -5,7 +5,6 @@ import { useActivityMediator } from '../hooks/useActivityMediator';
 import MonacoTerminal from './MonacoTerminal'; // Changed to default import
 import { useWPMCalculator } from '../hooks/useWPMCaculator';
 import { isShowVideoSignal, activitySignal } from '../signals/appSignals';
-import { commandTimeSignal } from '../signals/commandLineSignals';
 import { setGamePhrase } from '../signals/gameSignals';
 import { tutorialSignal } from '../signals/tutorialSignals';
 import {
@@ -30,6 +29,7 @@ import NextCharsDisplay, { type NextCharsDisplayHandle } from './NextCharsDispla
 import { PromptHeader } from './PromptHeader';
 import { TutorialManager } from './TutorialManager';
 // Removed: import { useMonacoTerminal } from '../hooks/useMonacoTerminal';
+import { isInLoginProcessSignal, isInSignUpProcessSignal, isInVerifyProcessSignal } from '../signals/appSignals';
 
 const logger = createLogger({
   prefix: 'HandTermWrapper',
@@ -55,8 +55,17 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
   const [githubUsername] = useState<string | null>(null);
   const [showIntro, setShowIntro] = useState(() => !localStorage.getItem(StorageKeys.hasVisited));
   const [userName] = useState<string | null>(null); // Removed setUserName as it's not used
-  const commandTime = useComputed(() => commandTimeSignal.value);
   const [treeItems, setTreeItems] = useState<TreeItem[]>([]);
+  const isAuthProcess = useComputed(() => isInLoginProcessSignal.value || isInSignUpProcessSignal.value || isInVerifyProcessSignal.value);
+  const [currentTimestamp, setCurrentTimestamp] = useState(() => getTimestamp(new Date()));
+
+  // Update timestamp every second
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTimestamp(getTimestamp(new Date()));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Mark user as visited so IntroText only shows on first visit
   useEffect(() => {
@@ -283,12 +292,14 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
           width: '100%'
         }}
       >
-        <PromptHeader
-          username={userName ?? 'guest'}
-          domain={domain ?? 'handterm.com'}
-          githubUsername={githubUsername}
-          timestamp={getTimestamp(commandTime.value)}
-        />
+        {!isAuthProcess.value && (
+          <PromptHeader
+            username={userName ?? 'guest'}
+            domain={domain ?? 'handterm.com'}
+            githubUsername={githubUsername}
+            timestamp={currentTimestamp}
+          />
+        )}
         <MonacoTerminal onTerminalReady={setTerminalAdapter} onEnter={handleTerminalEnter} />
       </div>
 

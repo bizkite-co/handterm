@@ -8,9 +8,11 @@ import { TERMINAL_CONSTANTS } from 'src/constants/terminal';
 import {
   isInLoginProcessSignal,
   isInSignUpProcessSignal,
+  isInVerifyProcessSignal,
   setActivity,
   setIsInLoginProcess,
   setIsInSignUpProcess,
+  setIsInVerifyProcess,
   setTempEmail,
   setTempPassword,
   setTempUserName,
@@ -164,6 +166,15 @@ export const useMonacoTerminal = (
       setTempPassword('');
       setTempUserName('');
       setTempEmail('');
+    } else if (isInVerifyProcessSignal.value) {
+      const verifyCommand = parseCommand([
+        'verify',
+        tempUserNameSignal.value,
+        currentCommand.trim()
+      ].join(' '));
+      handleCommand(verifyCommand).catch(console.error);
+      setIsInVerifyProcess(false);
+      setTempUserName('');
     } else {
       const parsedCommand = parseCommand(currentCommand === '' ? '\r' : currentCommand);
       setCommandLine('');
