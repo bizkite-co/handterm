@@ -106,76 +106,13 @@ HTMLCanvasElement.prototype.getContext = vi.fn(() => ({
   arc: vi.fn(),
 })) as unknown as typeof HTMLCanvasElement.prototype.getContext;
 
-// Mock xterm.js
-const mockTerminal = {
-  loadAddon: vi.fn(),
-  open: vi.fn(),
-  write: vi.fn(),
-  onData: vi.fn((callback: (data: string) => void) => {
-    (window as WindowWithXtermCallback).__xtermDataCallback = callback;
-    return { dispose: vi.fn() };
-  }),
-  onKey: vi.fn(),
-  clear: vi.fn(),
-  focus: vi.fn(),
-  dispose: vi.fn(),
-  reset: vi.fn(() => {
-  }),
-  scrollToBottom: vi.fn(),
-  buffer: {
-    active: {
-      cursorX: 2,
-      cursorY: 0,
-      getLine: () => ({
-        translateToString: () => {
-          return '> ';
-        }
-      })
-    }
-  }
-};
-
-vi.mock('xterm', () => ({
-  Terminal: vi.fn().mockImplementation(() => mockTerminal)
-}));
-
-vi.mock('@xterm/addon-fit', () => ({
-  FitAddon: vi.fn().mockImplementation(() => ({
-    fit: vi.fn(),
-    activate: vi.fn(),
-    dispose: vi.fn()
-  }))
-}));
-
 // Define types for window extensions
-interface WindowWithXtermCallback extends Window {
-  __xtermDataCallback?: ((data: string) => void) | undefined;
-  mockTerminal?: typeof mockTerminal;
+interface WindowWithMonacoCallback extends Window {
+  mockTerminal?: { write: ReturnType<typeof vi.fn> };
   triggerTerminalInput?: (data: string) => void;
 }
 
-// Helper to trigger terminal input
-function createTriggerTerminalInput(data: string) {
-  const xtermDataCallback = (window as WindowWithXtermCallback).__xtermDataCallback;
-  if (xtermDataCallback != null) {
-    // For Enter key, ensure we send just \r
-    if (data === '\r\n') {
-      xtermDataCallback('\r');
-    } else {
-      xtermDataCallback(data);
-    }
-  }
-}
-
 // Initialize window extensions
-(window as WindowWithXtermCallback).__xtermDataCallback = undefined;
-(window as WindowWithXtermCallback).triggerTerminalInput = createTriggerTerminalInput;
-(window as WindowWithXtermCallback).mockTerminal = mockTerminal;
-
-// Set up callback handler
-(window as WindowWithXtermCallback).__xtermDataCallback = (data: string) => {
-  const callback = (window as WindowWithXtermCallback).__xtermDataCallback;
-  if (callback != null) {
-    callback(data);
-  }
+(window as WindowWithMonacoCallback).triggerTerminalInput = (data: string) => {
+  // No-op: Monaco editor handles input via DOM events, not callbacks
 };

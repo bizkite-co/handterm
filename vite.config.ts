@@ -69,10 +69,7 @@ export default defineConfig({
   optimizeDeps: {
     include: [
       '@preact/signals-react',
-      'hoist-non-react-statics',
-      '@xterm/xterm',
-      '@xterm/addon-fit',
-      'react-xtermjs'
+      'hoist-non-react-statics'
     ],
     exclude: [
       '@emotion/react/jsx-dev-runtime',

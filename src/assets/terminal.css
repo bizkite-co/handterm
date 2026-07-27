@@ -156,15 +156,6 @@ div.terminal {
     z-index: 10;
 }
 
-.xterm .xterm-viewport {
-    background-color: rgba(0, 0, 0, 0.3);
-    /* Adjust the alpha value for transparency */
-}
-
-.xterm-screen {
-    width: 100%;
-}
-
 #chord-image-holder .char {
     font-size: 35px;
 }
@@ -235,11 +226,6 @@ pre#prompt {
     z-index: 100;
     background-color: #0000;
     font-size: var(--terminal-font-size);
-}
-
-.xterm-rows :first-child,
-.xterm-rows :nth-child(2) {
-    background-color: #0007;
 }
 
 #terminal-game {
@@ -397,10 +383,6 @@ pre#prompt {
 .tutorial-component pre {
     color: lightsalmon;
     font-size: var(--terminal-font-size);
-}
-
-#terminal .xterm-cursor-block {
-    color: white !important;
 }
 
 .tutorial-component pre {

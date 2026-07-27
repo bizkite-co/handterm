@@ -12,7 +12,7 @@ import { getDefaultAutoSelectFamilyAttemptTimeout } from 'net';
 export class TerminalPage {
   readonly page: Page;
   readonly terminal: Locator;
-  readonly terminalElementId = 'xtermRef';
+  readonly terminalElementId = 'monaco-editor-container';
   readonly output: Locator;
   readonly tutorialMode: Locator;
   readonly gameMode: Locator;
@@ -79,7 +79,7 @@ export class TerminalPage {
 
   public async terminalHasChildren(): Promise<boolean> {
     return await this.page.evaluate(() => {
-      const terminal = document.querySelector('#xtermRef');
+      const terminal = document.querySelector('.monaco-editor-container');
       const hasChildren = terminal ? terminal.children.length > 0 : false;
       return hasChildren;
     });
@@ -98,21 +98,21 @@ export class TerminalPage {
       console.log(`[waitForTerminalContainer] #handterm-wrapper attached in ${Date.now() - startTime}ms (timeout: ${TEST_CONFIG.timeout.medium}ms)`);
 
       // Wait for terminal element container
-      const xtermRef = await this.page.$('#xtermRef');
-      if (!xtermRef) {
-        throw new Error('Terminal element (#xtermRef) not found');
+      const terminalEl = await this.page.$('.monaco-editor-container');
+      if (!terminalEl) {
+        throw new Error('Terminal element (.monaco-editor-container) not found');
       }
-      console.log(`[waitForTerminalContainer] #xtermRef found in ${Date.now() - startTime}ms`);
+      console.log(`[waitForTerminalContainer] .monaco-editor-container found in ${Date.now() - startTime}ms`);
 
-      // Check if #xtermRef has children.
+      // Check if terminal has children.
       if (!await this.terminalHasChildren()) {
         // Add a small delay and retry once, sometimes children take a moment
         await this.page.waitForTimeout(200);
         if (!await this.terminalHasChildren()) {
-          throw new Error('Terminal element (#xtermRef) has no children after retry');
+          throw new Error('Terminal element (.monaco-editor-container) has no children after retry');
         }
       }
-      console.log(`[waitForTerminalContainer] #xtermRef has children in ${Date.now() - startTime}ms`);
+      console.log(`[waitForTerminalContainer] .monaco-editor-container has children in ${Date.now() - startTime}ms`);
 
     } catch (error) {
       const duration = Date.now() - startTime;

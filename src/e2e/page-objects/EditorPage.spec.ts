@@ -167,7 +167,7 @@ test.describe('EditorPage', () => {
 		await page.locator('#prompt-and-terminal').waitFor({ state: 'visible', timeout: TEST_CONFIG.timeout.long });
 		console.log('TEST: Terminal container is visible.');
 
-		// Add a small delay to allow xterm.js to settle
+		// Add a small delay to allow terminal to settle
 		await page.waitForTimeout(500);
 		console.log('TEST: Added small delay after terminal container visible.');
 
@@ -240,7 +240,7 @@ test.describe('EditorPage', () => {
 		await page.locator('#prompt-and-terminal').waitFor({ state: 'visible', timeout: TEST_CONFIG.timeout.long });
 		console.log('TEST: Terminal container is visible.');
 
-		// Add a small delay to allow xterm.js to settle
+		// Add a small delay to allow terminal to settle
 		await page.waitForTimeout(500);
 		console.log('TEST: Added small delay after terminal container visible.');
 

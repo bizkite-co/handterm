@@ -62,31 +62,6 @@ vi.mock('../hooks/useMonaco', () => ({
   })
 }));
 
-// Mock useTerminal hook
-vi.mock('../hooks/useTerminal', () => {
-  const mockTerminalRef = { current: document.createElement('div') };
-  mockTerminalRef.current.setAttribute('data-testid', 'terminal-container');
-  mockTerminalRef.current.id = 'terminal-container';
-
-  return {
-    useTerminal: vi.fn(() => ({
-      ref: mockTerminalRef,
-      write: vi.fn((data: string) => {
-        if (mockTerminalRef.current) {
-          mockTerminalRef.current.textContent += data;
-        }
-      }),
-      resetPrompt: vi.fn(() => {
-        if (mockTerminalRef.current) {
-          mockTerminalRef.current.textContent = '';
-        }
-      }),
-      focus: vi.fn(),
-      onData: vi.fn(() => ({ dispose: vi.fn() })),
-    })),
-  };
-});
-
 vi.mock('../utils/navigationUtils', () => ({
   parseLocation: vi.fn(() => ({ groupKey: undefined })), // Mock parseLocation
   navigate: vi.fn()
