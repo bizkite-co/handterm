@@ -135,6 +135,8 @@ export default function MonacoCore({ value, language = 'text', toggleVideo, mode
   const [containerStyle] = useState({ flexGrow: 1, height: '100%', minHeight: '300px' });
   const vimModeRef = useRef<IDisposable | null>(null);
   const defineCommandsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const currentVimModeRef = useRef<string>('insert');
+  const editorKeydownRef = useRef<IDisposable | null>(null);
 
   // Effect 1: Editor Creation (runs once on mount)
   useEffect(() => {
@@ -263,6 +265,10 @@ export default function MonacoCore({ value, language = 'text', toggleVideo, mode
       if (vimModeInstanceRef) vimModeInstanceRef.current = null;
       logger.debug("Vim effect: Disposed previous Vim mode.");
     }
+    if (editorKeydownRef.current) {
+      editorKeydownRef.current.dispose();
+      editorKeydownRef.current = null;
+    }
     // Clear any pending command definition timeouts
     if (defineCommandsTimeoutRef.current) {
       clearTimeout(defineCommandsTimeoutRef.current);
@@ -279,12 +285,29 @@ export default function MonacoCore({ value, language = 'text', toggleVideo, mode
           if (vimModeInstanceRef) vimModeInstanceRef.current = vimInstance;
           logger.debug(`Vim effect: initVimMode called successfully.`);
 
-          // Notify caller of mode changes (used by terminal to defer keys to vim in normal mode)
+          // Track vim mode internally for alt+s handling
           vimInstance.on('vim-mode-change', (modeInfo: { mode: string; subMode?: string }) => {
+            currentVimModeRef.current = modeInfo.mode;
             onVimModeChange?.(modeInfo.mode);
           });
 
           if (mode === 'editor') {
+            // Register alt+s to exit insert mode (same as terminal behavior)
+            editorKeydownRef.current = editor.onKeyDown((e) => {
+              if (e.browserEvent.key === 's' && e.altKey) {
+                e.preventDefault();
+                e.stopPropagation();
+                if (currentVimModeRef.current !== 'normal' && vimModeRef.current) {
+                  try {
+                    monacoVim.VimMode.Vim.handleKey(vimModeRef.current as any, '<Esc>');
+                    currentVimModeRef.current = 'normal';
+                  } catch (err) {
+                    logger.warn('Alt+S: could not trigger vim exit-insert', err);
+                  }
+                }
+              }
+            });
+
             defineCommandsTimeoutRef.current = setTimeout(() => {
               logger.debug("Timeout triggered: Attempting to define Vim commands now.");
               defineVimCommands(editorRef, toggleVideo);
