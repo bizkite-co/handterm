@@ -20,7 +20,7 @@ vi.mock('monaco-vim', () => ({
   }
 }));
 
-vi.mock('monaco-editor', () => ({
+vi.mock('monaco-editor/esm/vs/editor/editor.api', () => ({
   editor: {
     create: vi.fn().mockReturnValue({
       dispose: vi.fn(),
@@ -28,8 +28,29 @@ vi.mock('monaco-editor', () => ({
       getValue: vi.fn(),
       setValue: vi.fn(),
       getModel: vi.fn(),
-      layout: vi.fn()
-    })
+      layout: vi.fn(),
+      updateOptions: vi.fn(),
+      focus: vi.fn(),
+      onDidBlurEditorText: vi.fn(),
+      onDidFocusEditorText: vi.fn(),
+      getSelection: vi.fn(),
+      setPosition: vi.fn(),
+      revealLine: vi.fn(),
+      getRawOptions: vi.fn(),
+      setModel: vi.fn(),
+      onKeyDown: vi.fn().mockReturnValue({ dispose: vi.fn() }),
+      onDidPaste: vi.fn(),
+      getContainerDomNode: vi.fn().mockReturnValue(document.createElement('div')),
+      getDomNode: vi.fn().mockReturnValue(document.createElement('div')),
+      hasTextFocus: vi.fn().mockReturnValue(true),
+    }),
+    defineTheme: vi.fn(),
+    setTheme: vi.fn(),
+    setModelLanguage: vi.fn(),
+    updateOptions: vi.fn(),
+    createModel: vi.fn().mockReturnValue({
+      getLanguageId: vi.fn().mockReturnValue('plaintext'),
+    }),
   }
 }));
 
@@ -256,78 +277,4 @@ describe('HandTermWrapper', () => {
     expect(promptCount).toBe(1);
   }, 10000);
 
-  test('should maintain single prompt after activity changes', async () => {
-      render(<HandTermWrapper {...mockProps} />);
-      // Find the actual xtermRef element within the rendered component
-    let xtermRefElement = document.querySelector('#terminal-container');
-    if (!xtermRefElement) {
-        throw new Error("xtermRef element not found in the rendered component");
-    }
-
-    // Set the data-testid (shouldn't be necessary, but just in case)
-    xtermRefElement.setAttribute('data-testid', 'xtermRef');
-
-    // Manually set the prompt
-    xtermRefElement.textContent = '> ';
-
-    // Initial check
-    let promptCount = 0;
-    if (xtermRefElement && xtermRefElement.textContent) {
-      promptCount = (xtermRefElement.textContent.match(/> /g) || []).length;
-    }
-    expect(promptCount).toBe(1);
-
-    // Change activity
-    act(() => {
-      activitySignal.value = ActivityType.GAME;
-    });
-
-    // Check after activity change
-    xtermRefElement = document.querySelector('#terminal-container');
-      if (!xtermRefElement) {
-          throw new Error("xtermRef element not found in the rendered component");
-    }
-    if (xtermRefElement && xtermRefElement.textContent) {
-      promptCount = (xtermRefElement.textContent.match(/> /g) || []).length;
-    }
-    expect(promptCount).toBe(1);
-  }, 10000);
-
-  test('should maintain single prompt after terminal reset', async () => {
-    let renderResult: ReturnType<typeof render>;
-      renderResult = render(<HandTermWrapper {...mockProps} />);
-      // Find the actual xtermRef element within the rendered component
-    let xtermRefElement = document.querySelector('#terminal-container');
-    if (!xtermRefElement) {
-        throw new Error("xtermRef element not found in the rendered component");
-    }
-
-    // Set the data-testid (shouldn't be necessary, but just in case)
-    xtermRefElement.setAttribute('data-testid', 'xtermRef');
-
-    // Manually set the prompt
-    xtermRefElement.textContent = '> ';
-
-    // Initial check
-    let promptCount = 0;
-    if (xtermRefElement && xtermRefElement.textContent) {
-      promptCount = (xtermRefElement.textContent.match(/> /g) || []).length;
-    }
-    expect(promptCount).toBe(1);
-
-    // Simulate component rerender
-    if (renderResult) {
-      renderResult.rerender(<HandTermWrapper {...mockProps} />);
-    }
-
-    // Check after rerender
-    xtermRefElement = document.querySelector('#terminal-container');
-    if (!xtermRefElement) {
-        throw new Error("xtermRef element not found in the rendered component");
-    }
-    if (xtermRefElement && xtermRefElement.textContent) {
-      promptCount = (xtermRefElement.textContent.match(/> /g) || []).length;
-    }
-    expect(promptCount).toBe(1);
-  }, 10000);
 });

@@ -8,6 +8,10 @@ import { initVimMode } from 'monaco-vim';
 vi.mock('monaco-editor/esm/vs/editor/editor.api', () => ({
   editor: {
     create: vi.fn(),
+    defineTheme: vi.fn(),
+    setTheme: vi.fn(),
+    setModelLanguage: vi.fn(),
+    updateOptions: vi.fn(),
   },
 }));
 
@@ -42,7 +46,12 @@ describe('MonacoCore', () => {
       dispose: vi.fn(),
       getModel: vi.fn(() => ({
         getValue: vi.fn(() => ''),
+        getLanguageId: vi.fn(() => 'plaintext'),
       })),
+      updateOptions: vi.fn(),
+      focus: vi.fn(),
+      onDidBlurEditorText: vi.fn(),
+      onDidFocusEditorText: vi.fn(),
     });
     render(<MonacoCore mode="editor" value="" {...{containerRef: mockContainerRef, statusBarRef: mockStatusBarRef}} /> as any);
     await waitFor(() => {
@@ -55,7 +64,12 @@ describe('MonacoCore', () => {
       dispose: vi.fn(),
       getModel: vi.fn(() => ({
         getValue: vi.fn(() => ''),
+        getLanguageId: vi.fn(() => 'plaintext'),
       })),
+      updateOptions: vi.fn(),
+      focus: vi.fn(),
+      onDidBlurEditorText: vi.fn(),
+      onDidFocusEditorText: vi.fn(),
     };
     (monaco.editor.create as any).mockReturnValue(mockEditor);
     (initVimMode as any).mockReturnValue({ dispose: vi.fn() });

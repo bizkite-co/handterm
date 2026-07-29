@@ -23,9 +23,7 @@ export default defineConfig({
       'tests-examples/**',
       '**/e2e/**', // Exclude Playwright tests
     ],
-    alias: {
-      "\\.css$": "<rootDir>/src/__mocks__/styleMock.js"
-    },
+    css: true,
     server: {
       deps: {
         inline: [

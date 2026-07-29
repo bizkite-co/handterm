@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { useComputed } from '@preact/signals-react';
+import { effect } from '@preact/signals-react';
 
 import { activitySignal, setNotification } from 'src/signals/appSignals';
 import {
@@ -44,7 +44,13 @@ export function useActivityMediator(): {
         getIncompleteTutorialsInGroup,
         canUnlockTutorial
     } = useTutorial();
-    const activity = useComputed(() => activitySignal.value).value;
+    const [activityState, setActivityState] = useState(() => activitySignal.value);
+    useEffect(() => {
+        const unsub = effect(() => {
+            setActivityState(activitySignal.value);
+        });
+        return () => unsub();
+    }, []);
     const currentTutorialRef = useRef<GamePhrase | null>(null);
 
     // Effect to listen for locationchange events dispatched by navigate()
@@ -333,10 +339,10 @@ export function useActivityMediator(): {
     }, [checkGameProgress, checkTutorialProgress, transitionToGame]);
 
     useEffect(() => {
-        if (activity === ActivityType.TUTORIAL) {
+        if (activityState === ActivityType.TUTORIAL) {
             checkTutorialProgress(null);
         }
-    }, [activity, checkTutorialProgress]);
+    }, [activityState, checkTutorialProgress]);
 
 
     // Initial activity determination - runs once on mount
@@ -390,10 +396,10 @@ export function useActivityMediator(): {
     }, []);
 
     return {
-        isInGameMode: activity === ActivityType.GAME,
-        isInTutorial: activity === ActivityType.TUTORIAL,
-        isInEdit: activity === ActivityType.EDIT,
-        isInNormal: activity === ActivityType.NORMAL,
+        isInGameMode: activityState === ActivityType.GAME,
+        isInTutorial: activityState === ActivityType.TUTORIAL,
+        isInEdit: activityState === ActivityType.EDIT,
+        isInNormal: activityState === ActivityType.NORMAL,
         checkTutorialProgress,
         heroAction,
         zombie4Action,

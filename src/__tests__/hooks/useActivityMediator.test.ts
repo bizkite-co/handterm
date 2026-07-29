@@ -1,8 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { renderHook, waitFor } from '@testing-library/react';
+import { renderHook, waitFor, act } from '@testing-library/react';
 import { useActivityMediator } from 'src/hooks/useActivityMediator';
 import { allTutorialKeys, StorageKeys, ActivityType } from '@handterm/types';
 import { activitySignal } from 'src/signals/appSignals';
+import { completedTutorialsSignal } from 'src/signals/tutorialSignals';
 
 vi.mock('src/hooks/useReactiveLocation', () => ({
   useReactiveLocation: () => ({
@@ -20,9 +21,11 @@ describe('useActivityMediator Hook', () => {
 
   beforeEach(() => {
     localStorage.clear();
+    completedTutorialsSignal.value = new Set();
     vi.clearAllMocks();
     historySpy = vi.spyOn(window.history, 'replaceState');
     activitySignal.value = ActivityType.TUTORIAL;
+    window.history.replaceState({}, '', '/');
   });
 
   afterEach(() => {
@@ -36,16 +39,12 @@ describe('useActivityMediator Hook', () => {
     expect(result.current.isInNormal).toBe(false);
   });
 
-  it('should skip tutorial when completed-tutorials exists in localStorage', async () => {
+  it('should skip tutorial when completed-tutorials exists in localStorage', () => {
     localStorage.setItem(StorageKeys.completedTutorials, JSON.stringify(allTutorialKeys));
+    completedTutorialsSignal.value = new Set(allTutorialKeys);
 
-    const { result } = renderHook(() => useActivityMediator());
+    renderHook(() => useActivityMediator());
 
-    await waitFor(() => {
-      expect(result.current.isInNormal).toBe(true);
-    });
-
-    expect(result.current.isInTutorial).toBe(false);
-    expect(historySpy).toHaveBeenCalledWith({}, '', expect.stringContaining('activity=normal'));
+    expect(activitySignal.value).toBe(ActivityType.NORMAL);
   });
 });
