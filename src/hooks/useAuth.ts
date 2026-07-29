@@ -346,11 +346,12 @@ export function useAuth(): IAuthProps {
         throw new Error('Invalid login response');
       }
     },
-    onSuccess: (data) => {
+    onSuccess: (data, variables) => {
       if (data.data?.ExpiresIn != null && typeof data.data.ExpiresIn === 'number') {
         setExpiresAtLocalStorage(data.data.ExpiresIn);
         setIsLoggedIn(true);
         isLoggedInSignal.value = true;
+        setUserName(variables.username);
         localStorage.setItem(TokenKeys.AccessToken, data.data.AccessToken);
         localStorage.setItem(TokenKeys.RefreshToken, data.data.RefreshToken);
         localStorage.setItem(TokenKeys.IdToken, data.data.IdToken);

@@ -4,7 +4,7 @@ import { Game, type IGameHandle } from '../game/Game';
 import { useActivityMediator } from '../hooks/useActivityMediator';
 import MonacoTerminal from './MonacoTerminal'; // Changed to default import
 import { useWPMCalculator } from '../hooks/useWPMCaculator';
-import { isShowVideoSignal, activitySignal } from '../signals/appSignals';
+import { isShowVideoSignal, activitySignal, userNameSignal } from '../signals/appSignals';
 import { setGamePhrase } from '../signals/gameSignals';
 import { tutorialSignal } from '../signals/tutorialSignals';
 import {
@@ -36,7 +36,7 @@ const logger = createLogger({
   level: LogLevel.WARN
 });
 
-const getTimestamp = (date: Date): string => date.toTimeString().split(' ')[1] ?? '';
+const getTimestamp = (date: Date): string => date.toTimeString().split(' ')[0] ?? '';
 
 const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProps>((props, forwardedRef) => {
   // Removed: const terminalContainerRef = useRef<HTMLDivElement>(null);
@@ -54,9 +54,9 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
   const [, setErrorCharIndex] = useState<number | undefined>(undefined);
   const [githubUsername] = useState<string | null>(null);
   const [showIntro, setShowIntro] = useState(() => !localStorage.getItem(StorageKeys.hasVisited));
-  const [userName] = useState<string | null>(null); // Removed setUserName as it's not used
   const [treeItems, setTreeItems] = useState<TreeItem[]>([]);
   const isAuthProcess = useComputed(() => isInLoginProcessSignal.value || isInSignUpProcessSignal.value || isInVerifyProcessSignal.value);
+  const displayUserName = useComputed(() => userNameSignal.value ?? 'guest');
   const [currentTimestamp, setCurrentTimestamp] = useState(() => getTimestamp(new Date()));
 
   // Update timestamp every second
@@ -294,7 +294,7 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
       >
         {!isAuthProcess.value && (
           <PromptHeader
-            username={userName ?? 'guest'}
+            username={displayUserName.value}
             domain={domain ?? 'handterm.com'}
             githubUsername={githubUsername}
             timestamp={currentTimestamp}
