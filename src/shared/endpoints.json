@@ -26,6 +26,8 @@
         "SetUser": "/setUser",
         "GetFile": "/getFile",
         "PutFile": "/putFile",
+        "ListFiles": "/listFiles",
+        "DeleteFile": "/deleteFile",
         "ListRecentRepos": "/list-recent-repos",
         "GetRepoTree": "/get-repo-tree",
         "SaveRepoFile": "/save-repo-file",

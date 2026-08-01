@@ -234,6 +234,7 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
         language="markdown"
         toggleVideo={toggleVideoCallback}
         mode="editor" // Explicitly set mode
+        auth={props.auth}
       />
     );
   }, [getStoredContent, toggleVideoCallback]);

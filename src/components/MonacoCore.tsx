@@ -6,9 +6,11 @@ import { initVimMode } from 'monaco-vim';
 import * as monacoVim from 'monaco-vim'; // Import namespace
 import { ActivityType, StorageKeys, type IStandaloneCodeEditor, type ITerminalAdapter } from '@handterm/types';
 import type { IDisposable, IWindowWithMonacoEditor } from 'packages/types/src/monaco';
-import { navigate } from '../utils/navigationUtils';
+import { navigate, parseLocation } from '../utils/navigationUtils';
 import type { JSX } from 'react';
 import { createLogger, LogLevel } from '../utils/Logger';
+import type { IAuthProps } from '../types/HandTerm';
+import { putFile } from '../utils/awsApiClient';
 
 const logger = createLogger({
   prefix: 'MonacoCore',
@@ -34,6 +36,7 @@ monaco.editor.defineTheme('handterm-transparent', {
 // Define commands checking monacoVim namespace import
 export function defineVimCommands(
   editorRef: React.MutableRefObject<monaco.editor.IStandaloneCodeEditor | null>,
+  auth?: IAuthProps,
   toggleVideo?: () => boolean
 ): boolean {
   logger.debug("Attempting to define Vim commands...");
@@ -46,6 +49,20 @@ export function defineVimCommands(
     logger.error("[defineVimCommands] Error accessing API via monacoVim namespace", e);
   }
 
+  const saveToAWS = (content: string): void => {
+    if (!auth) {
+      logger.warn(':w command skipped AWS upload: no auth context');
+      return;
+    }
+    const filename = parseLocation().contentKey || '_index.md';
+    putFile(auth, filename, content)
+      .then((response) => {
+        logger.debug(':w command upload response:', response.status);
+      })
+      .catch((error) => {
+        logger.error(':w command upload failed:', error);
+      });
+  };
 
   // Check if the Vim object and defineEx method exist
   if (Vim && typeof Vim.defineEx === 'function') {
@@ -56,6 +73,7 @@ export function defineVimCommands(
         const content = editorRef.current.getValue();
         localStorage.setItem(StorageKeys.editContent, JSON.stringify(content));
         logger.debug(':w command executed, content saved.');
+        saveToAWS(content);
       }
     });
 
@@ -93,6 +111,7 @@ export function defineVimCommands(
           const content = editorRef.current.getValue();
           localStorage.setItem(StorageKeys.editContent, JSON.stringify(content));
           logger.debug(':wq command: content saved.');
+          saveToAWS(content);
         }
         navigate({ activityKey: ActivityType.NORMAL });
         logger.debug(':wq command: navigate called. Removing editContent from localStorage.');
@@ -121,6 +140,7 @@ interface MonacoCoreProps {
   language?: string;
   toggleVideo?: () => boolean;
   mode: 'editor' | 'terminal'; // Add this prop
+  auth?: IAuthProps; // For editor mode to upload saved content
   onTerminalReady?: (adapter: ITerminalAdapter) => void; // For terminal mode
   onEditorReady?: (editor: monaco.editor.IStandaloneCodeEditor) => void; // For editor mode
   onEnter?: (value: string) => void; // For terminal mode to handle Enter key
@@ -128,7 +148,7 @@ interface MonacoCoreProps {
   vimModeInstanceRef?: React.MutableRefObject<import('monaco-vim').VimModeInstance | null>; // Exposes vim instance to caller
 }
 
-export default function MonacoCore({ value, language = 'text', toggleVideo, mode, onEditorReady, onEnter, onVimModeChange, vimModeInstanceRef }: MonacoCoreProps): JSX.Element {
+export default function MonacoCore({ value, language = 'text', toggleVideo, mode, auth, onEditorReady, onEnter, onVimModeChange, vimModeInstanceRef }: MonacoCoreProps): JSX.Element {
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const statusBarRef = useRef<HTMLDivElement>(null);
@@ -310,7 +330,7 @@ export default function MonacoCore({ value, language = 'text', toggleVideo, mode
 
             defineCommandsTimeoutRef.current = setTimeout(() => {
               logger.debug("Timeout triggered: Attempting to define Vim commands now.");
-              defineVimCommands(editorRef, toggleVideo);
+              defineVimCommands(editorRef, auth, toggleVideo);
               defineCommandsTimeoutRef.current = null;
             }, 500);
           } else {
@@ -329,7 +349,7 @@ export default function MonacoCore({ value, language = 'text', toggleVideo, mode
         logger.warn("Vim effect: statusBarRef not available, skipping initVimMode.");
       }
     }
-  }, [editorRef.current, mode, toggleVideo, onVimModeChange]); // Dependencies for Vim mode
+  }, [editorRef.current, mode, toggleVideo, auth, onVimModeChange]); // Dependencies for Vim mode
 
   // Effect 4: Resize Observer (runs once on mount)
   useEffect(() => {

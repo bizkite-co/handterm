@@ -138,11 +138,37 @@ export async function putFile(
     path: string = '_index.md',
     content: string
 ): Promise<APIResponse<{ message: string }>> {
+    const [ key = '', extension = '' ] = path.split('.');
     return makeAuthenticatedRequest<{ message: string }>(
         auth,
         ENDPOINTS.api.PutFile,
-        { path },
+        undefined,
         'POST',
-        { content }
+        { key, extension, content }
+    );
+}
+
+export async function listFiles(
+    auth: IAuthProps
+): Promise<APIResponse<{ files: string[] }>> {
+    return makeAuthenticatedRequest<{ files: string[] }>(
+        auth,
+        ENDPOINTS.api.ListFiles,
+        undefined,
+        'POST',
+        {}
+    );
+}
+
+export async function deleteFile(
+    auth: IAuthProps,
+    path: string
+): Promise<APIResponse<{ message: string }>> {
+    return makeAuthenticatedRequest<{ message: string }>(
+        auth,
+        ENDPOINTS.api.DeleteFile,
+        undefined,
+        'POST',
+        { path }
     );
 }

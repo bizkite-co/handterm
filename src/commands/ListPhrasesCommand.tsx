@@ -1,15 +1,15 @@
 import { type ICommand, type ICommandContext, type ICommandResponse } from '../contexts/CommandContext';
-import { Phrases, type GamePhrase, type ParsedCommand } from '../types/Types';
+import { type ParsedCommand } from '../types/Types';
+import { listFiles } from '../utils/awsApiClient';
+import { createLogger } from '../utils/Logger';
+
+const logger = createLogger({ prefix: 'ListPhrasesCommand' });
 
 export const ListPhrasesCommand: ICommand = {
   name: 'ls',
   description: 'List files',
-  switches: {
-    'all': 'List all phrases',
-    'random': 'List a random phrase',
-    'easy': 'List only easy phrases',
-  },
-  execute: (
+  switches: {},
+  execute: async (
     context: ICommandContext,
     _parsedCommand: ParsedCommand
   ): Promise<ICommandResponse> => {
@@ -17,13 +17,30 @@ export const ListPhrasesCommand: ICommand = {
       return Promise.resolve({ status: 404, message: 'No command context available.' });
     }
 
-    const phrases: string = Phrases
-      .map((phrase: GamePhrase) => phrase.key)
-      .join('\n');
+    try {
+      const response = await listFiles(context.auth);
+      if (response.status !== 200 || !response.data) {
+        return {
+          status: response.status,
+          message: response.error ?? 'Failed to list files'
+        };
+      }
 
-    return Promise.resolve({
-      status: 200,
-      message: phrases
-    });
+      const files = response.data.files;
+      if (files.length === 0) {
+        return { status: 200, message: 'No files found.' };
+      }
+
+      return {
+        status: 200,
+        message: files.join('\n')
+      };
+    } catch (error) {
+      logger.error('Error listing files:', error);
+      return {
+        status: 500,
+        message: error instanceof Error ? error.message : 'Failed to list files'
+      };
+    }
   }
 };
