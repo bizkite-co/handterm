@@ -237,7 +237,7 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
         auth={props.auth}
       />
     );
-  }, [getStoredContent, toggleVideoCallback]);
+  }, [getStoredContent, toggleVideoCallback, currentActivityValue]);
 
   const treeEditorComponent = useMemo(() => {
     logger.debug("Memoizing MonacoCore (Tree) component instance");

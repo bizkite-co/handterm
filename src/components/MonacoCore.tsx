@@ -190,6 +190,10 @@ export default function MonacoCore({ value, language = 'text', toggleVideo, mode
       onEditorReady(editorInstance);
     }
 
+    if (mode === 'editor') {
+      editorInstance.focus();
+    }
+
     // Cleanup for editor creation
     return () => {
       logger.debug("Editor creation cleanup: Disposing editor instance.");
@@ -268,6 +272,12 @@ export default function MonacoCore({ value, language = 'text', toggleVideo, mode
         editor.setValue(value);
       }
     }
+
+    return () => {
+      if (mode === 'editor') {
+        monaco.editor.setTheme('handterm-transparent');
+      }
+    };
 
   }, [editorRef.current, language, mode, value]); // Dependencies for model/options
 

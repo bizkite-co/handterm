@@ -37,6 +37,19 @@ describe('MonacoCore', () => {
   })
 
   it('renders without crashing', () => {
+    (monaco.editor.create as any).mockReturnValue({
+      dispose: vi.fn(),
+      focus: vi.fn(),
+      getModel: vi.fn(() => ({
+        getValue: vi.fn(() => ''),
+        getLanguageId: vi.fn(() => 'plaintext'),
+      })),
+      updateOptions: vi.fn(),
+      onDidBlurEditorText: vi.fn(),
+      onDidFocusEditorText: vi.fn(),
+      onKeyDown: vi.fn().mockReturnValue({ dispose: vi.fn() }),
+    });
+    (initVimMode as any).mockReturnValue({ dispose: vi.fn(), on: vi.fn() });
     render(<MonacoCore mode="editor" value="" {...{containerRef: mockContainerRef, statusBarRef: mockStatusBarRef}} /> as any);
     expect(screen.getByTestId('monaco-editor-container')).toBeInTheDocument();
   });
@@ -79,5 +92,56 @@ describe('MonacoCore', () => {
     await waitFor(() => {
       expect(initVimMode).toHaveBeenCalledWith(mockEditor, expect.anything());
     }, { timeout: 2000 });
+  });
+
+  it('restores the terminal theme when an editor-mode editor unmounts', async () => {
+    const mockEditor = {
+      dispose: vi.fn(),
+      getModel: vi.fn(() => ({
+        getValue: vi.fn(() => ''),
+        getLanguageId: vi.fn(() => 'plaintext'),
+      })),
+      updateOptions: vi.fn(),
+      focus: vi.fn(),
+      onDidBlurEditorText: vi.fn(),
+      onDidFocusEditorText: vi.fn(),
+      onKeyDown: vi.fn().mockReturnValue({ dispose: vi.fn() }),
+    };
+    (monaco.editor.create as any).mockReturnValue(mockEditor);
+    (initVimMode as any).mockReturnValue({ dispose: vi.fn(), on: vi.fn() });
+
+    const { unmount } = render(<MonacoCore mode="editor" value="" {...{containerRef: mockContainerRef, statusBarRef: mockStatusBarRef}} /> as any);
+
+    await waitFor(() => {
+      expect(monaco.editor.setTheme).toHaveBeenCalledWith('vs-dark');
+    });
+
+    unmount();
+
+    expect(monaco.editor.setTheme).toHaveBeenCalledWith('handterm-transparent');
+  });
+
+  it('focuses the editor on mount in editor mode', async () => {
+    const focus = vi.fn();
+    const mockEditor = {
+      dispose: vi.fn(),
+      focus,
+      getModel: vi.fn(() => ({
+        getValue: vi.fn(() => ''),
+        getLanguageId: vi.fn(() => 'plaintext'),
+      })),
+      updateOptions: vi.fn(),
+      onDidBlurEditorText: vi.fn(),
+      onDidFocusEditorText: vi.fn(),
+      onKeyDown: vi.fn().mockReturnValue({ dispose: vi.fn() }),
+    };
+    (monaco.editor.create as any).mockReturnValue(mockEditor);
+    (initVimMode as any).mockReturnValue({ dispose: vi.fn(), on: vi.fn() });
+
+    render(<MonacoCore mode="editor" value="" {...{containerRef: mockContainerRef, statusBarRef: mockStatusBarRef}} /> as any);
+
+    await waitFor(() => {
+      expect(focus).toHaveBeenCalled();
+    });
   });
 });

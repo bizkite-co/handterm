@@ -2,6 +2,7 @@ import { render, act, screen } from '@testing-library/react';
 import { vi, describe, test, expect, beforeEach, afterEach } from 'vitest';
 import { HandTermWrapper } from './HandTermWrapper';
 import { activitySignal } from '../signals/appSignals';
+import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 import {
   ActivityType,
   type OutputElement,
@@ -27,7 +28,11 @@ vi.mock('monaco-editor/esm/vs/editor/editor.api', () => ({
       onDidChangeModelContent: vi.fn(),
       getValue: vi.fn(),
       setValue: vi.fn(),
-      getModel: vi.fn(),
+      getModel: vi.fn().mockReturnValue({
+        getValue: vi.fn(() => ''),
+        getLanguageId: vi.fn(() => 'plaintext'),
+        setValue: vi.fn(),
+      }),
       layout: vi.fn(),
       updateOptions: vi.fn(),
       focus: vi.fn(),
@@ -275,6 +280,21 @@ describe('HandTermWrapper', () => {
       promptCount = (xtermRefElement.textContent.match(/> /g) || []).length;
     }
     expect(promptCount).toBe(1);
+  }, 10000);
+
+  test('editor mounts with fresh editContent each time EDIT activity is entered', async () => {
+    render(<HandTermWrapper {...mockProps} />);
+
+    localStorage.setItem('editContent', JSON.stringify('# Fresh content'));
+
+    await act(async () => {
+      activitySignal.value = ActivityType.EDIT;
+    });
+
+    const createCalls = (monaco.editor.create as any).mock.calls;
+    const editorCall = createCalls.find((call: any[]) => call[1]?.theme === 'vs-dark');
+    expect(editorCall).toBeDefined();
+    expect(editorCall[1].value).toBe('# Fresh content');
   }, 10000);
 
 });
