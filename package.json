@@ -6,6 +6,8 @@
   "type": "module",
   "scripts": {
     "test": "npm run test:unit",
+    "build:package": "cd packages/types && npm run build",
+    "build": "npm run build:package && npx vite build",
     "test:all": "npm run test:unit; npm run test:e2e",
     "test:unit": "mkdir -p vitest-output; rm -rf vitest-output/*; vitest --run",
     "test:unit-save": "mkdir -p vitest-output; rm -rf vitest-output/*; vitest --run --reporter=json --outputFile=./vitest-output/vitest.json",
