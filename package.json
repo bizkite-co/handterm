@@ -23,7 +23,6 @@
   "dependencies": {
     "@aws-sdk/client-apigatewayv2": "^3.x.x",
     "@effect/schema": "^0.75.5",
-    "effect": "^3.17.10",
     "@emotion/react": "^11.14.0",
     "@fortawesome/fontawesome-svg-core": "^6.7.2",
     "@fortawesome/free-brands-svg-icons": "^6.7.2",
@@ -38,8 +37,10 @@
     "canvas-confetti": "^1.9.3",
     "canvas-mock": "^0.0.0",
     "dotenv": "^16.4.7",
+    "effect": "^3.17.10",
     "monaco-editor": "^0.52.2",
     "monaco-vim": "^0.4.2",
+    "preact": "^10.29.8",
     "raw-body": "^3.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

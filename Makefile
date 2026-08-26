@@ -107,6 +107,9 @@ test-save: ## Run tests and save results to a temporary file
 test-ui: ## Run Vitest UI
 	vitest --ui
 
+test-playwright: ## Run Playwright tests
+	npx playwright test
+
 test-e2e: ## Run end-to-end tests
 	mkdir -p test-results; PLAYWRIGHT_OUTPUT_DIR=test-results PLAYWRIGHT_REPORTERS='junit' PLAYWRIGHT_JUNIT_OUTPUT_NAME='test-results/playwright.xml' PLAYWRIGHT_TEST=1 npx playwright test
 
