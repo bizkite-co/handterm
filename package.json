@@ -21,6 +21,7 @@
   "dependencies": {
     "@aws-sdk/client-apigatewayv2": "^3.x.x",
     "@effect/schema": "^0.75.5",
+    "effect": "^3.17.10",
     "@emotion/react": "^11.14.0",
     "@fortawesome/fontawesome-svg-core": "^6.7.2",
     "@fortawesome/free-brands-svg-icons": "^6.7.2",

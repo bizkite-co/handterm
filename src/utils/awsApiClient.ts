@@ -1,9 +1,15 @@
 import type { AxiosError, AxiosInstance } from 'axios';
 import axios from 'axios';
+import { Schema } from '@effect/schema';
 
 import { type IAuthProps } from '../types/HandTerm';
 import ENDPOINTS from '../shared/endpoints.json';
 import { createLogger } from './Logger';
+import {
+    FileContentResponseSchema,
+    MessageResponseSchema,
+    ListFilesResponseSchema,
+} from '@handterm/types';
 
 const logger = createLogger();
 
@@ -42,7 +48,8 @@ export async function makeAuthenticatedRequest<T>(
     endpoint: string,
     params?: Record<string, string>,
     method: 'GET' | 'POST' = 'GET',
-    data?: unknown
+    data?: unknown,
+    responseSchema?: Schema.Schema<any, any>
 ): Promise<APIResponse<T>> {
     try {
         const authResponse = await auth.validateAndRefreshToken();
@@ -72,6 +79,26 @@ export async function makeAuthenticatedRequest<T>(
                 params,
                 data
             });
+
+            // Validate the response shape against the schema when one is provided.
+            // A malformed shape (e.g. a missing `content` field) surfaces as a
+            // typed 502 error instead of silently returning undefined data.
+            if (responseSchema != null) {
+                const either = Schema.decodeUnknownEither(responseSchema)(response.data);
+                if (either._tag === 'Left') {
+                    const decodeMessage = (either.left as { message?: string })?.message
+                        ?? 'response failed schema validation';
+                    logger.error(`Response schema validation failed for ${endpoint}: ${decodeMessage}`);
+                    return {
+                        status: 502,
+                        error: `Invalid response shape: ${decodeMessage}`
+                    };
+                }
+                return {
+                    status: response.status,
+                    data: either.right as T
+                };
+            }
 
             return {
                 status: response.status,
@@ -129,7 +156,10 @@ export async function getFile(
     return makeAuthenticatedRequest<FileContentResponse>(
         auth,
         ENDPOINTS.api.GetFile,
-        { key, extension }
+        { key, extension },
+        'GET',
+        undefined,
+        FileContentResponseSchema
     );
 }
 
@@ -144,7 +174,8 @@ export async function putFile(
         ENDPOINTS.api.PutFile,
         undefined,
         'POST',
-        { key, extension, content }
+        { key, extension, content },
+        MessageResponseSchema
     );
 }
 
@@ -156,7 +187,8 @@ export async function listFiles(
         ENDPOINTS.api.ListFiles,
         undefined,
         'POST',
-        {}
+        {},
+        ListFilesResponseSchema
     );
 }
 
@@ -169,6 +201,7 @@ export async function deleteFile(
         ENDPOINTS.api.DeleteFile,
         undefined,
         'POST',
-        { path }
+        { path },
+        MessageResponseSchema
     );
 }
