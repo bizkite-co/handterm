@@ -184,6 +184,8 @@ function GameFunction(props: IGameProps, ref: React.ForwardedRef<IGameHandle>): 
   }, [toggleScrollingText]);
 
   const startAnimationLoop = useCallback((context: CanvasRenderingContext2D) => {
+    stopAnimationLoop();
+
     const frameDelay = 150;
     let lastFrameTime = performance.now();
 
@@ -205,7 +207,7 @@ function GameFunction(props: IGameProps, ref: React.ForwardedRef<IGameHandle>): 
     };
 
     animationFrameIndex.current = requestAnimationFrame(loop);
-  }, [isPhraseComplete, drawScrollingText, updateCharacterAndBackgroundPostion, checkProximityAndSetAction]);
+  }, [isPhraseComplete, drawScrollingText, updateCharacterAndBackgroundPostion, checkProximityAndSetAction, stopAnimationLoop]);
 
   const setHeroRunAction = useCallback(() => {
     const timeout = heroRunTimeoutRef.current;
@@ -291,7 +293,8 @@ function GameFunction(props: IGameProps, ref: React.ForwardedRef<IGameHandle>): 
     if (context !== null) {
       startAnimationLoop(context);
     }
-  }, [context, startAnimationLoop]);
+    return () => stopAnimationLoop();
+  }, [context, startAnimationLoop, stopAnimationLoop]);
 
   useImperativeHandle(ref, () => ({
     startGame,
