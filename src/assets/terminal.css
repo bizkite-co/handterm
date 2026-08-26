@@ -249,7 +249,7 @@ pre#prompt {
     div {
         float: left;
         padding: 20px 0 0 30px;
-        font-size: calc(var(--terminal-font-size) * 2.8);
+        font-size: calc(var(--terminal-font-size) * 1.5);
         text-align: center;
 
         a {

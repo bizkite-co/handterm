@@ -19,7 +19,7 @@ class CommandRegistry {
         return Object.values(this.commands)
             .filter(cmd => !filter || cmd.name.includes(filter))
             .map(cmd => `${cmd.name}: ${cmd.description}`)
-            .join('\n\n');
+            .join('\n');
     }
 
 }
