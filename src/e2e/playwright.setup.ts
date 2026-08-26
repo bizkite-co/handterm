@@ -5,8 +5,11 @@ import { TEST_CONFIG } from './config';
 import { assert } from 'console';
 
 async function globalSetup(_config: FullConfig): Promise<void> {
-  const executablePath = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH || '/usr/bin/chromium-browser';
-  const browser = await chromium.launch({ executablePath });
+  const launchOptions: { executablePath?: string } = {};
+  if (process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH) {
+    launchOptions.executablePath = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH;
+  }
+  const browser = await chromium.launch(launchOptions);
   const page = await browser.newPage();
 
   // Add console listener for debugging
