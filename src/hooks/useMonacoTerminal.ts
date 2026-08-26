@@ -350,6 +350,28 @@ export const useMonacoTerminal = (
           return;
         }
 
+        // Prevent cursor from moving into the prompt area (Left/Right arrows)
+        if (e.keyCode === monaco.KeyCode.LeftArrow || e.keyCode === monaco.KeyCode.RightArrow) {
+          const m = modelRef.current;
+          const ed = editorRef.current;
+          if (m && ed) {
+            const pos = ed.getPosition();
+            if (pos) {
+              const lineContent = m.getLineContent(pos.lineNumber);
+              // Only protect lines that start with the prompt
+              if (lineContent.startsWith(TERMINAL_CONSTANTS.PROMPT)) {
+                if (e.keyCode === monaco.KeyCode.LeftArrow && pos.column <= TERMINAL_CONSTANTS.PROMPT_LENGTH + 1) {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  // Clamp cursor to right after the prompt
+                  ed.setPosition({ lineNumber: pos.lineNumber, column: TERMINAL_CONSTANTS.PROMPT_LENGTH + 1 });
+                  return;
+                }
+              }
+            }
+          }
+        }
+
         // For regular characters, we intercept and handle it ourselves to avoid model loops
         if (e.browserEvent.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
           e.preventDefault();
@@ -357,9 +379,21 @@ export const useMonacoTerminal = (
           handleDataRef.current(e.browserEvent.key);
         }
       });
-      
+
+      // Guard cursor position: prevent clicks/vim from moving cursor into prompt
+      const cursorDisposable = editor.onDidChangeCursorPosition((e) => {
+        if (currentModeRef?.current === 'normal') return; // vim manages cursor in normal mode
+        const m = modelRef.current;
+        if (!m) return;
+        const lineContent = m.getLineContent(e.position.lineNumber);
+        if (lineContent.startsWith(TERMINAL_CONSTANTS.PROMPT) && e.position.column <= TERMINAL_CONSTANTS.PROMPT_LENGTH) {
+          editor.setPosition({ lineNumber: e.position.lineNumber, column: TERMINAL_CONSTANTS.PROMPT_LENGTH + 1 });
+        }
+      });
+
       return () => {
         disposable.dispose();
+        cursorDisposable.dispose();
       };
     }
     return () => {};
