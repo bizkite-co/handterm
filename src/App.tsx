@@ -32,13 +32,22 @@ export function App() {
   }, [containerRef]);
 
   useEffect(() => {
-    const handleResize = () => {
+    const measure = () => {
       const w = getContainerWidth();
       setContainerWidth(w);
     };
 
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    // Measure once on mount so the canvas isn't 0px wide until a resize.
+    measure();
+    window.addEventListener('resize', measure);
+    const observer = new ResizeObserver(measure);
+    if (containerRef.current != null) {
+      observer.observe(containerRef.current);
+    }
+    return () => {
+      window.removeEventListener('resize', measure);
+      observer.disconnect();
+    };
   }, [getContainerWidth]);
 
   useEffect(() => {
