@@ -52,10 +52,12 @@ export default defineConfig({
     outDir: 'dist',
     target: 'esnext',
     sourcemap: true, // Enable source maps
+    chunkSizeWarningLimit: 2500, // monaco-editor is ~2.3MB; allow it without warning
     rollupOptions: {
       output: {
         manualChunks: {
           monaco: ['monaco-editor'],
+          vendor: ['react', 'react-dom', 'react-router-dom'],
         },
       },
     },
