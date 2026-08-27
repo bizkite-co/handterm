@@ -6,7 +6,7 @@ import MonacoTerminal from './MonacoTerminal'; // Changed to default import
 import { useWPMCalculator } from '../hooks/useWPMCaculator';
 import { isShowVideoSignal, activitySignal, userNameSignal } from '../signals/appSignals';
 import { setGamePhrase } from '../signals/gameSignals';
-import { tutorialSignal } from '../signals/tutorialSignals';
+import { tutorialSignal, setCompletedTutorial, getNextTutorial, completedTutorialsSignal } from '../signals/tutorialSignals';
 import {
   type GamePhrase,
   type IHandTermWrapperProps,
@@ -193,6 +193,9 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
       tutorialSignal.value = tutorial;
     };
     window.ActivityType = ActivityType;
+    window.setCompletedTutorial = setCompletedTutorial;
+    window.getNextTutorial = getNextTutorial;
+    (window as any).completedTutorialsSignal = completedTutorialsSignal;
   }, []);
 
   const getStoredContent = useCallback((): string => {

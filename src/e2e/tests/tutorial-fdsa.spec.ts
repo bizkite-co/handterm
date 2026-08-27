@@ -1,5 +1,4 @@
 import { test, expect } from '@playwright/test';
-import '../playwright.setup';
 import { TerminalPage } from '../page-objects/TerminalPage';
 import { TEST_CONFIG } from '../config';
 

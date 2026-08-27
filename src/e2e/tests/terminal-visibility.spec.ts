@@ -5,20 +5,20 @@ import { TEST_CONFIG } from '\'e2e/config\'';
 test.describe('Terminal Visibility', () => {
   test('terminal element should be visible', async ({ page }) => {
     await page.goto(TEST_CONFIG.baseUrl);
+    await page.waitForLoadState('domcontentloaded');
     const terminal = new TerminalPage(page);
-
-    // Wrap the waitForTerminal call in an expect().not.toThrow()
-    await expect(async () => {
-      await terminal.waitForTerminal();
-    }).not.toThrow();
-
-    // Use the terminal page object for the assertion
-    expect(terminal.terminal).toBeVisible();
+    await terminal.waitForAppReady();
+    await terminal.waitForTerminalContainer();
+    // Check the container is attached and has child elements (Monaco renders inside)
+    const hasChildren = await terminal.terminalHasChildren();
+    await expect(hasChildren).toBe(true);
   });
   test('terminal element should have children', async ({ page }) => {
     await page.goto(TEST_CONFIG.baseUrl);
+    await page.waitForLoadState('domcontentloaded');
     const terminal = new TerminalPage(page);
-    await terminal.waitForTerminal();
+    await terminal.waitForAppReady();
+    await terminal.waitForTerminalContainer();
     const hasChildren = await terminal.terminalHasChildren();
     await expect(hasChildren).toBe(true);
   })

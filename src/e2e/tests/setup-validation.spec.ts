@@ -8,6 +8,9 @@ test.describe('Setup Validation', () => {
     test.beforeAll(async ({ browser }) => {
       page = await browser.newPage();
       await page.goto(TEST_CONFIG.baseUrl);
+      await page.waitForLoadState('domcontentloaded');
+      // Wait for React to mount
+      await page.waitForSelector('#handterm-wrapper', { state: 'attached', timeout: TEST_CONFIG.timeout.long });
     });
 
     test('Page loads successfully', async () => {
@@ -22,7 +25,15 @@ test.describe('Setup Validation', () => {
 
   test.describe('Window Extensions', () => {
     test('window.completedTutorialsSignal is defined', async ({ page }) => {
-      const isDefined = await page.evaluate(() => typeof window.completedTutorialsSignal !== 'undefined');
+      await page.goto(TEST_CONFIG.baseUrl);
+      await page.waitForLoadState('domcontentloaded');
+      // Wait for app to mount and expose signals
+      await page.waitForFunction(
+        () => typeof (window as any).completedTutorialsSignal !== 'undefined',
+        null,
+        { timeout: TEST_CONFIG.timeout.long }
+      );
+      const isDefined = await page.evaluate(() => typeof (window as any).completedTutorialsSignal !== 'undefined');
       expect(isDefined).toBe(true);
     });
   });

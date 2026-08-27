@@ -7,6 +7,13 @@ test.describe('Signal Value', () => {
   test.beforeEach(async ({ browser }) => {
     page = await browser.newPage();
     await page.goto(TEST_CONFIG.baseUrl);
+    await page.waitForLoadState('domcontentloaded');
+    // Wait for app to mount and expose signals on window
+    await page.waitForFunction(
+      () => typeof (window as any).completedTutorialsSignal !== 'undefined',
+      null,
+      { timeout: TEST_CONFIG.timeout.long }
+    );
   });
 
   test('completedTutorialsSignal.value is a Set', async () => {
