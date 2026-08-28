@@ -16,9 +16,11 @@ class CommandRegistry {
     }
 
     getHelp(filter?: string): string {
-        return Object.values(this.commands)
-            .filter(cmd => !filter || cmd.name.includes(filter))
-            .map(cmd => `${cmd.name}: ${cmd.description}`)
+        const commands = Object.values(this.commands)
+            .filter(cmd => !filter || cmd.name.includes(filter));
+        const maxNameLen = Math.max(...commands.map(cmd => cmd.name.length));
+        return commands
+            .map(cmd => `<span class="cmd-name">${cmd.name.padEnd(maxNameLen)}</span>  <span class="cmd-desc">${cmd.description}</span>`)
             .join('\n');
     }
 

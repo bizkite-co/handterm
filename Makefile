@@ -16,7 +16,7 @@ dev-prepare: ## Prepare development environment
 dev-watch: ## Watch for changes and recompile
 	npx vite
 
-dev: dev-stop ## Run development server in background
+start: stop ## Run development server in background
 	@echo "Starting Vite server..."; \
 	nohup npx vite --no-open > vite.log 2>&1 & \
 	echo $$! > vite.pid; \
@@ -33,14 +33,14 @@ dev: dev-stop ## Run development server in background
 		echo "Vite did not report a URL quickly; see vite.log"; \
 	fi
 
-dev-stop: ## Stop development server
+stop: ## Stop development server
 	@echo "Attempting to stop all Vite processes using pkill..."
 	-pkill -f vite
 	@echo "Vite processes stopped. Checking status..."
 	echo "Vite server stopped" > vite.log 2>&1
-	@make dev-status
+	@make status
 
-dev-status: ## Get development server status
+status: ## Get development server status
 	@ps aug | rg vite
 	@cat vite.log
 
@@ -124,6 +124,36 @@ validate: ## Validate code with linting and tests
 
 deploy: ## Deploy to GitHub Pages
 	gh-pages -d dist
+
+# ==============================================================================
+# Cognito User Management (delegates to handterm-cdk)
+# ==============================================================================
+
+.PHONY: cognito-list cognito-reset cognito-create
+
+cognito-list: ## List all Cognito users
+	$(MAKE) -C ../handterm-cdk list-users
+
+cognito-reset: ## Reset Cognito password (usage: make cognito-reset USER=myuser PASSWORD=P@ssw0rd!)
+ifndef USER
+	$(error USER is required. Usage: make cognito-reset USER=myuser PASSWORD=P@ssw0rd!)
+endif
+ifndef PASSWORD
+	$(error PASSWORD is required. Usage: make cognito-reset USER=myuser PASSWORD=P@ssw0rd!)
+endif
+	$(MAKE) -C ../handterm-cdk reset-password USER=$(USER) PASSWORD=$(PASSWORD)
+
+cognito-create: ## Create Cognito user (usage: make cognito-create USER=myuser EMAIL=my@email.com PASSWORD=P@ssw0rd!)
+ifndef USER
+	$(error USER is required. Usage: make cognito-create USER=myuser EMAIL=my@email.com PASSWORD=P@ssw0rd!)
+endif
+ifndef EMAIL
+	$(error EMAIL is required. Usage: make cognito-create USER=myuser EMAIL=my@email.com PASSWORD=P@ssw0rd!)
+endif
+ifndef PASSWORD
+	$(error PASSWORD is required. Usage: make cognito-create USER=myuser EMAIL=my@email.com PASSWORD=P@ssw0rd!)
+endif
+	$(MAKE) -C ../handterm-cdk create-user USER=$(USER) EMAIL=$(EMAIL) PASSWORD=$(PASSWORD)
 
 format: ## Format code with Prettier
 	prettier --write "src/**/*.{ts,tsx,js,jsx}"

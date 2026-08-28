@@ -116,6 +116,19 @@ body {
     padding-right: 10px;
 }
 
+.command-list {
+    font-family: 'Fira Code', Menlo, 'DejaVu Sans Mono', monospace;
+    white-space: pre;
+    line-height: 1.6;
+}
+.command-list .cmd-name {
+    color: cyan;
+    font-weight: bold;
+}
+.command-list .cmd-desc {
+    color: #aaa;
+}
+
 .terminal-nav {
     color: white;
     background-color: #000;

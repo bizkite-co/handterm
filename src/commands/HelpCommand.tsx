@@ -36,7 +36,7 @@ export const HelpCommand: ICommand = {
         <div class='chord-display-container'>${commandChordsHtml}</div>
         <div class='command-list-container'>
           <h3>Available Commands:</h3>
-          <pre>${commandList}</pre>
+          <div class="command-list">${commandList}</div>
         </div>
       `;
       return Promise.resolve<ICommandResponse>({ status: 200, message: response });
