@@ -45,6 +45,7 @@ vi.mock('monaco-editor/esm/vs/editor/editor.api', () => ({
       setModel: vi.fn(),
       onKeyDown: vi.fn().mockReturnValue({ dispose: vi.fn() }),
       onDidChangeCursorPosition: vi.fn().mockReturnValue({ dispose: vi.fn() }),
+      onMouseDown: vi.fn().mockReturnValue({ dispose: vi.fn() }),
       onDidPaste: vi.fn(),
       getContainerDomNode: vi.fn().mockReturnValue(document.createElement('div')),
       getDomNode: vi.fn().mockReturnValue(document.createElement('div')),

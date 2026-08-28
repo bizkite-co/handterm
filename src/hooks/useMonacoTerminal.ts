@@ -391,9 +391,26 @@ export const useMonacoTerminal = (
         }
       });
 
+      // Intercept mouse/touch clicks BEFORE the cursor moves — more reliable
+      // than the post-move guard above (no flash, no re-entrancy).
+      const mouseDisposable = editor.onMouseDown((e) => {
+        if (currentModeRef?.current === 'normal') return;
+        const target = e.target;
+        if (target == null || target.position == null) return;
+        const pos = target.position;
+        const m = modelRef.current;
+        if (!m) return;
+        const lineContent = m.getLineContent(pos.lineNumber);
+        if (lineContent.startsWith(TERMINAL_CONSTANTS.PROMPT) && pos.column <= TERMINAL_CONSTANTS.PROMPT_LENGTH) {
+          e.preventDefault();
+          editor.setPosition({ lineNumber: pos.lineNumber, column: TERMINAL_CONSTANTS.PROMPT_LENGTH + 1 });
+        }
+      });
+
       return () => {
         disposable.dispose();
         cursorDisposable.dispose();
+        mouseDisposable.dispose();
       };
     }
     return () => {};
