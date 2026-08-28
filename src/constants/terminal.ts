@@ -3,9 +3,9 @@ export const TERMINAL_CONSTANTS = {
   PROMPT_LENGTH: 2, // Length of '> '
 } as const;
 
-// Base dimensions for the handshape glyph (the hand-chord SVG).
-// Scale via HANDSHAPE_SCALE signal / `config handshape-size` command.
-export const HANDSHAPE_BASE = {
+// Base dimensions for the chord glyph (the hand-chord SVG).
+// Scale via chordGlyphScale signal / `config chord-glyph-size` command.
+export const CHORD_GLYPH_BASE = {
   width: 75,
   height: 59.516,
 } as const;

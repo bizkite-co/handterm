@@ -27,14 +27,14 @@ export const notificationSignal = signal<string | null>(null);
 export const isEditModeSignal = signal<boolean>(false);
 export const isShowVideoSignal = signal<boolean>(false);
 
-// Handshape glyph scale — adjustable via `config handshape-size <value>`
-const HANDSHAPE_SCALE_KEY = 'handshape-scale';
-export const handshapeScaleSignal = signal<number>(
-  parseFloat(localStorage.getItem(HANDSHAPE_SCALE_KEY) ?? '1') || 1
+// Chord glyph scale — adjustable via `config chord-glyph-size <value>`
+const CHORD_GLYPH_SCALE_KEY = 'chord-glyph-scale';
+export const chordGlyphScaleSignal = signal<number>(
+  parseFloat(localStorage.getItem(CHORD_GLYPH_SCALE_KEY) ?? '1') || 1
 );
-export const setHandshapeScale = (scale: number): void => {
-  handshapeScaleSignal.value = scale;
-  localStorage.setItem(HANDSHAPE_SCALE_KEY, String(scale));
+export const setChordGlyphScale = (scale: number): void => {
+  chordGlyphScaleSignal.value = scale;
+  localStorage.setItem(CHORD_GLYPH_SCALE_KEY, String(scale));
 };
 
 export const isInLoginProcessSignal = signal<boolean>(false);
