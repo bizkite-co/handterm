@@ -8,7 +8,7 @@ declare global {
 
 import { computed, signal } from '@preact/signals-react';
 
-import { ActivityType } from '@handterm/types';
+import { ActivityType, TokenKeys } from '@handterm/types';
 import type { OutputElement } from '@handterm/types';
 import { createLogger, LogLevel } from 'src/utils/Logger';
 import { createPersistentSignal } from 'src/utils/signalPersistence';
@@ -123,8 +123,12 @@ export const setNotification = (notification: string): void => {
     notificationSignal.value = notification;
 };
 
-export const isLoggedInSignal = signal<boolean>(false);
-export const userNameSignal = signal<string | null>(null);
+export const isLoggedInSignal = signal<boolean>(
+  localStorage.getItem(TokenKeys.AccessToken) != null
+);
+export const userNameSignal = signal<string | null>(
+  localStorage.getItem(TokenKeys.UserName) ?? null
+);
 
 export const setIsLoggedIn = (value: boolean): void => {
     isLoggedInSignal.value = value;
@@ -132,6 +136,11 @@ export const setIsLoggedIn = (value: boolean): void => {
 
 export const setUserName = (name: string | null): void => {
     userNameSignal.value = name;
+    if (name != null) {
+        localStorage.setItem(TokenKeys.UserName, name);
+    } else {
+        localStorage.removeItem(TokenKeys.UserName);
+    }
 };
 
 // REVERTED: Removed locationchange event listener

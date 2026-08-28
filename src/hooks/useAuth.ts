@@ -35,8 +35,10 @@ export function useAuth(): IAuthProps {
     localStorage.removeItem(TokenKeys.ExpiresIn);
     localStorage.removeItem(TokenKeys.IdToken);
     localStorage.removeItem(TokenKeys.GithubUsername);
+    localStorage.removeItem(TokenKeys.UserName);
     setIsLoggedIn(false);
     isLoggedInSignal.value = false;
+    setUserName(null);
   };
 
   // Token refresh mutation

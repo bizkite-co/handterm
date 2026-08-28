@@ -169,7 +169,8 @@ export const TokenKeys = {
   IdToken: 'IdToken',
   ExpiresAt: 'ExpiresAt',
   ExpiresIn: 'ExpiresIn',
-  GithubUsername: 'githubUsername'
+  GithubUsername: 'githubUsername',
+  UserName: 'UserName'
 } as const;
 export type TokenKey = keyof typeof TokenKeys;
 
