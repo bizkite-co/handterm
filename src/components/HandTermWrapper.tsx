@@ -131,7 +131,11 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
     // phrase assignment wins. Runs unconditionally — a successful phrase
     // always progresses, regardless of typing speed.
     activityMediator.checkGameProgress(phrase);
-    terminalAdapter?.clear(); // Use optional chaining
+    // resetPrompt (NOT clear) restores the "> " prompt AND resets the
+    // command line. clear() alone empties the model but leaves the previous
+    // phrase in commandLineSignal, so the next level starts with a stale
+    // prefix and nextChars never shrink as it is typed.
+    terminalAdapter?.resetPrompt();
   }, [activityMediator, handlePhraseComplete, gameHandleRef, terminalAdapter, currentActivityValue]);
 
   useEffect(() => {
