@@ -402,7 +402,6 @@ export const useMonacoTerminal = (
         if (!m) return;
         const lineContent = m.getLineContent(pos.lineNumber);
         if (lineContent.startsWith(TERMINAL_CONSTANTS.PROMPT) && pos.column <= TERMINAL_CONSTANTS.PROMPT_LENGTH) {
-          e.preventDefault();
           editor.setPosition({ lineNumber: pos.lineNumber, column: TERMINAL_CONSTANTS.PROMPT_LENGTH + 1 });
         }
       });
