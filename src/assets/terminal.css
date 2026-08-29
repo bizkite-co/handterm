@@ -266,7 +266,7 @@ pre#prompt {
     div {
         float: left;
         padding: 20px 0 0 30px;
-        font-size: calc(var(--terminal-font-size) * 1.5);
+        font-size: var(--terminal-font-size);
         line-height: var(--terminal-line-height);
         text-align: center;
 
@@ -309,7 +309,7 @@ pre#prompt {
 
     #footer {
         div {
-            font-size: calc(var(--terminal-font-size) * 0.8);
+            font-size: var(--terminal-font-size);
         }
 
         img {

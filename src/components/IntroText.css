@@ -6,6 +6,15 @@
   text-align: center;
   color: white;
   font-family: var(--terminal-font-family);
+  font-size: var(--terminal-font-size);
   line-height: var(--terminal-line-height);
   z-index: 10;
+}
+
+.intro-text p {
+  margin: calc(var(--terminal-line-height) * 1em) 0 0;
+}
+
+.intro-title {
+  font-weight: bold;
 }
