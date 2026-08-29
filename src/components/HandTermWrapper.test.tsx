@@ -3,6 +3,7 @@ import { vi, describe, test, expect, beforeEach, afterEach } from 'vitest';
 import { HandTermWrapper } from './HandTermWrapper';
 import { activitySignal } from '../signals/appSignals';
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
+import { parseLocation } from '../utils/navigationUtils';
 import {
   ActivityType,
   type OutputElement,
@@ -190,6 +191,28 @@ describe('HandTermWrapper', () => {
   test('should render', () => {
     render(<HandTermWrapper {...mockProps} />);
     expect(screen.getByTestId('handterm-wrapper')).toBeInTheDocument();
+  });
+
+  test('dismisses the welcome intro once the tutorial begins', async () => {
+    // Make the mediator's location sync see a NORMAL activity on mount so the
+    // intro isn't dismissed before the assertion below.
+    vi.mocked(parseLocation).mockReturnValue({
+      activityKey: ActivityType.NORMAL,
+      contentKey: '',
+      groupKey: null,
+      clearParams: false,
+    });
+
+    // localStorage is cleared in beforeEach, so showIntro is true (first visit)
+    render(<HandTermWrapper {...mockProps} />);
+    expect(screen.getByText('Welcome to HandTerm!')).toBeInTheDocument();
+
+    // Once the tutorial (any non-NORMAL activity) starts, the intro must go away
+    await act(async () => {
+      activitySignal.value = ActivityType.TUTORIAL;
+    });
+
+    expect(screen.queryByText('Welcome to HandTerm!')).not.toBeInTheDocument();
   });
 
   /**

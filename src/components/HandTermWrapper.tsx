@@ -3,7 +3,6 @@ import { useComputed } from '@preact/signals-react';
 import { Game, type IGameHandle } from '../game/Game';
 import { useActivityMediator } from '../hooks/useActivityMediator';
 import MonacoTerminal from './MonacoTerminal'; // Changed to default import
-import { useWPMCalculator } from '../hooks/useWPMCaculator';
 import { isShowVideoSignal, activitySignal, userNameSignal } from '../signals/appSignals';
 import { setGamePhrase } from '../signals/gameSignals';
 import { tutorialSignal, setCompletedTutorial, getNextTutorial, completedTutorialsSignal } from '../signals/tutorialSignals';
@@ -41,8 +40,6 @@ const getTimestamp = (date: Date): string => date.toTimeString().split(' ')[0] ?
 const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProps>((props, forwardedRef) => {
   // Removed: const terminalContainerRef = useRef<HTMLDivElement>(null);
   const [terminalAdapter, setTerminalAdapter] = useState<ITerminalAdapter | null>(null); // State to hold the terminal adapter
-  const targetWPM = 10;
-  const wpmCalculator = useWPMCalculator();
   const gameHandleRef = useRef<IGameHandle>(null);
   const nextCharsDisplayRef = useRef<NextCharsDisplayHandle>(null);
   const activityMediator = useActivityMediator();
@@ -76,6 +73,14 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
 
   const activity = useComputed(() => activitySignal.value);
   const currentActivityValue = activity.value;
+
+  // Dismiss the welcome intro once the tutorial (or any real activity) begins
+  useEffect(() => {
+    if (currentActivityValue !== ActivityType.NORMAL) {
+      setShowIntro(false);
+    }
+  }, [currentActivityValue]);
+
   logger.debug(`HandTermWrapper rendering with activity: ${currentActivityValue}`);
 
   const handlePhraseComplete = useCallback(() => {
@@ -107,12 +112,6 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
       return;
     }
     logger.debug('handlePhraseSuccess called with phrase:', key, 'Activity:', currentActivityValue);
-    const wpms = wpmCalculator.getWPMs();
-    const wpmAverage = wpms.wpmAverage;
-
-    if (wpmAverage > targetWPM) {
-      activityMediator.checkGameProgress(phrase);
-    }
 
     const game = gameHandleRef.current;
     if (isGameHandle(game)) {
@@ -127,8 +126,13 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
       return game !== null;
     }
     handlePhraseComplete();
+    // Advances the game to the next phrase/tutorial. Must run AFTER
+    // handlePhraseComplete (which clears gamePhraseSignal) so the next
+    // phrase assignment wins. Runs unconditionally — a successful phrase
+    // always progresses, regardless of typing speed.
+    activityMediator.checkGameProgress(phrase);
     terminalAdapter?.clear(); // Use optional chaining
-  }, [wpmCalculator, activityMediator, handlePhraseComplete, gameHandleRef, targetWPM, terminalAdapter, currentActivityValue]);
+  }, [activityMediator, handlePhraseComplete, gameHandleRef, terminalAdapter, currentActivityValue]);
 
   useEffect(() => {
     if (currentActivityValue === ActivityType.TREE) {

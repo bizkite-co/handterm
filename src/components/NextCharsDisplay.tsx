@@ -4,7 +4,6 @@ import {
     useRef,
     useImperativeHandle,
     useCallback,
-    useEffect,
     forwardRef,
 } from 'react';
 
@@ -188,9 +187,11 @@ const NextCharsDisplay = forwardRef<NextCharsDisplayHandle, INextCharsDisplayPro
         cancelTimer
     }), [resetTimer, cancelTimer]);
 
-    // Load the current phrase whenever the game phrase signal changes
-    useEffect(() => {
-        const foundPhrase = gamePhrase.value;
+    // Load the current phrase whenever the game phrase signal changes.
+    // useSignalEffect re-runs when the signal's VALUE changes (a stable
+    // useComputed object as a useEffect dep would only fire once).
+    useSignalEffect(() => {
+        const foundPhrase = gamePhraseSignal.value;
         if (foundPhrase === null || foundPhrase === undefined || isNullOrEmptyString(foundPhrase.value)) return;
         if (foundPhrase.displayAs !== 'Game') return;
 
@@ -202,7 +203,7 @@ const NextCharsDisplay = forwardRef<NextCharsDisplayHandle, INextCharsDisplayPro
         //INFO: This is the only place the Phrase.ts is still used.
         setPhrase(new Phrase(foundPhrase.value.split('')));
         setNextChars(foundPhrase.value);
-    }, [gamePhrase]);
+    });
 
     // Optimize signal effect to prevent unnecessary re-renders
     useSignalEffect(() => {
