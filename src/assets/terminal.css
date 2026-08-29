@@ -145,11 +145,10 @@ body {
 pre#next-chars {
     padding: 0;
     margin: 0;
-    /* min-height: 1.5em; */
     color: lightgreen;
     font-weight: bold;
-    font-size: calc(var(--terminal-font-size) * 1.2);
-    float: left;
+    font-size: var(--terminal-font-size);
+    line-height: var(--terminal-line-height);
     white-space: pre-wrap;
     /* Allows text to wrap */
     word-break: break-word;
@@ -460,8 +459,9 @@ div.monaco-editor-container > section > div > div > div.overflow-guard > div.min
 pre#prompt-header {
   margin: 0;
   padding: 0;
-  font-size: inherit;
-  font-family: inherit;
+  font-size: var(--terminal-font-size);
+  line-height: var(--terminal-line-height);
+  font-family: var(--terminal-font-family);
 }
 
 pre#prompt-header .timestamp {
