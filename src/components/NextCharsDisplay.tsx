@@ -5,18 +5,15 @@ import {
     useImperativeHandle,
     useCallback,
     useEffect,
-    useMemo,
     forwardRef,
 } from 'react';
 
 import { commandLineSignal } from 'src/signals/commandLineSignals';
-import { setCompletedGamePhrase } from 'src/signals/gameSignals';
+import { gamePhraseSignal } from 'src/signals/gameSignals';
 import { type GamePhrase } from '@handterm/types';
 import { TerminalCssClasses } from '@handterm/types';
-import { parseLocation } from 'src/utils/navigationUtils';
 
 import { Phrase } from '../utils/Phrase';
-import GamePhrases from '../utils/GamePhrases';
 
 import ErrorDisplay from './ErrorDisplay';
 import Timer, { type TimerHandle } from './Timer';
@@ -53,8 +50,9 @@ const NextCharsDisplay = forwardRef<NextCharsDisplayHandle, INextCharsDisplayPro
     const wpmRef = useRef<HTMLSpanElement>(null);
     const commandLine = useComputed(() => commandLineSignal.value);
 
-    // Memoize location parsing to prevent unnecessary re-renders
-    const currentLocation = useMemo(() => parseLocation(), []);
+    // The mediator sets gamePhraseSignal on every level transition, so it is
+    // the source of truth here (the URL key can change without a re-render).
+    const gamePhrase = useComputed(() => gamePhraseSignal.value);
 
     const getFirstNonMatchingChar = useCallback((stringBeingTested: string): number => {
         if (isNullOrEmptyString(_phrase.value)) return 0;
@@ -190,13 +188,10 @@ const NextCharsDisplay = forwardRef<NextCharsDisplayHandle, INextCharsDisplayPro
         cancelTimer
     }), [resetTimer, cancelTimer]);
 
-    // Optimize useEffect to only run when content key changes
+    // Load the current phrase whenever the game phrase signal changes
     useEffect(() => {
-        const { activityKey, contentKey } = currentLocation;
-        if (activityKey === null || activityKey === undefined || isNullOrEmptyString(contentKey)) return;
-
-        const foundPhrase = GamePhrases.getGamePhraseByKey(contentKey);
-        if (foundPhrase === null || foundPhrase === undefined) return;
+        const foundPhrase = gamePhrase.value;
+        if (foundPhrase === null || foundPhrase === undefined || isNullOrEmptyString(foundPhrase.value)) return;
 
         // Prevent unnecessary state updates
         setGamePhrase(prevPhrase =>
@@ -206,7 +201,7 @@ const NextCharsDisplay = forwardRef<NextCharsDisplayHandle, INextCharsDisplayPro
         //INFO: This is the only place the Phrase.ts is still used.
         setPhrase(new Phrase(foundPhrase.value.split('')));
         setNextChars(foundPhrase.value);
-    }, [currentLocation, currentLocation.contentKey]);
+    }, [gamePhrase]);
 
     // Optimize signal effect to prevent unnecessary re-renders
     useSignalEffect(() => {
@@ -215,7 +210,7 @@ const NextCharsDisplay = forwardRef<NextCharsDisplayHandle, INextCharsDisplayPro
     });
 
     return (
-        (currentLocation !== null && currentLocation !== undefined && !isNullOrEmptyString(currentLocation.contentKey) &&
+        (gamePhrase.value !== null && gamePhrase.value !== undefined &&
             <div
                 id={TerminalCssClasses.nextChars}
                 hidden={!isInPhraseMode}
