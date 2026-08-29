@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState, type RefObject } from 'react'; // Explicitly import React and RefObject
+import { prefetchChordGlyphs } from './utils/prefetchImages';
 
 import { HandTermWrapper } from './components/HandTermWrapper';
 import { Output } from './components/Output';
@@ -44,6 +45,11 @@ export function App() {
     if (containerRef.current != null) {
       observer.observe(containerRef.current);
     }
+
+    // Warm the browser cache for all chord glyphs so they render instantly
+    // on keypress instead of lagging behind the typing.
+    prefetchChordGlyphs();
+
     return () => {
       window.removeEventListener('resize', measure);
       observer.disconnect();
