@@ -24,6 +24,25 @@ class CommandRegistry {
             .join('\n');
     }
 
+    /**
+     * Returns standardized styled HTML help for a single command, including its
+     * switches (if any). Matches the cyan/aligned format used by `help`.
+     */
+    formatCommandHelp(cmd: ICommand): string {
+        const switchEntries = cmd.switches
+            ? Object.entries(cmd.switches).map(([key, desc]) => ({ name: `-${key}`, description: desc }))
+            : [];
+        const allEntries = [
+            { name: cmd.name, description: cmd.description },
+            ...switchEntries,
+        ];
+        const maxLen = Math.max(...allEntries.map(e => e.name.length));
+        const lines = allEntries
+            .map(e => `<span class="cmd-name">${e.name.padEnd(maxLen)}</span>  <span class="cmd-desc">${e.description}</span>`)
+            .join('\n');
+        return `<div class="command-list">${lines}</div>`;
+    }
+
 }
 
 export const commandRegistry = new CommandRegistry();

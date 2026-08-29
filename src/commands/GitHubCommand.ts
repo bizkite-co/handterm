@@ -9,6 +9,7 @@ import {
   pollGitHubDeviceAuth,
 } from "../utils/apiClient.js";
 import { createLogger } from "../utils/Logger.js";
+import { commandRegistry } from "./commandRegistry.js";
 
 const logger = createLogger({ prefix: "GitHubCommand" });
 
@@ -33,16 +34,11 @@ export const GitHubCommand: ICommand = {
     context: ICommandContext,
     parsedCommand: ParsedCommand
   ): Promise<ICommandResponse> => {
-    // Show help if requested
-    if ('h' in parsedCommand.switches) {
+    // Show help if requested or no switches provided
+    if ('h' in parsedCommand.switches || Object.keys(parsedCommand.switches).length === 0) {
       return {
         status: 200,
-        message: `GitHub Command Usage:
-                github -l : Link your GitHub account
-                github -u : Unlink GitHub account
-                github -r : List recent repositories
-                github -t owner/repo [path] [sha] : Get repository tree
-                github -h : Show this help message`,
+        message: commandRegistry.formatCommandHelp(GitHubCommand),
       };
     }
 
@@ -205,12 +201,7 @@ export const GitHubCommand: ICommand = {
 
       return {
         status: 200,
-        message: `GitHub Command Usage:
-                github -l : Link your GitHub account
-                github -u : Unlink GitHub account
-                github -r : List recent repositories
-                github -t owner/repo [path] [sha] : Get repository tree
-                github -h : Show this help message`,
+        message: commandRegistry.formatCommandHelp(GitHubCommand),
       };
     } catch (error: unknown) {
       logger.error('GitHub command error:', error);
