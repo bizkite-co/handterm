@@ -204,8 +204,13 @@ export const GitHubCommand: ICommand = {
       }
 
       return {
-        status: 400,
-        message: 'Invalid command. Use -h to show command help info',
+        status: 200,
+        message: `GitHub Command Usage:
+                github -l : Link your GitHub account
+                github -u : Unlink GitHub account
+                github -r : List recent repositories
+                github -t owner/repo [path] [sha] : Get repository tree
+                github -h : Show this help message`,
       };
     } catch (error: unknown) {
       logger.error('GitHub command error:', error);
