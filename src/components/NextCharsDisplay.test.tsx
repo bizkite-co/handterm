@@ -3,6 +3,7 @@ import { vi, describe, test, expect, beforeEach } from 'vitest';
 
 import NextCharsDisplay from './NextCharsDisplay';
 import { gamePhraseSignal } from 'src/signals/gameSignals';
+import { commandLineSignal, setCommandLine } from 'src/signals/commandLineSignals';
 import { type GamePhrase } from '@handterm/types';
 
 vi.mock('./Timer', () => ({ default: () => null }));
@@ -31,6 +32,33 @@ const tutorialPhrase: GamePhrase = {
 describe('NextCharsDisplay', () => {
   beforeEach(() => {
     gamePhraseSignal.value = null;
+    commandLineSignal.value = '';
+  });
+
+  test('removes typed characters from nextChars as the command line grows', async () => {
+    await act(async () => {
+      gamePhraseSignal.value = firstPhrase;
+    });
+    const { container } = render(
+      <NextCharsDisplay isInPhraseMode={true} onPhraseSuccess={vi.fn()} onError={vi.fn()} />
+    );
+    expect(screen.getByText('all sad lads ask dad; alas fads fall')).toBeInTheDocument();
+
+    // Each keystroke flows through handleData -> setCommandLine -> this component
+    for (const prefix of ['a', 'al', 'all', 'all ', 'all s', 'all sa']) {
+      await act(async () => {
+        setCommandLine(prefix);
+      });
+    }
+
+    expect(screen.getByText('d lads ask dad; alas fads fall')).toBeInTheDocument();
+    expect(screen.queryByText('all sad lads ask dad; alas fads fall')).not.toBeInTheDocument();
+
+    // Finishing the phrase empties nextChars (and fires onPhraseSuccess)
+    await act(async () => {
+      setCommandLine('all sad lads ask dad; alas fads fall');
+    });
+    expect(container.querySelector('#next-chars')?.textContent).toBe('');
   });
 
   test('shows the current game phrase from gamePhraseSignal', async () => {
