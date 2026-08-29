@@ -351,8 +351,8 @@ export function useActivityMediator(): {
         const initialParsedLocation = parseLocation(initialUrl);
         logger.debug(`Initial activity determination - starting. URL: ${initialUrl}, Parsed Activity: ${initialParsedLocation.activityKey}, Current Signal: ${activitySignal.peek()}`);
 
-        // --- MODIFIED: Only run tutorial logic if loading at base URL ---
-        if (initialParsedLocation.activityKey === ActivityType.NORMAL && !initialParsedLocation.contentKey && !initialParsedLocation.groupKey) {
+        // Home flow: clear URL params and resume the tutorial where left off
+        const startTutorialAtHome = (): void => {
             logger.debug('Initial load at base URL, checking tutorial status.');
             const completedTutorials = localStorage.getItem(StorageKeys.completedTutorials);
             logger.debug(`Found completed tutorials in localStorage: ${completedTutorials}`);
@@ -379,9 +379,23 @@ export function useActivityMediator(): {
                 }
                 logger.debug('Initial activity determination - completed (tutorials were not complete).');
             }
+        };
+
+        if (initialParsedLocation.activityKey === ActivityType.NORMAL && !initialParsedLocation.contentKey && !initialParsedLocation.groupKey) {
+            startTutorialAtHome();
         } else {
             logger.debug(`Initial load has specific activity/key/group in URL (${initialParsedLocation.activityKey}), skipping tutorial determination logic.`);
-            // Rely on the locationchange listener effect to sync the signal if needed
+            // A stale URL (shared link, or localStorage cleared mid-session) must
+            // not resurrect an arbitrary tutorial key for a fresh user. Redirect
+            // home so the tutorial flow restarts cleanly from the beginning.
+            const completedTutorials = localStorage.getItem(StorageKeys.completedTutorials);
+            if (!completedTutorials) {
+                logger.debug('No completed tutorials found despite URL activity - redirecting home to restart tutorial flow.');
+                startTutorialAtHome();
+            } else {
+                // Returning user resuming an activity from the URL: rely on the
+                // locationchange listener effect to sync the signal if needed
+            }
         }
         // --- END MODIFIED ---
     }, []); // Empty dependency array ensures this runs only once

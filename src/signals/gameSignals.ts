@@ -55,6 +55,7 @@ export const getIncompletePhrasesByTutorialGroup = (tutorialGroup: string): Game
 
 export const getNextGamePhrase = (): GamePhrase | null => {
   const nextGamePhrase = Phrases
+    .filter(p => p.displayAs === 'Game')
     .find(t => !completedGamePhrasesSignal.value.has(t.key));
   if (nextGamePhrase === undefined) {
     return null;

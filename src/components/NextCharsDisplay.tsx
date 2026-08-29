@@ -192,6 +192,7 @@ const NextCharsDisplay = forwardRef<NextCharsDisplayHandle, INextCharsDisplayPro
     useEffect(() => {
         const foundPhrase = gamePhrase.value;
         if (foundPhrase === null || foundPhrase === undefined || isNullOrEmptyString(foundPhrase.value)) return;
+        if (foundPhrase.displayAs !== 'Game') return;
 
         // Prevent unnecessary state updates
         setGamePhrase(prevPhrase =>
