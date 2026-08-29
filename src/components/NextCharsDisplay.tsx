@@ -9,7 +9,7 @@ import {
 } from 'react';
 
 import { commandLineSignal } from 'src/signals/commandLineSignals';
-import { gamePhraseSignal } from 'src/signals/gameSignals';
+import { gamePhraseSignal, setCompletedGamePhrase } from 'src/signals/gameSignals';
 import { type GamePhrase } from '@handterm/types';
 import { TerminalCssClasses } from '@handterm/types';
 
