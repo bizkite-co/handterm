@@ -119,7 +119,7 @@ body {
 .command-list {
     font-family: 'Fira Code', Menlo, 'DejaVu Sans Mono', monospace;
     white-space: pre;
-    line-height: 1.6;
+    line-height: 1;
 }
 .command-list .cmd-name {
     color: cyan;
