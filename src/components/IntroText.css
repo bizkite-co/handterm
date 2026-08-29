@@ -5,5 +5,7 @@
   transform: translate(-50%, -50%);
   text-align: center;
   color: white;
+  font-family: var(--terminal-font-family);
+  line-height: var(--terminal-line-height);
   z-index: 10;
 }

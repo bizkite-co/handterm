@@ -267,6 +267,7 @@ pre#prompt {
         float: left;
         padding: 20px 0 0 30px;
         font-size: calc(var(--terminal-font-size) * 1.5);
+        line-height: var(--terminal-line-height);
         text-align: center;
 
         a {
