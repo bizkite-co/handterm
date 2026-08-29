@@ -251,6 +251,7 @@ export default function MonacoCore({ value, language = 'text', toggleVideo, mode
           cursorStyle: 'block',
           fontFamily: '"Fira Code", Menlo, "DejaVu Sans Mono", "Lucida Console", monospace',
           fontSize: 16,
+          lineHeight: 19,
           fontLigatures: true,
           cursorBlinking: 'blink',
           automaticLayout: true,

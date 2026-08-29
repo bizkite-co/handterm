@@ -1,7 +1,7 @@
 :root {
     --terminal-font-family: "Fira Code", Menlo, "DejaVu Sans Mono", "Lucida Console", monospace;
     --terminal-font-size: 16px;
-    --terminal-line-height: 1.5em;
+    --terminal-line-height: 1.2;
     color: white;
 }
 
@@ -84,6 +84,9 @@ body {
     line-height: 0.6em;
     vertical-align: text-top;
 }
+.log-line {
+    line-height: var(--terminal-line-height);
+}
 .log-line span {
     background-color: #0007;
 }
@@ -114,12 +117,13 @@ body {
     display: inline-block;
     background-color: #0007;
     padding-right: 10px;
+    line-height: var(--terminal-line-height);
 }
 
 .command-list {
-    font-family: 'Fira Code', Menlo, 'DejaVu Sans Mono', monospace;
+    font-family: var(--terminal-font-family);
     white-space: pre;
-    line-height: 1;
+    line-height: var(--terminal-line-height);
 }
 .command-list .cmd-name {
     color: cyan;
@@ -292,10 +296,6 @@ pre#prompt {
 @media (max-width: 600px) {
 
     /* Example breakpoint for mobile devices */
-    :root {
-        --terminal-line-height: 1.2em;
-    }
-
     body {
         padding-left: 2px;
     }
