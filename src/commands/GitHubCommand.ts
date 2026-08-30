@@ -61,6 +61,18 @@ export const GitHubCommand: ICommand = {
         }
         const { verification_uri, user_code, device_code } = deviceCodeResponse.data;
 
+        // Display the device code and verification URL in the terminal so the
+        // code is visible even if clipboard access is unavailable or blocked.
+        context.appendToOutput({
+            command: parsedCommand,
+            status: 200,
+            commandTime: new Date(),
+            response:
+                'GitHub authorization required:<br />' +
+                `1. Open: ${verification_uri}<br />` +
+                `2. Enter code: <strong>${user_code}</strong>`,
+        });
+
         // Copy code to clipboard
         await navigator.clipboard.writeText(user_code);
 
