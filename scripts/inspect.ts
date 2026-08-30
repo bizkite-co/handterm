@@ -17,9 +17,8 @@
  *   You can modify the typed command in the `inspect` function.
  * - Includes error handling for page navigation failures.
  */
-import { chromium, Page } from '@playwright/test';
+import { chromium, type Page } from '@playwright/test';
 import fs from 'fs';
-import path from 'path';
 import { rimrafSync } from 'rimraf';
 
 /**

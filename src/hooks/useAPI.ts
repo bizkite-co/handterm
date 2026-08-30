@@ -40,13 +40,14 @@ export function useAPI(auth: IAuthProps): {
     getRepoContent: (repo: string, path: string) => Promise<APIResponse<FileContentResponse>>,
     listRecentRepos: () => Promise<APIResponse<RepoResponse[]>>
 } {
+    const { validateAndRefreshToken } = auth;
     const makeAuthenticatedRequest = useCallback(async <T,>(
         endpoint: string,
         params?: Record<string, string>,
         method: 'GET' | 'POST' = 'GET'
     ): Promise<APIResponse<T>> => {
         try {
-            const authResponse = await auth.validateAndRefreshToken();
+            const authResponse = await validateAndRefreshToken();
             if (authResponse == null || authResponse.status !== 200 || authResponse.data == null) {
                 return {
                     status: 401,
@@ -86,7 +87,7 @@ export function useAPI(auth: IAuthProps): {
                 error: errorMessage
             };
         }
-    }, [auth.validateAndRefreshToken]);
+    }, [validateAndRefreshToken]);
 
     const getRepoTree = useCallback(async (repo: string, path?: string, sha?: string) => {
         return makeAuthenticatedRequest<TreeItemResponse[]>(ENDPOINTS.api.GetRepoTree, {

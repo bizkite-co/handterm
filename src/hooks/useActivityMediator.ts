@@ -183,7 +183,7 @@ export function useActivityMediator(): {
 
         const groupKey = parseLocation().groupKey ?? null;
         const commandOrReturn = command === '' ? '\r' : command;
-        if (commandOrReturn != null) {
+        if (command != null && commandOrReturn != null) {
             if (currentTutorialRef.current?.value == null) {
                 const errorMessage = 'Current tutorial value is undefined: Undefined tutorial value';
                 logger.error(errorMessage);
@@ -265,6 +265,11 @@ export function useActivityMediator(): {
             }
         }
 
+        // A `null` command is a pure nudge from the guard effect (e.g. boot or a
+        // lagging render), never a real user keystroke: it must NOT unlock.
+        // Otherwise boot-time nudges can auto-complete the \r tutorial
+        // (commandOrReturn === '\r' === its key) without ENTER. It still
+        // navigates to the next incompleted tutorial so boot works.
         const nextTutorial = getNextTutorial();
         logger.debug('Next tutorial:', nextTutorial);
         if (nextTutorial?.value != null) {
@@ -339,9 +344,19 @@ export function useActivityMediator(): {
     }, [checkGameProgress, checkTutorialProgress, transitionToGame]);
 
     useEffect(() => {
-        if (activityState === ActivityType.TUTORIAL) {
-            checkTutorialProgress(null);
+        if (activityState !== ActivityType.TUTORIAL) {
+            return;
         }
+        const location = parseLocation();
+        if (location.activityKey !== ActivityType.TUTORIAL) {
+            return;
+        }
+        // If the rendered tutorial already matches the URL, there is nothing
+        // to fix up — skip so we don't re-navigate every re-render.
+        if (tutorialSignal.value?.key === location.contentKey) {
+            return;
+        }
+        checkTutorialProgress(null);
     }, [activityState, checkTutorialProgress]);
 
 

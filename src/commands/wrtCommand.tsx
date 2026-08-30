@@ -1,7 +1,7 @@
 import type React from 'react';
 
 import { type ICommand, type ICommandResponse, type ICommandContext } from '../contexts/CommandContext';
-import type { OutputElement, ParsedCommand, IAuthProps, ActivityType } from '@handterm/types';
+import { ActivityType, type OutputElement, type ParsedCommand, type IAuthProps } from '@handterm/types';
 import { isNotNullOrUndefined } from '../utils/typeSafetyUtils';
 
 // Extend the command context with optional methods

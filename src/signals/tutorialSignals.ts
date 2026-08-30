@@ -1,12 +1,11 @@
 // src/signals/tutorialSignals.ts
 import { computed, signal } from "@preact/signals-react";
 
-import { ActivityType, Phrases, allTutorialKeys } from '@handterm/types';
+import { Phrases, allTutorialKeys } from '@handterm/types';
 import type { GamePhrase } from "@handterm/types";
 import { createLogger } from "src/utils/Logger";
 
 import { createPersistentSignal } from "../utils/signalPersistence";
-import { activitySignal } from "./appSignals";
 
 const logger = createLogger({ prefix: 'tutorialSignals' });
 

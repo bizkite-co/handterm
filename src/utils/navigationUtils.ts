@@ -55,7 +55,7 @@ export function initializeActivityState(): void {
   }
 }
 
-interface NavigationOptions {
+export interface NavigationOptions {
   forceClear?: boolean;
   replace?: boolean;
   skipTutorial?: boolean;

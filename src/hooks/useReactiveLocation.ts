@@ -28,7 +28,7 @@ export function useReactiveLocation(): ReactiveLocation {
         searchSignal.value = location.search;
       }
     }
-  }, [location]);
+  }, [location, isInitialized, pathSignal, searchSignal]);
 
 
   return {

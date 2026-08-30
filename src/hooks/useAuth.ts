@@ -445,7 +445,7 @@ export function useAuth(): IAuthProps {
     return () => {
       window.removeEventListener('storage', onStorageChange);
     };
-  }, []);
+  }, [validateAndRefreshToken]);
 
   const isLoading = loginMutation.isPending ?? signupMutation.isPending ?? verifyMutation.isPending;
   const isError = loginMutation.isError ?? signupMutation.isError ?? verifyMutation.isError;

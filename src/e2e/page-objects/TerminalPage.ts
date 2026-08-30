@@ -39,7 +39,7 @@ export class TerminalPage {
     await this.waitForPrompt();
   }
 
-  public async getOutput() {
+  public async getOutput(): Promise<string[]> {
     return this.output.allInnerTexts();
   }
 
@@ -56,7 +56,7 @@ export class TerminalPage {
     const startTime = Date.now();
     try {
       // Wait for the flag set in App.tsx's useEffect
-      await this.page.waitForFunction(() => (window as any).appReady === true, null, { timeout });
+      await this.page.waitForFunction(() => window.appReady === true, null, { timeout });
       const duration = Date.now() - startTime;
       console.log(`[waitForAppReady] Completed in ${duration}ms (timeout: ${timeout}ms)`);
     } catch (error) {
@@ -149,7 +149,7 @@ export class TerminalPage {
 
           function parseActivityType(activityString: string): ActivityType {
             const normalizedActivity = (activityString ?? '').toUpperCase();
-            const activity = (ActivityType as any)[normalizedActivity]; // Use any for browser context simplicity
+            const activity = ActivityType[normalizedActivity as keyof typeof ActivityType];
             return activity ?? ActivityType.NORMAL;
           }
 
@@ -289,7 +289,7 @@ export class TerminalPage {
     try {
       // Wait for Monaco editor instance to be available
       await this.page.waitForFunction(
-        () => (window as any).monacoEditor != null,
+        () => window.monacoEditor != null,
         null,
         { timeout: overallTimeout }
       );
@@ -297,7 +297,7 @@ export class TerminalPage {
 
       // Wait for the prompt string to appear in the editor model
       await this.page.waitForFunction((prompt: string) => {
-        const editor = (window as any).monacoEditor;
+        const editor = window.monacoEditor;
         if (!editor) return false;
         const model = editor.getModel();
         if (!model) return false;
@@ -314,7 +314,7 @@ export class TerminalPage {
 
       while (Date.now() - stabilityStartTime < overallTimeout && !stable) {
         const currentLineContent = await this.page.evaluate(() => {
-          const editor = (window as any).monacoEditor;
+          const editor = window.monacoEditor;
           if (!editor) return null;
           const model = editor.getModel();
           if (!model) return null;
@@ -382,7 +382,7 @@ export class TerminalPage {
   public async getActualTerminalLine(): Promise<string> {
     await this.waitForPrompt(); // Ensure prompt is ready
     return await this.page.evaluate(() => {
-      const editor = (window as any).monacoEditor;
+      const editor = window.monacoEditor;
       if (!editor) return '';
       const model = editor.getModel();
       if (!model) return '';
@@ -398,7 +398,7 @@ export class TerminalPage {
   public async getFullTerminalContent(): Promise<string> {
     await this.waitForPrompt(); // Ensure prompt is ready
     return await this.page.evaluate(() => {
-      const editor = (window as any).monacoEditor;
+      const editor = window.monacoEditor;
       if (!editor) return '';
       return editor.getValue() ?? '';
     });

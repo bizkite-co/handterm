@@ -6,7 +6,7 @@ import type { IStandaloneCodeEditor } from './monaco.js';
 // import type { HandTermCurrent } from './path/to/HandTermCurrent'; // Placeholder import
 
 // Define logger type structure if not imported
-type LoggerFunction = (...args: any[]) => void;
+type LoggerFunction = (...args: unknown[]) => void;
 interface Logger {
   debug: LoggerFunction;
   info: LoggerFunction;

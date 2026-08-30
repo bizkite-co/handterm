@@ -1,5 +1,4 @@
-import { test, expect, type Page } from '@playwright/test';
-import { setupBrowserWindow } from './setupWindow';
+import { test, expect } from '@playwright/test';
 
 test.describe('setupBrowserWindow', () => {
   test('should expose a simple function', async ({ page }) => {

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState, type RefObject } from 'react'; // Explicitly import React and RefObject
+import { useCallback, useEffect, useRef, useState, type RefObject, type JSX } from 'react';
 import { prefetchChordGlyphs } from './utils/prefetchImages';
 
 import { HandTermWrapper } from './components/HandTermWrapper';
@@ -19,9 +19,7 @@ function isHandTermWrapperMethods(ref: RefObject<IHandTermWrapperMethods | null>
   return ref.current !== null && typeof ref.current.focusTerminal === 'function';
 }
 
-// ENHANCED: Remove explicit JSX.Element return type annotation
-export function App() {
-// END ENHANCED
+export function App(): JSX.Element {
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState<number>(0);
 
@@ -95,11 +93,11 @@ export function App() {
   // ADDED: Effect to signal app readiness for Playwright
   useEffect(() => {
     logger.debug('App component mounted, signaling appReady.');
-    (window as any).appReady = true;
+    window.appReady = true;
   }, []); // Empty dependency array ensures this runs only once after initial mount
 
   // Expose navigate function for Playwright tests (unconditionally)
-  (window as any).navigate = navigate;
+  window.navigate = navigate;
 
   return (
     <ActivityMediatorProvider>

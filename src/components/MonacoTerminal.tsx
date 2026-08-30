@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect, useCallback } from 'react';
+import { useRef, useState, useEffect, useCallback, type JSX } from 'react';
 import MonacoCore from './MonacoCore';
 import { useMonacoTerminal } from '../hooks/useMonacoTerminal';
 import type { IStandaloneCodeEditor } from '@handterm/types';
@@ -15,7 +15,7 @@ interface MonacoTerminalProps {
   onEnter: (value: string) => void;
 }
 
-export default function MonacoTerminal({ onTerminalReady, onEnter }: MonacoTerminalProps) {
+export default function MonacoTerminal({ onTerminalReady, onEnter }: MonacoTerminalProps): JSX.Element {
   const [editorInstance, setEditorInstance] = useState<IStandaloneCodeEditor | null>(null);
   // Tracks the current vim mode so useMonacoTerminal can defer keys to vim in normal mode.
   const currentModeRef = useRef<string>('insert');
@@ -23,10 +23,21 @@ export default function MonacoTerminal({ onTerminalReady, onEnter }: MonacoTermi
   const vimInstanceRef = useRef<VimModeInstance | null>(null);
   const terminalAdapter = useMonacoTerminal(editorInstance, currentModeRef, vimInstanceRef);
 
+  // Keep latest callbacks in refs so the readiness effect only fires on
+  // editorInstance transitions (null → instance), regardless of render churn.
+  const onTerminalReadyRef = useRef(onTerminalReady);
   useEffect(() => {
-    if (editorInstance && onTerminalReady) {
+    onTerminalReadyRef.current = onTerminalReady;
+  }, [onTerminalReady]);
+  const terminalAdapterRef = useRef(terminalAdapter);
+  useEffect(() => {
+    terminalAdapterRef.current = terminalAdapter;
+  }, [terminalAdapter]);
+
+  useEffect(() => {
+    if (editorInstance && onTerminalReadyRef.current) {
       logger.debug("MonacoTerminal: Editor instance ready, calling onTerminalReady.");
-      onTerminalReady(terminalAdapter);
+      onTerminalReadyRef.current(terminalAdapterRef.current);
     }
     // Only run when editorInstance changes from null to something
   }, [editorInstance]);

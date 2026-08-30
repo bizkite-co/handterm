@@ -1,3 +1,5 @@
+import type { ITextModel, IStandaloneCodeEditor } from 'monaco-editor';
+
 declare module 'monaco' {
   export = Monaco;
 }
@@ -20,8 +22,8 @@ declare global {
   interface Window {
     monaco: {
       editor: {
-        createModel(value: string, language: string): import('monaco-editor').ITextModel;
-        create(container: HTMLElement, options: unknown): import('monaco-editor').IStandaloneCodeEditor;
+        createModel(value: string, language: string): ITextModel;
+        create(container: HTMLElement, options: unknown): IStandaloneCodeEditor;
       };
     };
   }

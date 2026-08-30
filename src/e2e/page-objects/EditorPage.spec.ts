@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { TerminalPage } from './TerminalPage';
 import { EditorPage } from './EditorPage';
 import { TEST_CONFIG } from '../config';
-import { ActivityType, StorageKeys } from '@handterm/types'; // Import necessary types
+import { StorageKeys } from '@handterm/types'; // Import necessary types
 
 // Remove test-specific window type extension if not needed elsewhere
 
@@ -88,7 +88,7 @@ test.describe('EditorPage', () => {
 	});
 
 	// ENHANCED: Add trace option to individual tests
-	test('initializes with correct state', async ({ page }) => {
+	test('initializes with correct state', async ({ _page }) => {
 	// END ENHANCED
 		// Verify editor is visible
 		await expect(editor.editor).toBeVisible();
@@ -96,7 +96,7 @@ test.describe('EditorPage', () => {
 	});
 
 	// ENHANCED: Add trace option to individual tests
-	test('can set and get content', async ({ page }) => {
+	test('can set and get content', async ({ _page }) => {
 	// END ENHANCED
 		const testContent = '# Mock File Content\n\nThis content is modified.';
 		await editor.setContent(testContent);
@@ -106,7 +106,7 @@ test.describe('EditorPage', () => {
 	});
 
 	// ENHANCED: Add trace option to individual tests
-	test('cursor movement works', async ({ page }) => {
+	test('cursor movement works', async ({ _page }) => {
 	// END ENHANCED
 		// Set some test content
 		await editor.focus();
@@ -125,7 +125,7 @@ test.describe('EditorPage', () => {
 	});
 
 	// ENHANCED: Add trace option to individual tests
-	test('vim mode transitions work', async ({ page }) => {
+	test('vim mode transitions work', async ({ _page }) => {
 	// END ENHANCED
 		// Restore Vim mode transition test
 		await editor.focus();

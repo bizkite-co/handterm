@@ -50,3 +50,6 @@ current.patch
 vite.pid
 urllog-output
 .gwt
+*.tsbuildinfo
+vite.config.d.ts
+vite.config.js

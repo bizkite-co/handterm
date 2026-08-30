@@ -54,4 +54,4 @@ Object.entries(commandModules).forEach(([path, module]) => {
 
 logger.debug('Command registration complete.'); // Log end
 // Signal Playwright tests that commands are ready
-(window as any).commandsRegistered = true;
+window.commandsRegistered = true;

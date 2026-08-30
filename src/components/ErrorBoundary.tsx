@@ -1,4 +1,4 @@
-import React, { Component, type ErrorInfo, type ReactNode } from 'react';
+import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { createLogger } from '../utils/Logger';
 
 const logger = createLogger({ prefix: 'ErrorBoundary' });
@@ -18,7 +18,7 @@ class ErrorBoundary extends Component<Props, State> {
   };
 
   // Remove @override decorator from static method as per previous linter error
-  public static getDerivedStateFromError(_: Error): State {
+  public static getDerivedStateFromError(_error: Error): State {
     // Update state so the next render will show the fallback UI.
     return { hasError: true };
   }

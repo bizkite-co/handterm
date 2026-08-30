@@ -3,7 +3,14 @@ import { useComputed } from '@preact/signals-react';
 import { Game, type IGameHandle } from '../game/Game';
 import { useActivityMediator } from '../hooks/useActivityMediator';
 import MonacoTerminal from './MonacoTerminal'; // Changed to default import
-import { isShowVideoSignal, activitySignal, userNameSignal } from '../signals/appSignals';
+import {
+  isShowVideoSignal,
+  activitySignal,
+  userNameSignal,
+  isInLoginProcessSignal,
+  isInSignUpProcessSignal,
+  isInVerifyProcessSignal
+} from '../signals/appSignals';
 import { setGamePhrase } from '../signals/gameSignals';
 import { tutorialSignal, setCompletedTutorial, getNextTutorial, completedTutorialsSignal } from '../signals/tutorialSignals';
 import {
@@ -27,8 +34,6 @@ import MonacoCore from './MonacoCore';
 import NextCharsDisplay, { type NextCharsDisplayHandle } from './NextCharsDisplay';
 import { PromptHeader } from './PromptHeader';
 import { TutorialManager } from './TutorialManager';
-// Removed: import { useMonacoTerminal } from '../hooks/useMonacoTerminal';
-import { isInLoginProcessSignal, isInSignUpProcessSignal, isInVerifyProcessSignal } from '../signals/appSignals';
 
 const logger = createLogger({
   prefix: 'HandTermWrapper',
@@ -69,16 +74,15 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
     if (showIntro) {
       localStorage.setItem(StorageKeys.hasVisited, 'true');
     }
-  }, []);
+  }, [showIntro]);
 
   const activity = useComputed(() => activitySignal.value);
   const currentActivityValue = activity.value;
 
   // Dismiss the welcome intro once the tutorial (or any real activity) begins
   useEffect(() => {
-    if (currentActivityValue !== ActivityType.NORMAL) {
-      setShowIntro(false);
-    }
+    if (currentActivityValue === ActivityType.NORMAL) return;
+    setShowIntro(false);
   }, [currentActivityValue]);
 
   logger.debug(`HandTermWrapper rendering with activity: ${currentActivityValue}`);
@@ -102,6 +106,14 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
       return game !== null;
     }
   }, [nextCharsDisplayRef, gameHandleRef]);
+
+  const handleTutorialComplete = useCallback((key: string) => {
+    logger.debug('Tutorial auto-completed:', key);
+    activityMediator.checkTutorialProgress(key);
+    // resetPrompt clears the command line/buffer so the next level starts
+    // without a stale prefix (same reason as handlePhraseSuccess).
+    terminalAdapter?.resetPrompt();
+  }, [activityMediator, terminalAdapter]);
 
   const handlePhraseSuccess = useCallback((phrase: GamePhrase | null) => {
     if (phrase === null) return;
@@ -203,7 +215,7 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
     window.ActivityType = ActivityType;
     window.setCompletedTutorial = setCompletedTutorial;
     window.getNextTutorial = getNextTutorial;
-    (window as any).completedTutorialsSignal = completedTutorialsSignal;
+    window.completedTutorialsSignal = completedTutorialsSignal;
   }, []);
 
   const getStoredContent = useCallback((): string => {
@@ -248,7 +260,15 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
         auth={props.auth}
       />
     );
-  }, [getStoredContent, toggleVideoCallback, currentActivityValue]);
+    // Dep intentionally kept though the body never reads it: re-entering EDIT
+    // must re-memoize so `value` picks up fresh localStorage content.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional invalidation trigger
+  }, [
+    getStoredContent,
+    toggleVideoCallback,
+    currentActivityValue,
+    props.auth
+  ]);
 
   const treeEditorComponent = useMemo(() => {
     logger.debug("Memoizing MonacoCore (Tree) component instance");
@@ -293,6 +313,7 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
       {currentActivityValue === ActivityType.TUTORIAL && tutorialSignal.value != null && (
         <TutorialManager
           tutorial={tutorialSignal.value}
+          onTutorialComplete={handleTutorialComplete}
         />
       )}
 

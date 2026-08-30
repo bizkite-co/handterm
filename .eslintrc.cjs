@@ -95,8 +95,12 @@ module.exports = {
     'no-restricted-syntax': [
       'warn',
       {
-        selector: 'IfStatement[test.type="BinaryExpression"][test.operator="!=="]',
-        message: 'Consider using type guards for more explicit type checking. Refer to docs/linting/type_safety_strategies.md'
+        selector: 'IfStatement[test.type="BinaryExpression"][test.operator="!=="][test.right.type="Literal"][test.right.raw="null"]',
+        message: 'Consider using the isNotNullOrUndefined type guard from typeSafetyUtils for more explicit type checking. Refer to docs/linting/type_safety_strategies.md'
+      },
+      {
+        selector: 'IfStatement[test.type="BinaryExpression"][test.operator="!=="][test.right.type="Identifier"][test.right.name="undefined"]',
+        message: 'Consider using the isNotNullOrUndefined type guard from typeSafetyUtils for more explicit type checking. Refer to docs/linting/type_safety_strategies.md'
       }
     ]
   },

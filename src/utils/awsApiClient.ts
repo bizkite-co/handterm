@@ -4,6 +4,9 @@ import { Schema } from '@effect/schema';
 
 import { type IAuthProps } from '../types/HandTerm';
 import ENDPOINTS from '../shared/endpoints.json';
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- @effect/schema Struct/TypeLiteral types use invariant generics; only an any-bounded type accepts them
+type AnySchema = Schema.Schema<any, any>;
 import { createLogger } from './Logger';
 import {
     FileContentResponseSchema,
@@ -49,7 +52,7 @@ export async function makeAuthenticatedRequest<T>(
     params?: Record<string, string>,
     method: 'GET' | 'POST' = 'GET',
     data?: unknown,
-    responseSchema?: Schema.Schema<any, any>
+    responseSchema?: AnySchema
 ): Promise<APIResponse<T>> {
     try {
         const authResponse = await auth.validateAndRefreshToken();

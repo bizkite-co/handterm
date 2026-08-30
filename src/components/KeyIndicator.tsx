@@ -1,11 +1,11 @@
-import React from 'react';
+import type { FC } from 'react';
 import './KeyIndicator.css';
 
 interface KeyIndicatorProps {
   keyType: 'enter' | 'backspace';
 }
 
-export const KeyIndicator: React.FC<KeyIndicatorProps> = ({ keyType }) => {
+export const KeyIndicator: FC<KeyIndicatorProps> = ({ keyType }) => {
   const svgPath = `/images/svgs/${keyType}-key.svg`;
 
   return (

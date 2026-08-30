@@ -1,4 +1,5 @@
 import { createLogger, LogLevel } from 'src/utils/Logger';
+import { isNotNullOrUndefined } from 'src/utils/typeSafetyUtils';
 
 import { type SpriteAnimation } from '../types/SpriteTypes';
 
@@ -15,7 +16,7 @@ export class SpriteManager {
     public async loadSprite(animationData: SpriteAnimation): Promise<Sprite> {
         if (this.spriteCache.has(animationData.imagePath)) {
             const cachedSprite = this.spriteCache.get(animationData.imagePath);
-            if (cachedSprite !== undefined) {
+            if (isNotNullOrUndefined(cachedSprite)) {
                 return cachedSprite;
             }
         }

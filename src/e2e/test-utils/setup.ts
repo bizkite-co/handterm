@@ -1,8 +1,7 @@
 import type { Page } from '@playwright/test';
 import { TEST_CONFIG } from '../config';
-import { ActivityType } from '@handterm/types';
 
-export async function setupTestEnvironment(page: Page) {
+export async function setupTestEnvironment(page: Page): Promise<void> {
 	// Clear specific localStorage keys
 	await page.evaluate(() => {
 		const keysToRemove = [

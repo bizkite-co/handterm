@@ -60,13 +60,13 @@ list-types: ## List project types
 	tsx list-types.ts > project-types.lst
 
 lint: ## Run ESLint
-	eslint . --ext .js,.jsx,.ts,.tsx --report-unused-disable-directives --max-warnings 0
+	npx eslint . --ext .js,.jsx,.ts,.tsx --report-unused-disable-directives --max-warnings 0
 
 lint-file: ## Run ESLint on a specific file
-	eslint $1 --ext .js,.jsx,.ts,.tsx --report-unused-disable-directives --max-warnings 0
+	npx eslint $1 --ext .js,.jsx,.ts,.tsx --report-unused-disable-directives --max-warnings 0
 
 lint-save: ## Run ESLint and save results to JSON
-	eslint . --ext .js,.jsx,.ts,.tsx --report-unused-disable-directives --max-warnings 0 -f json > eslint-results.json
+	npx eslint . --ext .js,.jsx,.ts,.tsx --report-unused-disable-directives --max-warnings 0 -f json > eslint-results.json
 
 lint-get-files: ## Get linting files with errors or warnings
 	jq -c '[.[] | select(.errorCount > 0 or .warningCount > 0) | { filePath: .filePath, errorCount: .errorCount, warningCount: .warningCount }]' eslint-files.json > eslint-files.json
@@ -78,10 +78,10 @@ lint-save-files: ## Run ESLint, save results, and get files with errors
 	npm run lint:save; sleep 2 && npm run lint:get-files && npm run lint:get:files-csv
 
 lint-fix-file: ## Fix linting errors in a specific file
-	eslint --fix
+	npx eslint --fix
 
 lint-types: ## Run TypeScript type checking for linting
-	tsc --noEmit
+	npx tsc --noEmit
 
 lint-style: ## Check code style with Prettier
 	prettier --check "src/**/*.{ts,tsx,js,jsx}"
@@ -123,7 +123,7 @@ validate: ## Validate code with linting and tests
 	npm run lint && npm run lint:types && npm run lint:style && npm run test
 
 deploy: ## Deploy to GitHub Pages
-	gh-pages -d dist
+	npx gh-pages -d dist --cname handterm.com
 
 # ==============================================================================
 # Cognito User Management (delegates to handterm-cdk)

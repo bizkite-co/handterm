@@ -1,7 +1,7 @@
-import type * as monaco from 'monaco-editor';
+declare module 'vite-plugin-cross-origin-isolation' {
+  import type { Plugin } from 'vite';
 
-declare module 'vite-plugin-cross-origin-isolation';
+  const crossOriginIsolation: () => Plugin;
 
-interface Window {
-  monacoEditor: monaco.editor.IStandaloneCodeEditor | undefined;
+  export default crossOriginIsolation;
 }

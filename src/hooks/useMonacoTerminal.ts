@@ -34,17 +34,17 @@ import { useWPMCalculator } from './useWPMCaculator';
 const VIM_ESCAPE_KEY_COMBO = 'Alt+s';
 // ─────────────────────────────────────────────────────────────────────────────
 
+const logger = createLogger({ prefix: 'useMonacoTerminal', level: LogLevel.WARN });
+
 export const useMonacoTerminal = (
   editor: IStandaloneCodeEditor | null,
   currentModeRef?: MutableRefObject<string>,
   vimInstanceRef?: MutableRefObject<VimModeInstance | null>
 ): ITerminalAdapter => {
   const [model, setModel] = useState<monaco.editor.ITextModel | null>(null);
-  const [onDataCallbacks, setOnDataCallbacks] = useState<((data: string) => void)[]>([]);
-  const logger = createLogger({ prefix: 'useMonacoTerminal', level: LogLevel.WARN });
+  const onDataCallbacksRef = useRef<((data: string) => void)[]>([]);
   const { handleCommand, commandHistory, commandHistoryIndex, setCommandHistoryIndex } = useCommand();
   const wpmCalculator = useWPMCalculator();
-  const [_commandLineState, _setCommandLineState] = useState('');
   const lastTypedCharacterRef = useRef<string | null>(null);
 
   // Use refs for stable adapter methods and internal values
@@ -52,13 +52,18 @@ export const useMonacoTerminal = (
   const modelRef = useRef<monaco.editor.ITextModel | null>(model);
   const commandHistoryRef = useRef(commandHistory);
   const commandHistoryIndexRef = useRef(commandHistoryIndex);
-  const commandLineStateRef = useRef(_commandLineState);
+
+  // Local refs mirroring the optional prop-refs, so hooks lint recognizes them
+  // as stable (props-refs aren't exempt from exhaustive-deps).
+  const currentModeRefLocal = useRef(currentModeRef?.current);
+  const vimInstanceRefLocal = useRef(vimInstanceRef?.current ?? null);
 
   useEffect(() => { editorRef.current = editor; }, [editor]);
   useEffect(() => { modelRef.current = model; }, [model]);
   useEffect(() => { commandHistoryRef.current = commandHistory; }, [commandHistory]);
   useEffect(() => { commandHistoryIndexRef.current = commandHistoryIndex; }, [commandHistoryIndex]);
-  useEffect(() => { commandLineStateRef.current = _commandLineState; }, [_commandLineState]);
+  useEffect(() => { currentModeRefLocal.current = currentModeRef?.current; }, [currentModeRef]);
+  useEffect(() => { vimInstanceRefLocal.current = vimInstanceRef?.current ?? null; }, [vimInstanceRef]);
 
   const setLastTypedCharacter = useCallback((value: string | null) => {
     lastTypedCharacterRef.current = value;
@@ -90,10 +95,6 @@ export const useMonacoTerminal = (
     writeOutputInternal(data);
   }, [writeOutputInternal]);
 
-  const getCurrentCommand = useCallback((): string => {
-    return commandLineSignal.value;
-  }, []);
-
   const resetPrompt = useCallback((): void => {
     const e = editorRef.current;
     const m = modelRef.current;
@@ -103,8 +104,7 @@ export const useMonacoTerminal = (
       setValueAndFocusEnd(TERMINAL_CONSTANTS.PROMPT);
     }
     setCommandLine('');
-    _setCommandLineState('');
-  }, [setCommandLine, setValueAndFocusEnd]);
+  }, [setValueAndFocusEnd]);
 
   const navigateHistory = useCallback((direction: 'up' | 'down'): void => {
     const e = editorRef.current;
@@ -131,9 +131,8 @@ export const useMonacoTerminal = (
     const historicalCommand = history[newIndex] ?? '';
     setValueAndFocusEnd(m.getValue() + historicalCommand);
     setCommandLine(historicalCommand);
-    _setCommandLineState(historicalCommand);
     setCommandHistoryIndex(newIndex);
-  }, [resetPrompt, setCommandHistoryIndex, setCommandLine, setValueAndFocusEnd, _setCommandLineState]);
+  }, [resetPrompt, setCommandHistoryIndex, setValueAndFocusEnd]);
 
   const handleEnterKey = useCallback(() => {
     const e = editorRef.current;
@@ -178,7 +177,6 @@ export const useMonacoTerminal = (
     } else {
       const parsedCommand = parseCommand(currentCommand === '' ? '\r' : currentCommand);
       setCommandLine('');
-      _setCommandLineState('');
       handleCommand(parsedCommand).catch(console.error);
       wpmCalculator.clearKeystrokes();
     }
@@ -189,7 +187,7 @@ export const useMonacoTerminal = (
     const content = m.getValue();
     setValueAndFocusEnd(content + '\n');
     resetPrompt();
-  }, [handleCommand, wpmCalculator, setCommandHistoryIndex, resetPrompt, setCommandLine, setValueAndFocusEnd]);
+  }, [handleCommand, wpmCalculator, setCommandHistoryIndex, resetPrompt, setValueAndFocusEnd]);
 
   const handleBackspace = useCallback(() => {
     const m = modelRef.current;
@@ -207,11 +205,10 @@ export const useMonacoTerminal = (
       return;
     } else {
       setValueAndFocusEnd(m.getValue().slice(0, -1));
-      const newCommandLine = commandLineStateRef.current.slice(0, -1);
+      const newCommandLine = commandLineSignal.value.slice(0, -1);
       setCommandLine(newCommandLine);
-      _setCommandLineState(newCommandLine);
     }
-  }, [setCommandLine, setValueAndFocusEnd]);
+  }, [setValueAndFocusEnd]);
 
   const handleData = useCallback((data: string) => {
     const e = editorRef.current;
@@ -222,7 +219,6 @@ export const useMonacoTerminal = (
     switch (data) {
       case '\x03': // Ctrl+C
         setCommandLine('');
-        _setCommandLineState('');
         setActivity(ActivityType.NORMAL);
         setValueAndFocusEnd(m.getValue() + '^C\r\n');
         resetPrompt();
@@ -250,21 +246,33 @@ export const useMonacoTerminal = (
           tempPasswordSignal.value += data;
           handleCharacter(data); // writes '*' to the editor via writeOutputInternal
         } else {
-          const newCommandLine = commandLineStateRef.current + data;
+          const newCommandLine = commandLineSignal.value + data;
           setValueAndFocusEnd(m.getValue() + data);
           setCommandLine(newCommandLine);
-          _setCommandLineState(newCommandLine);
           addKeystroke(data);
         }
         return;
     }
-  }, [handleCharacter, handleEnterKey, handleBackspace, resetPrompt, navigateHistory, setCommandLine, setValueAndFocusEnd]);
+  }, [handleCharacter, handleEnterKey, handleBackspace, resetPrompt, navigateHistory, setValueAndFocusEnd]);
 
   // Use a ref for handleData to keep the keydown listener stable
   const handleDataRef = useRef(handleData);
   useEffect(() => {
     handleDataRef.current = handleData;
   }, [handleData]);
+
+  const positionCursorPastPrompt = useCallback((ed: IStandaloneCodeEditor | null, m: monaco.editor.ITextModel | null) => {
+    if (!ed || !m) return;
+    if (currentModeRefLocal.current === 'normal') return; // vim manages cursor in normal mode
+    if (typeof m.getLineCount !== 'function' || typeof m.getLineContent !== 'function') return;
+    const lineNumber = m.getLineCount();
+    const lineContent = m.getLineContent(lineNumber);
+    if (!lineContent.startsWith(TERMINAL_CONSTANTS.PROMPT)) return;
+    const pos = ed.getPosition();
+    if (pos && pos.lineNumber === lineNumber && pos.column > TERMINAL_CONSTANTS.PROMPT_LENGTH) return;
+    const endCol = typeof m.getLineMaxColumn === 'function' ? m.getLineMaxColumn(lineNumber) : lineContent.length + 1;
+    ed.setPosition({ lineNumber, column: Math.max(TERMINAL_CONSTANTS.PROMPT_LENGTH + 1, endCol) });
+  }, []);
 
   useEffect(() => {
     if (editor) {
@@ -277,12 +285,15 @@ export const useMonacoTerminal = (
           currentModel.setValue(TERMINAL_CONSTANTS.PROMPT);
       }
       setModel(currentModel);
+      // The model was just (re)created, so the cursor may have reset to (1,1),
+      // left of the prompt. Reposition it to the right of '> '.
+      positionCursorPastPrompt(editor, currentModel);
 
       // Listen to key down events to handle terminal input
       const disposable = editor.onKeyDown((e) => {
         // In vim NORMAL mode, defer entirely to vim so navigation/edit commands
         // (i/a/o to re-enter insert, w/b/dw/cw motions, etc.) work unhindered.
-        if (currentModeRef?.current === 'normal') {
+        if (currentModeRefLocal.current === 'normal') {
           return;
         }
 
@@ -320,11 +331,11 @@ export const useMonacoTerminal = (
 
         // Handle configurable insert-mode exit key (Alt+S by default, like NVim's imap)
         if (VIM_ESCAPE_KEY_COMBO === 'Alt+s' && e.browserEvent.key === 's' && e.altKey) {
-          if (currentModeRef?.current !== 'normal' && vimInstanceRef?.current) {
+          if (currentModeRefLocal.current !== 'normal' && vimInstanceRefLocal.current) {
             e.preventDefault();
             e.stopPropagation();
             try {
-              monacoVim.VimMode.Vim.handleKey(vimInstanceRef.current, '<Esc>');
+              monacoVim.VimMode.Vim.handleKey(vimInstanceRefLocal.current, '<Esc>');
             } catch (err) {
               logger.warn('Alt+S: could not trigger vim exit-insert', err);
             }
@@ -382,7 +393,7 @@ export const useMonacoTerminal = (
 
       // Guard cursor position: prevent clicks/vim from moving cursor into prompt
       const cursorDisposable = editor.onDidChangeCursorPosition((e) => {
-        if (currentModeRef?.current === 'normal') return; // vim manages cursor in normal mode
+        if (currentModeRefLocal.current === 'normal') return; // vim manages cursor in normal mode
         const m = modelRef.current;
         if (!m) return;
         const lineContent = m.getLineContent(e.position.lineNumber);
@@ -394,7 +405,7 @@ export const useMonacoTerminal = (
       // Intercept mouse/touch clicks BEFORE the cursor moves — more reliable
       // than the post-move guard above (no flash, no re-entrancy).
       const mouseDisposable = editor.onMouseDown((e) => {
-        if (currentModeRef?.current === 'normal') return;
+        if (currentModeRefLocal.current === 'normal') return;
         const target = e.target;
         if (target == null || target.position == null) return;
         const pos = target.position;
@@ -413,7 +424,25 @@ export const useMonacoTerminal = (
       };
     }
     return () => {};
-  }, [editor]); // Stable: only depends on editor
+  }, [editor, positionCursorPastPrompt]); // Stable: only depends on editor
+
+  // Any click or tap anywhere on the page should leave the cursor to the right
+  // of the prompt. Clicks outside the editor never reach monaco's onMouseDown,
+  // so clamp via a document-level listener (scheduled a tick after the click so
+  // the editor's own synchronous cursor move settles first).
+  useEffect(() => {
+    const clampCursor = () => {
+      setTimeout(() => {
+        positionCursorPastPrompt(editorRef.current, modelRef.current);
+      }, 0);
+    };
+    window.addEventListener('pointerdown', clampCursor, true);
+    window.addEventListener('touchend', clampCursor, true);
+    return () => {
+      window.removeEventListener('pointerdown', clampCursor, true);
+      window.removeEventListener('touchend', clampCursor, true);
+    };
+  }, [positionCursorPastPrompt]);
 
   const clear = useCallback(() => {
     const m = modelRef.current;
@@ -425,10 +454,10 @@ export const useMonacoTerminal = (
   }, []);
 
   const onData = useCallback((callback: (data: string) => void): IDisposable => {
-    setOnDataCallbacks(prev => [...prev, callback]);
+    onDataCallbacksRef.current = [...onDataCallbacksRef.current, callback];
     return {
       dispose: () => {
-        setOnDataCallbacks(prev => prev.filter(cb => cb !== callback));
+        onDataCallbacksRef.current = onDataCallbacksRef.current.filter(cb => cb !== callback);
       },
     };
   }, []);

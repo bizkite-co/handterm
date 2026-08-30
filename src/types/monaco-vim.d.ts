@@ -6,12 +6,12 @@ declare module 'monaco-vim' {
     export interface VimModeInstance {
         dispose: () => void;
         on(event: 'vim-mode-change', listener: (mode: { mode: string; subMode?: string }) => void): void;
-        on(event: string, listener: (...args: any[]) => void): void;
+        on(event: string, listener: (...args: unknown[]) => void): void;
         attach(): void;
     }
 
     export interface VimApi {
-        defineEx(name: string, prefix: string, fn: (cm: any) => void): void;
+        defineEx(name: string, prefix: string, fn: (cm: unknown) => void): void;
         handleKey(cm: VimModeInstance, key: string, origin?: string): void;
         exitInsertMode(cm: VimModeInstance): void;
         map(lhs: string, rhs: string, ctx?: string): void;

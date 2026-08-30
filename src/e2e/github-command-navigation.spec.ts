@@ -2,7 +2,6 @@ import { ActivityType } from '@handterm/types';
 import { setActivity } from 'src/signals/appSignals';
 import type { Page } from '@playwright/test';
 import { test, expect } from '@playwright/test';
-import { signal, type Signal } from '@preact/signals-react';
 
 // REMOVED declare global block - types are now in packages/types/src/window.ts
 
@@ -58,9 +57,6 @@ const setupMocks = async (page: Page): Promise<void> => {
       }
     };
 
-    const activitySignal = signal(ActivityType.NORMAL);
-    // Assuming activitySignal is part of WindowExtensions now
-    // window.activitySignal = activitySignal;
     window.executeCommand = async (command: string) => {
       if (command === 'github') {
         if (!window.githubUtils || !window.setActivity) {

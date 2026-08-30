@@ -112,7 +112,9 @@ export const appendToOutput = (element: OutputElement): void => {
                     index === 0 ? arg : '*'.repeat(arg.length)
                 )
             };
-            element = { ...element, command: maskedCommand };
+            const maskedElement = { ...element, command: maskedCommand };
+            const newOutput = [...prevOutput, maskedElement].slice(-3);
+            return newOutput;
         }
         const newOutput = [...prevOutput, element].slice(-3);
         return newOutput;

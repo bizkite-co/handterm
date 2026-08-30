@@ -1,22 +1,21 @@
 import { screen } from '@testing-library/react';
-import { TERMINAL_CONSTANTS } from '../constants/terminal';
 
 export class TerminalTestUtils {
-  static async waitForTerminal() {
+  static async waitForTerminal(): Promise<HTMLElement> {
     return screen.findByTestId('monaco-editor-container');
   }
 
-  static async getTerminalContent() {
+  static async getTerminalContent(): Promise<string> {
     const terminal = await this.waitForTerminal();
     return terminal.textContent || '';
   }
 
-  static async getPromptCount() {
+  static async getPromptCount(): Promise<number> {
       const terminal = await screen.findByTestId('monaco-editor-container');
       return (terminal.textContent?.match(/> /g) || []).length;
   }
 
-  static async waitForPrompt() {
+  static async waitForPrompt(): Promise<void> {
     // Wait for the prompt to appear
     return new Promise<void>((resolve) => {
       const observer = new MutationObserver(async () => {

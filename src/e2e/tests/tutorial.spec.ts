@@ -1,9 +1,7 @@
 import { test, expect, type Page } from '@playwright/test';
 import { TerminalPage } from '../page-objects/TerminalPage';
-// Import Signal and GamePhrase types
-import type { GamePhrase, Signal, ActivityType } from '@handterm/types';
 import { TEST_CONFIG } from '../config';
-import type { commandLineSignal } from 'src/signals/commandLineSignals'; // Import type for declaration
+import { isNotNullOrUndefined } from '../../utils/typeSafetyUtils';
 
 // REMOVED declare global block - types are now in packages/types/src/window.ts
 
@@ -44,40 +42,7 @@ async function logVisibleElements(page: Page, context: string): Promise<void> {
 }
 
 // Type guards and interfaces
-interface TutorialSignalState {
-  tutorialSignal: unknown;
-  completedTutorials: string | null;
-  tutorialState: string | null;
-}
-
-function isError(value: unknown): value is Error {
-  return value instanceof Error;
-}
-
 let terminalPage: TerminalPage;
-
-/**
- * Helper function to verify tutorial completion using localStorage (if needed)
- */
-async function isTutorialCompletedLocally(page: Page, tutorialKey: string): Promise<boolean> {
-  try {
-    return await page.evaluate((key: string): boolean => {
-      try {
-        // Check actual localStorage
-        const completed = JSON.parse(localStorage.getItem('completed-tutorials') || '[]');
-        return Array.isArray(completed) && completed.includes(key);
-      } catch (error) {
-        console.log('[isTutorialCompletedLocally CHECK Error]', error);
-        return false;
-      }
-    }, tutorialKey);
-  } catch (error) {
-    const message = isError(error) ? error.message : 'Unknown error';
-    console.log('[isTutorialCompletedLocally Check Error]', message);
-    return false;
-  }
-}
-
 
 /**
  * Helper function to complete a tutorial step by simulating user input
@@ -96,7 +61,7 @@ async function completeTutorialStep(
   await terminalPage.pressEnter();
   // Only wait for prompt if we expect another tutorial step,
   // otherwise the prompt might not reappear immediately after transition.
-  if (expectedNextKey !== null) {
+  if (isNotNullOrUndefined(expectedNextKey)) {
       await terminalPage.waitForPrompt(); // Wait for command processing
   } else {
       // If it's the last step, give a brief moment for transition to start
@@ -288,7 +253,7 @@ test.describe('Tutorial Mode', () => {
     //    test.skip(true, 'Skipping potentially redundant transition test');
     // });
 
-    test('should complete game phrase and return to tutorial', async ({ page }) => {
+    test('should complete game phrase and return to tutorial', async ({ _page }) => {
       test.skip(true, 'Skipping game phrase test as it requires game signal mocking');
     });
 

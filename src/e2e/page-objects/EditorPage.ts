@@ -1,7 +1,7 @@
 import { type Page, type Locator } from '@playwright/test';
 import { TEST_CONFIG } from '../config';
 import { setupBrowserWindow } from '../browser-setup/setupWindow';
-import { type IStandaloneCodeEditor, type ActivityType } from '@handterm/types';
+import { type IStandaloneCodeEditor } from '@handterm/types';
 
 declare global {
 	interface Window {

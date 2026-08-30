@@ -233,7 +233,6 @@ export const useCommand = (): {
         setCommandHistoryIndex,
         commandHistoryFilter,
         setCommandHistoryFilter,
-        appendToOutput,
         executeCommand
     ]);
 };

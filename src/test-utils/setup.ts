@@ -113,6 +113,6 @@ interface WindowWithMonacoCallback extends Window {
 }
 
 // Initialize window extensions
-(window as WindowWithMonacoCallback).triggerTerminalInput = (data: string) => {
+(window as WindowWithMonacoCallback).triggerTerminalInput = (_data: string) => {
   // No-op: Monaco editor handles input via DOM events, not callbacks
 };

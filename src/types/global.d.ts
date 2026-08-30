@@ -1,4 +1,4 @@
-import { ActivityType } from '@handterm/types';
+import type { ActivityType } from '@handterm/types';
 
 declare global {
   interface Window {

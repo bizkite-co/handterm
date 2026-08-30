@@ -2,7 +2,7 @@ import { test, expect, type Page } from '@playwright/test';
 import { TerminalPage } from '../page-objects/TerminalPage';
 import { EditorPage } from '../page-objects/EditorPage';
 import { TEST_CONFIG } from '../config';
-import { Phrases, type GamePhrase, type ActivityType, StorageKeys } from '@handterm/types';
+import { Phrases, type GamePhrase, StorageKeys } from '@handterm/types';
 
 /**
  * Tests for Vim mode in the Monaco editor.

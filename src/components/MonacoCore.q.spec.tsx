@@ -1,5 +1,5 @@
 // Mock monaco-vim *once* before all tests. We don't actually need the real one.
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { defineVimCommands } from './MonacoCore'; // Import the named export
 import { ActivityType } from '@handterm/types';
 import { navigate } from '../utils/navigationUtils';

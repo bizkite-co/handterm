@@ -13,10 +13,10 @@ import {
  * Exposes signals and helper functions to the window object for e2e testing
  */
 export function exposeSignals(): void {
-  (window as any).commandLineSignal = commandLineSignal;
-  (window as any).setActivity = setActivity;
-  (window as any).setCompletedTutorial = setCompletedTutorial;
-  (window as any).getNextTutorial = getNextTutorial;
-  (window as any).setNextTutorial = setNextTutorial;
+  window.commandLineSignal = commandLineSignal;
+  window.setActivity = setActivity;
+  window.setCompletedTutorial = setCompletedTutorial;
+  window.getNextTutorial = getNextTutorial;
+  window.setNextTutorial = setNextTutorial;
   // Removed exposure of commandRegistry
 }

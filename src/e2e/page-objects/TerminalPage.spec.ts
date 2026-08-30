@@ -168,16 +168,6 @@ test.describe('TerminalPage', () => {
     await terminal.completeTutorials();
     await terminal.waitForPrompt();
 
-    const terminalCharCodes = await page.evaluate(() => {
-      const terminal = (window as any).terminalInstance;
-      if (!terminal) return [];
-      const buffer = terminal.buffer.active;
-      // Get the content of the last line where the prompt should be
-      const lastLine = buffer.getLine(buffer.cursorY);
-      // Explicitly cast 'c' to string within the map callback
-      return lastLine ? Array.from(lastLine.translateToString(true)).map((c) => (c as string).charCodeAt(0)) : [];
-    });
-
     // Expect the last line to contain only the prompt characters ('>', ' ')
     // The exact characters might vary slightly based on cursor representation,
     // but '> ' should be present. Let's check for the prompt string itself.

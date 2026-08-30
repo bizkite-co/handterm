@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { renderHook, waitFor, act } from '@testing-library/react';
+import { renderHook } from '@testing-library/react';
 import { useActivityMediator } from 'src/hooks/useActivityMediator';
 import { allTutorialKeys, StorageKeys, ActivityType } from '@handterm/types';
 import { activitySignal } from 'src/signals/appSignals';

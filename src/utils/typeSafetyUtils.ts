@@ -7,7 +7,7 @@ export function isNullOrEmptyString(value: unknown): value is null | undefined |
   return value === null || value === undefined || value === '';
 }
 
-export function isNotNullOrUndefined<T>(value: T | null | undefined):boolean {
+export function isNotNullOrUndefined<T>(value: T | null | undefined): value is T {
   return value != null;
 }
 
@@ -31,12 +31,11 @@ export function safelyAccessProperty<T, K extends keyof T>(
 export function safelyCallMethodOnRef<T, K extends keyof T>(
     ref: React.RefObject<T>,
     methodName: K,
-    ...args: any[] // Use any[] for more flexibility in arguments
+    ...args: T[K] extends (...a: infer P) => unknown ? P : never[]
 ): void {
     const method = ref.current?.[methodName];
     if (method !== null && method !== undefined && typeof method === 'function') {
-        // Cast to Function to allow calling with any arguments
-        (method as Function)(...args);
+        (method as (...a: T[K] extends (...a: infer P) => unknown ? P : never[]) => void)(...args);
     }
 }
 

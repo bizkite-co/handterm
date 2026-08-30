@@ -4,6 +4,7 @@ import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 // Import namespace and init function
 import { initVimMode } from 'monaco-vim';
 import * as monacoVim from 'monaco-vim'; // Import namespace
+import type { VimModeInstance } from 'monaco-vim';
 import { ActivityType, StorageKeys, type IStandaloneCodeEditor, type ITerminalAdapter } from '@handterm/types';
 import type { IDisposable, IWindowWithMonacoEditor } from 'packages/types/src/monaco';
 import { navigate, parseLocation } from '../utils/navigationUtils';
@@ -163,10 +164,10 @@ interface MonacoCoreProps {
   onEditorReady?: (editor: monaco.editor.IStandaloneCodeEditor) => void; // For editor mode
   onEnter?: (value: string) => void; // For terminal mode to handle Enter key
   onVimModeChange?: (mode: string) => void; // Notifies caller of vim mode changes (terminal)
-  vimModeInstanceRef?: React.MutableRefObject<import('monaco-vim').VimModeInstance | null>; // Exposes vim instance to caller
+  vimModeInstanceRef?: React.MutableRefObject<VimModeInstance | null>; // Exposes vim instance to caller
 }
 
-export default function MonacoCore({ value, language = 'text', toggleVideo, mode, auth, onSaveResult, onEditorReady, onEnter, onVimModeChange, vimModeInstanceRef }: MonacoCoreProps): JSX.Element {
+export default function MonacoCore({ value, language = 'text', toggleVideo, mode, auth, onSaveResult, onEditorReady, onVimModeChange, vimModeInstanceRef }: MonacoCoreProps): JSX.Element {
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const statusBarRef = useRef<HTMLDivElement>(null);
@@ -219,6 +220,7 @@ export default function MonacoCore({ value, language = 'text', toggleVideo, mode
       editorRef.current = null;
       (window as IWindowWithMonacoEditor).monacoEditor = undefined;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- Editor is created once on mount from initial props; value/language/mode are applied by Effect 2
   }, []); // Empty dependency array: runs once on mount and once on unmount
 
   // Effect 2: Model and Options Configuration (runs on mode/language/value changes)
@@ -298,7 +300,7 @@ export default function MonacoCore({ value, language = 'text', toggleVideo, mode
       }
     };
 
-  }, [editorRef.current, language, mode, value]); // Dependencies for model/options
+  }, [language, mode, value]); // Dependencies for model/options
 
   // Effect 3: Vim Mode (runs on editor instance or mode changes)
   useEffect(() => {
@@ -348,7 +350,7 @@ export default function MonacoCore({ value, language = 'text', toggleVideo, mode
                 e.stopPropagation();
                 if (currentVimModeRef.current !== 'normal' && vimModeRef.current) {
                   try {
-                    monacoVim.VimMode.Vim.handleKey(vimModeRef.current as any, '<Esc>');
+                    monacoVim.VimMode.Vim.handleKey(vimModeRef.current as unknown as VimModeInstance, '<Esc>');
                     currentVimModeRef.current = 'normal';
                   } catch (err) {
                     logger.warn('Alt+S: could not trigger vim exit-insert', err);
@@ -378,7 +380,7 @@ export default function MonacoCore({ value, language = 'text', toggleVideo, mode
         logger.warn("Vim effect: statusBarRef not available, skipping initVimMode.");
       }
     }
-  }, [editorRef.current, mode, toggleVideo, auth, onVimModeChange, onSaveResult]); // Dependencies for Vim mode
+  }, [mode, toggleVideo, auth, onVimModeChange, onSaveResult, vimModeInstanceRef]); // Dependencies for Vim mode
 
   // Effect 4: Resize Observer (runs once on mount)
   useEffect(() => {
@@ -412,7 +414,7 @@ export default function MonacoCore({ value, language = 'text', toggleVideo, mode
       logger.debug("ValueSync effect: Updating editor value.");
       editor.setValue(value);
     }
-  }, [value, editorRef.current, mode]); // Depend on value, editor instance, and mode
+  }, [value, mode]); // Depend on value, editor instance, and mode
 
   return (
     <div data-testid="monaco-editor-container" className="monaco-editor-container" style={{ display: 'flex', flexDirection: 'column', height: '100%', flex: '1 1 auto' }}>

@@ -36,18 +36,18 @@ function walkDirectory(dir: string, fileList: string[] = []): string[] {
     return fileList;
   }
   const files = fs.readdirSync(dir, { });
+  let collected = fileList;
 
   files.forEach(file => {
     const filePath = path.join(dir, file);
     if (fs.statSync(filePath).isDirectory()) {
-      const nextFileList = walkDirectory(filePath, fileList);
-      fileList = fileList.concat(nextFileList);
+      collected = walkDirectory(filePath, collected);
     } else if (filePath.endsWith('.ts') || filePath.endsWith('.tsx')) {
-      fileList.push(filePath);
+      collected.push(filePath);
     }
   });
 
-  return fileList;
+  return collected;
 }
 
 const projectRoot = process.cwd();

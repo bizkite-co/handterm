@@ -1,5 +1,5 @@
 import { signal } from '@preact/signals-react';
-import { ActivityType, allTutorialKeys } from '@handterm/types';
+import { ActivityType } from '@handterm/types';
 
 // Navigation state
 export const navigationState = signal<{

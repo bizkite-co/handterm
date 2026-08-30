@@ -1,7 +1,6 @@
 // Playwright-specific setup without Vitest dependencies
 import { chromium, type FullConfig } from '@playwright/test';
 import { exposeSignals } from '../test-utils/exposeSignals';
-import { TEST_CONFIG } from './config';
 
 async function globalSetup(_config: FullConfig): Promise<void> {
   const launchOptions: { executablePath?: string } = {};

@@ -1,7 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { TerminalPage } from './page-objects/TerminalPage';
 import { TEST_CONFIG } from './config';
-import { ActivityType } from '@handterm/types';
 
 test.describe('Edit Command', () => {
   let terminal: TerminalPage;
@@ -75,7 +74,7 @@ test.describe('Edit Command', () => {
     await terminal.waitForPrompt();
 
     // Use getOutput() which reads from #output-container where errors are sent
-    const output = await terminal.getOutput();
+    await terminal.getOutput();
 
     // Check the output container content
     await expect(terminal.output).toContainText('Command not found: editt', { timeout: TEST_CONFIG.timeout.short });
