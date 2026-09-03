@@ -16,7 +16,6 @@ export const ConfigCommand: ICommand = {
             const currentScale = chordGlyphScaleSignal.value;
             const message = `
               <div class="command-list">
-                <h3>Config:</h3>
                 <span class="cmd-name">chord-glyph-size    </span>  <span class="cmd-desc">${currentScale} (scale factor for chord glyphs)</span>
                 <br><br>
                 <span class="cmd-desc">Usage: config &lt;key&gt; &lt;value&gt;</span>

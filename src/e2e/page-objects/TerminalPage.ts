@@ -140,7 +140,7 @@ export class TerminalPage {
           const ActivityType = {
             NORMAL: 'normal',
             EDIT: 'edit',
-            GITHUB: 'github',
+            GITHUB: 'gh',
             TREE: 'tree',
             TUTORIAL: 'tutorial',
             GAME: 'game'

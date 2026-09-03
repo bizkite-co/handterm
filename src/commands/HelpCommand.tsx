@@ -35,7 +35,6 @@ export const HelpCommand: ICommand = {
       const response = `
         <div class='chord-display-container'>${commandChordsHtml}</div>
         <div class='command-list-container'>
-          <h3>Available Commands:</h3>
           <div class="command-list">${commandList}</div>
         </div>
       `;

@@ -21,21 +21,24 @@ async function sleep(ms: number): Promise<void> {
 }
 
 export const GitHubCommand: ICommand = {
-  name: 'github',
+  name: 'gh',
   description: 'GitHub account and repository management',
-  switches: {
-    h: 'Show help for GitHub command',
-    l: 'Link GitHub account',
-    u: 'Unlink GitHub account',
-    r: 'List recent repositories',
-    t: 'Get repository tree (Usage: -t owner/repo [path] [sha])',
+  subcommands: {
+    help: 'Show help for gh command',
+    link: 'Link GitHub account',
+    unlink: 'Unlink GitHub account',
+    recent: 'List recent repositories',
+    tree: 'Get repository tree (Usage: gh tree owner/repo [path] [sha])',
   },
   execute: async (
     context: ICommandContext,
     parsedCommand: ParsedCommand
   ): Promise<ICommandResponse> => {
-    // Show help if requested or no switches provided
-    if ('h' in parsedCommand.switches || Object.keys(parsedCommand.switches).length === 0) {
+    const subcommand = parsedCommand.args[0] ?? 'help';
+    const args = parsedCommand.args.slice(1);
+
+    // Show help if requested or no subcommand provided
+    if (subcommand === 'help') {
       return {
         status: 200,
         message: commandRegistry.formatCommandHelp(GitHubCommand),
@@ -43,7 +46,7 @@ export const GitHubCommand: ICommand = {
     }
 
     try {
-      if ('l' in parsedCommand.switches) {
+      if (subcommand === 'link') {
         // Get device code from GitHub
         const deviceCodeResponse = await getGitHubDeviceCode(context.auth);
         if (deviceCodeResponse.status !== 200 || deviceCodeResponse.data === null) {
@@ -121,7 +124,7 @@ export const GitHubCommand: ICommand = {
         };
       }
 
-      if ('u' in parsedCommand.switches) {
+      if (subcommand === 'unlink') {
         const response = await unlinkGitHub(context.auth);
         if (response.status === 200) {
           // Clear GitHub-related items from localStorage
@@ -133,7 +136,7 @@ export const GitHubCommand: ICommand = {
           return {
             status: 200,
             message:
-              'GitHub account unlinked. Use "github -l" to link again with new permissions.',
+              'GitHub account unlinked. Use "gh link" to link again with new permissions.',
           };
         }
 
@@ -143,17 +146,16 @@ export const GitHubCommand: ICommand = {
         };
       }
 
-      if ('r' in parsedCommand.switches) {
+      if (subcommand === 'recent') {
         const response = await listRecentRepos(context.auth);
 
         if (response.status === 200 && response.data !== null && response.data !== undefined && typeof response.data === 'object') {
-          const repoList = response.data
-            .map((repo) => `${repo.name}: ${repo.description ?? 'No description'}`)
-            .join('<br />');
-
+          const repoRows = response.data
+            .map((repo) => `<tr><td class="repo-name">${repo.name}</td><td class="repo-desc">${repo.description ?? 'No description'}</td></tr>`)
+            .join('');
           return {
             status: 200,
-            message: `Recent Repositories:<br />${repoList}`,
+            message: `Recent Repositories:<br /><table class="repo-list-table">${repoRows}</table>`,
           };
         }
 
@@ -163,21 +165,18 @@ export const GitHubCommand: ICommand = {
         };
       }
 
-      if ('t' in parsedCommand.switches) {
-        const repoArg: string =
-          parsedCommand.switches.t === true
-            ? parsedCommand.args[0] as string
-            : parsedCommand.switches.t as string;
+      if (subcommand === 'tree') {
+        const repoArg = args[0];
         if (repoArg == null) {
           return {
             status: 400,
             message:
-              'Repository parameter required. Usage: github -t owner/repo [path] [sha]',
+              'Repository parameter required. Usage: gh tree owner/repo [path] [sha]',
           };
         }
 
-        const path = parsedCommand.args[1] ?? '';
-        const sha = parsedCommand.args[2] ?? '';
+        const path = args[1] ?? '';
+        const sha = args[2] ?? '';
 
         logger.info('Fetching tree for repo:', repoArg);
         const response = await getRepoTree(context.auth, repoArg, path, sha);

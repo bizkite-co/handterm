@@ -70,9 +70,9 @@ describe('GitHubCommand -l', () => {
 
     const mockContext = createMockContext({ appendToOutput });
     const parsedCommand: ParsedCommand = {
-      command: 'github',
-      args: [],
-      switches: { l: true },
+      command: 'gh',
+      args: ['link'],
+      switches: {},
     };
 
     const responsePromise = GitHubCommand.execute(mockContext, parsedCommand);

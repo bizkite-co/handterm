@@ -1,123 +1,123 @@
 :root {
-    --terminal-font-family: "Fira Code", Menlo, "DejaVu Sans Mono", "Lucida Console", monospace;
-    --terminal-font-size: 16px;
-    --terminal-line-height: 1.2;
-    color: white;
+  --terminal-font-family:
+    "Fira Code", Menlo, "DejaVu Sans Mono", "Lucida Console", monospace;
+  --terminal-font-size: 16px;
+  --terminal-line-height: 1.2;
+  color: white;
 }
 
 html {
-    height: 100%;
-    width: 100%;
+  height: 100%;
+  width: 100%;
 }
 
 body {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    margin: 0;
-    padding: 0;
-    font-family: var(--terminal-font-family);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: var(--terminal-font-family);
 }
 
 .app {
-    flex-direction: column;
-    justify-content: flex-end;
-    margin: 10px;
-    /* Aligns children (HandexTerm) to the bottom */
+  flex-direction: column;
+  justify-content: flex-end;
+  margin: 10px;
+  /* Aligns children (HandexTerm) to the bottom */
 }
 
 .parallax-background {
-    position: relative;
-    overflow: hidden;
-    height: 100px;
-    /* Example height, adjust as needed */
+  position: relative;
+  overflow: hidden;
+  height: 100px;
+  /* Example height, adjust as needed */
 }
 
 .parallax-layer {
-    position: absolute;
-    height: 100px;
-    width: 100%;
+  position: absolute;
+  height: 100px;
+  width: 100%;
 }
 
 .chord-navigation {
+  img {
+    display: block;
+    width: 40px;
+    height: 40px;
+    margin: 5px;
+  }
 
-    img {
-        display: block;
-        width: 40px;
-        height: 40px;
-        margin: 5px;
-    }
-
-    &:after {
-        content: "";
-        display: table;
-        clear: both;
-    }
+  &:after {
+    content: "";
+    display: table;
+    clear: both;
+  }
 }
 
 .phrase-names {
-    text-align: left;
+  text-align: left;
 }
 
 #root {
-    flex: 1;
+  flex: 1;
 }
 
 .phrase-name {
-    display: inline-block;
-    width: auto;
-    margin: 0 10px 10px 0;
+  display: inline-block;
+  width: auto;
+  margin: 0 10px 10px 0;
 }
 
 .key-container {
-    float: left;
-    flex-direction: column;
-    align-items: left;
-    /* Center-align the items horizontally */
-    text-align: left;
-    /* Center-align the text */
-    margin-bottom: 15px;
-    /* Add some space between the pairs */
+  float: left;
+  flex-direction: column;
+  align-items: left;
+  /* Center-align the items horizontally */
+  text-align: left;
+  /* Center-align the text */
+  margin-bottom: 15px;
+  /* Add some space between the pairs */
 }
 
 .key-container label {
-    line-height: 0.6em;
-    vertical-align: text-top;
+  line-height: 0.6em;
+  vertical-align: text-top;
 }
 .log-line {
-    line-height: var(--terminal-line-height);
+  line-height: var(--terminal-line-height);
 }
 .log-line span {
-    background-color: #0007;
+  background-color: #0007;
 }
 .log-time {
-    color: grey;
-    font-weight: 100;
+  color: grey;
+  font-weight: 100;
 }
 
 .log-hour {
-    color: #00ffff;
-    font-weight: 100;
+  color: #00ffff;
+  font-weight: 100;
 }
 
 .log-minute {
-    color: #FF09;
-    font-weight: bold;
+  color: #ff09;
+  font-weight: bold;
 }
 
 .log-second {
-    color: green;
-    font-weight: 100;
+  color: green;
+  font-weight: 100;
 }
 
 .log-prefix {
-    color: gray;
+  color: gray;
 }
 #output-container .response {
-    display: inline-block;
-    background-color: #0007;
-    padding-right: 10px;
-    line-height: var(--terminal-line-height);
+  display: inline-block;
+  background-color: #0007;
+  padding-right: 10px;
+  line-height: var(--terminal-line-height);
 }
 
 .command-list {
@@ -126,285 +126,304 @@ body {
     line-height: var(--terminal-line-height);
 }
 .command-list .cmd-name {
-    color: cyan;
-    font-weight: bold;
+  color: cyan;
+  font-weight: bold;
 }
 .command-list .cmd-desc {
-    color: #aaa;
+  color: #aaa;
+}
+
+.repo-list-table {
+  font-family: var(--terminal-font-family);
+  line-height: var(--terminal-line-height);
+  border-collapse: collapse;
+}
+
+.repo-list-table td {
+  padding: 0;
+}
+
+.repo-list-table .repo-name {
+  color: green;
+  font-weight: bold;
+  padding-right: 1em;
+  white-space: nowrap;
+}
+
+.repo-list-table .repo-desc {
+  color: #aaa;
 }
 
 .terminal-nav {
-    color: white;
-    background-color: #000;
-    font-weight: bold;
-    flex-shrink: 1;
-    padding: 0 10px;
-    line-height: 2em;
+  color: white;
+  background-color: #000;
+  font-weight: bold;
+  flex-shrink: 1;
+  padding: 0 10px;
+  line-height: 2em;
 }
 
 pre#next-chars {
-    padding: 0;
-    margin: 0;
-    color: lightgreen;
-    font-weight: bold;
-    font-size: var(--terminal-font-size);
-    line-height: var(--terminal-line-height);
-    white-space: pre-wrap;
-    /* Allows text to wrap */
-    word-break: break-word;
-    /* Ensures words break to prevent overflow */
-    font-family: var(--terminal-font-family);
-    /* Maintains monospace font */
+  padding: 0;
+  margin: 0;
+  color: lightgreen;
+  font-weight: bold;
+  font-size: var(--terminal-font-size);
+  line-height: var(--terminal-line-height);
+  white-space: pre-wrap;
+  /* Allows text to wrap */
+  word-break: break-word;
+  /* Ensures words break to prevent overflow */
+  font-family: var(--terminal-font-family);
+  /* Maintains monospace font */
 }
 
 video#terminal-video {
-    width: 100%;
-    top: 0;
-    left: 0;
-    margin: 0;
-    padding: 0;
-    position: absolute;
-    z-index: -1;
+  width: 100%;
+  top: 0;
+  left: 0;
+  margin: 0;
+  padding: 0;
+  position: absolute;
+  z-index: -1;
 }
 
 div.terminal {
-    background-color: #0000;
-    z-index: 10;
+  background-color: #0000;
+  z-index: 10;
 }
 
 #chord-image-holder .char {
-    font-size: 35px;
+  font-size: 35px;
 }
 
 #timer-root {
-    color: white;
-    float: left;
+  color: white;
+  float: left;
 }
 
 .wpm-table-row .number {
-    color: lightgreen;
-    text-align: right;
+  color: lightgreen;
+  text-align: right;
 }
 
 .terminal {
-    /* Terminal styles */
-    background-color: #0003;
-    z-index: 10;
-    color: white;
-    /* font-size: var(--terminal-font-size); */
-    display: flex;
-    height: 100%;
-    width: 100%;
-    padding: 0;
-    margin: 0;
-    flex-direction: column;
+  /* Terminal styles */
+  background-color: #0003;
+  z-index: 10;
+  color: white;
+  /* font-size: var(--terminal-font-size); */
+  display: flex;
+  height: 100%;
+  width: 100%;
+  padding: 0;
+  margin: 0;
+  flex-direction: column;
 
-    .prompt {
-        color: lightseagreen;
+  .prompt {
+    color: lightseagreen;
 
-        .domain {
-            color: darkkhaki;
-        }
-
-        .user {
-            color: magenta;
-        }
+    .domain {
+      color: darkkhaki;
     }
+
+    .user {
+      color: magenta;
+    }
+  }
 }
 
 pre#prompt {
-    margin: 0;
-    font-size: var(--terminal-font-size);
-    font-family: var(--terminal-font-family);
-    font-weight: 600;
-    color: lightgreen;
-    clear: both;
-    .user {
-        color: magenta;
-    }
-    .domain {
-        color: yellow;
-    }
-    .github {
-        color: cyan;
-    }
+  margin: 0;
+  font-size: var(--terminal-font-size);
+  font-family: var(--terminal-font-family);
+  font-weight: 600;
+  color: lightgreen;
+  clear: both;
+  .user {
+    color: magenta;
+  }
+  .domain {
+    color: yellow;
+  }
+  .github {
+    color: cyan;
+  }
 }
 
 .hidden-canvas {
-    visibility: hidden;
-    position: absolute;
-    left: -9999px;
+  visibility: hidden;
+  position: absolute;
+  left: -9999px;
 }
 
 #output-container {
-    /* Output area styles */
-    padding: 1opx 0 0 0;
-    z-index: 100;
-    background-color: #0000;
-    font-size: var(--terminal-font-size);
+  /* Output area styles */
+  padding: 1opx 0 0 0;
+  z-index: 100;
+  background-color: #0000;
+  font-size: var(--terminal-font-size);
 }
 
 #terminal-game {
-    background-color: #0007;
+  background-color: #0007;
 }
 
 #next-chars {
+  background-color: #0007;
+  pre#next-chars {
     background-color: #0007;
-    pre#next-chars {
-        background-color: #0007;
-    }
+  }
 }
 
 #terminal-output div {
-    z-index: 1000;
+  z-index: 1000;
 }
 
 #footer {
-    padding: 0 0 15 0;
+  padding: 0 0 15 0;
 
-    div {
-        float: left;
-        padding: 20px 0 0 30px;
-        font-size: var(--terminal-font-size);
-        line-height: var(--terminal-line-height);
-        text-align: center;
+  div {
+    float: left;
+    padding: 20px 0 0 30px;
+    font-size: var(--terminal-font-size);
+    line-height: var(--terminal-line-height);
+    text-align: center;
 
-        a {
-            color: cyan;
-        }
+    a {
+      color: cyan;
     }
+  }
 
-    img {
-        width: 170px;
-        float: right;
-        padding: 0 15px 15px 0;
-    }
+  img {
+    width: 170px;
+    float: right;
+    padding: 0 15px 15px 0;
+  }
 }
 
-
 .wpm {
-    color: yellow;
-    font-weight: bold;
-    padding: 0 5px;
+  color: yellow;
+  font-weight: bold;
+  padding: 0 5px;
 }
 
 .wpm-label {
-    color: cyan;
+  color: cyan;
 }
 
 /* Responsive font size and padding */
 @media (max-width: 600px) {
+  /* Example breakpoint for mobile devices */
+  body {
+    padding-left: 2px;
+  }
 
-    /* Example breakpoint for mobile devices */
-    body {
-        padding-left: 2px;
+  /* Add any additional mobile-specific styles here */
+  .scrolling-text {
+    animation: scrollText 1s linear infinite;
+    /* Adjust duration as needed */
+  }
+
+  #footer {
+    div {
+      font-size: var(--terminal-font-size);
     }
 
-    /* Add any additional mobile-specific styles here */
-    .scrolling-text {
-        animation: scrollText 1s linear infinite;
-        /* Adjust duration as needed */
+    img {
+      width: 120px;
     }
-
-    #footer {
-        div {
-            font-size: var(--terminal-font-size);
-        }
-
-        img {
-            width: 120px;
-        }
-    }
+  }
 }
 
 .terminal-line {
-    display: flex;
-    align-items: flex-start;
-    /* Align items to the top */
+  display: flex;
+  align-items: flex-start;
+  /* Align items to the top */
 }
 
 .prompt-tail-container {
-    margin-right: 4px;
-    /* Space between the prompt tail and the input */
+  margin-right: 4px;
+  /* Space between the prompt tail and the input */
 }
 
 .terminal-prompt.tail {
-    /* Aligning the prompt-tail vertically */
-    align-self: top;
+  /* Aligning the prompt-tail vertically */
+  align-self: top;
 }
 
 .terminal-input {
-    flex: 1;
-    background: none;
-    border: none;
-    color: yellow;
-    caret-color: lightyellow;
-    /* resize: none; */
-    white-space: pre-wrap;
-    overflow-y: hidden;
-    padding: 0;
-    vertical-align: top;
-    /* If you want the textarea to grow without a scrollbar */
-    /* Remove fixed height to allow auto-expanding */
+  flex: 1;
+  background: none;
+  border: none;
+  color: yellow;
+  caret-color: lightyellow;
+  /* resize: none; */
+  white-space: pre-wrap;
+  overflow-y: hidden;
+  padding: 0;
+  vertical-align: top;
+  /* If you want the textarea to grow without a scrollbar */
+  /* Remove fixed height to allow auto-expanding */
 }
 
 .terminal-input:focus {
-    outline: none;
+  outline: none;
 }
 
 .terminal-line:not(.first-line) {
-    display: flex;
-    align-items: center;
+  display: flex;
+  align-items: center;
 }
 
 .terminal .domain {
-    color: darkkhaki;
+  color: darkkhaki;
 }
 
 .terminal-progress-bar {
-    /* Progress bar styles */
-    background-color: darkblue;
+  /* Progress bar styles */
+  background-color: darkblue;
 }
 
 @keyframes scrollText {
-    0% {
-        transform: translateX(100%);
-    }
+  0% {
+    transform: translateX(100%);
+  }
 
-    100% {
-        transform: translateX(-100%);
-    }
+  100% {
+    transform: translateX(-100%);
+  }
 }
 
 .scrolling-text {
-    animation: scrollText 5s linear infinite;
-    /* Adjust duration as needed */
-    color: lightgreen;
-    /* Text color */
-    font: italic 60px Arial;
+  animation: scrollText 5s linear infinite;
+  /* Adjust duration as needed */
+  color: lightgreen;
+  /* Text color */
+  font: italic 60px Arial;
 }
 
 .chord-display-container {
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-start;
-    align-items: center;
-    flex-wrap: wrap;
-    /* Optional: if you want to vertically align them */
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+  flex-wrap: wrap;
+  /* Optional: if you want to vertically align them */
 }
 
 .tutorial-component pre {
-    color: lightsalmon;
-    font-size: var(--terminal-font-size);
+  color: lightsalmon;
+  font-size: var(--terminal-font-size);
 }
 
 .tutorial-component pre {
-    white-space: pre-wrap;
-    /* Allows text to wrap */
-    word-break: break-word;
-    /* Ensures words break to prevent overflow */
-    font-family: var(--terminal-font-family);
-    /* Maintains monospace font */
+  white-space: pre-wrap;
+  /* Allows text to wrap */
+  word-break: break-word;
+  /* Ensures words break to prevent overflow */
+  font-family: var(--terminal-font-family);
+  /* Maintains monospace font */
 }
 
 .CodeMirror div.CodeMirror-cursors {
@@ -412,7 +431,7 @@ pre#prompt {
 }
 
 .vim-status-bar {
-  opacity: 50%;
+  opacity: 0.25;
 }
 
 div.cm-content {
@@ -447,11 +466,22 @@ div.view-line > span {
   display: inline-block;
 }
 
-div.monaco-editor-container > section > div > div > div.overflow-guard > div.margin {
+div.monaco-editor-container
+  > section
+  > div
+  > div
+  > div.overflow-guard
+  > div.margin {
   background: #0000;
 }
 
-div.monaco-editor-container > section > div > div > div.overflow-guard > div.minimap.slider-mouseover > canvas.minimap-decorations-layer {
+div.monaco-editor-container
+  > section
+  > div
+  > div
+  > div.overflow-guard
+  > div.minimap.slider-mouseover
+  > canvas.minimap-decorations-layer {
   background: #0000;
 }
 
@@ -466,7 +496,7 @@ pre#prompt-header {
 
 pre#prompt-header .timestamp {
   padding-right: 10px;
-  opacity: 50%;
+  opacity: 0.5;
 }
 
 /* Remove Monaco focus border/outline */

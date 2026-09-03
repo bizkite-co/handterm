@@ -51,17 +51,21 @@ interface IGameHandle {
 // LOGICAL leftX (the zombie's includes its 41 xOffset).
 const GAME_TUNING = {
   // Initial placement (px from the left edge of the canvas).
-  heroStartLeftX: 30,      // hero anchors near the left edge
+  heroStartLeftX: 30,      // hero anchors near the left edge; runs right to center
   zombieStartLeftX: -130,  // zombie spawns just OFF the left edge and walks on (lull)
 
+  // Run / world scroll.
+  heroRunStepPx: 30,       // px the hero advances per run keystroke toward center
+                           // once centered, that advance instead scrolls the world
+
   // Contact / combat.
-  fightGap: 15,            // body-gap (px) below which the zombie is in range
+  fightGap: 2,             // body-gap (px) at which the zombie is close enough to fight
   hitIntervalMs: 2200,     // zombie swipe tempo (matches the 15-frame Attack anim)
   maxHeroLives: 3,         // hits to kill the hero (then restart this level)
   fightSwingMs: 800,       // how long a player-initiated swing / run flash lasts
 
   // Defensive typing.
-  zombiePushBackPx: 5,     // weak push-back: px the zombie retreats per correct char
+  zombiePushBackPx: 5,     // ONLY when the player swings: px the zombie retreats
   zombieFloorLeftX: -130,  // retreat floor — zombie never goes far off the left edge
 
   // Body footprints (relative to logical leftX).
@@ -77,13 +81,6 @@ function GameFunction(props: IGameProps, ref: ForwardedRef<IGameHandle>): JSX.El
     leftX: GAME_TUNING.zombieStartLeftX,
     topY: 0,
   }), []);
-  // The hero's drawn position must match the logical position used by the
-  // proximity check and reach threshold, or the zombie stops relative to a
-  // phantom hero on non-717px canvases.
-  const heroStartPosition = useMemo<SpritePosition>(() => ({
-    leftX: GAME_TUNING.heroStartLeftX,
-    topY: 29,
-  }), []);
 
   const zombie4PositionRef = useRef<SpritePosition>(zombie4StartPosition);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -93,17 +90,20 @@ function GameFunction(props: IGameProps, ref: ForwardedRef<IGameHandle>): JSX.El
   const zombie4DeathTimeout = useRef<NodeJS.Timeout | null>(null);
   const heroRunTimeoutRef = useRef<number | null>(null);
 
-  const heroPositionRef = useRef<SpritePosition>(heroStartPosition);
+  // The hero's on-screen x (px). Starts near the left edge and advances right
+  // as the hero runs; it is capped at the canvas center, past which running
+  // scrolls the world instead. Stored as a SpritePosition because the Hero
+  // sprite draws from its positionRef.
+  const heroPositionRef = useRef<SpritePosition>({ leftX: GAME_TUNING.heroStartLeftX, topY: 30 });
+  const centerX = canvasWidth / 2;
+
   // Keep the drawn position in sync when the canvas is resized.
   useEffect(() => {
-    heroPositionRef.current = heroStartPosition;
-  }, [heroStartPosition]);
-  // The hero runs in place at the reach threshold; its anchored leftX is a
-  // constant (fixed px), not derived from canvas size.
-  const heroPosition = useMemo<SpritePosition>(
-    () => ({ leftX: GAME_TUNING.heroStartLeftX, topY: 30 }),
-    []
-  );
+    heroPositionRef.current = {
+      ...heroPositionRef.current,
+      leftX: Math.min(heroPositionRef.current.leftX, centerX),
+    };
+  }, [centerX]);
   const [heroFacingLeft, setHeroFacingLeft] = useState(false);
   const [heroLives, setHeroLives] = useState<number>(GAME_TUNING.maxHeroLives);
 
@@ -187,6 +187,8 @@ function GameFunction(props: IGameProps, ref: ForwardedRef<IGameHandle>): JSX.El
         setHeroAction('Idle');
         setZombie4Action('Walk');
         zombie4PositionRef.current = zombie4StartPosition;
+        heroPositionRef.current = { ...heroPositionRef.current, leftX: GAME_TUNING.heroStartLeftX };
+        setBackgroundOffsetX(0);
         setHeroFacingLeft(false);
         engagedRef.current = false;
         lastZombieHitAtRef.current = 0;
@@ -204,32 +206,22 @@ function GameFunction(props: IGameProps, ref: ForwardedRef<IGameHandle>): JSX.El
   const updateCharacterAndBackgroundPostion = useCallback((context: CanvasRenderingContext2D): number => {
     context.clearRect(0, 0, canvasWidth, canvasHeight);
 
-    let heroDx = 0;
     const hero = heroRef.current;
     if (isNotNullOrUndefined(hero)) {
-      heroDx = hero.draw(context, heroPosition);
+      hero.draw(context, heroPositionRef.current);
     }
 
     const zombie = zombie4Ref.current;
     if (isNotNullOrUndefined(zombie)) {
       const zombie4Dx = zombie.draw(context, zombie4PositionRef.current);
+      // The zombie advances toward the hero on its own walk (dx per frame).
       zombie4PositionRef.current = {
         ...zombie4PositionRef.current,
         leftX: zombie4PositionRef.current.leftX + zombie4Dx
       };
     }
-
-    if (heroDx !== 0) {
-      setBackgroundOffsetX(prev => prev + heroDx);
-
-      const newZombie4PositionX = zombie4PositionRef.current.leftX - heroDx;
-      zombie4PositionRef.current = {
-        ...zombie4PositionRef.current,
-        leftX: newZombie4PositionX
-      };
-    }
-    return heroDx;
-  }, [canvasWidth, canvasHeight, heroPosition]);
+    return 0;
+  }, [canvasWidth, canvasHeight]);
 
   const checkProximityAndSetAction = useCallback(() => {
     if (isHeroDeadRef.current) return;
@@ -238,7 +230,7 @@ function GameFunction(props: IGameProps, ref: ForwardedRef<IGameHandle>): JSX.El
     // Gap between the zombie's body right edge and the hero's body left edge.
     const heroHitbox = heroRef.current?.hitbox ?? GAME_TUNING.heroHitbox;
     const zombieHitbox = zombie4Ref.current?.hitbox ?? GAME_TUNING.zombieHitbox;
-    const heroBodyLeft = heroPosition.leftX + heroHitbox.left;
+    const heroBodyLeft = heroPositionRef.current.leftX + heroHitbox.left;
     const zombieBodyRight = zombie4PositionRef.current.leftX + zombieHitbox.left + zombieHitbox.width;
     const bodyGap = heroBodyLeft - zombieBodyRight;
 
@@ -265,7 +257,7 @@ function GameFunction(props: IGameProps, ref: ForwardedRef<IGameHandle>): JSX.El
       }
       lastZombieHitAtRef.current = 0;
     }
-  }, [heroPosition, zombie4Action, handleHeroHit]);
+  }, [zombie4Action, handleHeroHit]);
 
   const toggleScrollingText = useCallback((show: boolean | null = null) => {
     const nextShow = show === null ? !isTextScrolling : show;
@@ -305,68 +297,89 @@ function GameFunction(props: IGameProps, ref: ForwardedRef<IGameHandle>): JSX.El
     animationFrameIndex.current = requestAnimationFrame(loop);
   }, [isPhraseComplete, drawScrollingText, updateCharacterAndBackgroundPostion, checkProximityAndSetAction, stopAnimationLoop]);
 
-  // Flash the hero's Run animation in place (facing away from the zombie) while
-  // the zombie is still out of range. Reverts to a neutral Idle afterwards.
-  const setHeroRunAction = useCallback(() => {
+  // Helpers to flash a transient action (Run or Attack) and revert to Idle.
+  const clearRunSwingTimer = useCallback(() => {
     const timeout = heroRunTimeoutRef.current;
     if (isNotNullOrUndefined(timeout)) {
       clearTimeout(timeout);
       heroRunTimeoutRef.current = null;
     }
+  }, []);
 
-    setHeroFacingLeft(false);
-    setHeroAction('Run');
+  const flashActionThenIdle = useCallback(() => {
     heroRunTimeoutRef.current = window.setTimeout(() => {
       setHeroAction('Idle');
       heroRunTimeoutRef.current = null;
     }, GAME_TUNING.fightSwingMs);
-  }, [setHeroAction, setHeroFacingLeft]);
+  }, [setHeroAction]);
 
-  // A correctly typed character is the hero's engine: while the zombie is out of
-  // range the hero runs (pushing it back); once the zombie is in range, typing is
-  // the hero's only defense — the player swings (fights) by typing. Either way
-  // typing drives the phrase forward, and completing it is the fatal blow.
+  // A correctly typed character is the hero's engine. While the zombie is out of
+  // range the hero RUNS (advancing toward center, then scrolling the world past).
+  // Once the zombie is in range, typing is the hero's defense: the player swings
+  // (fights) by typing, turning to face the zombie and nudging it back ~5px.
+  // Completing the phrase (upstream) is the fatal blow.
   const handleCommandLineChange = useCallback(() => {
     if (isHeroDeadRef.current) return;
-    // Typing pushes the zombie away — the hero "out-runs" it. The retreat is
-    // bounded by a floor so the zombie is nudged back, not flung to the start.
-    zombie4PositionRef.current = {
-      ...zombie4PositionRef.current,
-      leftX: Math.max(
-        GAME_TUNING.zombieFloorLeftX,
-        zombie4PositionRef.current.leftX - GAME_TUNING.zombiePushBackPx
-      )
-    };
-
-    const timeout = heroRunTimeoutRef.current;
-    if (isNotNullOrUndefined(timeout)) {
-      clearTimeout(timeout);
-      heroRunTimeoutRef.current = null;
-    }
+    clearRunSwingTimer();
 
     if (engagedRef.current) {
-      // In range: the player fights back (a swing per keystroke). Turn to face
-      // the zombie; the swing reverts to Idle so it only looks like an attack
-      // while the player is actually typing.
+      // Fighting: turn to face the zombie (on the hero's left) and swing. The
+      // swing is the only time the zombie retreats, and only by a few px.
+      zombie4PositionRef.current = {
+        ...zombie4PositionRef.current,
+        leftX: Math.max(
+          GAME_TUNING.zombieFloorLeftX,
+          zombie4PositionRef.current.leftX - GAME_TUNING.zombiePushBackPx
+        )
+      };
       setHeroFacingLeft(true);
       setHeroAction('Attack');
-      heroRunTimeoutRef.current = window.setTimeout(() => {
-        setHeroAction('Idle');
-        heroRunTimeoutRef.current = null;
-      }, GAME_TUNING.fightSwingMs);
     } else {
-      // Out of range: typing runs the hero.
-      setHeroRunAction();
-    }
-  }, [setHeroRunAction, setHeroFacingLeft, setHeroAction]);
+      // Running: advance the hero right toward the center. Once centered, the
+      // same advance scrolls the world (hero stays at center, scenery moves).
+      const prev = heroPositionRef.current.leftX;
+      const nextOnScreen = Math.min(prev + GAME_TUNING.heroRunStepPx, centerX);
+      const moved = nextOnScreen - prev;
+      heroPositionRef.current = { ...heroPositionRef.current, leftX: nextOnScreen };
 
+      const scroll = GAME_TUNING.heroRunStepPx - moved;
+      if (scroll > 0) {
+        setBackgroundOffsetX(b => b + scroll);
+        // Scrolling the world pulls the (stationary-in-world) zombie left too.
+        zombie4PositionRef.current = {
+          ...zombie4PositionRef.current,
+          leftX: zombie4PositionRef.current.leftX - scroll,
+        };
+      }
+
+      setHeroFacingLeft(false);
+      setHeroAction('Run');
+    }
+
+    flashActionThenIdle();
+  }, [
+    clearRunSwingTimer,
+    flashActionThenIdle,
+    centerX,
+    setHeroFacingLeft,
+    setHeroAction,
+    setBackgroundOffsetX,
+  ]);
+
+  // Only advance the hero on genuine forward progress — a strictly longer correct
+  // prefix. Backspacing (even to a correct shorter prefix) must NOT advance.
+  const lastRunCharCountRef = useRef(0);
   useSignalEffect(() => {
     const typed = commandLine.value ?? '';
     const phraseValue = gamePhraseSignal.value?.value;
     if (phraseValue == null || phraseValue === '') return;
-    // Only advance the hero when the typed text is a correct prefix of the
-    // game phrase (same comparison as NextCharsDisplay).
-    if (typed !== '' && typed === phraseValue.trim().substring(0, typed.length)) {
+    if (typed === '') {
+      lastRunCharCountRef.current = 0;
+      return;
+    }
+    const isCorrectPrefix = typed === phraseValue.trim().substring(0, typed.length);
+    if (isCorrectPrefix && typed.length > lastRunCharCountRef.current) {
+      lastRunCharCountRef.current = typed.length;
       handleCommandLineChange();
     }
   });
@@ -442,6 +455,8 @@ function GameFunction(props: IGameProps, ref: ForwardedRef<IGameHandle>): JSX.El
       setHeroAction('Idle');
       setZombie4Action('Walk');
       zombie4PositionRef.current = zombie4StartPosition;
+      heroPositionRef.current = { ...heroPositionRef.current, leftX: GAME_TUNING.heroStartLeftX };
+      setBackgroundOffsetX(0);
       engagedRef.current = false;
       setHeroFacingLeft(false);
       lastZombieHitAtRef.current = 0;

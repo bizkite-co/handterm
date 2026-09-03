@@ -17,6 +17,7 @@ export interface ICommand {
   name: string;
   description: string;
   switches?: Record<string, string>;
+  subcommands?: Record<string, string>;
   execute: (
     context: ICommandContext,
     parsedCommand: ParsedCommand,
