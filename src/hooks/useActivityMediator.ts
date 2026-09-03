@@ -303,25 +303,9 @@ export function useActivityMediator(): {
             if (gamePhrase != null) checkGameProgress(gamePhrase);
         }
         switch (parsedCommand.command) {
-            case 'play': {
-                const nextGamePhrase = getNextGamePhrase();
-                transitionToGame(nextGamePhrase?.key);
-                result = true;
-                break;
-            }
-            case 'tut': {
-                if ('r' in parsedCommand.switches) {
-                    resetCompletedTutorials();
-                }
-                const nextTutorial = getNextTutorial();
-                navigate({
-                    activityKey: ActivityType.TUTORIAL,
-                    contentKey: nextTutorial?.key ?? null,
-                    groupKey: nextTutorial?.tutorialGroup ?? null
-                })
-                result = true;
-                break;
-            }
+            // `play` and `tut` are registered commands (PlayCommand,
+            // TutCommand) that navigate themselves; they no longer need
+            // special-casing here.
             case 'edit': {
                 // REVERTED: Only check if tutorials are complete. Navigation is handled by editCommand.tsx
                 const completedTutorials = localStorage.getItem(StorageKeys.completedTutorials);
@@ -341,7 +325,7 @@ export function useActivityMediator(): {
         }
 
         return result;
-    }, [checkGameProgress, checkTutorialProgress, transitionToGame]);
+    }, [checkGameProgress, checkTutorialProgress]);
 
     useEffect(() => {
         if (activityState !== ActivityType.TUTORIAL) {

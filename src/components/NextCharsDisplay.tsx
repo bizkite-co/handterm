@@ -61,14 +61,16 @@ const NextCharsDisplay = forwardRef<NextCharsDisplayHandle, INextCharsDisplayPro
         if (isNullOrEmptyString(stringBeingTested)) {
             return 0;
         }
-        let result = 0;
+        // sourcePhrase is a character ARRAY, so the mismatch check must compare
+        // the typed character against sourcePhrase[i] directly. (A `typeof
+        // sourcePhrase === 'string'` guard here would never fire and would make
+        // this always return the typed length — the "moves along with junk" bug.)
         for (let i = 0; i < stringBeingTested.length; i++) {
-            if (typeof sourcePhrase === 'string' && stringBeingTested[i] !== sourcePhrase[i]) {
+            if (stringBeingTested[i] !== sourcePhrase[i]) {
                 return i;
             }
-            result++;
         }
-        return result;
+        return stringBeingTested.length;
     }, [_phrase.value]);
 
     const getNextCharacters = useCallback((stringBeingTested: string): string => {

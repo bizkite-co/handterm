@@ -15,6 +15,7 @@ interface BaseCharacterProps {
   scale: number;
   xOffset: number;
   positionRef: React.RefObject<SpritePosition>;
+  flip?: boolean | undefined;
 }
 
 export const useBaseCharacter = (props: BaseCharacterProps): { draw: (context: CanvasRenderingContext2D, positionRef: React.RefObject<SpritePosition>, scale: number | null) => number; setCurrentActionType: (newActionType: ActionType) => void } => {
@@ -77,7 +78,8 @@ export const useBaseCharacter = (props: BaseCharacterProps): { draw: (context: C
         frameIndexRef.current,
         newX,
         positionRef?.current?.topY ?? 0,
-        scale ?? props.scale
+        scale ?? props.scale,
+        props.flip ?? false
       );
     }
     return action.dx;

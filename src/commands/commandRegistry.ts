@@ -32,9 +32,13 @@ class CommandRegistry {
         const switchEntries = cmd.switches
             ? Object.entries(cmd.switches).map(([key, desc]) => ({ name: `-${key}`, description: desc }))
             : [];
+        const subcommandEntries = cmd.subcommands
+            ? Object.entries(cmd.subcommands).map(([key, desc]) => ({ name: `${cmd.name} ${key}`, description: desc }))
+            : [];
         const allEntries = [
             { name: cmd.name, description: cmd.description },
             ...switchEntries,
+            ...subcommandEntries,
         ];
         const maxLen = Math.max(...allEntries.map(e => e.name.length));
         const lines = allEntries

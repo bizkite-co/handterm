@@ -17,7 +17,10 @@ vi.mock('src/hooks/useReactiveLocation', () => ({
 }));
 
 vi.mock('src/signals/gameSignals', () => ({
-  isInGameModeSignal: { value: true }
+  isInGameModeSignal: { value: true },
+  gamePhraseSignal: { value: null },
+  gameLevelSignal: { value: null },
+  setGameLevel: vi.fn()
 }));
 
 /**

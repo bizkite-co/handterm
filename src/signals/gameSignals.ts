@@ -15,9 +15,13 @@ export const gamePhraseSignal = signal<GamePhrase | null>(null);
 export const gameInitSignal = signal<boolean>(false);
 export const isInGameModeSignal = computed(() => activitySignal.value === ActivityType.GAME);
 export const currentGamePhraseSignal = signal<GamePhrase | null>(null);
-export const gameLevelSignal = signal<number | null>(null);
 export const heroActionSignal = signal<ActionType>('Idle');
 export const zombie4ActionSignal = signal<ActionType>('Walk');
+const gameLevelKey = 'game-level';
+export const { signal: gameLevelSignal, update: updateGameLevel } = createPersistentSignal<number | null>({
+  key: gameLevelKey,
+  signal: signal<number | null>(null),
+});
 
 const completedGamePhrasesKey = 'completed-game-phrases';
 
@@ -30,7 +34,7 @@ export const setZombie4Action = (action: ActionType): void => {
 };
 
 export const setGameLevel = (level: number): void => {
-  gameLevelSignal.value = level;
+  updateGameLevel(level);
 };
 
 const { signal: completedGamePhrasesSignal, update: updateCompletedGamePhrases } = createPersistentSignal<Set<string>>({
@@ -44,6 +48,10 @@ export { completedGamePhrasesSignal };
 
 export const setCompletedGamePhrase = (gamePhraseId: string): void => {
   updateCompletedGamePhrases(prev => prev.add(gamePhraseId));
+}
+
+export const resetCompletedGamePhrases = (): void => {
+  updateCompletedGamePhrases(new Set());
 }
 
 export const getIncompletePhrasesByTutorialGroup = (tutorialGroup: string): GamePhrase[] => {

@@ -60,7 +60,8 @@ export class Sprite {
         frameIndex: number,
         leftX: number,
         topY: number,
-        scale: number = 1.5
+        scale: number = 1.5,
+        flip: boolean = false
     ): void => {
         let frameLeftX = 0, frameTopY = 0;
         if (this.frameSequence != null) {
@@ -81,13 +82,30 @@ export class Sprite {
             frameLeftX = this.frameWidth * frameIndex;
             frameTopY = 0;
         }
-        context.drawImage(
-            this.image,
-            frameLeftX, frameTopY, // source x, y
-            this.frameWidth, this.frameHeight, // source width, height
-            leftX, topY, // destination x, y
-            this.frameWidth * scale, this.frameHeight * scale // destination width, height (scaled)
-        );
+        const destWidth = this.frameWidth * scale;
+        const destHeight = this.frameHeight * scale;
+        if (flip) {
+            // Mirror horizontally within the same bounding box
+            context.save();
+            context.translate(leftX + destWidth, topY);
+            context.scale(-1, 1);
+            context.drawImage(
+                this.image,
+                frameLeftX, frameTopY, // source x, y
+                this.frameWidth, this.frameHeight, // source width, height
+                0, 0, // destination x, y (mirrored)
+                destWidth, destHeight // destination width, height (scaled)
+            );
+            context.restore();
+        } else {
+            context.drawImage(
+                this.image,
+                frameLeftX, frameTopY, // source x, y
+                this.frameWidth, this.frameHeight, // source width, height
+                leftX, topY, // destination x, y
+                destWidth, destHeight // destination width, height (scaled)
+            );
+        }
     }
 
     // ... rest of the Sprite class methods

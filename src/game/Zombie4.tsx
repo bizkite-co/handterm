@@ -19,14 +19,18 @@ export const Zombie4 = forwardRef((props: ICharacterProps, ref) => {
     currentActionType: props.currentActionType,
     name: 'Zombie4',
     scale: props.scale,
-    xOffset: 77,
+    xOffset: 41,
     positionRef: props.positionRef
   });
 
+  // The zombie's body footprint is exposed via the imperative handle so the
+  // Game can detect contact with the hero. Relative to the LOGICAL leftX
+  // (positionRef, before the 41 xOffset) the body starts ~83px in, ~36px wide.
   useImperativeHandle(ref, () => ({
     draw: (context: CanvasRenderingContext2D) => {
       return draw(context, props.positionRef, props.scale);
-    }
+    },
+    hitbox: props.hitbox ?? { left: 83, width: 36 }
   }));
 
   return null;

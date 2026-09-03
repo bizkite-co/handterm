@@ -67,7 +67,7 @@ export const HeroActions: Record<ActionType, Action> = {
 export const Zombie4Actions: Record<string, Action> = {
   Attack: {
     animation: Zombie4Animations.Attack, // HeroRunAnimation is imported from HeroAnimations.ts
-    dx: 2,
+    dx: 0,
     dy: 0,
     continueous: false,
   },
