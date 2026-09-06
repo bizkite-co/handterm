@@ -5,10 +5,12 @@ import confetti from 'canvas-confetti';
 
 import { useComputed, useSignalEffect } from "@preact/signals-react";
 
+import { ActivityType } from "@handterm/types";
 import { commandLineSignal } from "../signals/commandLineSignals";
 import { isInGameModeSignal, gamePhraseSignal, gameLevelSignal, setGameLevel } from '../signals/gameSignals';
 import { createLogger, LogLevel } from '../utils/Logger';
 import { isNotNullOrUndefined } from '../utils/typeSafetyUtils';
+import { navigate } from '../utils/navigationUtils';
 
 import { Hero } from './Hero';
 import { layers, getLevelCount } from './Level';
@@ -55,17 +57,31 @@ const GAME_TUNING = {
   zombieStartLeftX: -130,  // zombie spawns just OFF the left edge and walks on (lull)
 
   // Run / world scroll.
-  heroRunStepPx: 30,       // px the hero advances per run keystroke toward center
-                           // once centered, that advance instead scrolls the world
+  // The hero advances continuously while the Run animation plays (per ~150ms
+  // animation frame, not per keystroke) so movement and scroll are smooth.
+  // Before center the advance moves the hero right; once centered it scrolls
+  // the world instead. The zombie is NOT pulled left by the scroll — it keeps
+  // walking right and can always catch up to engage.
+  heroRunDxPerFrame: 4,
 
-  // Contact / combat.
-  fightGap: 2,             // body-gap (px) at which the zombie is close enough to fight
-  hitIntervalMs: 2200,     // zombie swipe tempo (matches the 15-frame Attack anim)
-  maxHeroLives: 3,         // hits to kill the hero (then restart this level)
+  // Contact / combat. Engagement uses hysteresis so the duel is stable: once
+  // the zombie closes to fightGap it stays engaged (holding its ground — no
+  // forward recovery competing with the player's push) until it is knocked a
+  // full disengageGap back, at which point it walks forward and re-engages.
+  fightGap: 2,             // body-gap (px) at which the zombie becomes engaged
+  disengageGap: 36,        // body-gap (px) at which the zombie breaks off the duel
+  maxHeroLives: 3,         // hits to kill the hero (then game over)
   fightSwingMs: 800,       // how long a player-initiated swing / run flash lasts
 
+  // Danger when the player idles in range: the zombie does NOT auto-fight, but
+  // if the player stops typing for this long while the zombie is engaged, a
+  // swipe lands (then repeats every zombieHitCooldownMs until the player
+  // resumes striking or the zombie is pushed out of range).
+  idleDamageAfterMs: 1500,
+  zombieHitCooldownMs: 1200,
+
   // Defensive typing.
-  zombiePushBackPx: 5,     // ONLY when the player swings: px the zombie retreats
+  zombiePushBackPx: 3,     // ONLY when the player swings: px the zombie retreats
   zombieFloorLeftX: -130,  // retreat floor — zombie never goes far off the left edge
 
   // Body footprints (relative to logical leftX).
@@ -109,6 +125,10 @@ function GameFunction(props: IGameProps, ref: ForwardedRef<IGameHandle>): JSX.El
 
   const lastZombieHitAtRef = useRef<number>(0);
   const isHeroDeadRef = useRef(false);
+  // Last time the player struck (typed a correct char while the zombie was in
+  // range). Used to land idle-danger: if the player stops striking long enough
+  // while the zombie is in range, the zombie swipes the hero.
+  const lastStrikeAtRef = useRef<number>(0);
   // Whether the zombie is currently within strike range of the hero. Updated
   // every animation frame purely from geometry; read at keystroke time to
   // decide if a typed char is a fight-swing or a run.
@@ -127,6 +147,12 @@ function GameFunction(props: IGameProps, ref: ForwardedRef<IGameHandle>): JSX.El
   const [isTextScrolling, setIsTextScrolling] = useState(false);
   const [heroAction, setHeroAction] = useState<ActionType>('Idle');
   const [zombie4Action, setZombie4Action] = useState<ActionType>('Walk');
+  // Mirror of heroAction for the animation loop, which must read the current
+  // action without the loop being torn down/restarted on every keystroke.
+  const heroActionRef = useRef<ActionType>('Idle');
+  useEffect(() => {
+    heroActionRef.current = heroAction;
+  }, [heroAction]);
   const textToScroll = "TERMINAL VELOCITY!";
   const [layersState, setLayersState] = useState<IParallaxLayer[]>(() => layers[Math.min(initialLevel - 1, layers.length - 1)] ?? []);
 
@@ -171,8 +197,10 @@ function GameFunction(props: IGameProps, ref: ForwardedRef<IGameHandle>): JSX.El
     }, 3000);
   }, [zombie4StartPosition]);
 
-  // Land a zombie hit on the hero. Three hits kills the hero, which then
-  // restarts the current level (same background, same phrase) fresh.
+  // Land a zombie hit on the hero. Three hits (idle-danger swipes) kill the
+  // hero, which is a GAME OVER — we leave the level rather than re-fighting it.
+  // The zombie is only ever sent back to the start when it is defeated (phrase
+  // completion -> level change), never from a losing fight.
   const handleHeroHit = useCallback(() => {
     if (isHeroDeadRef.current) return;
     const nextLives = heroLives - 1;
@@ -180,18 +208,13 @@ function GameFunction(props: IGameProps, ref: ForwardedRef<IGameHandle>): JSX.El
     if (nextLives <= 0) {
       isHeroDeadRef.current = true;
       setHeroAction('Death');
-      // Restart the level after the death animation plays out.
+      // Game over: after the death animation plays, exit to the terminal. The
+      // player can `play` again, which is a fresh run (a respawn only ever
+      // comes from defeating the zombie by finishing the phrase).
       zombie4DeathTimeout.current = setTimeout(() => {
-        isHeroDeadRef.current = false;
-        setHeroLives(GAME_TUNING.maxHeroLives);
-        setHeroAction('Idle');
-        setZombie4Action('Walk');
-        zombie4PositionRef.current = zombie4StartPosition;
-        heroPositionRef.current = { ...heroPositionRef.current, leftX: GAME_TUNING.heroStartLeftX };
-        setBackgroundOffsetX(0);
-        setHeroFacingLeft(false);
-        engagedRef.current = false;
-        lastZombieHitAtRef.current = 0;
+        zombie4DeathTimeout.current = null;
+        commandLineSignal.value = '';
+        void navigate({ activityKey: ActivityType.NORMAL });
       }, 2500);
     } else {
       setHeroAction('Hurt');
@@ -201,7 +224,7 @@ function GameFunction(props: IGameProps, ref: ForwardedRef<IGameHandle>): JSX.El
         setHeroAction(isHeroDeadRef.current ? 'Death' : 'Idle');
       }, 600);
     }
-  }, [heroLives, zombie4StartPosition]);
+  }, [heroLives]);
 
   const updateCharacterAndBackgroundPostion = useCallback((context: CanvasRenderingContext2D): number => {
     context.clearRect(0, 0, canvasWidth, canvasHeight);
@@ -209,6 +232,32 @@ function GameFunction(props: IGameProps, ref: ForwardedRef<IGameHandle>): JSX.El
     const hero = heroRef.current;
     if (isNotNullOrUndefined(hero)) {
       hero.draw(context, heroPositionRef.current);
+    }
+
+    // While the Run action is active the hero advances a little each frame
+    // (not per-keystroke) so movement and world-scroll are smooth. Before the
+    // center the hero moves right on screen; once centered the same step scrolls
+    // the world instead. Scrolling moves the WHOLE background frame, so the
+    // zombie (stationary in world terms) is dragged left by the exact same
+    // amount — it keeps walking forward along the background, but the hero is
+    // genuinely outrunning it, which is what makes running worthwhile.
+    if (heroActionRef.current === 'Run' && !engagedRef.current && !isHeroDeadRef.current) {
+      const { leftX } = heroPositionRef.current;
+      const scroll = Math.max(0, leftX + GAME_TUNING.heroRunDxPerFrame - centerX);
+      heroPositionRef.current = {
+        ...heroPositionRef.current,
+        leftX: Math.min(leftX + GAME_TUNING.heroRunDxPerFrame, centerX),
+      };
+      if (scroll > 0) {
+        setBackgroundOffsetX(b => b + scroll);
+        // The zombie's motion is always in the background reference frame:
+        // scroll the background and the zombie together, so the hero's run
+        // actually opens distance instead of the zombie moving with the hero.
+        zombie4PositionRef.current = {
+          ...zombie4PositionRef.current,
+          leftX: zombie4PositionRef.current.leftX - scroll,
+        };
+      }
     }
 
     const zombie = zombie4Ref.current;
@@ -221,7 +270,7 @@ function GameFunction(props: IGameProps, ref: ForwardedRef<IGameHandle>): JSX.El
       };
     }
     return 0;
-  }, [canvasWidth, canvasHeight]);
+  }, [canvasWidth, canvasHeight, centerX]);
 
   const checkProximityAndSetAction = useCallback(() => {
     if (isHeroDeadRef.current) return;
@@ -234,20 +283,41 @@ function GameFunction(props: IGameProps, ref: ForwardedRef<IGameHandle>): JSX.El
     const zombieBodyRight = zombie4PositionRef.current.leftX + zombieHitbox.left + zombieHitbox.width;
     const bodyGap = heroBodyLeft - zombieBodyRight;
 
-    const engaged = bodyGap <= GAME_TUNING.fightGap;
-
-    // The zombie is the aggressor: proximity drives ITS attack (and the danger),
-    // but the hero does NOT auto-fight. Whether the hero swings is decided by
-    // the player typing (in handleCommandLineChange). Here we just record the
-    // geometry so that keystroke knows if it's a swing (in range) or a run.
+    let engaged = engagedRef.current;
+    if (engaged) {
+      // Break off the duel only when pushed a full disengageGap back. Until
+      // then the zombie holds its ground (Attack, dx=0) so each player strike
+      // visibly moves it back instead of it re-walking forward every frame.
+      if (bodyGap >= GAME_TUNING.disengageGap) {
+        engaged = false;
+      }
+    } else if (bodyGap <= GAME_TUNING.fightGap) {
+      engaged = true;
+    }
     engagedRef.current = engaged;
 
+    // The hero always faces the zombie while it is on screen, EXCEPT while
+    // running (the hero always runs to the right).
+    const heroRunning = heroActionRef.current === 'Run';
+    const zombieOnScreen = zombieBodyRight > 0 && heroBodyLeft < canvasWidth;
+    setHeroFacingLeft(zombieOnScreen && !heroRunning);
+
+    // The zombie is the aggressor: proximity drives ITS attack (and the danger);
+    // but the hero does NOT auto-fight — it only swings when the player types
+    // (in handleCommandLineChange). Recording the geometry here lets a keystroke
+    // know whether it's a swing (engaged) or a run.
     if (engaged) {
       if (zombie4Action !== 'Attack') {
         setZombie4Action('Attack');
       }
-      // Land a hit on the zombie's tempo while it is in range.
-      if (now - lastZombieHitAtRef.current >= GAME_TUNING.hitIntervalMs) {
+      // Danger only if the PLAYER has been idle (not striking) for too long
+      // while the zombie is in range. Repeated swipes are throttled so the
+      // whole life bar doesn't drain in a single frame.
+      const idleSinceStrike = now - lastStrikeAtRef.current;
+      if (
+        idleSinceStrike >= GAME_TUNING.idleDamageAfterMs &&
+        now - lastZombieHitAtRef.current >= GAME_TUNING.zombieHitCooldownMs
+      ) {
         lastZombieHitAtRef.current = now;
         handleHeroHit();
       }
@@ -257,7 +327,7 @@ function GameFunction(props: IGameProps, ref: ForwardedRef<IGameHandle>): JSX.El
       }
       lastZombieHitAtRef.current = 0;
     }
-  }, [zombie4Action, handleHeroHit]);
+  }, [zombie4Action, handleHeroHit, setHeroFacingLeft, canvasWidth]);
 
   const toggleScrollingText = useCallback((show: boolean | null = null) => {
     const nextShow = show === null ? !isTextScrolling : show;
@@ -316,7 +386,7 @@ function GameFunction(props: IGameProps, ref: ForwardedRef<IGameHandle>): JSX.El
   // A correctly typed character is the hero's engine. While the zombie is out of
   // range the hero RUNS (advancing toward center, then scrolling the world past).
   // Once the zombie is in range, typing is the hero's defense: the player swings
-  // (fights) by typing, turning to face the zombie and nudging it back ~5px.
+  // (fights) by typing, turning to face the zombie and nudging it back 3px.
   // Completing the phrase (upstream) is the fatal blow.
   const handleCommandLineChange = useCallback(() => {
     if (isHeroDeadRef.current) return;
@@ -324,7 +394,9 @@ function GameFunction(props: IGameProps, ref: ForwardedRef<IGameHandle>): JSX.El
 
     if (engagedRef.current) {
       // Fighting: turn to face the zombie (on the hero's left) and swing. The
-      // swing is the only time the zombie retreats, and only by a few px.
+      // swing is the only time the zombie retreats, and only by 3px. Recording
+      // the strike time also resets the idle-danger clock so the zombie won't
+      // swipe as long as the player keeps striking.
       zombie4PositionRef.current = {
         ...zombie4PositionRef.current,
         leftX: Math.max(
@@ -332,26 +404,13 @@ function GameFunction(props: IGameProps, ref: ForwardedRef<IGameHandle>): JSX.El
           zombie4PositionRef.current.leftX - GAME_TUNING.zombiePushBackPx
         )
       };
+      lastStrikeAtRef.current = performance.now();
       setHeroFacingLeft(true);
       setHeroAction('Attack');
     } else {
-      // Running: advance the hero right toward the center. Once centered, the
-      // same advance scrolls the world (hero stays at center, scenery moves).
-      const prev = heroPositionRef.current.leftX;
-      const nextOnScreen = Math.min(prev + GAME_TUNING.heroRunStepPx, centerX);
-      const moved = nextOnScreen - prev;
-      heroPositionRef.current = { ...heroPositionRef.current, leftX: nextOnScreen };
-
-      const scroll = GAME_TUNING.heroRunStepPx - moved;
-      if (scroll > 0) {
-        setBackgroundOffsetX(b => b + scroll);
-        // Scrolling the world pulls the (stationary-in-world) zombie left too.
-        zombie4PositionRef.current = {
-          ...zombie4PositionRef.current,
-          leftX: zombie4PositionRef.current.leftX - scroll,
-        };
-      }
-
+      // Running: set the Run action and face right. Actual on-screen advance
+      // (toward center) and then world-scroll happen in the animation loop so
+      // the movement is smooth instead of a per-keystroke jump.
       setHeroFacingLeft(false);
       setHeroAction('Run');
     }
@@ -360,10 +419,8 @@ function GameFunction(props: IGameProps, ref: ForwardedRef<IGameHandle>): JSX.El
   }, [
     clearRunSwingTimer,
     flashActionThenIdle,
-    centerX,
     setHeroFacingLeft,
     setHeroAction,
-    setBackgroundOffsetX,
   ]);
 
   // Only advance the hero on genuine forward progress — a strictly longer correct
@@ -460,6 +517,7 @@ function GameFunction(props: IGameProps, ref: ForwardedRef<IGameHandle>): JSX.El
       engagedRef.current = false;
       setHeroFacingLeft(false);
       lastZombieHitAtRef.current = 0;
+      lastStrikeAtRef.current = 0;
       setIsPhraseComplete(false);
     },
     levelUp,
