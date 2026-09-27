@@ -90,10 +90,7 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
   const handlePhraseComplete = useCallback(() => {
     localStorage.setItem('currentCommand', '');
     setGamePhrase(null);
-    const timer = nextCharsDisplayRef.current?.cancelTimer;
-    if (typeof timer === 'function') {
-      timer();
-    }
+    nextCharsDisplayRef.current?.clearPhrase();
     const game = gameHandleRef.current;
     if (isGameHandle(game)) {
       game.completeGame();
@@ -138,16 +135,14 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
       return game !== null;
     }
     handlePhraseComplete();
+    // Clear the command line BEFORE loading the next phrase so the old
+    // completed text cannot be painted back into nextChars.
+    terminalAdapter?.resetPrompt();
     // Advances the game to the next phrase/tutorial. Must run AFTER
     // handlePhraseComplete (which clears gamePhraseSignal) so the next
     // phrase assignment wins. Runs unconditionally — a successful phrase
     // always progresses, regardless of typing speed.
     activityMediator.checkGameProgress(phrase);
-    // resetPrompt (NOT clear) restores the "> " prompt AND resets the
-    // command line. clear() alone empties the model but leaves the previous
-    // phrase in commandLineSignal, so the next level starts with a stale
-    // prefix and nextChars never shrink as it is typed.
-    terminalAdapter?.resetPrompt();
   }, [activityMediator, handlePhraseComplete, gameHandleRef, terminalAdapter, currentActivityValue]);
 
   useEffect(() => {

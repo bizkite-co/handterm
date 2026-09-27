@@ -1,4 +1,4 @@
-import { memo, useState } from 'react';
+import { memo, useState, useEffect } from 'react';
 import { useSignalEffect } from '@preact/signals-react';
 import { type GamePhrase } from '../types/Types';
 import { Chord } from './Chord';
@@ -26,6 +26,11 @@ export const TutorialManager = memo(({
   onTutorialComplete,
 }: TutorialManagerProps): JSX.Element => {
   const [_commandLine, setCommandLine] = useState<string>(commandLineSignal.value);
+  const [completedKey, setCompletedKey] = useState<string | null>(null);
+
+  useEffect(() => {
+    setCompletedKey(null);
+  }, [tutorial]);
 
   useSignalEffect(() => {
     const nextCommandLine = commandLineSignal.value;
@@ -38,6 +43,7 @@ export const TutorialManager = memo(({
       || tutorial.key === '\r' || nextCommandLine !== tutorial.key) {
       return;
     }
+    setCompletedKey(tutorial.key);
     onTutorialComplete?.(tutorial.key);
   });
 
@@ -45,12 +51,15 @@ export const TutorialManager = memo(({
     return <div id="tutorial-component" className="tutorial-component" data-testid="tutorial-component" />;
   }
 
-  const firstNonMatchingChar = getFirstNonMatchingChar(tutorial.key, _commandLine);
-  const remainingKey = tutorial.key.substring(firstNonMatchingChar);
+  const justCompleted = completedKey !== null && completedKey === tutorial.key;
+  const firstNonMatchingChar = justCompleted
+    ? tutorial.key.length
+    : getFirstNonMatchingChar(tutorial.key, _commandLine);
+  const remainingKey = justCompleted ? '' : tutorial.key.substring(firstNonMatchingChar);
 
   return (
     <div id="tutorial-component" className="tutorial-component" data-testid="tutorial-component">
-      <pre className="tutorial-prompt">{tutorial.value}</pre>
+      {!justCompleted && <pre className="tutorial-prompt">{tutorial.value}</pre>}
       <div className="chord-display-container" data-testid="tutorial-chords">
         {remainingKey.split('').map((character: string, index: number) => (
           <Chord key={`char-${firstNonMatchingChar + index}-${character}`} displayChar={character} />

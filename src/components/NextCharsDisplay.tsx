@@ -27,6 +27,8 @@ export interface INextCharsDisplayProps {
 export interface NextCharsDisplayHandle {
     resetTimer: () => void;
     cancelTimer: () => void;
+    /** Drop the current phrase from state and the DOM so it cannot flash back. */
+    clearPhrase: () => void;
 }
 
 const NextCharsDisplay = forwardRef<NextCharsDisplayHandle, INextCharsDisplayProps>(({
@@ -91,20 +93,30 @@ const NextCharsDisplay = forwardRef<NextCharsDisplayHandle, INextCharsDisplayPro
         onError(undefined);
     }, [onError]);
 
-    const handleSuccess = useCallback(() => {
+    const clearPhraseState = useCallback(() => {
         setMismatchedChar('');
         setMismatchedIsVisible(false);
         setNextChars('');
-        if (
-            _gamePhrase !== null &&
-            _gamePhrase !== undefined &&
-            _gamePhrase.key !== null &&
-            _gamePhrase.key !== undefined
-        ) {
-            setCompletedGamePhrase(_gamePhrase.key);
+        setPhrase(new Phrase(['']));
+        setGamePhrase(null);
+        if (nextCharsRef.current !== null && nextCharsRef.current !== undefined) {
+            nextCharsRef.current.innerText = '';
         }
-        onPhraseSuccess(_gamePhrase);
-    }, [_gamePhrase, onPhraseSuccess]);
+    }, []);
+
+    const handleSuccess = useCallback(() => {
+        const completed = _gamePhrase;
+        clearPhraseState();
+        if (
+            completed !== null &&
+            completed !== undefined &&
+            completed.key !== null &&
+            completed.key !== undefined
+        ) {
+            setCompletedGamePhrase(completed.key);
+        }
+        onPhraseSuccess(completed);
+    }, [_gamePhrase, onPhraseSuccess, clearPhraseState]);
 
     const stopTimer = useCallback(() => {
         if (timerRef.current) {
@@ -128,12 +140,14 @@ const NextCharsDisplay = forwardRef<NextCharsDisplayHandle, INextCharsDisplayPro
         if (timerRef.current) {
             timerRef.current.reset();
         }
-        if (nextCharsRef.current !== null && nextCharsRef.current !== undefined) {
-            nextCharsRef.current.innerText = _phrase.value.join('');
-        }
-    }, [_phrase.value]);
+    }, []);
 
     const handleCommandLineChange = useCallback((stringBeingTested: string) => {
+        const phraseText = _phrase.value.join('');
+        if (phraseText.trim() === '') {
+            return;
+        }
+
         startOrContinueTimer();
 
         const nextIndex = getFirstNonMatchingChar(stringBeingTested);
@@ -149,10 +163,11 @@ const NextCharsDisplay = forwardRef<NextCharsDisplayHandle, INextCharsDisplayPro
 
         if (stringBeingTested.length === 0) {
             cancelTimer();
+            setNextChars(phraseText);
             return;
         }
 
-        if (stringBeingTested === _phrase.value.join('').trim().substring(0, stringBeingTested.length)) {
+        if (stringBeingTested === phraseText.trim().substring(0, stringBeingTested.length)) {
             hideError();
         } else {
             const firstNonMatchingChar = getFirstNonMatchingChar(stringBeingTested);
@@ -162,7 +177,7 @@ const NextCharsDisplay = forwardRef<NextCharsDisplayHandle, INextCharsDisplayPro
             showError(mismatchedChar ?? '', firstNonMatchingChar); // Provide default value of empty string
         }
 
-        if (stringBeingTested.trim() === _phrase.value.join('').trim()) {
+        if (stringBeingTested.trim() === phraseText.trim()) {
             stopTimer();
             handleSuccess();
             return;
@@ -186,16 +201,21 @@ const NextCharsDisplay = forwardRef<NextCharsDisplayHandle, INextCharsDisplayPro
 
     useImperativeHandle(ref, () => ({
         resetTimer,
-        cancelTimer
-    }), [resetTimer, cancelTimer]);
+        cancelTimer,
+        clearPhrase: clearPhraseState,
+    }), [resetTimer, cancelTimer, clearPhraseState]);
 
     // Load the current phrase whenever the game phrase signal changes.
     // useSignalEffect re-runs when the signal's VALUE changes (a stable
     // useComputed object as a useEffect dep would only fire once).
     useSignalEffect(() => {
         const foundPhrase = gamePhraseSignal.value;
-        if (foundPhrase === null || foundPhrase === undefined || isNullOrEmptyString(foundPhrase.value)) return;
-        if (foundPhrase.displayAs !== 'Game') return;
+        if (foundPhrase === null || foundPhrase === undefined || isNullOrEmptyString(foundPhrase.value) || foundPhrase.displayAs !== 'Game') {
+            setGamePhrase(null);
+            setPhrase(new Phrase(['']));
+            setNextChars('');
+            return;
+        }
 
         // Prevent unnecessary state updates
         setGamePhrase(prevPhrase =>

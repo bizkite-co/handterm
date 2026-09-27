@@ -4,7 +4,36 @@ import { type ICommand } from '../contexts/CommandContext';
 
 export type ICommandRegistryItems = Record<string, ICommand>;
 
-class CommandRegistry {
+type HelpEntry = { name: string; description: string };
+
+function helpEntriesFor(cmd: ICommand): HelpEntry[] {
+    const entries: HelpEntry[] = [
+        { name: cmd.name, description: cmd.description },
+    ];
+    if (cmd.switches) {
+        for (const [key, desc] of Object.entries(cmd.switches)) {
+            entries.push({ name: `${cmd.name} -${key}`, description: desc });
+        }
+    }
+    if (cmd.subcommands) {
+        for (const [key, desc] of Object.entries(cmd.subcommands)) {
+            entries.push({ name: `${cmd.name} ${key}`, description: desc });
+        }
+    }
+    return entries;
+}
+
+function formatHelpEntries(entries: HelpEntry[]): string {
+    if (entries.length === 0) {
+        return '';
+    }
+    const maxLen = Math.max(...entries.map(e => e.name.length));
+    return entries
+        .map(e => `<span class="cmd-name">${e.name.padEnd(maxLen)}</span>  <span class="cmd-desc">${e.description}</span>`)
+        .join('\n');
+}
+
+export class CommandRegistry {
     private commands: ICommandRegistryItems = {};
 
     register(command: ICommand) {
@@ -15,13 +44,21 @@ class CommandRegistry {
         return this.commands[name];
     }
 
+    /** Live snapshot of registered commands, sorted by name. */
+    listCommands(): ICommand[] {
+        return Object.values(this.commands)
+            .sort((a, b) => a.name.localeCompare(b.name));
+    }
+
+    /**
+     * Help text for every currently registered command (and each command's
+     * switches/subcommands). Built from the live registry so a newly
+     * registered command appears with no extra wiring.
+     */
     getHelp(filter?: string): string {
-        const commands = Object.values(this.commands)
+        const commands = this.listCommands()
             .filter(cmd => !filter || cmd.name.includes(filter));
-        const maxNameLen = Math.max(...commands.map(cmd => cmd.name.length));
-        return commands
-            .map(cmd => `<span class="cmd-name">${cmd.name.padEnd(maxNameLen)}</span>  <span class="cmd-desc">${cmd.description}</span>`)
-            .join('\n');
+        return formatHelpEntries(commands.flatMap(helpEntriesFor));
     }
 
     /**
@@ -29,22 +66,7 @@ class CommandRegistry {
      * switches (if any). Matches the cyan/aligned format used by `help`.
      */
     formatCommandHelp(cmd: ICommand): string {
-        const switchEntries = cmd.switches
-            ? Object.entries(cmd.switches).map(([key, desc]) => ({ name: `-${key}`, description: desc }))
-            : [];
-        const subcommandEntries = cmd.subcommands
-            ? Object.entries(cmd.subcommands).map(([key, desc]) => ({ name: `${cmd.name} ${key}`, description: desc }))
-            : [];
-        const allEntries = [
-            { name: cmd.name, description: cmd.description },
-            ...switchEntries,
-            ...subcommandEntries,
-        ];
-        const maxLen = Math.max(...allEntries.map(e => e.name.length));
-        const lines = allEntries
-            .map(e => `<span class="cmd-name">${e.name.padEnd(maxLen)}</span>  <span class="cmd-desc">${e.description}</span>`)
-            .join('\n');
-        return `<div class="command-list">${lines}</div>`;
+        return `<div class="command-list">${formatHelpEntries(helpEntriesFor(cmd))}</div>`;
     }
 
 }

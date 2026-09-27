@@ -25,8 +25,9 @@ function isValidCommand(command: unknown): command is ICommand {
 
 logger.debug('Starting command registration...'); // Log start
 
-// Dynamically import and register all command files
-const commandModules = import.meta.glob('./*Command.ts*', { eager: true });
+// Dynamically import and register every command module. `help` lists whatever
+// ends up in the registry, so a new *Command.ts(x) file appears automatically.
+const commandModules = import.meta.glob(['./*Command.ts', './*Command.tsx'], { eager: true });
 logger.debug(`Found ${Object.keys(commandModules).length} potential command modules.`); // Log count
 
 Object.entries(commandModules).forEach(([path, module]) => {

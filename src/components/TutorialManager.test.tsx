@@ -77,6 +77,25 @@ describe('TutorialManager', () => {
     expect(onTutorialComplete).toHaveBeenCalledWith('fdsa');
   });
 
+  test('does not flash the old prompt when the command line is cleared after completion', async () => {
+    const onTutorialComplete = vi.fn();
+    render(<TutorialManager tutorial={tutorialPhrase} onTutorialComplete={onTutorialComplete} />);
+
+    await act(async () => {
+      setCommandLine('fdsa');
+    });
+    expect(onTutorialComplete).toHaveBeenCalledWith('fdsa');
+    expect(screen.queryByText('Type `fdsa` and Enter.')).not.toBeInTheDocument();
+    expect(screen.getByTestId('tutorial-chords').textContent).toBe('');
+
+    await act(async () => {
+      setCommandLine('');
+    });
+
+    expect(screen.queryByText('Type `fdsa` and Enter.')).not.toBeInTheDocument();
+    expect(screen.getByTestId('tutorial-chords').textContent).toBe('');
+  });
+
   test('does not auto-complete for the \\r (ENTER) tutorial; ENTER unlocks it elsewhere', async () => {
     const onTutorialComplete = vi.fn();
     const enterTutorial: GamePhrase = {

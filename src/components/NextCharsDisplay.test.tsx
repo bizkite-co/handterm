@@ -61,6 +61,43 @@ describe('NextCharsDisplay', () => {
     expect(container.querySelector('#next-chars')?.textContent).toBe('');
   });
 
+  test('does not restore the old phrase when the command line is cleared after success', async () => {
+    await act(async () => {
+      gamePhraseSignal.value = firstPhrase;
+    });
+    const { container } = render(
+      <NextCharsDisplay isInPhraseMode={true} onPhraseSuccess={vi.fn()} onError={vi.fn()} />
+    );
+
+    await act(async () => {
+      setCommandLine('all sad lads ask dad; alas fads fall');
+    });
+    expect(container.querySelector('#next-chars')?.textContent).toBe('');
+
+    await act(async () => {
+      setCommandLine('');
+    });
+
+    expect(container.querySelector('#next-chars')?.textContent).toBe('');
+    expect(screen.queryByText('all sad lads ask dad; alas fads fall')).not.toBeInTheDocument();
+  });
+
+  test('clears nextChars when the game phrase signal is nulled', async () => {
+    await act(async () => {
+      gamePhraseSignal.value = firstPhrase;
+    });
+    render(
+      <NextCharsDisplay isInPhraseMode={true} onPhraseSuccess={vi.fn()} onError={vi.fn()} />
+    );
+    expect(screen.getByText('all sad lads ask dad; alas fads fall')).toBeInTheDocument();
+
+    await act(async () => {
+      gamePhraseSignal.value = null;
+    });
+
+    expect(screen.queryByText('all sad lads ask dad; alas fads fall')).not.toBeInTheDocument();
+  });
+
   test('shows the current game phrase from gamePhraseSignal', async () => {
     await act(async () => {
       gamePhraseSignal.value = firstPhrase;
