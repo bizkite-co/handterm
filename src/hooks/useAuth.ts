@@ -80,10 +80,18 @@ export function useAuth(): IAuthProps {
     },
     onSuccess: (response: MyResponse<AuthResponse>) => {
       if (response.data != null && typeof response.data === 'object' && 'AccessToken' in response.data) {
-        setExpiresAtLocalStorage(response.data.ExpiresIn);
+        if (typeof response.data.ExpiresIn === 'number' && !Number.isNaN(response.data.ExpiresIn)) {
+          setExpiresAtLocalStorage(response.data.ExpiresIn);
+        }
         setIsLoggedIn(true);
         isLoggedInSignal.value = true;
         localStorage.setItem(TokenKeys.AccessToken, response.data.AccessToken);
+        if (typeof response.data.IdToken === 'string' && response.data.IdToken !== '') {
+          localStorage.setItem(TokenKeys.IdToken, response.data.IdToken);
+        }
+        if (typeof response.data.RefreshToken === 'string' && response.data.RefreshToken !== '') {
+          localStorage.setItem(TokenKeys.RefreshToken, response.data.RefreshToken);
+        }
         void queryClient.invalidateQueries({ queryKey: ['auth', 'session'] });
       }
     },
@@ -308,15 +316,10 @@ export function useAuth(): IAuthProps {
         } else {
           logger.error('An unexpected error occurred during session validation');
         }
-        if (typeof localStorage.getItem(TokenKeys.AccessToken) === 'string') localStorage.removeItem(TokenKeys.AccessToken);
-        if (typeof localStorage.getItem(TokenKeys.RefreshToken) === 'string') localStorage.removeItem(TokenKeys.RefreshToken);
-        if (typeof localStorage.getItem(TokenKeys.ExpiresAt) === 'string') localStorage.removeItem(TokenKeys.ExpiresAt);
-        if (typeof localStorage.getItem(TokenKeys.ExpiresIn) === 'string') localStorage.removeItem(TokenKeys.ExpiresIn);
-        if (typeof localStorage.getItem(TokenKeys.IdToken) === 'string') localStorage.removeItem(TokenKeys.IdToken);
-        if (typeof localStorage.getItem(TokenKeys.GithubUsername) === 'string') localStorage.removeItem(TokenKeys.GithubUsername);
+        // Keep the refresh token. Wiping it here forced a full re-login
+        // whenever getUser or a one-shot validation failed.
         setIsLoggedIn(false);
         isLoggedInSignal.value = false;
-        setUserName(null);
         return {
           status: 401,
           data: undefined,
