@@ -16,6 +16,7 @@ export interface ICommandResponse {
 export interface ICommand {
   name: string;
   description: string;
+  aliases?: string[];
   switches?: Record<string, string>;
   subcommands?: Record<string, string>;
   execute: (

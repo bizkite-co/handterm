@@ -25,8 +25,9 @@ const mockContext: ICommandContext = {
 };
 
 describe('CharsCommand', () => {
-  it('is named chars', () => {
+  it('is named chars with a char alias', () => {
     expect(CharsCommand.name).toBe('chars');
+    expect(CharsCommand.aliases).toContain('char');
   });
 
   it('renders every allChords entry', async () => {
@@ -39,11 +40,47 @@ describe('CharsCommand', () => {
     expect(response.message).toContain('Enter');
   });
 
-  it('appears in live registry help when registered', () => {
+  it('filters case-insensitively by a search phrase', async () => {
+    const response = await CharsCommand.execute(mockContext, {
+      ...parsedCommand,
+      args: ['arrow'],
+    });
+
+    expect(response.status).toBe(200);
+    const count = response.message.match(/class="chord-image-holder"/g)?.length ?? 0;
+    expect(count).toBeGreaterThan(0);
+    expect(count).toBeLessThan(allChords.length);
+    expect(response.message.toLowerCase()).toContain('arrow');
+  });
+
+  it('matches a short phrase such as arr', async () => {
+    const response = await CharsCommand.execute(mockContext, {
+      command: 'char',
+      args: ['arr'],
+      switches: {},
+    });
+
+    expect(response.message.toLowerCase()).toContain('arrow');
+    expect(response.message.match(/class="chord-image-holder"/g)?.length).toBeGreaterThan(0);
+  });
+
+  it('reports when nothing matches', async () => {
+    const response = await CharsCommand.execute(mockContext, {
+      ...parsedCommand,
+      args: ['zzzznotachar'],
+    });
+
+    expect(response.status).toBe(200);
+    expect(response.message).toBe("No characters match 'zzzznotachar'.");
+  });
+
+  it('appears in live registry help when registered, including the char alias', () => {
     const registry = new CommandRegistry();
     registry.register(CharsCommand);
+    expect(registry.getCommand('char')?.name).toBe('chars');
     const help = registry.getHelp();
     expect(help).toContain('chars');
-    expect(help).toContain('Display all Handterm characters');
+    expect(help).toContain('char');
+    expect(help).toContain('Display Handterm characters, optionally filtered by a search phrase');
   });
 });

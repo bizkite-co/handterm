@@ -3,18 +3,40 @@ import ReactDOMServer from 'react-dom/server';
 import { allChords } from '../allChords';
 import { Chord } from '../components/Chord';
 import { type ICommand, type ICommandContext, type ICommandResponse } from '../contexts/CommandContext';
-import { TerminalCssClasses } from '@handterm/types';
+import { TerminalCssClasses, type IChord } from '@handterm/types';
 import { type ParsedCommand } from '../types/Types';
+
+export function filterChords(chords: IChord[], query: string): IChord[] {
+  const needle = query.trim().toLowerCase();
+  if (needle === '') {
+    return chords;
+  }
+  return chords.filter(chord => {
+    const haystacks = [chord.key, chord.alias ?? '', chord.chordCode];
+    return haystacks.some(field => field.toLowerCase().includes(needle));
+  });
+}
 
 export const CharsCommand: ICommand = {
   name: 'chars',
-  description: 'Display all Handterm characters',
+  aliases: ['char'],
+  description: 'Display Handterm characters, optionally filtered by a search phrase',
   execute: async (
     _context: ICommandContext,
-    _parsedCommand: ParsedCommand,
+    parsedCommand: ParsedCommand,
   ): Promise<ICommandResponse> => {
     await Promise.resolve();
-    const chordElements = allChords.map((chord, i) => (
+    const query = parsedCommand.args.join(' ');
+    const matches = filterChords(allChords, query);
+
+    if (matches.length === 0) {
+      return {
+        status: 200,
+        message: `No characters match '${query}'.`
+      };
+    }
+
+    const chordElements = matches.map((chord, i) => (
       <Chord
         key={`${chord.chordCode}-${chord.key}-${i}`}
         displayChar={chord.key}

@@ -6,9 +6,16 @@ export type ICommandRegistryItems = Record<string, ICommand>;
 
 type HelpEntry = { name: string; description: string };
 
+function commandHelpName(cmd: ICommand): string {
+    if (cmd.aliases !== undefined && cmd.aliases.length > 0) {
+        return [cmd.name, ...cmd.aliases].join(', ');
+    }
+    return cmd.name;
+}
+
 function helpEntriesFor(cmd: ICommand): HelpEntry[] {
     const entries: HelpEntry[] = [
-        { name: cmd.name, description: cmd.description },
+        { name: commandHelpName(cmd), description: cmd.description },
     ];
     if (cmd.switches) {
         for (const [key, desc] of Object.entries(cmd.switches)) {
@@ -38,6 +45,9 @@ export class CommandRegistry {
 
     register(command: ICommand) {
         this.commands[command.name] = command;
+        for (const alias of command.aliases ?? []) {
+            this.commands[alias] = command;
+        }
     }
 
     getCommand(name: string): ICommand | undefined {
@@ -46,7 +56,15 @@ export class CommandRegistry {
 
     /** Live snapshot of registered commands, sorted by name. */
     listCommands(): ICommand[] {
+        const seen = new Set<string>();
         return Object.values(this.commands)
+            .filter(cmd => {
+                if (seen.has(cmd.name)) {
+                    return false;
+                }
+                seen.add(cmd.name);
+                return true;
+            })
             .sort((a, b) => a.name.localeCompare(b.name));
     }
 

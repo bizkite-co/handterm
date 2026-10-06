@@ -63,4 +63,17 @@ describe('CommandRegistry help', () => {
     expect(help).toContain('gh link');
     expect(help).toContain('Link GitHub account');
   });
+
+  test('aliases resolve to the same command and appear once in help', () => {
+    const registry = new CommandRegistry();
+    registry.register(stubCommand({
+      name: 'chars',
+      aliases: ['char'],
+      description: 'Display characters',
+    }));
+
+    expect(registry.getCommand('char')?.name).toBe('chars');
+    expect(registry.listCommands()).toHaveLength(1);
+    expect(registry.getHelp()).toContain('chars, char');
+  });
 });
