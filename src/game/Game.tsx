@@ -85,7 +85,9 @@ const GAME_TUNING = {
   zombieFloorLeftX: -130,  // retreat floor — zombie never goes far off the left edge
 
   // Body footprints (relative to logical leftX).
-  heroHitbox: { left: 29, width: 43 },    // body x[15..36] of 50px frame @1.95
+  // Lucia's 579px cell renders ~75px wide at scale 0.13; the hitbox is the
+  // torso footprint (centered ~x+38) where contact with the zombie is judged.
+  heroHitbox: { left: 22, width: 32 },    // torso of Lucia's cell @0.13
   zombieHitbox: { left: 83, width: 36 },  // body x[22..40] of 62px frame, incl. the 41 xOffset
 } as const;
 
@@ -559,7 +561,7 @@ function GameFunction(props: IGameProps, ref: ForwardedRef<IGameHandle>): JSX.El
         ref={heroRef}
         positionRef={heroPositionRef}
         currentActionType={heroAction}
-        scale={1.95}
+        scale={0.13}
         flip={heroFacingLeft}
         hitbox={GAME_TUNING.heroHitbox}
       />

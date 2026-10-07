@@ -1,7 +1,7 @@
 // ActionTypes.ts
 import { type  ActionType } from '@handterm/types';
 export type { ActionType };
-import { HeroAnimations } from '../characters/hero/HeroAnimations';
+import { LuciaAnimations } from '../characters/lucia/LuciaAnimations';
 import { Zombie4Animations } from '../characters/zombie4/Zombie4Animations';
 
 import { type SpriteAnimation } from './SpriteTypes';
@@ -15,49 +15,49 @@ export type Action = {
 
 export const HeroActions: Record<ActionType, Action> = {
   Run: {
-    animation: HeroAnimations.Run, // HeroRunAnimation is imported from HeroAnimations.ts
+    animation: LuciaAnimations.Run,
     dx: 2,
     dy: 0,
     continueous: true,
   },
   Idle: {
-    animation: HeroAnimations.Idle, // HeroIdleAnimation is imported from HeroAnimations.ts
+    animation: LuciaAnimations.Idle,
     dx: 0,
     dy: 0,
     continueous: true,
   },
   Walk: {
-    animation: HeroAnimations.Walk, // HeroWalkAnimation is imported from HeroAnimations.ts
+    animation: LuciaAnimations.Walk,
     dx: 1,
     dy: 0,
     continueous: true,
   },
   Jump: {
-    animation: HeroAnimations.Jump,
+    animation: LuciaAnimations.Jump,
     dx: 0,
     dy: 0,
     continueous: false
   },
   Attack: {
-    animation: HeroAnimations.Attack,
+    animation: LuciaAnimations.Attack,
     dx: 0,
     dy: 0,
     continueous: false
   },
   Summersault: {
-    animation: HeroAnimations.Summersault,
+    animation: LuciaAnimations.Summersault,
     dx: 3,
     dy: 1,
     continueous: false
   },
   Death: {
-    animation: HeroAnimations.Death,
+    animation: LuciaAnimations.Death,
     dx: 0,
     dy: 0,
     continueous: false
   },
   Hurt: {
-    animation: HeroAnimations.Hurt,
+    animation: LuciaAnimations.Hurt,
     dx: 0,
     dy: 0,
     continueous: false
