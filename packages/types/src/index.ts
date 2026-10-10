@@ -13,6 +13,8 @@ export interface GamePhrase {
   displayAs: string;
   value: string;
   tutorialGroup?: string;
+  /** Characters this tutorial introduces. Game sentences after it may use these plus earlier keys. */
+  introducedKeys?: string;
 }
 
 

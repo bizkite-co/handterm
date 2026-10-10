@@ -126,7 +126,7 @@ function pressKey(key: string) {
 const firstPhrase: GamePhrase = {
   key: 'first-eight',
   displayAs: 'Game',
-  value: 'all sad lads ask dad; alas fads fall',
+  value: 'All sad lads ask dad; alas fads fall',
   tutorialGroup: 'single-click',
 };
 
@@ -186,16 +186,16 @@ describe('useMonacoTerminal level-transition reset contract', () => {
 
     // During the level the command line grows and nextChars shrinks
     await act(async () => {
-      pressKey('a');
+      pressKey('A');
     });
-    expect(commandLineSignal.value).toBe('a');
+    expect(commandLineSignal.value).toBe('A');
     expect(screen.getByText('ll sad lads ask dad; alas fads fall')).toBeInTheDocument();
-    expect(screen.queryByText('all sad lads ask dad; alas fads fall')).not.toBeInTheDocument();
+    expect(screen.queryByText('All sad lads ask dad; alas fads fall')).not.toBeInTheDocument();
 
     await act(async () => {
       pressKey('l');
     });
-    expect(commandLineSignal.value).toBe('al');
+    expect(commandLineSignal.value).toBe('Al');
     expect(screen.getByText('l sad lads ask dad; alas fads fall')).toBeInTheDocument();
 
     // Level transition: reset the prompt AND the command line, so the next
@@ -210,15 +210,15 @@ describe('useMonacoTerminal level-transition reset contract', () => {
     // At real typing speed each key event flushes React effects before the
     // next keystroke, so each key is fired and flushed individually.
     await act(async () => {
-      pressKey('a');
+      pressKey('A');
     });
-    expect(commandLineSignal.value).toBe('a');
+    expect(commandLineSignal.value).toBe('A');
     expect(screen.getByText('ll sad lads ask dad; alas fads fall')).toBeInTheDocument();
 
     await act(async () => {
       pressKey('l');
     });
-    expect(commandLineSignal.value).toBe('al');
+    expect(commandLineSignal.value).toBe('Al');
     expect(screen.getByText('l sad lads ask dad; alas fads fall')).toBeInTheDocument();
   });
 });

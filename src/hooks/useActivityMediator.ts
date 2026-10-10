@@ -145,7 +145,7 @@ export function useActivityMediator(): {
             }
             const incompleteTutorialInGroup = getIncompleteTutorialsInGroup(groupKey);
             incompleteTutorialInGroup.forEach(itig => {
-                setCompletedTutorial(itig.value);
+                setCompletedTutorial(itig.key);
             });
             const nextTutorial = getNextTutorial();
             if (nextTutorial != null) {

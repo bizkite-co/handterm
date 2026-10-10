@@ -13,9 +13,10 @@ Scenario: Tutorial Progression with Multiple Checks
   And the user presses Enter
   And the user types "jkl;"
   And the user presses Enter
+  And the user types "FDSA"
   Then the game mode should be visible and the tutorial mode should not be visible
   And the user is presented with a Game phrase
-  When the user types "all sad lads ask dad; alas fads fall"
+  When the user types "All sad lads ask dad; alas fads fall"
   Then the tutorial mode should be visible and the game mode should not be visible
 
 Feature: Tutorial Command Execution

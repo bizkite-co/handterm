@@ -12,7 +12,7 @@ vi.mock('./ErrorDisplay', () => ({ default: () => null }));
 const firstPhrase: GamePhrase = {
   key: 'first-eight',
   displayAs: 'Game',
-  value: 'all sad lads ask dad; alas fads fall',
+  value: 'All sad lads ask dad; alas fads fall',
   tutorialGroup: 'single-click',
 };
 
@@ -42,21 +42,21 @@ describe('NextCharsDisplay', () => {
     const { container } = render(
       <NextCharsDisplay isInPhraseMode={true} onPhraseSuccess={vi.fn()} onError={vi.fn()} />
     );
-    expect(screen.getByText('all sad lads ask dad; alas fads fall')).toBeInTheDocument();
+    expect(screen.getByText('All sad lads ask dad; alas fads fall')).toBeInTheDocument();
 
     // Each keystroke flows through handleData -> setCommandLine -> this component
-    for (const prefix of ['a', 'al', 'all', 'all ', 'all s', 'all sa']) {
+    for (const prefix of ['A', 'Al', 'All', 'All ', 'All s', 'All sa']) {
       await act(async () => {
         setCommandLine(prefix);
       });
     }
 
     expect(screen.getByText('d lads ask dad; alas fads fall')).toBeInTheDocument();
-    expect(screen.queryByText('all sad lads ask dad; alas fads fall')).not.toBeInTheDocument();
+    expect(screen.queryByText('All sad lads ask dad; alas fads fall')).not.toBeInTheDocument();
 
     // Finishing the phrase empties nextChars (and fires onPhraseSuccess)
     await act(async () => {
-      setCommandLine('all sad lads ask dad; alas fads fall');
+      setCommandLine('All sad lads ask dad; alas fads fall');
     });
     expect(container.querySelector('#next-chars')?.textContent).toBe('');
   });
@@ -70,7 +70,7 @@ describe('NextCharsDisplay', () => {
     );
 
     await act(async () => {
-      setCommandLine('all sad lads ask dad; alas fads fall');
+      setCommandLine('All sad lads ask dad; alas fads fall');
     });
     expect(container.querySelector('#next-chars')?.textContent).toBe('');
 
@@ -79,7 +79,7 @@ describe('NextCharsDisplay', () => {
     });
 
     expect(container.querySelector('#next-chars')?.textContent).toBe('');
-    expect(screen.queryByText('all sad lads ask dad; alas fads fall')).not.toBeInTheDocument();
+    expect(screen.queryByText('All sad lads ask dad; alas fads fall')).not.toBeInTheDocument();
   });
 
   test('clears nextChars when the game phrase signal is nulled', async () => {
@@ -89,13 +89,13 @@ describe('NextCharsDisplay', () => {
     render(
       <NextCharsDisplay isInPhraseMode={true} onPhraseSuccess={vi.fn()} onError={vi.fn()} />
     );
-    expect(screen.getByText('all sad lads ask dad; alas fads fall')).toBeInTheDocument();
+    expect(screen.getByText('All sad lads ask dad; alas fads fall')).toBeInTheDocument();
 
     await act(async () => {
       gamePhraseSignal.value = null;
     });
 
-    expect(screen.queryByText('all sad lads ask dad; alas fads fall')).not.toBeInTheDocument();
+    expect(screen.queryByText('All sad lads ask dad; alas fads fall')).not.toBeInTheDocument();
   });
 
   test('shows the current game phrase from gamePhraseSignal', async () => {
@@ -105,7 +105,7 @@ describe('NextCharsDisplay', () => {
     render(
       <NextCharsDisplay isInPhraseMode={true} onPhraseSuccess={vi.fn()} onError={vi.fn()} />
     );
-    expect(screen.getByText('all sad lads ask dad; alas fads fall')).toBeInTheDocument();
+    expect(screen.getByText('All sad lads ask dad; alas fads fall')).toBeInTheDocument();
   });
 
   test('switches to the next phrase when gamePhraseSignal changes (level-up)', async () => {
@@ -115,7 +115,7 @@ describe('NextCharsDisplay', () => {
     render(
       <NextCharsDisplay isInPhraseMode={true} onPhraseSuccess={vi.fn()} onError={vi.fn()} />
     );
-    expect(screen.getByText('all sad lads ask dad; alas fads fall')).toBeInTheDocument();
+    expect(screen.getByText('All sad lads ask dad; alas fads fall')).toBeInTheDocument();
 
     // The mediator sets the next phrase on level-up; the display must reload it
     await act(async () => {
@@ -123,7 +123,7 @@ describe('NextCharsDisplay', () => {
     });
 
     expect(screen.getByText('0123 4567 8901 2345 6789 0987')).toBeInTheDocument();
-    expect(screen.queryByText('all sad lads ask dad; alas fads fall')).not.toBeInTheDocument();
+    expect(screen.queryByText('All sad lads ask dad; alas fads fall')).not.toBeInTheDocument();
   });
 
   test('does not render tutorial explanatory text as a typing phrase', async () => {

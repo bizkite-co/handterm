@@ -6,11 +6,14 @@ const TUTORIAL_TEXTS: Record<string, string> = {
   '\r': 'most important key',
   fdsa: 'Type `fdsa`',
   'jkl;': 'Type `jkl;`',
+  FDSA: 'Shift to type FDSA',
   '01234': 'type numbers 0-4',
   '56789': 'type numbers 5-9',
 };
 
-// Real progression: \r -> fdsa -> jkl; -> GAME first-eight -> 01234 ->
+const FIRST_EIGHT = 'All sad lads ask dad; alas fads fall';
+
+// Real progression: \r -> fdsa -> jkl; -> FDSA -> GAME first-eight -> 01234 ->
 // 56789 -> GAME numbers. Asserts nextChars shrinks on BOTH game levels
 // reached through real tutorial progression.
 test.describe('game nextChars shrink through real progression', () => {
@@ -58,10 +61,15 @@ test.describe('game nextChars shrink through real progression', () => {
     await expect(page.locator('[data-testid="tutorial-chords"]')).toHaveText(';');
     await page.keyboard.type(';');
 
-    // GAME 1: first-eight.
-    await waitForNextCharsText(page, 'all sad lads ask dad; alas fads fall');
+    // Shift tutorial before the first game sentence, so it can start with "All".
+    await waitForTutorialPrompt(page, TUTORIAL_TEXTS.FDSA);
     await page.evaluate(() => (window as any).monacoEditor.focus());
-    await page.keyboard.type('a');
+    await page.keyboard.type('FDSA');
+
+    // GAME 1: first-eight.
+    await waitForNextCharsText(page, FIRST_EIGHT);
+    await page.evaluate(() => (window as any).monacoEditor.focus());
+    await page.keyboard.type('A');
     await expect(term.nextChars).toHaveText('ll sad lads ask dad; alas fads fall');
     await page.keyboard.type('l');
     await expect(term.nextChars).toHaveText('l sad lads ask dad; alas fads fall');
