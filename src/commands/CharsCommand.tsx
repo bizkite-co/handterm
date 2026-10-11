@@ -6,14 +6,24 @@ import { type ICommand, type ICommandContext, type ICommandResponse } from '../c
 import { TerminalCssClasses, type IChord } from '@handterm/types';
 import { type ParsedCommand } from '../types/Types';
 
+function field(value: string): string {
+  return value.replace('&#x2581;', ' ').toLowerCase();
+}
+
 export function filterChords(chords: IChord[], query: string): IChord[] {
   const needle = query.trim().toLowerCase();
   if (needle === '') {
     return chords;
   }
   return chords.filter(chord => {
-    const haystacks = [chord.key, chord.alias ?? '', chord.chordCode];
-    return haystacks.some(field => field.toLowerCase().includes(needle));
+    const key = field(chord.key);
+    const alias = field(chord.alias ?? '');
+    // Single-character queries match the printed character only. Matching
+    // chordCode here listed every shift chord (codes starting with "5").
+    if (needle.length === 1) {
+      return key === needle || alias === needle;
+    }
+    return key.includes(needle) || alias.includes(needle) || field(chord.chordCode) === needle;
   });
 }
 
@@ -40,6 +50,7 @@ export const CharsCommand: ICommand = {
       <Chord
         key={`${chord.chordCode}-${chord.key}-${i}`}
         displayChar={chord.key}
+        chordCode={chord.chordCode}
       />
     ));
     const chordsHtml = chordElements.map(element =>

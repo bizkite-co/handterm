@@ -53,6 +53,18 @@ describe('CharsCommand', () => {
     expect(response.message.toLowerCase()).toContain('arrow');
   });
 
+  it('chars 5 matches the digit 5, not every shift chord', async () => {
+    const response = await CharsCommand.execute(mockContext, {
+      ...parsedCommand,
+      args: ['5'],
+    });
+
+    expect(response.status).toBe(200);
+    expect(response.message).toContain('C0.svg');
+    expect(response.message.match(/class="chord-image-holder"/g)?.length).toBe(1);
+    expect(response.message).not.toContain('>A<');
+  });
+
   it('matches a short phrase such as arr', async () => {
     const response = await CharsCommand.execute(mockContext, {
       command: 'char',

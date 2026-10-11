@@ -53,6 +53,9 @@ build: ## Build the project
 clean: ## Clean project artifacts
 	rm -rf dist && rm -rf node_modules && npm cache verify
 
+refresh-chords: ## Rebuild shifted chord SVGs from the unshifted keymap glyphs
+	python3 scripts/refresh-chord-svgs.py
+
 inspect: ## Inspect project
 	npx tsx scripts/inspect.ts
 

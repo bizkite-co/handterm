@@ -303,12 +303,12 @@ export const allChords: IChord[] = [
   },
   {
     "key": "5",
-    "chordCode": "050",
+    "chordCode": "C0",
     "index": 30
   },
   {
     "key": "%",
-    "chordCode": "5050",
+    "chordCode": "5C0",
     "index": 30
   },
   {
@@ -403,12 +403,12 @@ export const allChords: IChord[] = [
   },
   {
     "key": "=",
-    "chordCode": "C0",
+    "chordCode": "E0",
     "index": 42
   },
   {
     "key": "+",
-    "chordCode": "5C0",
+    "chordCode": "5E0",
     "index": 42
   },
   {
@@ -442,13 +442,8 @@ export const allChords: IChord[] = [
     "index": 45
   },
   {
-    "key": ";",
+    "key": "",
     "chordCode": "9",
-    "index": 46
-  },
-  {
-    "key": ":",
-    "chordCode": "59",
     "index": 46
   },
   {
@@ -613,25 +608,21 @@ export const allChords: IChord[] = [
   },
   {
     "key": "RightArrow",
-    "alias": "Right",
     "chordCode": "2C",
     "index": 74
   },
   {
     "key": "LeftArrow",
-    "alias": "Left",
     "chordCode": "1B",
     "index": 75
   },
   {
     "key": "DownArrow",
-    "alias": "Down",
     "chordCode": "71",
     "index": 76
   },
   {
     "key": "UpArrow",
-    "alias": "Up",
     "chordCode": "73",
     "index": 77
   },
@@ -1032,7 +1023,7 @@ export const allChords: IChord[] = [
   },
   {
     "key": "LeftControl",
-    "chordCode": "09999",
+    "chordCode": "9999",
     "index": 145
   },
   {
