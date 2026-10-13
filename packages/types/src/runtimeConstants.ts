@@ -16,6 +16,7 @@ export const ActivityType = {
   EDIT: 'edit',
   GITHUB: 'github',
   TREE: 'tree',
+  BROWSE: 'browse',
   TUTORIAL: 'tutorial',
   GAME: 'game'
 } as const;

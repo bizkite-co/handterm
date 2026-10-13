@@ -34,6 +34,7 @@ import MonacoCore from './MonacoCore';
 import NextCharsDisplay, { type NextCharsDisplayHandle } from './NextCharsDisplay';
 import { PromptHeader } from './PromptHeader';
 import { TutorialManager } from './TutorialManager';
+import { BrowseView } from './BrowseView';
 
 const logger = createLogger({
   prefix: 'HandTermWrapper',
@@ -315,7 +316,7 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
       <div
         id="prompt-and-terminal"
         style={{
-          display: (currentActivityValue !== ActivityType.EDIT && currentActivityValue !== ActivityType.TREE && !forceEditActivity) ? 'block' : 'none',
+          display: (currentActivityValue !== ActivityType.EDIT && currentActivityValue !== ActivityType.TREE && currentActivityValue !== ActivityType.BROWSE && !forceEditActivity) ? 'block' : 'none',
           height: '100%',
           width: '100%'
         }}
@@ -336,6 +337,9 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
       }
       {currentActivityValue === ActivityType.TREE && treeItems.length > 0 &&
         treeEditorComponent
+      }
+      {currentActivityValue === ActivityType.BROWSE &&
+        <BrowseView auth={props.auth} />
       }
       {isShowVideoSignal.value !== null && (
         <WebCam

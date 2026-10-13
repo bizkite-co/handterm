@@ -108,6 +108,7 @@ export function App(): JSX.Element {
             handTermRef={handexTermWrapperRef}
           >
             {parseLocation().activityKey !== ActivityType.EDIT
+              && parseLocation().activityKey !== ActivityType.BROWSE
               && <Output />
             }
             {/* ENHANCED: Wrap HandTermWrapper with ErrorBoundary */}
