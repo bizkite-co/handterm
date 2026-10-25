@@ -289,6 +289,7 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
           ref={gameHandleRef}
           canvasHeight={canvasHeight}
           canvasWidth={props.terminalWidth}
+          onHeroDeath={() => terminalAdapter?.resetPrompt()}
         />
       )}
       {currentActivityValue === ActivityType.GAME && (

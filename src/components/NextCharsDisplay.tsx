@@ -163,6 +163,7 @@ const NextCharsDisplay = forwardRef<NextCharsDisplayHandle, INextCharsDisplayPro
 
         if (stringBeingTested.length === 0) {
             cancelTimer();
+            hideError();
             setNextChars(phraseText);
             return;
         }

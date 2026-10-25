@@ -5,12 +5,10 @@ import confetti from 'canvas-confetti';
 
 import { useComputed, useSignalEffect } from "@preact/signals-react";
 
-import { ActivityType } from "@handterm/types";
 import { commandLineSignal } from "../signals/commandLineSignals";
 import { isInGameModeSignal, gamePhraseSignal, gameLevelSignal, setGameLevel } from '../signals/gameSignals';
 import { createLogger, LogLevel } from '../utils/Logger';
 import { isNotNullOrUndefined } from '../utils/typeSafetyUtils';
-import { navigate } from '../utils/navigationUtils';
 
 import { Hero } from './Hero';
 import { layers, getLevelCount } from './Level';
@@ -37,6 +35,7 @@ interface ICharacterRefMethods {
 interface IGameProps {
   canvasHeight: number;
   canvasWidth: number;
+  onHeroDeath?: () => void;
 }
 
 interface IGameHandle {
@@ -44,6 +43,7 @@ interface IGameHandle {
   completeGame: () => void;
   resetGame: () => void;
   levelUp: (setLevelValue?: number | null) => void;
+  handleHeroHit: () => void;
 }
 
 // Game tuning. Everything is centered here so numbers can be tweaked without
@@ -72,6 +72,7 @@ const GAME_TUNING = {
   disengageGap: 36,        // body-gap (px) at which the zombie breaks off the duel
   maxHeroLives: 3,         // hits to kill the hero (then game over)
   fightSwingMs: 800,       // how long a player-initiated swing / run flash lasts
+  heroRespawnMs: 1500,     // pause after death animation before respawn
 
   // Danger when the player idles in range: the zombie does NOT auto-fight, but
   // if the player stops typing for this long while the zombie is engaged, a
@@ -106,7 +107,10 @@ function GameFunction(props: IGameProps, ref: ForwardedRef<IGameHandle>): JSX.El
   const zombie4Ref = useRef<ICharacterRefMethods>(null);
   const animationFrameIndex = useRef<number | undefined>(undefined);
   const zombie4DeathTimeout = useRef<NodeJS.Timeout | null>(null);
+  const heroDeathTimeout = useRef<NodeJS.Timeout | null>(null);
   const heroRunTimeoutRef = useRef<number | null>(null);
+  const lastRunCharCountRef = useRef<number>(0);
+  const [failCount, setFailCount] = useState<number>(0);
 
   // The hero's on-screen x (px). Starts near the left edge and advances right
   // as the hero runs; it is capped at the canvas center, past which running
@@ -123,6 +127,7 @@ function GameFunction(props: IGameProps, ref: ForwardedRef<IGameHandle>): JSX.El
     };
   }, [centerX]);
   const [heroFacingLeft, setHeroFacingLeft] = useState(false);
+  const heroLivesRef = useRef<number>(GAME_TUNING.maxHeroLives);
   const [heroLives, setHeroLives] = useState<number>(GAME_TUNING.maxHeroLives);
 
   const lastZombieHitAtRef = useRef<number>(0);
@@ -199,25 +204,40 @@ function GameFunction(props: IGameProps, ref: ForwardedRef<IGameHandle>): JSX.El
     }, 3000);
   }, [zombie4StartPosition]);
 
+  const respawnHero = useCallback(() => {
+    isHeroDeadRef.current = false;
+    heroLivesRef.current = GAME_TUNING.maxHeroLives;
+    setHeroLives(GAME_TUNING.maxHeroLives);
+    setHeroAction('Idle');
+    setZombie4Action('Walk');
+    zombie4PositionRef.current = zombie4StartPosition;
+    heroPositionRef.current = { ...heroPositionRef.current, leftX: GAME_TUNING.heroStartLeftX };
+    setBackgroundOffsetX(0);
+    engagedRef.current = false;
+    setHeroFacingLeft(false);
+    lastZombieHitAtRef.current = 0;
+    lastStrikeAtRef.current = 0;
+    lastRunCharCountRef.current = 0;
+    commandLineSignal.value = '';
+  }, [zombie4StartPosition]);
+
   // Land a zombie hit on the hero. Three hits (idle-danger swipes) kill the
-  // hero, which is a GAME OVER — we leave the level rather than re-fighting it.
-  // The zombie is only ever sent back to the start when it is defeated (phrase
-  // completion -> level change), never from a losing fight.
+  // hero, which triggers a respawn back to the level start rather than
+  // exiting to the terminal, and increments the failure counter.
   const handleHeroHit = useCallback(() => {
     if (isHeroDeadRef.current) return;
-    const nextLives = heroLives - 1;
+    heroLivesRef.current -= 1;
+    const nextLives = heroLivesRef.current;
     setHeroLives(nextLives);
     if (nextLives <= 0) {
       isHeroDeadRef.current = true;
       setHeroAction('Death');
-      // Game over: after the death animation plays, exit to the terminal. The
-      // player can `play` again, which is a fresh run (a respawn only ever
-      // comes from defeating the zombie by finishing the phrase).
-      zombie4DeathTimeout.current = setTimeout(() => {
-        zombie4DeathTimeout.current = null;
-        commandLineSignal.value = '';
-        void navigate({ activityKey: ActivityType.NORMAL });
-      }, 2500);
+      setFailCount(prev => prev + 1);
+      heroDeathTimeout.current = setTimeout(() => {
+        heroDeathTimeout.current = null;
+        respawnHero();
+        props.onHeroDeath?.();
+      }, GAME_TUNING.heroRespawnMs);
     } else {
       setHeroAction('Hurt');
       setTimeout(() => {
@@ -226,7 +246,7 @@ function GameFunction(props: IGameProps, ref: ForwardedRef<IGameHandle>): JSX.El
         setHeroAction(isHeroDeadRef.current ? 'Death' : 'Idle');
       }, 600);
     }
-  }, [heroLives]);
+  }, [respawnHero, props]);
 
   const updateCharacterAndBackgroundPostion = useCallback((context: CanvasRenderingContext2D): number => {
     context.clearRect(0, 0, canvasWidth, canvasHeight);
@@ -427,7 +447,6 @@ function GameFunction(props: IGameProps, ref: ForwardedRef<IGameHandle>): JSX.El
 
   // Only advance the hero on genuine forward progress — a strictly longer correct
   // prefix. Backspacing (even to a correct shorter prefix) must NOT advance.
-  const lastRunCharCountRef = useRef(0);
   useSignalEffect(() => {
     const typed = commandLine.value ?? '';
     const phraseValue = gamePhraseSignal.value?.value;
@@ -467,6 +486,7 @@ function GameFunction(props: IGameProps, ref: ForwardedRef<IGameHandle>): JSX.El
     if (nextLevel < 1) nextLevel = 1;
     setLevel(nextLevel);
     setGameLevel(nextLevel);
+    setFailCount(0);
   }, [setLevel, getLevel]);
 
   const startGame = useCallback(() => {
@@ -481,6 +501,7 @@ function GameFunction(props: IGameProps, ref: ForwardedRef<IGameHandle>): JSX.El
     setZombie4ToDeathThenResetPosition();
     triggerConfettiCannon();
     setIsPhraseComplete(true);
+    setFailCount(0);
   }, [setZombie4ToDeathThenResetPosition, triggerConfettiCannon]);
 
   useEffect(() => {
@@ -494,6 +515,10 @@ function GameFunction(props: IGameProps, ref: ForwardedRef<IGameHandle>): JSX.El
       const timeout = zombie4DeathTimeout.current;
       if (isNotNullOrUndefined(timeout)) {
         clearTimeout(timeout);
+      }
+      const heroTimeout = heroDeathTimeout.current;
+      if (isNotNullOrUndefined(heroTimeout)) {
+        clearTimeout(heroTimeout);
       }
     };
   }, [setupCanvas, stopAnimationLoop]);
@@ -509,21 +534,13 @@ function GameFunction(props: IGameProps, ref: ForwardedRef<IGameHandle>): JSX.El
     startGame,
     completeGame,
     resetGame: () => {
-      isHeroDeadRef.current = false;
-      setHeroLives(GAME_TUNING.maxHeroLives);
-      setHeroAction('Idle');
-      setZombie4Action('Walk');
-      zombie4PositionRef.current = zombie4StartPosition;
-      heroPositionRef.current = { ...heroPositionRef.current, leftX: GAME_TUNING.heroStartLeftX };
-      setBackgroundOffsetX(0);
-      engagedRef.current = false;
-      setHeroFacingLeft(false);
-      lastZombieHitAtRef.current = 0;
-      lastStrikeAtRef.current = 0;
+      respawnHero();
       setIsPhraseComplete(false);
+      setFailCount(0);
     },
     levelUp,
-  }), [startGame, completeGame, levelUp, zombie4StartPosition]);
+    handleHeroHit,
+  }), [startGame, completeGame, levelUp, respawnHero, handleHeroHit]);
 
   if (!isInGameMode) {
     return <div />;
@@ -534,6 +551,16 @@ function GameFunction(props: IGameProps, ref: ForwardedRef<IGameHandle>): JSX.El
       id="terminal-game"
       style={{ position: "relative", height: canvasHeight }}
     >
+      {failCount > 0 && (
+        <div
+          id="game-fail-count"
+          className="game-fail-badge"
+          data-testid="game-fail-count"
+        >
+          <span role="img" aria-label="failures">💀</span>
+          <span>{failCount}</span>
+        </div>
+      )}
       <div className="parallax-background">
         {isTextScrolling && (
           <ScrollingTextLayer
