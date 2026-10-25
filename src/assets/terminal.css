@@ -289,6 +289,22 @@ pre#prompt {
   user-select: none;
 }
 
+.ta-active {
+  color: #51cf66;
+  font-weight: bold;
+}
+
+.ta-pending {
+  color: #339af0;
+  font-weight: bold;
+}
+
+.ta-task-list {
+  font-family: monospace;
+  white-space: pre-wrap;
+  line-height: 1.5;
+}
+
 #next-chars {
   background-color: #0007;
   pre#next-chars {

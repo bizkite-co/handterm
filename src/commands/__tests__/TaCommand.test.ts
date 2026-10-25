@@ -1,0 +1,427 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { type ICommandContext } from 'src/contexts/CommandContext';
+import { type IAuthProps } from 'src/hooks/useAuth';
+import { type ParsedCommand } from '@handterm/types';
+
+import * as apiClient from 'src/utils/apiClient';
+import {
+  TaCommand,
+  slugify,
+  parseTasksFromTree,
+  extractTitleFromContent,
+  DEFAULT_TASK_REPO,
+} from '../TaCommand';
+
+vi.mock('src/utils/apiClient', () => ({
+  getRepoTree: vi.fn(),
+  getRepoContent: vi.fn(),
+  saveRepoFile: vi.fn(),
+}));
+
+describe('TaCommand', () => {
+  const createMockContext = (overrides: Partial<ICommandContext> = {}): ICommandContext => ({
+    executeCommand: vi.fn(),
+    commandHistory: [],
+    addToCommandHistory: vi.fn(),
+    output: [],
+    appendToOutput: vi.fn(),
+    handTermRef: { current: null },
+    auth: {
+      user: { id: 'user-1', email: 'test@example.com' },
+      token: 'jwt-token',
+    } as unknown as IAuthProps,
+    updateLocation: vi.fn(),
+    ...overrides,
+  });
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  describe('slugify', () => {
+    it('converts to lowercase and replaces spaces and symbols with hyphens', () => {
+      expect(slugify('My First Task!')).toBe('my-first-task');
+      expect(slugify('Add ta (task-agent) command')).toBe('add-ta-task-agent-command');
+      expect(slugify('test___task___name')).toBe('test-task-name');
+    });
+
+    it('removes file extensions from the slug', () => {
+      expect(slugify('my-task.md')).toBe('my-task');
+      expect(slugify('config.json')).toBe('config');
+      expect(slugify('notes.yaml')).toBe('notes');
+    });
+
+    it('trims leading and trailing hyphens', () => {
+      expect(slugify('--leading-trailing--')).toBe('leading-trailing');
+    });
+  });
+
+  describe('parseTasksFromTree', () => {
+    it('extracts task entries from tree items and sorts active before pending', () => {
+      const treeItems = [
+        { path: 'pending/second-task/README.md', mode: '100644', type: 'blob', sha: 'sha1' },
+        { path: 'active/first-task/README.md', mode: '100644', type: 'blob', sha: 'sha2' },
+        { path: 'completed/old-task/README.md', mode: '100644', type: 'blob', sha: 'sha3' },
+        { path: 'other/file.txt', mode: '100644', type: 'blob', sha: 'sha4' },
+      ];
+
+      const tasks = parseTasksFromTree(treeItems);
+      expect(tasks).toHaveLength(3);
+      expect(tasks[0]).toEqual({
+        status: 'ACTIVE',
+        slug: 'first-task',
+        path: 'active/first-task/README.md',
+      });
+      expect(tasks[1]).toEqual({
+        status: 'PENDING',
+        slug: 'second-task',
+        path: 'pending/second-task/README.md',
+      });
+      expect(tasks[2]).toEqual({
+        status: 'COMPLETED',
+        slug: 'old-task',
+        path: 'completed/old-task/README.md',
+      });
+    });
+
+    it('supports flat markdown task files like pending/task-name.md', () => {
+      const treeItems = [
+        { path: 'pending/flat-task.md', mode: '100644', type: 'blob', sha: 'sha5' },
+      ];
+      const tasks = parseTasksFromTree(treeItems);
+      expect(tasks).toHaveLength(1);
+      expect(tasks[0].slug).toBe('flat-task');
+      expect(tasks[0].status).toBe('PENDING');
+    });
+
+    it('deduplicates tasks if multiple paths exist for same slug and status', () => {
+      const treeItems = [
+        { path: 'pending/task-dup/README.md', mode: '100644', type: 'blob', sha: 'sha6' },
+        { path: 'pending/task-dup.md', mode: '100644', type: 'blob', sha: 'sha7' },
+      ];
+      const tasks = parseTasksFromTree(treeItems);
+      expect(tasks).toHaveLength(1);
+    });
+  });
+
+  describe('extractTitleFromContent', () => {
+    it('extracts first H1 title from content', () => {
+      const md = `---
+created_at: 2026-10-25T16:00:00Z
+---
+
+# Build the New Feature
+
+Details here...`;
+      expect(extractTitleFromContent(md, 'fallback')).toBe('Build the New Feature');
+    });
+
+    it('returns fallback slug if no H1 exists', () => {
+      const md = `Just text without headers.`;
+      expect(extractTitleFromContent(md, 'my-fallback-slug')).toBe('my-fallback-slug');
+    });
+  });
+
+  describe('command execution', () => {
+    it('returns help output for "ta help"', async () => {
+      const context = createMockContext();
+      const parsedCommand: ParsedCommand = {
+        command: 'ta',
+        args: ['help'],
+        switches: {},
+      };
+
+      const res = await TaCommand.execute(context, parsedCommand);
+      expect(res.status).toBe(200);
+      expect(res.message).toContain('ta list');
+      expect(res.message).toContain('ta new');
+      expect(res.message).toContain('ta active');
+    });
+
+    describe('ta list', () => {
+      it('returns 401 prompt when GitHub is not linked or unauthorized', async () => {
+        vi.mocked(apiClient.getRepoTree).mockResolvedValue({
+          status: 401,
+          error: 'Unauthorized',
+        });
+
+        const context = createMockContext();
+        const parsedCommand: ParsedCommand = {
+          command: 'ta',
+          args: ['list'],
+          switches: {},
+        };
+
+        const res = await TaCommand.execute(context, parsedCommand);
+        expect(res.status).toBe(401);
+        expect(res.message).toContain('gh link');
+      });
+
+      it('returns message when no active or pending tasks exist', async () => {
+        vi.mocked(apiClient.getRepoTree).mockResolvedValue({
+          status: 200,
+          data: [],
+        });
+
+        const context = createMockContext();
+        const parsedCommand: ParsedCommand = {
+          command: 'ta',
+          args: ['list'],
+          switches: {},
+        };
+
+        const res = await TaCommand.execute(context, parsedCommand);
+        expect(res.status).toBe(200);
+        expect(res.message).toContain('No active or pending tasks found');
+      });
+
+      it('lists active and pending tasks with titles retrieved from file contents', async () => {
+        vi.mocked(apiClient.getRepoTree).mockResolvedValue({
+          status: 200,
+          data: [
+            { path: 'active/current-work/README.md', mode: '100644', type: 'blob', sha: 'sha1' },
+            { path: 'pending/next-work/README.md', mode: '100644', type: 'blob', sha: 'sha2' },
+          ],
+        });
+
+        vi.mocked(apiClient.getRepoContent).mockImplementation(async (_auth, _repo, path) => {
+          if (path === 'active/current-work/README.md') {
+            return {
+              status: 200,
+              data: {
+                content: '# Implement Core Engine\n\nSome body',
+                encoding: 'utf-8',
+                sha: 's1',
+                size: 30,
+              },
+            };
+          }
+          if (path === 'pending/next-work/README.md') {
+            return {
+              status: 200,
+              data: {
+                content: '# Add Unit Tests\n\nSome body',
+                encoding: 'utf-8',
+                sha: 's2',
+                size: 25,
+              },
+            };
+          }
+          return { status: 404, error: 'Not found' };
+        });
+
+        const context = createMockContext();
+        const parsedCommand: ParsedCommand = {
+          command: 'ta',
+          args: ['list'],
+          switches: {},
+        };
+
+        const res = await TaCommand.execute(context, parsedCommand);
+        expect(res.status).toBe(200);
+        expect(res.message).toContain('ACTIVE</span>: Implement Core Engine');
+        expect(res.message).toContain('PENDING</span>: Add Unit Tests');
+        expect(res.message).toContain('[1]');
+        expect(res.message).toContain('[2]');
+      });
+    });
+
+    describe('ta new', () => {
+      it('returns 400 when no title is provided', async () => {
+        const context = createMockContext();
+        const parsedCommand: ParsedCommand = {
+          command: 'ta',
+          args: ['new'],
+          switches: {},
+        };
+
+        const res = await TaCommand.execute(context, parsedCommand);
+        expect(res.status).toBe(400);
+        expect(res.message).toContain('Title required');
+      });
+
+      it('creates a new task with criteria and body and commits to pending/<slug>/README.md', async () => {
+        vi.mocked(apiClient.saveRepoFile).mockResolvedValue({
+          status: 200,
+          data: { content: { sha: 'newsha' } },
+        });
+
+        const context = createMockContext();
+        const parsedCommand: ParsedCommand = {
+          command: 'ta',
+          args: ['new', 'Support', 'Custom', 'Themes'],
+          switches: {
+            c: 'All themes load correctly',
+            b: 'User can choose dark or light mode',
+          },
+        };
+
+        const res = await TaCommand.execute(context, parsedCommand);
+        expect(res.status).toBe(200);
+        expect(res.message).toContain('Created task: support-custom-themes (Status: pending)');
+
+        expect(apiClient.saveRepoFile).toHaveBeenCalledWith(
+          context.auth,
+          DEFAULT_TASK_REPO,
+          'pending/support-custom-themes/README.md',
+          expect.stringContaining('# Support Custom Themes'),
+          'task: create support-custom-themes'
+        );
+
+        const savedContent = vi.mocked(apiClient.saveRepoFile).mock.calls[0][3];
+        expect(savedContent).toContain('created_at:');
+        expect(savedContent).toContain('User can choose dark or light mode');
+        expect(savedContent).toContain('## Completion Criteria\n\nAll themes load correctly');
+      });
+
+      it('handles 401 unauthorized on save', async () => {
+        vi.mocked(apiClient.saveRepoFile).mockResolvedValue({
+          status: 401,
+          error: 'Unauthorized',
+        });
+
+        const context = createMockContext();
+        const parsedCommand: ParsedCommand = {
+          command: 'ta',
+          args: ['new', 'Test Task'],
+          switches: {},
+        };
+
+        const res = await TaCommand.execute(context, parsedCommand);
+        expect(res.status).toBe(401);
+        expect(res.message).toContain('gh link');
+      });
+    });
+
+    describe('ta active', () => {
+      it('lists active tasks when no slug is provided', async () => {
+        vi.mocked(apiClient.getRepoTree).mockResolvedValue({
+          status: 200,
+          data: [
+            { path: 'active/task-one/README.md', mode: '100644', type: 'blob', sha: 'sha1' },
+            { path: 'pending/task-two/README.md', mode: '100644', type: 'blob', sha: 'sha2' },
+          ],
+        });
+
+        vi.mocked(apiClient.getRepoContent).mockResolvedValue({
+          status: 200,
+          data: { content: '# Task One In Progress', encoding: 'utf-8', sha: 's1', size: 20 },
+        });
+
+        const context = createMockContext();
+        const parsedCommand: ParsedCommand = {
+          command: 'ta',
+          args: ['active'],
+          switches: {},
+        };
+
+        const res = await TaCommand.execute(context, parsedCommand);
+        expect(res.status).toBe(200);
+        expect(res.message).toContain('ACTIVE</span>: Task One In Progress');
+        expect(res.message).not.toContain('task-two');
+      });
+
+      it('returns message if no active tasks when listing', async () => {
+        vi.mocked(apiClient.getRepoTree).mockResolvedValue({
+          status: 200,
+          data: [
+            { path: 'pending/task-two/README.md', mode: '100644', type: 'blob', sha: 'sha2' },
+          ],
+        });
+
+        const context = createMockContext();
+        const parsedCommand: ParsedCommand = {
+          command: 'ta',
+          args: ['active'],
+          switches: {},
+        };
+
+        const res = await TaCommand.execute(context, parsedCommand);
+        expect(res.status).toBe(200);
+        expect(res.message).toContain('No active tasks');
+      });
+
+      it('activates a pending task by writing to active/<slug>/README.md', async () => {
+        vi.mocked(apiClient.getRepoContent).mockImplementation(async (_auth, _repo, path) => {
+          if (path === 'pending/my-feature/README.md') {
+            return {
+              status: 200,
+              data: {
+                content: '# My Feature\n\nImplement this soon.',
+                encoding: 'utf-8',
+                sha: 'p1',
+                size: 35,
+              },
+            };
+          }
+          return { status: 404, error: 'Not found' };
+        });
+
+        vi.mocked(apiClient.saveRepoFile).mockResolvedValue({
+          status: 200,
+          data: { content: { sha: 'a1' } },
+        });
+
+        const context = createMockContext();
+        const parsedCommand: ParsedCommand = {
+          command: 'ta',
+          args: ['active', 'my-feature'],
+          switches: {},
+        };
+
+        const res = await TaCommand.execute(context, parsedCommand);
+        expect(res.status).toBe(200);
+        expect(res.message).toBe("Task 'my-feature' is now active.");
+
+        expect(apiClient.saveRepoFile).toHaveBeenCalledWith(
+          context.auth,
+          DEFAULT_TASK_REPO,
+          'active/my-feature/README.md',
+          '# My Feature\n\nImplement this soon.',
+          'task: activate my-feature'
+        );
+      });
+
+      it('informs user if task is already active', async () => {
+        vi.mocked(apiClient.getRepoContent).mockImplementation(async (_auth, _repo, path) => {
+          if (path === 'active/already-active/README.md') {
+            return {
+              status: 200,
+              data: { content: '# Already Done', encoding: 'utf-8', sha: 'a1', size: 20 },
+            };
+          }
+          return { status: 404, error: 'Not found' };
+        });
+
+        const context = createMockContext();
+        const parsedCommand: ParsedCommand = {
+          command: 'ta',
+          args: ['active', 'already-active'],
+          switches: {},
+        };
+
+        const res = await TaCommand.execute(context, parsedCommand);
+        expect(res.status).toBe(200);
+        expect(res.message).toContain("already active");
+      });
+
+      it('returns 404 if task is not found in pending queue', async () => {
+        vi.mocked(apiClient.getRepoContent).mockResolvedValue({
+          status: 404,
+          error: 'Not found',
+        });
+
+        const context = createMockContext();
+        const parsedCommand: ParsedCommand = {
+          command: 'ta',
+          args: ['active', 'non-existent-task'],
+          switches: {},
+        };
+
+        const res = await TaCommand.execute(context, parsedCommand);
+        expect(res.status).toBe(404);
+        expect(res.message).toContain("Task 'non-existent-task' not found in pending queue.");
+      });
+    });
+  });
+});

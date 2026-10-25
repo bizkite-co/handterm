@@ -49,11 +49,38 @@ export function parsedCommandToString(cmd: ParsedCommand): string {
 }
 
 function isSwitch(part: string): boolean {
-  return part.substring(0, 1) === '--' || (part.startsWith('-') && part.length === 2);
+  return part.startsWith('--') || (part.startsWith('-') && part.length > 1);
+}
+
+export function tokenizeInput(input: string): string[] {
+  const tokens: string[] = [];
+  let current = '';
+  let inDoubleQuote = false;
+  let inSingleQuote = false;
+
+  for (let i = 0; i < input.length; i++) {
+    const char = input[i];
+    if (char === '"' && !inSingleQuote) {
+      inDoubleQuote = !inDoubleQuote;
+    } else if (char === "'" && !inDoubleQuote) {
+      inSingleQuote = !inSingleQuote;
+    } else if (/\s/.test(char) && !inDoubleQuote && !inSingleQuote) {
+      if (current.length > 0) {
+        tokens.push(current);
+        current = '';
+      }
+    } else {
+      current += char;
+    }
+  }
+  if (current.length > 0) {
+    tokens.push(current);
+  }
+  return tokens;
 }
 
 export const parseCommand = (input: string): ParsedCommand => {
-  const parts = input.split(/\s+/).filter(Boolean); // Split by whitespace and remove empty strings
+  const parts = tokenizeInput(input);
   const command = parts.shift() ?? ''; // The first element is the command
   const args: string[] = [];
   const switches: Record<string, boolean | string> = {};
@@ -66,7 +93,8 @@ export const parseCommand = (input: string): ParsedCommand => {
       const switchAssignmentIndex = part.indexOf('=');
       if (switchAssignmentIndex > -1) {
         // It's a switch with an explicit value
-        const switchName = part.substring(2, switchAssignmentIndex);
+        const rawSwitch = part.substring(0, switchAssignmentIndex);
+        const switchName = rawSwitch.startsWith('--') ? rawSwitch.substring(2) : rawSwitch.substring(1);
         const switchValue = part.substring(switchAssignmentIndex + 1);
         switches[switchName] = switchValue;
       } else {
