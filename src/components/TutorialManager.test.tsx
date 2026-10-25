@@ -110,4 +110,22 @@ describe('TutorialManager', () => {
     });
     expect(onTutorialComplete).not.toHaveBeenCalled();
   });
+
+  test('renders defined chord glyphs without undefined.svg for jkl; tutorial', () => {
+    const jklSemicolonTutorial: GamePhrase = {
+      key: 'jkl;',
+      displayAs: 'Tutorial',
+      value: 'Type `jkl;`.',
+    };
+    render(<TutorialManager tutorial={jklSemicolonTutorial} />);
+    expect(screen.getByTestId('tutorial-chords').textContent).toBe('jkl;');
+
+    const images = screen.getAllByRole('img') as HTMLImageElement[];
+    expect(images.length).toBe(4);
+    for (const img of images) {
+      expect(img.getAttribute('src')).not.toContain('undefined');
+    }
+    const semicolonImg = images[3];
+    expect(semicolonImg.getAttribute('src')).toContain('9.svg');
+  });
 });

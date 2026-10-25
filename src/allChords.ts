@@ -442,8 +442,13 @@ export const allChords: IChord[] = [
     "index": 45
   },
   {
-    "key": "",
+    "key": ";",
     "chordCode": "9",
+    "index": 46
+  },
+  {
+    "key": ":",
+    "chordCode": "59",
     "index": 46
   },
   {

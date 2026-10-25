@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest';
 
 import { Phrases } from '@handterm/types';
+import { allChords } from '../allChords';
 
 /** Space is used in every sentence; Enter is taught first but not typed inside phrases. */
 const ALWAYS_ALLOWED = new Set([' ']);
@@ -83,5 +84,21 @@ describe('phrase curriculum', () => {
       const first = phrase.value[0];
       expect(first, `${phrase.key} should start with an uppercase letter`).toMatch(/[A-Z]/);
     });
+  });
+
+  test('every tutorial key resolves to a valid chord in allChords (no empty key or undefined svg)', () => {
+    const tutorialKeys = new Set(
+      Phrases.filter(p => p.displayAs === 'Tutorial')
+        .flatMap(p => (p.key === '\r' ? [] : [...p.key]))
+    );
+    for (const ch of tutorialKeys) {
+      const chord = allChords.find(c => c.key === ch || c.key.replace('&#x2581;', ' ') === ch);
+      expect(chord, `missing chord for tutorial character: "${ch}"`).toBeDefined();
+      expect(chord?.chordCode, `invalid chord code for tutorial character: "${ch}"`).toBeTruthy();
+      expect(chord?.chordCode).not.toBe('undefined');
+    }
+    expect(allChords.find(c => c.key === ';')?.chordCode).toBe('9');
+    expect(allChords.find(c => c.key === ':')?.chordCode).toBe('59');
+    expect(allChords.some(c => c.key === '')).toBe(false);
   });
 });
