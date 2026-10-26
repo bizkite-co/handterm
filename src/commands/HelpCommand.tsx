@@ -7,7 +7,8 @@ import { type ParsedCommand } from '../types/Types';
 
 export const HelpCommand: ICommand = {
   name: 'help',
-  description: 'Display help information',
+  aliases: ['411'],
+  description: 'Display help information (usage: help [filter])',
   execute: (
     _context: ICommandContext,
     parsedCommand: ParsedCommand,
@@ -16,6 +17,22 @@ export const HelpCommand: ICommand = {
       parsedCommand.command === 'help'
       || parsedCommand.command === '411'
     ) {
+      const filter = parsedCommand.args[0]?.trim();
+      const commandList = commandRegistry.getHelp(filter);
+
+      if (filter) {
+        if (!commandList) {
+          return Promise.resolve<ICommandResponse>({
+            status: 404,
+            message: `<div class="command-list">No commands matching "${filter}". Run 'help' to see all commands.</div>`,
+          });
+        }
+        return Promise.resolve<ICommandResponse>({
+          status: 200,
+          message: `<div class="command-list-container"><div class="command-list">${commandList}</div></div>`,
+        });
+      }
+
       const commandChords = [
         'DELETE (Backspace)',
         '\r',
@@ -31,7 +48,7 @@ export const HelpCommand: ICommand = {
         // eslint-disable-next-line import/no-named-as-default-member
         ReactDOMServer.renderToStaticMarkup(element)
       )).join('');
-      const commandList = commandRegistry.getHelp();
+
       const response = `
         <div class='chord-display-container'>${commandChordsHtml}</div>
         <div class='command-list-container'>

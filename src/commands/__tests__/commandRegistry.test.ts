@@ -82,6 +82,7 @@ describe('CommandRegistry help', () => {
     const { commandRegistry: liveRegistry } = await import('../commandRegistry');
 
     const help = liveRegistry.getHelp();
+    expect(help).toContain('vimtut');
     expect(help).toContain('ta, task');
     expect(help).toContain('ta list');
     expect(help).toContain('ta new');
