@@ -51,4 +51,23 @@ describe('MonacoCore - defineVimCommands', () => {
     expect(navigate).toHaveBeenCalledWith({ activityKey: ActivityType.NORMAL });
     expect(localStorage.getItem('editContent')).toBeNull();
   });
+
+  it('defines the :next / :n command for vimtut step advancement', () => {
+    const defineExSpy = vi.fn();
+    (monacoVim as any).VimMode = {
+      Vim: {
+        defineEx: defineExSpy,
+      },
+    };
+
+    const onAdvanceSpy = vi.fn();
+    defineVimCommands(mockEditorRef, undefined, undefined, undefined, onAdvanceSpy);
+
+    expect(defineExSpy).toHaveBeenCalledWith('next', 'n', expect.any(Function));
+
+    const nextCommandCallback = defineExSpy.mock.calls.find(call => call[0] === 'next')[2];
+    nextCommandCallback();
+
+    expect(onAdvanceSpy).toHaveBeenCalledTimes(1);
+  });
 });

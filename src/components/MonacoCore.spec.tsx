@@ -3,6 +3,8 @@ import MonacoCore from './MonacoCore';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 import { initVimMode } from 'monaco-vim';
+import * as navigationUtils from '../utils/navigationUtils';
+import * as vimTutorialSignals from '../signals/vimTutorialSignals';
 
 // Mock the entire monaco-editor module *once* before all tests.
 vi.mock('monaco-editor/esm/vs/editor/editor.api', () => ({
@@ -143,5 +145,50 @@ describe('MonacoCore', () => {
     await waitFor(() => {
       expect(focus).toHaveBeenCalled();
     });
+  });
+
+  it('advances tutorial step when Enter is pressed and step is completed in vimtut mode', async () => {
+    vi.spyOn(navigationUtils, 'parseLocation').mockReturnValue({
+      activityKey: 'edit',
+      contentKey: 'vimtut',
+      groupKey: null,
+    });
+
+    const mockEditor = {
+      dispose: vi.fn(),
+      focus: vi.fn(),
+      getValue: vi.fn(() => ''),
+      getModel: vi.fn(() => ({
+        getValue: vi.fn(() => ''),
+        getLanguageId: vi.fn(() => 'plaintext'),
+      })),
+      setValue: vi.fn(),
+      setPosition: vi.fn(),
+      revealPosition: vi.fn(),
+      getPosition: vi.fn(() => ({ lineNumber: 1, column: 1 })),
+      onDidChangeCursorPosition: vi.fn(() => ({ dispose: vi.fn() })),
+      onDidChangeModelContent: vi.fn(() => ({ dispose: vi.fn() })),
+      updateOptions: vi.fn(),
+      onDidBlurEditorText: vi.fn(),
+      onDidFocusEditorText: vi.fn(),
+      onKeyDown: vi.fn().mockReturnValue({ dispose: vi.fn() }),
+    };
+    (monaco.editor.create as any).mockReturnValue(mockEditor);
+    (initVimMode as any).mockReturnValue({ dispose: vi.fn(), on: vi.fn() });
+
+    vimTutorialSignals.resetVimTutorial();
+    vimTutorialSignals.vimStepCompletedSignal.value = true;
+    expect(vimTutorialSignals.vimTutorialStepIndexSignal.value).toBe(0);
+
+    const { unmount } = render(<MonacoCore mode="editor" value="" {...{containerRef: mockContainerRef, statusBarRef: mockStatusBarRef}} /> as any);
+
+    // Dispatch Enter key event on window
+    const enterEvent = new KeyboardEvent('keydown', { key: 'Enter', bubbles: true });
+    window.dispatchEvent(enterEvent);
+
+    expect(vimTutorialSignals.vimTutorialStepIndexSignal.value).toBe(1);
+    expect(vimTutorialSignals.vimStepCompletedSignal.value).toBe(false);
+
+    unmount();
   });
 });

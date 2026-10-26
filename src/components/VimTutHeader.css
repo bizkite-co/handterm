@@ -123,7 +123,34 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 12px;
   animation: fadeIn 0.2s ease-in;
+}
+
+.vimtut-continue-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.vimtut-keymap-prompt {
+  font-size: 0.85rem;
+  color: #a7f3d0;
+  font-weight: 500;
+}
+
+.vimtut-keymap-prompt kbd {
+  background-color: #065f46;
+  border: 1px solid #10b981;
+  border-radius: 3px;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+  color: #ffffff;
+  display: inline-block;
+  font-size: 0.8rem;
+  font-family: inherit;
+  font-weight: 700;
+  line-height: 1;
+  padding: 2px 6px;
 }
 
 @keyframes fadeIn {

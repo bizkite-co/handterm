@@ -111,13 +111,18 @@ export function VimTutHeader({
         <div className="vimtut-success-banner" data-testid="vimtut-success-banner">
           <span>🎉 {successMsg ?? step.successMessage ?? 'Step completed!'}</span>
           {!isLastStep && (
-            <button
-              type="button"
-              className="vimtut-btn vimtut-btn-primary"
-              onClick={handleNext}
-            >
-              Continue ➔
-            </button>
+            <div className="vimtut-continue-actions">
+              <span className="vimtut-keymap-prompt">
+                Press <kbd>Enter</kbd> or type <kbd>:n</kbd> to continue
+              </span>
+              <button
+                type="button"
+                className="vimtut-btn vimtut-btn-primary"
+                onClick={handleNext}
+              >
+                Continue [Enter] ➔
+              </button>
+            </div>
           )}
         </div>
       )}

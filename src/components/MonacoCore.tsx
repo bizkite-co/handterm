@@ -55,7 +55,8 @@ export function defineVimCommands(
   editorRef: React.MutableRefObject<monaco.editor.IStandaloneCodeEditor | null>,
   auth?: IAuthProps,
   toggleVideo?: () => boolean,
-  onSaveResult?: (result: Either.Either<void, SaveError>) => void
+  onSaveResult?: (result: Either.Either<void, SaveError>) => void,
+  onVimTutAdvance?: () => void
 ): boolean {
   logger.debug("Attempting to define Vim commands...");
 
@@ -174,6 +175,13 @@ export function defineVimCommands(
         toggleVideo();
       }
     });
+
+    Vim.defineEx('next', 'n', () => {
+      logger.debug(':next / :n command triggered.');
+      if (onVimTutAdvance) {
+        onVimTutAdvance();
+      }
+    });
     logger.info("Vim commands defined successfully.");
   } else {
     logger.error('[defineVimCommands] Vim API not found.');
@@ -208,6 +216,34 @@ export default function MonacoCore({ value, language = 'text', toggleVideo, mode
   const isVimTut = mode === 'editor' && parseLocation().contentKey === 'vimtut';
   const [vimCursor, setVimCursor] = useState<{ lineNumber: number; column: number }>({ lineNumber: 1, column: 1 });
   const [vimModeState, setVimModeState] = useState<string>('normal');
+
+  const handleVimTutAdvanceRef = useRef<() => void>(() => {});
+  const handleVimTutAdvance = useCallback(() => {
+    const nextStep = advanceVimTutorial();
+    if (nextStep && editorRef.current) {
+      editorRef.current.setValue(nextStep.initialText);
+      if (nextStep.initialCursor) {
+        editorRef.current.setPosition(nextStep.initialCursor);
+        editorRef.current.revealPosition(nextStep.initialCursor);
+        setVimCursor(nextStep.initialCursor);
+      }
+      editorRef.current.focus();
+    }
+  }, []);
+  handleVimTutAdvanceRef.current = handleVimTutAdvance;
+
+  const handleVimTutRestart = useCallback(() => {
+    const currentStep = getCurrentVimStep();
+    if (currentStep && editorRef.current) {
+      editorRef.current.setValue(currentStep.initialText);
+      if (currentStep.initialCursor) {
+        editorRef.current.setPosition(currentStep.initialCursor);
+        editorRef.current.revealPosition(currentStep.initialCursor);
+        setVimCursor(currentStep.initialCursor);
+      }
+      editorRef.current.focus();
+    }
+  }, []);
 
   // Effect 1: Editor Creation (runs once on mount)
   useEffect(() => {
@@ -377,7 +413,17 @@ export default function MonacoCore({ value, language = 'text', toggleVideo, mode
 
           if (mode === 'editor') {
             // Register alt+s to exit insert mode (same as terminal behavior)
+            // and Enter to advance completed vimtut step
             editorKeydownRef.current = editor.onKeyDown((e) => {
+              if (isVimTut && vimStepCompletedSignal.value) {
+                if (e.browserEvent.key === 'Enter' || e.keyCode === monaco.KeyCode.Enter) {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleVimTutAdvanceRef.current();
+                  return;
+                }
+              }
+
               if (e.browserEvent.key === 's' && e.altKey) {
                 e.preventDefault();
                 e.stopPropagation();
@@ -394,7 +440,9 @@ export default function MonacoCore({ value, language = 'text', toggleVideo, mode
 
             defineCommandsTimeoutRef.current = setTimeout(() => {
               logger.debug("Timeout triggered: Attempting to define Vim commands now.");
-              defineVimCommands(editorRef, auth, toggleVideo, onSaveResult);
+              defineVimCommands(editorRef, auth, toggleVideo, onSaveResult, () => {
+                handleVimTutAdvanceRef.current();
+              });
               defineCommandsTimeoutRef.current = null;
             }, 500);
           } else {
@@ -507,31 +555,24 @@ export default function MonacoCore({ value, language = 'text', toggleVideo, mode
     };
   }, [isVimTut, vimTutorialStepIndexSignal.value, vimModeState]);
 
-  const handleVimTutAdvance = useCallback(() => {
-    const nextStep = advanceVimTutorial();
-    if (nextStep && editorRef.current) {
-      editorRef.current.setValue(nextStep.initialText);
-      if (nextStep.initialCursor) {
-        editorRef.current.setPosition(nextStep.initialCursor);
-        editorRef.current.revealPosition(nextStep.initialCursor);
-        setVimCursor(nextStep.initialCursor);
-      }
-      editorRef.current.focus();
-    }
-  }, []);
+  // Capture Enter globally when a vimtut step is completed so keyboard-only users
+  // can immediately advance to the next step without reaching for a mouse.
+  useEffect(() => {
+    if (!isVimTut) return;
 
-  const handleVimTutRestart = useCallback(() => {
-    const currentStep = getCurrentVimStep();
-    if (currentStep && editorRef.current) {
-      editorRef.current.setValue(currentStep.initialText);
-      if (currentStep.initialCursor) {
-        editorRef.current.setPosition(currentStep.initialCursor);
-        editorRef.current.revealPosition(currentStep.initialCursor);
-        setVimCursor(currentStep.initialCursor);
+    const handleWindowKeyDown = (e: KeyboardEvent) => {
+      if (vimStepCompletedSignal.value && e.key === 'Enter') {
+        e.preventDefault();
+        e.stopPropagation();
+        handleVimTutAdvanceRef.current();
       }
-      editorRef.current.focus();
-    }
-  }, []);
+    };
+
+    window.addEventListener('keydown', handleWindowKeyDown, true);
+    return () => {
+      window.removeEventListener('keydown', handleWindowKeyDown, true);
+    };
+  }, [isVimTut]);
 
   return (
     <div data-testid="monaco-editor-container" className="monaco-editor-container" style={{ display: 'flex', flexDirection: 'column', height: '100%', flex: '1 1 auto' }}>

@@ -53,6 +53,22 @@ describe('VimTutHeader', () => {
     expect(onAdvanceStep).toHaveBeenCalled();
   });
 
+  it('shows keymap instructions for Enter and :n when step is completed', () => {
+    vimTutorialSignals.vimStepCompletedSignal.value = true;
+    const onAdvanceStep = vi.fn();
+
+    render(<VimTutHeader onAdvanceStep={onAdvanceStep} />);
+
+    expect(screen.getByText(/Press/i)).toBeTruthy();
+    expect(screen.getByText('Enter')).toBeTruthy();
+    expect(screen.getByText(':n')).toBeTruthy();
+
+    const continueBtn = screen.getByRole('button', { name: /Continue \[Enter\]/i });
+    fireEvent.click(continueBtn);
+
+    expect(onAdvanceStep).toHaveBeenCalled();
+  });
+
   it('calls onRestartStep when Restart Step clicked', () => {
     const onRestartStep = vi.fn();
 
