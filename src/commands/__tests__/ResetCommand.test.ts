@@ -1,18 +1,25 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { type ICommandContext } from 'src/contexts/CommandContext';
-import { type ParsedCommand } from '@handterm/types';
+import { type ParsedCommand, ActivityType } from '@handterm/types';
 
 import { ResetCommand, resetAll } from '../ResetCommand';
 import * as tutorialSignals from 'src/signals/tutorialSignals';
 import * as gameSignals from 'src/signals/gameSignals';
+import * as navigationUtils from 'src/utils/navigationUtils';
 
 vi.mock('src/signals/tutorialSignals', () => ({
   resetCompletedTutorials: vi.fn(),
+  getNextTutorial: vi.fn(() => ({ key: 'a', value: 'a', tutorialGroup: 'home' })),
+  setNextTutorial: vi.fn(),
 }));
 
 vi.mock('src/signals/gameSignals', () => ({
   resetCompletedGamePhrases: vi.fn(),
   setGameLevel: vi.fn(),
+}));
+
+vi.mock('src/utils/navigationUtils', () => ({
+  navigate: vi.fn(),
 }));
 
 describe('ResetCommand', () => {
@@ -32,11 +39,16 @@ describe('ResetCommand', () => {
   });
 
   describe('resetAll', () => {
-    it('resets tutorials, game phrases, and sets game level to 1', () => {
+    it('resets tutorials, game phrases, sets game level to 1, and navigates to TUTORIAL', () => {
       resetAll();
       expect(tutorialSignals.resetCompletedTutorials).toHaveBeenCalledTimes(1);
       expect(gameSignals.resetCompletedGamePhrases).toHaveBeenCalledTimes(1);
       expect(gameSignals.setGameLevel).toHaveBeenCalledWith(1);
+      expect(navigationUtils.navigate).toHaveBeenCalledWith({
+        activityKey: ActivityType.TUTORIAL,
+        contentKey: 'a',
+        groupKey: 'home',
+      });
     });
   });
 
@@ -51,10 +63,15 @@ describe('ResetCommand', () => {
 
       const res = await ResetCommand.execute(context, parsedCommand);
       expect(res.status).toBe(200);
-      expect(res.message).toBe('All tutorial and game progress has been reset.');
+      expect(res.message).toContain('All tutorial and game progress has been reset');
       expect(tutorialSignals.resetCompletedTutorials).toHaveBeenCalledTimes(1);
       expect(gameSignals.resetCompletedGamePhrases).toHaveBeenCalledTimes(1);
       expect(gameSignals.setGameLevel).toHaveBeenCalledWith(1);
+      expect(navigationUtils.navigate).toHaveBeenCalledWith({
+        activityKey: ActivityType.TUTORIAL,
+        contentKey: 'a',
+        groupKey: 'home',
+      });
     });
 
     it('returns a 500 error if resetting throws an exception', async () => {

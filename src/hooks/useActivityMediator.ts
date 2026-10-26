@@ -307,15 +307,21 @@ export function useActivityMediator(): {
             // TutCommand) that navigate themselves; they no longer need
             // special-casing here.
             case 'edit': {
-                // REVERTED: Only check if tutorials are complete. Navigation is handled by editCommand.tsx
-                const completedTutorials = localStorage.getItem(StorageKeys.completedTutorials);
-                if (!completedTutorials) {
+                // Check if tutorials are complete. Navigation is handled by editCommand.tsx
+                const rawCompleted = localStorage.getItem(StorageKeys.completedTutorials);
+                let hasCompleted = false;
+                try {
+                    const parsed = rawCompleted ? JSON.parse(rawCompleted) : [];
+                    hasCompleted = Array.isArray(parsed) && parsed.length > 0;
+                } catch {
+                    hasCompleted = false;
+                }
+                if (!hasCompleted) {
                     logger.debug('Tutorials not complete, edit command blocked by mediator.');
                     setNotification('Complete tutorials before using edit command. Use `complete` to bypass.');
                     result = false; // Command blocked
                 } else {
                     logger.debug('Tutorials complete, allowing edit command transition (initiated by command).');
-                    // REMOVED redundant navigate call
                     result = true; // Command allowed, navigation handled elsewhere
                 }
                 break;
@@ -353,12 +359,18 @@ export function useActivityMediator(): {
         // Home flow: clear URL params and resume the tutorial where left off
         const startTutorialAtHome = (): void => {
             logger.debug('Initial load at base URL, checking tutorial status.');
-            const completedTutorials = localStorage.getItem(StorageKeys.completedTutorials);
-            logger.debug(`Found completed tutorials in localStorage: ${completedTutorials}`);
+            const rawCompleted = localStorage.getItem(StorageKeys.completedTutorials);
+            let hasCompleted = false;
+            try {
+                const parsed = rawCompleted ? JSON.parse(rawCompleted) : [];
+                hasCompleted = Array.isArray(parsed) && parsed.length > 0;
+            } catch {
+                hasCompleted = false;
+            }
+            logger.debug(`Found completed tutorials in localStorage: ${rawCompleted}`);
 
-            if (completedTutorials) {
+            if (hasCompleted) {
                 logger.debug('Found completed tutorials - ensuring NORMAL mode');
-                resetCompletedTutorials(); // Still reset this if found
                 // No navigation needed, already at NORMAL base URL
                 logger.debug('Initial activity determination - completed (tutorials were complete, already at NORMAL).');
             } else {
@@ -387,8 +399,15 @@ export function useActivityMediator(): {
             // A stale URL (shared link, or localStorage cleared mid-session) must
             // not resurrect an arbitrary tutorial key for a fresh user. Redirect
             // home so the tutorial flow restarts cleanly from the beginning.
-            const completedTutorials = localStorage.getItem(StorageKeys.completedTutorials);
-            if (!completedTutorials) {
+            const rawCompleted = localStorage.getItem(StorageKeys.completedTutorials);
+            let hasCompleted = false;
+            try {
+                const parsed = rawCompleted ? JSON.parse(rawCompleted) : [];
+                hasCompleted = Array.isArray(parsed) && parsed.length > 0;
+            } catch {
+                hasCompleted = false;
+            }
+            if (!hasCompleted) {
                 logger.debug('No completed tutorials found despite URL activity - redirecting home to restart tutorial flow.');
                 startTutorialAtHome();
             } else {
