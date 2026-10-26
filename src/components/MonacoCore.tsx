@@ -12,6 +12,7 @@ import type { JSX } from 'react';
 import { createLogger, LogLevel } from '../utils/Logger';
 import type { IAuthProps } from '../types/HandTerm';
 import { putFile } from '../utils/awsApiClient';
+import { setChordGlyphScale } from '../signals/appSignals';
 import { Data, Either } from 'effect';
 
 const logger = createLogger({
@@ -86,10 +87,26 @@ export function defineVimCommands(
   if (Vim && typeof Vim.defineEx === 'function') {
     logger.info("Vim API found. Defining commands.");
 
+    const syncConfigIfApplicable = (rawText: string) => {
+      const filename = parseLocation().contentKey;
+      if (filename === 'config.json' || filename === 'config') {
+        try {
+          const parsed = JSON.parse(rawText);
+          if (parsed && typeof parsed['chord-glyph-size'] === 'number') {
+            setChordGlyphScale(parsed['chord-glyph-size']);
+          }
+          localStorage.setItem('config.json', JSON.stringify(parsed, null, 2));
+        } catch {
+          // ignore malformed JSON during intermediate edits
+        }
+      }
+    };
+
     Vim.defineEx('w', '', () => {
       if (editorRef.current) {
         const content = editorRef.current.getValue();
         localStorage.setItem(StorageKeys.editContent, JSON.stringify(content));
+        syncConfigIfApplicable(content);
         logger.debug(':w command executed, content saved.');
         void saveToAWS(content).then(handleSaveResult);
       }
@@ -128,6 +145,7 @@ export function defineVimCommands(
         if (editorRef.current) {
           const content = editorRef.current.getValue();
           localStorage.setItem(StorageKeys.editContent, JSON.stringify(content));
+          syncConfigIfApplicable(content);
           logger.debug(':wq command: content saved.');
           void saveToAWS(content).then(handleSaveResult);
         }

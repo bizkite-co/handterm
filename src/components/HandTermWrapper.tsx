@@ -23,7 +23,7 @@ import {
   type ITerminalAdapter
 } from '@handterm/types';
 import { createLogger, LogLevel } from '../utils/Logger';
-// Removed: import { navigate } from '../utils/navigationUtils';
+import { parseLocation } from '../utils/navigationUtils';
 import WebCam from '../utils/WebCam';
 import GamePhrases from '../utils/GamePhrases';
 
@@ -246,11 +246,13 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
 
   const editorComponent = useMemo(() => {
     logger.debug("Memoizing MonacoCore (Editor) component instance");
+    const activeFile = parseLocation().contentKey ?? '';
+    const language = activeFile.endsWith('.json') ? 'json' : 'markdown';
     return (
       <MonacoCore
         key={ActivityType.EDIT}
         value={getStoredContent()}
-        language="markdown"
+        language={language}
         toggleVideo={toggleVideoCallback}
         mode="editor" // Explicitly set mode
         auth={props.auth}
