@@ -13,6 +13,7 @@ import {
   setGameLevel,
   setGamePhrase,
 } from '../signals/gameSignals';
+import { resetVimTutorial } from '../signals/vimTutorialSignals';
 import { createLogger } from '../utils/Logger';
 
 const logger = createLogger({ prefix: 'ResetCommand' });
@@ -32,6 +33,7 @@ export function resetAll(): void {
   logger.info('Resetting all tutorial and game progress');
   resetCompletedTutorials();
   resetCompletedGamePhrases();
+  resetVimTutorial();
   setGameLevel(1);
   setGamePhrase(getNextGamePhrase());
 

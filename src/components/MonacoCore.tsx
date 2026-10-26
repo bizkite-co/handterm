@@ -1,5 +1,5 @@
 
-import { useRef, useEffect, useState } from 'react';
+import { useRef, useEffect, useState, useCallback } from 'react';
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 // Import namespace and init function
 import { initVimMode } from 'monaco-vim';
@@ -14,6 +14,16 @@ import type { IAuthProps } from '../types/HandTerm';
 import { putFile } from '../utils/awsApiClient';
 import { setChordGlyphScale } from '../signals/appSignals';
 import { Data, Either } from 'effect';
+import { VimTutHeader } from './VimTutHeader';
+import {
+  getCurrentVimStep,
+  advanceVimTutorial,
+  evaluateVimStepConditions,
+  vimStepCompletedSignal,
+  vimStepMessageSignal,
+  vimTutorialStepIndexSignal,
+  updateCompletedVimTutorials,
+} from '../signals/vimTutorialSignals';
 
 const logger = createLogger({
   prefix: 'MonacoCore',
@@ -195,6 +205,10 @@ export default function MonacoCore({ value, language = 'text', toggleVideo, mode
   const currentVimModeRef = useRef<string>('insert');
   const editorKeydownRef = useRef<IDisposable | null>(null);
 
+  const isVimTut = mode === 'editor' && parseLocation().contentKey === 'vimtut';
+  const [vimCursor, setVimCursor] = useState<{ lineNumber: number; column: number }>({ lineNumber: 1, column: 1 });
+  const [vimModeState, setVimModeState] = useState<string>('normal');
+
   // Effect 1: Editor Creation (runs once on mount)
   useEffect(() => {
     if (!containerRef.current) {
@@ -357,6 +371,7 @@ export default function MonacoCore({ value, language = 'text', toggleVideo, mode
           // Track vim mode internally for alt+s handling
           vimInstance.on('vim-mode-change', (modeInfo: { mode: string; subMode?: string }) => {
             currentVimModeRef.current = modeInfo.mode;
+            setVimModeState(modeInfo.mode);
             onVimModeChange?.(modeInfo.mode);
           });
 
@@ -434,8 +449,100 @@ export default function MonacoCore({ value, language = 'text', toggleVideo, mode
     }
   }, [value, mode]); // Depend on value, editor instance, and mode
 
+  // Effect 6: Vim Tutorial Verification Runner
+  useEffect(() => {
+    const editor = editorRef.current;
+    if (!editor || !isVimTut) return;
+
+    const step = getCurrentVimStep();
+    if (!step) return;
+
+    // Set initial text & cursor for the step if editor is not yet set
+    if (editor.getValue() !== step.initialText && !vimStepCompletedSignal.value) {
+      editor.setValue(step.initialText);
+    }
+    if (step.initialCursor) {
+      editor.setPosition(step.initialCursor);
+      editor.revealPosition(step.initialCursor);
+      setVimCursor(step.initialCursor);
+    }
+
+    const checkConditions = () => {
+      if (vimStepCompletedSignal.value) return;
+      const currentPos = editor.getPosition() ?? { lineNumber: 1, column: 1 };
+      const currentText = editor.getValue();
+      const currentMode = currentVimModeRef.current;
+
+      setVimCursor({ lineNumber: currentPos.lineNumber, column: currentPos.column });
+
+      const passed = evaluateVimStepConditions(
+        step,
+        { lineNumber: currentPos.lineNumber, column: currentPos.column },
+        currentText,
+        currentMode
+      );
+
+      if (passed) {
+        logger.info(`Vim tutorial step ${step.id} completed!`);
+        vimStepCompletedSignal.value = true;
+        vimStepMessageSignal.value = step.successMessage ?? 'Step completed!';
+        updateCompletedVimTutorials(prev => new Set(prev).add(step.id));
+      }
+    };
+
+    checkConditions();
+
+    const cursorSub = editor.onDidChangeCursorPosition((e) => {
+      setVimCursor({ lineNumber: e.position.lineNumber, column: e.position.column });
+      checkConditions();
+    });
+
+    const modelSub = editor.onDidChangeModelContent(() => {
+      checkConditions();
+    });
+
+    return () => {
+      cursorSub.dispose();
+      modelSub.dispose();
+    };
+  }, [isVimTut, vimTutorialStepIndexSignal.value, vimModeState]);
+
+  const handleVimTutAdvance = useCallback(() => {
+    const nextStep = advanceVimTutorial();
+    if (nextStep && editorRef.current) {
+      editorRef.current.setValue(nextStep.initialText);
+      if (nextStep.initialCursor) {
+        editorRef.current.setPosition(nextStep.initialCursor);
+        editorRef.current.revealPosition(nextStep.initialCursor);
+        setVimCursor(nextStep.initialCursor);
+      }
+      editorRef.current.focus();
+    }
+  }, []);
+
+  const handleVimTutRestart = useCallback(() => {
+    const currentStep = getCurrentVimStep();
+    if (currentStep && editorRef.current) {
+      editorRef.current.setValue(currentStep.initialText);
+      if (currentStep.initialCursor) {
+        editorRef.current.setPosition(currentStep.initialCursor);
+        editorRef.current.revealPosition(currentStep.initialCursor);
+        setVimCursor(currentStep.initialCursor);
+      }
+      editorRef.current.focus();
+    }
+  }, []);
+
   return (
     <div data-testid="monaco-editor-container" className="monaco-editor-container" style={{ display: 'flex', flexDirection: 'column', height: '100%', flex: '1 1 auto' }}>
+      {isVimTut && (
+        <VimTutHeader
+          currentCursor={vimCursor}
+          currentMode={vimModeState}
+          onAdvanceStep={handleVimTutAdvance}
+          onRestartStep={handleVimTutRestart}
+        />
+      )}
       <div ref={containerRef} style={containerStyle} />
       <div ref={statusBarRef} className="vim-status-bar" style={{ height: '20px', flexShrink: 0 }} />
     </div>

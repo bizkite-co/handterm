@@ -1,0 +1,132 @@
+.vimtut-header-container {
+  background-color: #18181b;
+  border-bottom: 2px solid #27272a;
+  color: #f4f4f5;
+  padding: 10px 16px;
+  font-family: inherit;
+  user-select: none;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.vimtut-header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.vimtut-header-title-badge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.vimtut-badge {
+  background-color: #0284c7;
+  color: #ffffff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.vimtut-header-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #fafafa;
+  margin: 0;
+}
+
+.vimtut-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.vimtut-btn {
+  background: #27272a;
+  border: 1px solid #3f3f46;
+  color: #e4e4e7;
+  padding: 4px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-family: inherit;
+  transition: all 0.15s ease;
+}
+
+.vimtut-btn:hover {
+  background: #3f3f46;
+  color: #ffffff;
+}
+
+.vimtut-btn-primary {
+  background: #16a34a;
+  border-color: #22c55e;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.vimtut-btn-primary:hover {
+  background: #15803d;
+}
+
+.vimtut-instruction-box {
+  background-color: #27272a;
+  border-left: 3px solid #38bdf8;
+  padding: 8px 12px;
+  border-radius: 0 4px 4px 0;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  color: #e4e4e7;
+}
+
+.vimtut-hint-box {
+  background-color: #3b2a0c;
+  border-left: 3px solid #eab308;
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  color: #fef08a;
+  border-radius: 0 4px 4px 0;
+}
+
+.vimtut-status-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.8rem;
+  color: #a1a1aa;
+}
+
+.vimtut-status-indicators {
+  display: flex;
+  gap: 14px;
+}
+
+.vimtut-status-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.vimtut-success-banner {
+  background: #064e3b;
+  border: 1px solid #059669;
+  color: #6ee7b7;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-weight: 600;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  animation: fadeIn 0.2s ease-in;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
