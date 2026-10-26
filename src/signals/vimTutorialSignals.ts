@@ -36,6 +36,14 @@ export const { signal: completedVimTutorialsSignal, update: updateCompletedVimTu
 export const vimStepCompletedSignal = signal<boolean>(false);
 export const vimStepMessageSignal = signal<string | null>(null);
 
+export interface VimAccomplishment {
+  stepId: string;
+  stepTitle: string;
+  message: string;
+}
+
+export const lastVimAccomplishmentSignal = signal<VimAccomplishment | null>(null);
+
 export const currentVimStepSignal = computed<VimTutorialStep>(() => {
   const index = Math.max(0, Math.min(vimTutorialStepIndexSignal.value, VIM_TUTORIAL_STEPS.length - 1));
   return VIM_TUTORIAL_STEPS[index] ?? VIM_TUTORIAL_STEPS[0]!;
@@ -67,6 +75,7 @@ export function resetVimTutorial(): void {
   updateCompletedVimTutorials(new Set());
   vimStepCompletedSignal.value = false;
   vimStepMessageSignal.value = null;
+  lastVimAccomplishmentSignal.value = null;
   try {
     localStorage.removeItem(VIM_CURRENT_STEP_KEY);
     localStorage.removeItem(VIM_COMPLETED_STEPS_KEY);

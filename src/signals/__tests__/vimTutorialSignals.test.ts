@@ -6,6 +6,7 @@ import {
   resetVimTutorial,
   vimTutorialStepIndexSignal,
   vimStepCompletedSignal,
+  lastVimAccomplishmentSignal,
 } from '../vimTutorialSignals';
 import { VIM_TUTORIAL_STEPS } from '../../utils/vimTutorialCurriculum';
 
@@ -41,13 +42,19 @@ describe('vimTutorialSignals', () => {
     expect(vimTutorialStepIndexSignal.value).toBe(VIM_TUTORIAL_STEPS.length - 1);
   });
 
-  it('resets step index and completion signals with resetVimTutorial', () => {
+  it('resets step index, completion, and accomplishment signals with resetVimTutorial', () => {
     setVimTutorialStep(3);
     vimStepCompletedSignal.value = true;
+    lastVimAccomplishmentSignal.value = {
+      stepId: 'vim-01',
+      stepTitle: 'Lesson 1.1',
+      message: 'Done!',
+    };
     resetVimTutorial();
 
     expect(vimTutorialStepIndexSignal.value).toBe(0);
     expect(vimStepCompletedSignal.value).toBe(false);
+    expect(lastVimAccomplishmentSignal.value).toBeNull();
   });
 
   it('returns null when advancing past the last step', () => {

@@ -75,6 +75,52 @@
   background: #15803d;
 }
 
+.vimtut-accomplishment-banner {
+  background: #022c22;
+  border-left: 3px solid #10b981;
+  border-radius: 0 4px 4px 0;
+  color: #a7f3d0;
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  animation: fadeIn 0.2s ease-in;
+}
+
+.vimtut-accomplishment-check {
+  color: #34d399;
+  font-weight: 700;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.vimtut-accomplishment-label {
+  color: #6ee7b7;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  margin-right: 4px;
+}
+
+.vimtut-accomplishment-title {
+  color: #f0fdf4;
+  font-weight: 600;
+}
+
+.vimtut-accomplishment-msg {
+  color: #a7f3d0;
+}
+
+.vimtut-autoadvance-indicator {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #a7f3d0;
+  opacity: 0.9;
+  font-style: italic;
+}
+
 .vimtut-instruction-box {
   background-color: #27272a;
   border-left: 3px solid #38bdf8;

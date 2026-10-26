@@ -53,20 +53,30 @@ describe('VimTutHeader', () => {
     expect(onAdvanceStep).toHaveBeenCalled();
   });
 
-  it('shows keymap instructions for Enter and :n when step is completed', () => {
+  it('shows auto-advancing indicator when step is completed', () => {
     vimTutorialSignals.vimStepCompletedSignal.value = true;
     const onAdvanceStep = vi.fn();
 
     render(<VimTutHeader onAdvanceStep={onAdvanceStep} />);
 
-    expect(screen.getByText(/Press/i)).toBeTruthy();
-    expect(screen.getByText('Enter')).toBeTruthy();
-    expect(screen.getByText(':n')).toBeTruthy();
+    expect(screen.getByTestId('vimtut-success-banner')).toBeTruthy();
+    expect(screen.getByText(/Advancing to next task/i)).toBeTruthy();
+  });
 
-    const continueBtn = screen.getByRole('button', { name: /Continue \[Enter\]/i });
-    fireEvent.click(continueBtn);
+  it('displays accomplishment banner above instructions when a previous step was completed', () => {
+    vimTutorialSignals.lastVimAccomplishmentSignal.value = {
+      stepId: 'vim-01-hjkl',
+      stepTitle: 'Lesson 1.1: Moving the Cursor (h, j, k, l)',
+      message: 'Great job! You navigated to the target using hjkl motions.',
+    };
 
-    expect(onAdvanceStep).toHaveBeenCalled();
+    render(<VimTutHeader />);
+
+    const banner = screen.getByTestId('vimtut-accomplishment');
+    expect(banner).toBeTruthy();
+    expect(screen.getByText(/Accomplished:/i)).toBeTruthy();
+    expect(banner.querySelector('.vimtut-accomplishment-title')?.textContent).toContain('Lesson 1.1: Moving the Cursor');
+    expect(screen.getByText(/Great job! You navigated to the target/i)).toBeTruthy();
   });
 
   it('calls onRestartStep when Restart Step clicked', () => {

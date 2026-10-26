@@ -191,4 +191,54 @@ describe('MonacoCore', () => {
 
     unmount();
   });
+
+  it('auto-advances tutorial step and records accomplishment when step condition is met', async () => {
+    vi.useFakeTimers();
+    vi.spyOn(navigationUtils, 'parseLocation').mockReturnValue({
+      activityKey: 'edit',
+      contentKey: 'vimtut',
+      groupKey: null,
+    });
+
+    const mockEditor = {
+      dispose: vi.fn(),
+      focus: vi.fn(),
+      getValue: vi.fn(() => ''),
+      getModel: vi.fn(() => ({
+        getValue: vi.fn(() => ''),
+        getLanguageId: vi.fn(() => 'plaintext'),
+      })),
+      setValue: vi.fn(),
+      setPosition: vi.fn(),
+      revealPosition: vi.fn(),
+      // Position that satisfies Lesson 1.1 targetCursor (line 3, col 36)
+      getPosition: vi.fn(() => ({ lineNumber: 3, column: 36 })),
+      onDidChangeCursorPosition: vi.fn(() => ({ dispose: vi.fn() })),
+      onDidChangeModelContent: vi.fn(() => ({ dispose: vi.fn() })),
+      updateOptions: vi.fn(),
+      onDidBlurEditorText: vi.fn(),
+      onDidFocusEditorText: vi.fn(),
+      onKeyDown: vi.fn().mockReturnValue({ dispose: vi.fn() }),
+    };
+    (monaco.editor.create as any).mockReturnValue(mockEditor);
+    (initVimMode as any).mockReturnValue({ dispose: vi.fn(), on: vi.fn() });
+
+    vimTutorialSignals.resetVimTutorial();
+    expect(vimTutorialSignals.vimTutorialStepIndexSignal.value).toBe(0);
+
+    const { unmount } = render(<MonacoCore mode="editor" value="" {...{containerRef: mockContainerRef, statusBarRef: mockStatusBarRef}} /> as any);
+
+    // Initial check conditions ran; it passed because cursor is on target
+    expect(vimTutorialSignals.vimStepCompletedSignal.value).toBe(true);
+    expect(vimTutorialSignals.lastVimAccomplishmentSignal.value?.stepId).toBe('vim-01-hjkl');
+
+    // Fast-forward past the 400ms auto-advance timer
+    vi.advanceTimersByTime(500);
+
+    // Step index should now be advanced to 1
+    expect(vimTutorialSignals.vimTutorialStepIndexSignal.value).toBe(1);
+
+    unmount();
+    vi.useRealTimers();
+  });
 });

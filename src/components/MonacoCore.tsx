@@ -15,12 +15,14 @@ import { putFile } from '../utils/awsApiClient';
 import { setChordGlyphScale } from '../signals/appSignals';
 import { Data, Either } from 'effect';
 import { VimTutHeader } from './VimTutHeader';
+import { VIM_TUTORIAL_STEPS } from '../utils/vimTutorialCurriculum';
 import {
   getCurrentVimStep,
   advanceVimTutorial,
   evaluateVimStepConditions,
   vimStepCompletedSignal,
   vimStepMessageSignal,
+  lastVimAccomplishmentSignal,
   vimTutorialStepIndexSignal,
   updateCompletedVimTutorials,
 } from '../signals/vimTutorialSignals';
@@ -216,9 +218,14 @@ export default function MonacoCore({ value, language = 'text', toggleVideo, mode
   const isVimTut = mode === 'editor' && parseLocation().contentKey === 'vimtut';
   const [vimCursor, setVimCursor] = useState<{ lineNumber: number; column: number }>({ lineNumber: 1, column: 1 });
   const [vimModeState, setVimModeState] = useState<string>('normal');
+  const autoAdvanceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleVimTutAdvanceRef = useRef<() => void>(() => {});
   const handleVimTutAdvance = useCallback(() => {
+    if (autoAdvanceTimerRef.current) {
+      clearTimeout(autoAdvanceTimerRef.current);
+      autoAdvanceTimerRef.current = null;
+    }
     const nextStep = advanceVimTutorial();
     if (nextStep && editorRef.current) {
       editorRef.current.setValue(nextStep.initialText);
@@ -533,8 +540,26 @@ export default function MonacoCore({ value, language = 'text', toggleVideo, mode
       if (passed) {
         logger.info(`Vim tutorial step ${step.id} completed!`);
         vimStepCompletedSignal.value = true;
-        vimStepMessageSignal.value = step.successMessage ?? 'Step completed!';
+        const msg = step.successMessage ?? 'Step completed!';
+        vimStepMessageSignal.value = msg;
         updateCompletedVimTutorials(prev => new Set(prev).add(step.id));
+        lastVimAccomplishmentSignal.value = {
+          stepId: step.id,
+          stepTitle: step.title,
+          message: msg,
+        };
+
+        const totalSteps = VIM_TUTORIAL_STEPS.length;
+        const isLastStep = vimTutorialStepIndexSignal.value >= totalSteps - 1;
+        if (!isLastStep) {
+          if (autoAdvanceTimerRef.current) {
+            clearTimeout(autoAdvanceTimerRef.current);
+          }
+          autoAdvanceTimerRef.current = setTimeout(() => {
+            handleVimTutAdvanceRef.current();
+            autoAdvanceTimerRef.current = null;
+          }, 400);
+        }
       }
     };
 
@@ -552,6 +577,10 @@ export default function MonacoCore({ value, language = 'text', toggleVideo, mode
     return () => {
       cursorSub.dispose();
       modelSub.dispose();
+      if (autoAdvanceTimerRef.current) {
+        clearTimeout(autoAdvanceTimerRef.current);
+        autoAdvanceTimerRef.current = null;
+      }
     };
   }, [isVimTut, vimTutorialStepIndexSignal.value, vimModeState]);
 

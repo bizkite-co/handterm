@@ -5,6 +5,7 @@ import {
   vimTutorialStepIndexSignal,
   vimStepCompletedSignal,
   vimStepMessageSignal,
+  lastVimAccomplishmentSignal,
   advanceVimTutorial,
   setVimTutorialStep,
 } from '../signals/vimTutorialSignals';
@@ -31,6 +32,7 @@ export function VimTutHeader({
   const stepIndex = useComputed(() => vimTutorialStepIndexSignal.value).value;
   const isCompleted = useComputed(() => vimStepCompletedSignal.value).value;
   const successMsg = useComputed(() => vimStepMessageSignal.value).value;
+  const lastAccomplishment = useComputed(() => lastVimAccomplishmentSignal.value).value;
 
   const totalSteps = VIM_TUTORIAL_STEPS.length;
   const isLastStep = stepIndex >= totalSteps - 1;
@@ -97,6 +99,17 @@ export function VimTutHeader({
         </div>
       </div>
 
+      {lastAccomplishment && (
+        <div className="vimtut-accomplishment-banner" data-testid="vimtut-accomplishment">
+          <span className="vimtut-accomplishment-check">✓</span>
+          <span className="vimtut-accomplishment-content">
+            <strong className="vimtut-accomplishment-label">Accomplished:</strong>{' '}
+            <span className="vimtut-accomplishment-title">{lastAccomplishment.stepTitle}</span> —{' '}
+            <span className="vimtut-accomplishment-msg">{lastAccomplishment.message}</span>
+          </span>
+        </div>
+      )}
+
       <div className="vimtut-instruction-box">
         {step.instruction}
       </div>
@@ -110,19 +123,10 @@ export function VimTutHeader({
       {isCompleted && (
         <div className="vimtut-success-banner" data-testid="vimtut-success-banner">
           <span>🎉 {successMsg ?? step.successMessage ?? 'Step completed!'}</span>
-          {!isLastStep && (
-            <div className="vimtut-continue-actions">
-              <span className="vimtut-keymap-prompt">
-                Press <kbd>Enter</kbd> or type <kbd>:n</kbd> to continue
-              </span>
-              <button
-                type="button"
-                className="vimtut-btn vimtut-btn-primary"
-                onClick={handleNext}
-              >
-                Continue [Enter] ➔
-              </button>
-            </div>
+          {!isLastStep ? (
+            <span className="vimtut-autoadvance-indicator">Advancing to next task...</span>
+          ) : (
+            <span className="vimtut-autoadvance-indicator">All lessons completed! Type :q to exit</span>
           )}
         </div>
       )}
