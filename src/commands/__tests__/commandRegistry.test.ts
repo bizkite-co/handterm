@@ -76,4 +76,15 @@ describe('CommandRegistry help', () => {
     expect(registry.listCommands()).toHaveLength(1);
     expect(registry.getHelp()).toContain('chars, char');
   });
+
+  test('live global commandRegistry contains ta and subcommands after index registration', async () => {
+    await import('../index');
+    const { commandRegistry: liveRegistry } = await import('../commandRegistry');
+
+    const help = liveRegistry.getHelp();
+    expect(help).toContain('ta, task');
+    expect(help).toContain('ta list');
+    expect(help).toContain('ta new');
+    expect(help).toContain('ta active');
+  });
 });
