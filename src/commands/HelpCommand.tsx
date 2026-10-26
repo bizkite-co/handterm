@@ -8,7 +8,7 @@ import { type ParsedCommand } from '../types/Types';
 export const HelpCommand: ICommand = {
   name: 'help',
   aliases: ['411'],
-  description: 'Display help information (usage: help [filter])',
+  description: 'Display help information (usage: help [command])',
   execute: (
     _context: ICommandContext,
     parsedCommand: ParsedCommand,

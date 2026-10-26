@@ -6,6 +6,15 @@ export type ICommandRegistryItems = Record<string, ICommand>;
 
 type HelpEntry = { name: string; description: string };
 
+function escapeHtml(text: string): string {
+    return text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
 function commandHelpName(cmd: ICommand): string {
     if (cmd.aliases !== undefined && cmd.aliases.length > 0) {
         return [cmd.name, ...cmd.aliases].join(', ');
@@ -13,9 +22,13 @@ function commandHelpName(cmd: ICommand): string {
     return cmd.name;
 }
 
+function primaryHelpEntryFor(cmd: ICommand): HelpEntry {
+    return { name: commandHelpName(cmd), description: cmd.description };
+}
+
 function helpEntriesFor(cmd: ICommand): HelpEntry[] {
     const entries: HelpEntry[] = [
-        { name: commandHelpName(cmd), description: cmd.description },
+        primaryHelpEntryFor(cmd),
     ];
     if (cmd.switches) {
         for (const [key, desc] of Object.entries(cmd.switches)) {
@@ -36,7 +49,7 @@ function formatHelpEntries(entries: HelpEntry[]): string {
     }
     const maxLen = Math.max(...entries.map(e => e.name.length));
     return entries
-        .map(e => `<span class="cmd-name">${e.name.padEnd(maxLen)}</span>  <span class="cmd-desc">${e.description}</span>`)
+        .map(e => `<span class="cmd-name">${escapeHtml(e.name.padEnd(maxLen))}</span>  <span class="cmd-desc">${escapeHtml(e.description)}</span>`)
         .join('\n');
 }
 
@@ -69,14 +82,40 @@ export class CommandRegistry {
     }
 
     /**
-     * Help text for every currently registered command (and each command's
-     * switches/subcommands). Built from the live registry so a newly
-     * registered command appears with no extra wiring.
+     * Help text for commands.
+     * - When called without a filter, lists only primary registered commands
+     *   (names/aliases and description) so the output is concise and readable.
+     * - When called with a filter matching a specific command (or alias), returns
+     *   detailed help for that command including its switches and subcommands.
+     * - When called with a filter matching multiple commands, lists the matching
+     *   primary commands.
      */
     getHelp(filter?: string): string {
-        const commands = this.listCommands()
-            .filter(cmd => !filter || cmd.name.includes(filter));
-        return formatHelpEntries(commands.flatMap(helpEntriesFor));
+        const trimmedFilter = filter?.trim();
+        if (!trimmedFilter) {
+            return formatHelpEntries(this.listCommands().map(primaryHelpEntryFor));
+        }
+
+        const directMatch = this.getCommand(trimmedFilter);
+        if (directMatch) {
+            return formatHelpEntries(helpEntriesFor(directMatch));
+        }
+
+        const lowerFilter = trimmedFilter.toLowerCase();
+        const matching = this.listCommands().filter(cmd =>
+            cmd.name.toLowerCase().includes(lowerFilter) ||
+            cmd.aliases?.some(a => a.toLowerCase().includes(lowerFilter))
+        );
+
+        if (matching.length === 1) {
+            return formatHelpEntries(helpEntriesFor(matching[0]));
+        }
+
+        if (matching.length > 1) {
+            return formatHelpEntries(matching.map(primaryHelpEntryFor));
+        }
+
+        return '';
     }
 
     /**

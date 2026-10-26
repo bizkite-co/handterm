@@ -54,6 +54,28 @@ describe('HelpCommand', () => {
     expect(res.message).not.toContain('chord-display-container');
   });
 
+  it('shows subcommands when querying a specific command (e.g. help testcmd)', async () => {
+    commandRegistry.register({
+      name: 'testcmd',
+      description: 'Test command description',
+      subcommands: { sub1: 'Subcommand 1 description' },
+      switches: { flag: 'A switch flag' },
+      execute: vi.fn(),
+    });
+
+    const parsedCommand: ParsedCommand = {
+      command: 'help',
+      args: ['testcmd'],
+      switches: {},
+    };
+
+    const res = await HelpCommand.execute(createMockContext(), parsedCommand);
+    expect(res.status).toBe(200);
+    expect(res.message).toContain('testcmd');
+    expect(res.message).toContain('testcmd sub1');
+    expect(res.message).toContain('testcmd -flag');
+  });
+
   it('returns 404 message when no commands match the filter', async () => {
     const parsedCommand: ParsedCommand = {
       command: 'help',
