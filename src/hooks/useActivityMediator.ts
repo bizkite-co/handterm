@@ -298,10 +298,6 @@ export function useActivityMediator(): {
         if (parseLocation().activityKey === ActivityType.TUTORIAL) {
             checkTutorialProgress(parsedCommand.command);
         }
-        else if (parseLocation().activityKey === ActivityType.GAME && parseLocation().contentKey != null) {
-            const gamePhrase = GamePhrases.getGamePhraseByKey(parseLocation().contentKey ?? '')
-            if (gamePhrase != null) checkGameProgress(gamePhrase);
-        }
         switch (parsedCommand.command) {
             // `play` and `tut` are registered commands (PlayCommand,
             // TutCommand) that navigate themselves; they no longer need
@@ -331,7 +327,7 @@ export function useActivityMediator(): {
         }
 
         return result;
-    }, [checkGameProgress, checkTutorialProgress]);
+    }, [checkTutorialProgress]);
 
     useEffect(() => {
         if (activityState !== ActivityType.TUTORIAL) {
