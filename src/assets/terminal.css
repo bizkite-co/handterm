@@ -193,8 +193,10 @@ div.terminal {
   z-index: 10;
 }
 
+.chord-image-holder .char,
 #chord-image-holder .char {
-  font-size: 35px;
+  font-size: var(--terminal-font-size);
+  font-family: var(--terminal-font-family);
 }
 
 #timer-root {
