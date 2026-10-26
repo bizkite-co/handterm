@@ -96,13 +96,14 @@ export function useAuth(): IAuthProps {
       }
     },
     retry: (failureCount: number, error: unknown): boolean => {
-      if (axios.isAxiosError(error) && error.response?.status === 500) {
-        if(failureCount > 50){
+      if (axios.isAxiosError(error)) {
+        const status = error.response?.status;
+        if (status === 401 || status === 400 || status === 403 || status === 500) {
           clearTokens();
+          return false;
         }
-        return false;
       }
-      return failureCount < 3;
+      return failureCount < 2;
     },
     retryDelay: (attemptIndex: number): number => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
@@ -185,13 +186,23 @@ export function useAuth(): IAuthProps {
 
         // If token is expired or will expire within buffer time
         if (currentTime + bufferTime > expirationTime) {
-          const response = await refreshMutation.mutateAsync();
-          if ((response.data?.AccessToken) != null) {
-            setIsLoggedIn(true);
+          try {
+            const response = await refreshMutation.mutateAsync();
+            if ((response.data?.AccessToken) != null) {
+              setIsLoggedIn(true);
+              return {
+                status: 200,
+                data: response.data,
+                message: "Token refreshed",
+                error: []
+              };
+            }
+          } catch (error) {
+            logger.warn('Token refresh failed during validation, clearing tokens:', error);
+            clearTokens();
             return {
-              status: 200,
-              data: response.data,
-              message: "Token refreshed",
+              status: 401,
+              message: "Token refresh failed",
               error: []
             };
           }

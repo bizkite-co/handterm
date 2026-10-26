@@ -1,5 +1,5 @@
 import { navigate } from 'src/utils/navigationUtils';
-import { ActivityType, StorageKeys } from '@handterm/types';
+import { ActivityType } from '@handterm/types';
 import { type ICommand, type ICommandContext, type ICommandResponse } from '../contexts/CommandContext';
 import { type ParsedCommand } from '../types/Types';
 import {
@@ -7,22 +7,45 @@ import {
   resetCompletedTutorials,
   setNextTutorial,
 } from '../signals/tutorialSignals';
-import { resetCompletedGamePhrases, setGameLevel } from '../signals/gameSignals';
+import {
+  getNextGamePhrase,
+  resetCompletedGamePhrases,
+  setGameLevel,
+  setGamePhrase,
+} from '../signals/gameSignals';
 import { createLogger } from '../utils/Logger';
 
 const logger = createLogger({ prefix: 'ResetCommand' });
+
+const AUTH_KEY_NAMES = new Set([
+  'accesstoken',
+  'refreshtoken',
+  'idtoken',
+  'expiresat',
+  'expiresin',
+  'githubusername',
+  'github_access_token',
+  'username',
+]);
 
 export function resetAll(): void {
   logger.info('Resetting all tutorial and game progress');
   resetCompletedTutorials();
   resetCompletedGamePhrases();
   setGameLevel(1);
+  setGamePhrase(getNextGamePhrase());
 
   try {
-    localStorage.removeItem(StorageKeys.completedTutorials);
-    localStorage.removeItem('completed-game-phrases');
-    localStorage.removeItem('game-level');
-    localStorage.removeItem(StorageKeys.hasVisited);
+    const keysToRemove: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && !AUTH_KEY_NAMES.has(key.toLowerCase()) && !key.toLowerCase().startsWith('auth_')) {
+        keysToRemove.push(key);
+      }
+    }
+    for (const key of keysToRemove) {
+      localStorage.removeItem(key);
+    }
   } catch (e) {
     logger.warn('Failed to remove keys from localStorage during reset:', e);
   }

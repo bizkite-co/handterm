@@ -16,6 +16,8 @@ vi.mock('src/signals/tutorialSignals', () => ({
 vi.mock('src/signals/gameSignals', () => ({
   resetCompletedGamePhrases: vi.fn(),
   setGameLevel: vi.fn(),
+  getNextGamePhrase: vi.fn(() => ({ key: 'first-eight', value: 'All sad lads', tutorialGroup: 'single-click' })),
+  setGamePhrase: vi.fn(),
 }));
 
 vi.mock('src/utils/navigationUtils', () => ({
@@ -44,11 +46,36 @@ describe('ResetCommand', () => {
       expect(tutorialSignals.resetCompletedTutorials).toHaveBeenCalledTimes(1);
       expect(gameSignals.resetCompletedGamePhrases).toHaveBeenCalledTimes(1);
       expect(gameSignals.setGameLevel).toHaveBeenCalledWith(1);
+      expect(gameSignals.setGamePhrase).toHaveBeenCalled();
       expect(navigationUtils.navigate).toHaveBeenCalledWith({
         activityKey: ActivityType.TUTORIAL,
         contentKey: 'a',
         groupKey: 'home',
       });
+    });
+
+    it('clears all non-auth items from localStorage while preserving login credentials', () => {
+      localStorage.setItem('AccessToken', 'secret-access-token');
+      localStorage.setItem('RefreshToken', 'secret-refresh-token');
+      localStorage.setItem('IdToken', 'secret-id-token');
+      localStorage.setItem('userName', 'testuser');
+      localStorage.setItem('completed-tutorials', '["a"]');
+      localStorage.setItem('completed-game-phrases', '["g1"]');
+      localStorage.setItem('phrasesAchieved', '["60:phrase1"]');
+      localStorage.setItem('tutorial-state', '{"step": 1}');
+      localStorage.setItem('handterm-has-visited', 'true');
+
+      resetAll();
+
+      expect(localStorage.getItem('AccessToken')).toBe('secret-access-token');
+      expect(localStorage.getItem('RefreshToken')).toBe('secret-refresh-token');
+      expect(localStorage.getItem('IdToken')).toBe('secret-id-token');
+      expect(localStorage.getItem('userName')).toBe('testuser');
+      expect(localStorage.getItem('completed-tutorials')).toBeNull();
+      expect(localStorage.getItem('completed-game-phrases')).toBeNull();
+      expect(localStorage.getItem('phrasesAchieved')).toBeNull();
+      expect(localStorage.getItem('tutorial-state')).toBeNull();
+      expect(localStorage.getItem('handterm-has-visited')).toBeNull();
     });
   });
 
