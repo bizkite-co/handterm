@@ -70,4 +70,25 @@ describe('MonacoCore - defineVimCommands', () => {
 
     expect(onAdvanceSpy).toHaveBeenCalledTimes(1);
   });
+
+  it('defines the :h / :hint and :r / :restart commands', () => {
+    const defineExSpy = vi.fn();
+    (monacoVim as any).VimMode = {
+      Vim: {
+        defineEx: defineExSpy,
+      },
+    };
+
+    const onRestartSpy = vi.fn();
+    defineVimCommands(mockEditorRef, undefined, undefined, undefined, undefined, onRestartSpy);
+
+    expect(defineExSpy).toHaveBeenCalledWith('h', '', expect.any(Function));
+    expect(defineExSpy).toHaveBeenCalledWith('hint', '', expect.any(Function));
+    expect(defineExSpy).toHaveBeenCalledWith('r', '', expect.any(Function));
+    expect(defineExSpy).toHaveBeenCalledWith('restart', '', expect.any(Function));
+
+    const restartCallback = defineExSpy.mock.calls.find(call => call[0] === 'r')[2];
+    restartCallback();
+    expect(onRestartSpy).toHaveBeenCalledTimes(1);
+  });
 });

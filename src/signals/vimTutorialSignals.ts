@@ -35,6 +35,11 @@ export const { signal: completedVimTutorialsSignal, update: updateCompletedVimTu
 
 export const vimStepCompletedSignal = signal<boolean>(false);
 export const vimStepMessageSignal = signal<string | null>(null);
+export const showVimHintSignal = signal<boolean>(false);
+
+export const toggleVimHint = (): void => {
+  showVimHintSignal.value = !showVimHintSignal.value;
+};
 
 export interface VimAccomplishment {
   stepId: string;
@@ -58,6 +63,7 @@ export function setVimTutorialStep(index: number): VimTutorialStep {
   updateVimTutorialStepIndex(safeIndex);
   vimStepCompletedSignal.value = false;
   vimStepMessageSignal.value = null;
+  showVimHintSignal.value = false;
   return VIM_TUTORIAL_STEPS[safeIndex]!;
 }
 
@@ -76,6 +82,7 @@ export function resetVimTutorial(): void {
   vimStepCompletedSignal.value = false;
   vimStepMessageSignal.value = null;
   lastVimAccomplishmentSignal.value = null;
+  showVimHintSignal.value = false;
   try {
     localStorage.removeItem(VIM_CURRENT_STEP_KEY);
     localStorage.removeItem(VIM_COMPLETED_STEPS_KEY);

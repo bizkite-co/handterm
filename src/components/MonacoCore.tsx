@@ -12,9 +12,9 @@ import type { JSX } from 'react';
 import { createLogger, LogLevel } from '../utils/Logger';
 import type { IAuthProps } from '../types/HandTerm';
 import { putFile } from '../utils/awsApiClient';
-import { setChordGlyphScale } from '../signals/appSignals';
+import { setChordGlyphScale, appendToOutput } from '../signals/appSignals';
 import { Data, Either } from 'effect';
-import { VimTutHeader } from './VimTutHeader';
+import { VimGuide } from './VimGuide';
 import { VIM_TUTORIAL_STEPS } from '../utils/vimTutorialCurriculum';
 import {
   getCurrentVimStep,
@@ -25,6 +25,7 @@ import {
   lastVimAccomplishmentSignal,
   vimTutorialStepIndexSignal,
   updateCompletedVimTutorials,
+  toggleVimHint,
 } from '../signals/vimTutorialSignals';
 
 const logger = createLogger({
@@ -58,7 +59,8 @@ export function defineVimCommands(
   auth?: IAuthProps,
   toggleVideo?: () => boolean,
   onSaveResult?: (result: Either.Either<void, SaveError>) => void,
-  onVimTutAdvance?: () => void
+  onVimTutAdvance?: () => void,
+  onVimTutRestart?: () => void
 ): boolean {
   logger.debug("Attempting to define Vim commands...");
 
@@ -178,6 +180,26 @@ export function defineVimCommands(
       }
     });
 
+    Vim.defineEx('h', '', () => {
+      logger.debug(':h command triggered.');
+      toggleVimHint();
+    });
+
+    Vim.defineEx('hint', '', () => {
+      logger.debug(':hint command triggered.');
+      toggleVimHint();
+    });
+
+    Vim.defineEx('r', '', () => {
+      logger.debug(':r command triggered.');
+      onVimTutRestart?.();
+    });
+
+    Vim.defineEx('restart', '', () => {
+      logger.debug(':restart command triggered.');
+      onVimTutRestart?.();
+    });
+
     Vim.defineEx('next', 'n', () => {
       logger.debug(':next / :n command triggered.');
       if (onVimTutAdvance) {
@@ -239,6 +261,7 @@ export default function MonacoCore({ value, language = 'text', toggleVideo, mode
   }, []);
   handleVimTutAdvanceRef.current = handleVimTutAdvance;
 
+  const handleVimTutRestartRef = useRef<() => void>(() => {});
   const handleVimTutRestart = useCallback(() => {
     const currentStep = getCurrentVimStep();
     if (currentStep && editorRef.current) {
@@ -251,6 +274,7 @@ export default function MonacoCore({ value, language = 'text', toggleVideo, mode
       editorRef.current.focus();
     }
   }, []);
+  handleVimTutRestartRef.current = handleVimTutRestart;
 
   // Effect 1: Editor Creation (runs once on mount)
   useEffect(() => {
@@ -422,11 +446,23 @@ export default function MonacoCore({ value, language = 'text', toggleVideo, mode
             // Register alt+s to exit insert mode (same as terminal behavior)
             // and Enter to advance completed vimtut step
             editorKeydownRef.current = editor.onKeyDown((e) => {
-              if (isVimTut && vimStepCompletedSignal.value) {
-                if (e.browserEvent.key === 'Enter' || e.keyCode === monaco.KeyCode.Enter) {
+              if (isVimTut) {
+                if (vimStepCompletedSignal.value && (e.browserEvent.key === 'Enter' || e.keyCode === monaco.KeyCode.Enter)) {
                   e.preventDefault();
                   e.stopPropagation();
                   handleVimTutAdvanceRef.current();
+                  return;
+                }
+                if (e.browserEvent.key === 'h' && e.altKey) {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  toggleVimHint();
+                  return;
+                }
+                if (e.browserEvent.key === 'r' && e.altKey) {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleVimTutRestartRef.current();
                   return;
                 }
               }
@@ -447,9 +483,14 @@ export default function MonacoCore({ value, language = 'text', toggleVideo, mode
 
             defineCommandsTimeoutRef.current = setTimeout(() => {
               logger.debug("Timeout triggered: Attempting to define Vim commands now.");
-              defineVimCommands(editorRef, auth, toggleVideo, onSaveResult, () => {
-                handleVimTutAdvanceRef.current();
-              });
+              defineVimCommands(
+                editorRef,
+                auth,
+                toggleVideo,
+                onSaveResult,
+                () => handleVimTutAdvanceRef.current(),
+                () => handleVimTutRestartRef.current()
+              );
               defineCommandsTimeoutRef.current = null;
             }, 500);
           } else {
@@ -549,6 +590,17 @@ export default function MonacoCore({ value, language = 'text', toggleVideo, mode
           message: msg,
         };
 
+        // Append accomplishment directly to the terminal Output history!
+        appendToOutput({
+          command: { command: 'vimtut', args: [`step-${vimTutorialStepIndexSignal.value + 1}`], switches: {} },
+          response: `<div class="vimtut-accomplished-entry">
+            <span class="vimtut-check">✓</span> <strong>Accomplished:</strong> <span class="vimtut-step-title">${step.title}</span>
+            <div class="vimtut-step-msg">${msg}</div>
+          </div>`,
+          status: 200,
+          commandTime: new Date(),
+        });
+
         const totalSteps = VIM_TUTORIAL_STEPS.length;
         const isLastStep = vimTutorialStepIndexSignal.value >= totalSteps - 1;
         if (!isLastStep) {
@@ -606,7 +658,7 @@ export default function MonacoCore({ value, language = 'text', toggleVideo, mode
   return (
     <div data-testid="monaco-editor-container" className="monaco-editor-container" style={{ display: 'flex', flexDirection: 'column', height: '100%', flex: '1 1 auto' }}>
       {isVimTut && (
-        <VimTutHeader
+        <VimGuide
           currentCursor={vimCursor}
           currentMode={vimModeState}
           onAdvanceStep={handleVimTutAdvance}

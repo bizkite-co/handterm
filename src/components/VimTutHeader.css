@@ -1,111 +1,196 @@
-.vimtut-header-container {
-  background-color: #18181b;
-  border-bottom: 2px solid #27272a;
+/* src/components/VimTutHeader.css (VimGuide styles) */
+
+.vimtut-header-container,
+.vim-guide {
+  font-family: var(--terminal-font-family);
+  font-size: var(--terminal-font-size);
+  line-height: var(--terminal-line-height);
   color: #f4f4f5;
-  padding: 10px 16px;
-  font-family: inherit;
-  user-select: none;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+  background-color: transparent;
+  padding: 4px 0;
+  border-top: 1px solid #3f3f46;
+  border-bottom: 1px solid #3f3f46;
+  margin-bottom: 4px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;
+  user-select: none;
 }
 
-.vimtut-header-top {
+.vimtut-header-top,
+.vim-guide-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-}
-
-.vimtut-header-title-badge {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.vimtut-badge {
-  background-color: #0284c7;
-  color: #ffffff;
-  font-size: 0.75rem;
-  font-weight: 700;
-  padding: 2px 8px;
-  border-radius: 4px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.vimtut-header-title {
-  font-size: 1rem;
-  font-weight: 600;
-  color: #fafafa;
-  margin: 0;
-}
-
-.vimtut-controls {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.vimtut-btn {
-  background: #27272a;
-  border: 1px solid #3f3f46;
-  color: #e4e4e7;
-  padding: 4px 10px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 0.8rem;
   font-family: inherit;
-  transition: all 0.15s ease;
+  font-size: inherit;
+  line-height: inherit;
 }
 
-.vimtut-btn:hover {
-  background: #3f3f46;
+.vimtut-header-title-badge,
+.vim-guide-title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+}
+
+.vimtut-badge,
+.vim-guide-step-tag {
+  color: #38bdf8;
+  font-weight: 700;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+}
+
+.vimtut-header-title,
+.vim-guide-title {
+  font-size: inherit;
+  font-weight: 600;
   color: #ffffff;
+  margin: 0;
+  font-family: inherit;
+  line-height: inherit;
 }
 
-.vimtut-btn-primary {
-  background: #16a34a;
-  border-color: #22c55e;
+.vimtut-instruction-box,
+.vim-guide-instruction {
+  color: #f4f4f5;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  padding: 2px 0;
+}
+
+.vimtut-hint-box,
+.vim-guide-hint {
+  color: #facc15;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  padding: 2px 0;
+}
+
+.vimtut-controls,
+.vim-guide-commands {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  color: #9ca3af;
+}
+
+/* Terminal link commands (e.g. [:h hint], [:r restart], [:q exit]) - NO rounded buttons! */
+.vimtut-btn,
+.vim-guide-cmd {
+  background: none;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  margin: 0;
+  color: #38bdf8;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+  box-shadow: none;
+  transition: color 0.15s ease;
+}
+
+.vimtut-btn:hover,
+.vim-guide-cmd:hover {
+  background: none;
+  color: #7dd3fc;
+  text-decoration: underline;
+}
+
+.vimtut-btn:active,
+.vim-guide-cmd:active {
+  color: #bae6fd;
+}
+
+.vimtut-status-bar,
+.vim-guide-status {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  color: #9ca3af;
+}
+
+.vimtut-status-indicators {
+  display: flex;
+  gap: 16px;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+}
+
+.vimtut-status-tag {
+  color: #9ca3af;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+}
+
+/* Output history accomplishment styling */
+.vimtut-accomplished-entry {
+  font-family: var(--terminal-font-family);
+  font-size: var(--terminal-font-size);
+  line-height: var(--terminal-line-height);
+  color: #4ade80;
+  padding: 2px 0;
+}
+
+.vimtut-accomplished-entry .vimtut-check {
+  color: #4ade80;
+  font-weight: 700;
+  margin-right: 6px;
+}
+
+.vimtut-accomplished-entry .vimtut-step-title {
   color: #ffffff;
   font-weight: 600;
 }
 
-.vimtut-btn-primary:hover {
-  background: #15803d;
+.vimtut-accomplished-entry .vimtut-step-msg {
+  color: #a7f3d0;
+  margin-left: 20px;
 }
 
 .vimtut-accomplishment-banner {
-  background: #022c22;
-  border-left: 3px solid #10b981;
-  border-radius: 0 4px 4px 0;
-  color: #a7f3d0;
-  padding: 6px 12px;
-  font-size: 0.85rem;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  color: #4ade80;
+  padding: 2px 0;
   display: flex;
   align-items: center;
   gap: 8px;
-  animation: fadeIn 0.2s ease-in;
 }
 
 .vimtut-accomplishment-check {
-  color: #34d399;
+  color: #4ade80;
   font-weight: 700;
-  font-size: 1rem;
-  line-height: 1;
 }
 
 .vimtut-accomplishment-label {
-  color: #6ee7b7;
+  color: #4ade80;
   font-weight: 700;
-  text-transform: uppercase;
-  font-size: 0.75rem;
-  letter-spacing: 0.05em;
-  margin-right: 4px;
 }
 
 .vimtut-accomplishment-title {
-  color: #f0fdf4;
+  color: #ffffff;
   font-weight: 600;
 }
 
@@ -113,93 +198,10 @@
   color: #a7f3d0;
 }
 
-.vimtut-autoadvance-indicator {
-  font-size: 0.8rem;
-  font-weight: 500;
-  color: #a7f3d0;
-  opacity: 0.9;
-  font-style: italic;
-}
-
-.vimtut-instruction-box {
-  background-color: #27272a;
-  border-left: 3px solid #38bdf8;
-  padding: 8px 12px;
-  border-radius: 0 4px 4px 0;
-  font-size: 0.9rem;
-  line-height: 1.4;
-  color: #e4e4e7;
-}
-
-.vimtut-hint-box {
-  background-color: #3b2a0c;
-  border-left: 3px solid #eab308;
-  padding: 6px 12px;
-  font-size: 0.85rem;
-  color: #fef08a;
-  border-radius: 0 4px 4px 0;
-}
-
-.vimtut-status-bar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 0.8rem;
-  color: #a1a1aa;
-}
-
-.vimtut-status-indicators {
-  display: flex;
-  gap: 14px;
-}
-
-.vimtut-status-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-
 .vimtut-success-banner {
-  background: #064e3b;
-  border: 1px solid #059669;
-  color: #6ee7b7;
-  padding: 8px 12px;
-  border-radius: 4px;
-  font-weight: 600;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  animation: fadeIn 0.2s ease-in;
-}
-
-.vimtut-continue-actions {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.vimtut-keymap-prompt {
-  font-size: 0.85rem;
-  color: #a7f3d0;
-  font-weight: 500;
-}
-
-.vimtut-keymap-prompt kbd {
-  background-color: #065f46;
-  border: 1px solid #10b981;
-  border-radius: 3px;
-  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
-  color: #ffffff;
-  display: inline-block;
-  font-size: 0.8rem;
   font-family: inherit;
-  font-weight: 700;
-  line-height: 1;
-  padding: 2px 6px;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-4px); }
-  to { opacity: 1; transform: translateY(0); }
+  font-size: inherit;
+  line-height: inherit;
+  color: #4ade80;
+  padding: 2px 0;
 }

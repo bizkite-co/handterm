@@ -28,27 +28,27 @@ describe('VimTutHeader', () => {
     expect(screen.getByText(/Ln 3, Col 12/i)).toBeTruthy();
   });
 
-  it('toggles hint when hint button clicked', () => {
+  it('toggles hint when hint command clicked', () => {
     render(<VimTutHeader />);
 
-    const hintBtn = screen.getByRole('button', { name: /💡 Hint/i });
+    const hintCmd = screen.getByText(/\[:h hint\]/i);
     expect(screen.queryByText(/Make sure you are in NORMAL mode/i)).toBeNull();
 
-    fireEvent.click(hintBtn);
+    fireEvent.click(hintCmd);
     expect(screen.getByText(/Make sure you are in NORMAL mode/i)).toBeTruthy();
 
-    fireEvent.click(hintBtn);
+    const hideHintCmd = screen.getByText(/\[:h hide hint\]/i);
+    fireEvent.click(hideHintCmd);
     expect(screen.queryByText(/Make sure you are in NORMAL mode/i)).toBeNull();
   });
 
-  it('calls onAdvanceStep when Next Step clicked', () => {
-    vimTutorialSignals.vimStepCompletedSignal.value = true;
+  it('calls onAdvanceStep when [:n next] clicked', () => {
     const onAdvanceStep = vi.fn();
 
     render(<VimTutHeader onAdvanceStep={onAdvanceStep} />);
 
-    const nextButtons = screen.getAllByRole('button', { name: /Next Step/i });
-    fireEvent.click(nextButtons[0]!);
+    const nextCmd = screen.getByText(/\[:n next\]/i);
+    fireEvent.click(nextCmd);
 
     expect(onAdvanceStep).toHaveBeenCalled();
   });
@@ -79,13 +79,13 @@ describe('VimTutHeader', () => {
     expect(screen.getByText(/Great job! You navigated to the target/i)).toBeTruthy();
   });
 
-  it('calls onRestartStep when Restart Step clicked', () => {
+  it('calls onRestartStep when [:r restart] clicked', () => {
     const onRestartStep = vi.fn();
 
     render(<VimTutHeader onRestartStep={onRestartStep} />);
 
-    const restartBtn = screen.getByRole('button', { name: /Restart Step/i });
-    fireEvent.click(restartBtn);
+    const restartCmd = screen.getByText(/\[:r restart\]/i);
+    fireEvent.click(restartCmd);
 
     expect(onRestartStep).toHaveBeenCalled();
   });

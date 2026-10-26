@@ -107,7 +107,7 @@ export function App(): JSX.Element {
             auth={auth}
             handTermRef={handexTermWrapperRef}
           >
-            {parseLocation().activityKey !== ActivityType.EDIT
+            {(parseLocation().activityKey !== ActivityType.EDIT || parseLocation().contentKey === 'vimtut')
               && parseLocation().activityKey !== ActivityType.BROWSE
               && <Output />
             }

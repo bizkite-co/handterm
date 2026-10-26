@@ -5,6 +5,7 @@ import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 import { initVimMode } from 'monaco-vim';
 import * as navigationUtils from '../utils/navigationUtils';
 import * as vimTutorialSignals from '../signals/vimTutorialSignals';
+import * as appSignals from '../signals/appSignals';
 
 // Mock the entire monaco-editor module *once* before all tests.
 vi.mock('monaco-editor/esm/vs/editor/editor.api', () => ({
@@ -232,7 +233,11 @@ describe('MonacoCore', () => {
     expect(vimTutorialSignals.vimStepCompletedSignal.value).toBe(true);
     expect(vimTutorialSignals.lastVimAccomplishmentSignal.value?.stepId).toBe('vim-01-hjkl');
 
-    // Fast-forward past the 400ms auto-advance timer
+    // Accomplishment should be recorded into terminal Output elements
+    const outputs = appSignals.outputElementsSignal.value;
+    expect(outputs.some(o => typeof o.response === 'string' && o.response.includes('Accomplished:'))).toBe(true);
+
+    // Fast-forward past the 300ms auto-advance timer
     vi.advanceTimersByTime(500);
 
     // Step index should now be advanced to 1

@@ -1,4 +1,4 @@
-import { useState, type JSX } from 'react';
+import { useState, useEffect, type JSX } from 'react';
 import { useComputed } from '@preact/signals-react';
 import {
   currentVimStepSignal,
@@ -6,6 +6,8 @@ import {
   vimStepCompletedSignal,
   vimStepMessageSignal,
   lastVimAccomplishmentSignal,
+  showVimHintSignal,
+  toggleVimHint,
   advanceVimTutorial,
   setVimTutorialStep,
 } from '../signals/vimTutorialSignals';
@@ -14,32 +16,41 @@ import { navigate } from '../utils/navigationUtils';
 import { ActivityType } from '@handterm/types';
 import './VimTutHeader.css';
 
-interface VimTutHeaderProps {
+export interface VimGuideProps {
   currentCursor?: { lineNumber: number; column: number };
   currentMode?: string;
   onAdvanceStep?: () => void;
   onRestartStep?: () => void;
 }
 
-export function VimTutHeader({
+export function VimGuide({
   currentCursor = { lineNumber: 1, column: 1 },
   currentMode = 'normal',
   onAdvanceStep,
   onRestartStep,
-}: VimTutHeaderProps): JSX.Element {
-  const [showHint, setShowHint] = useState(false);
+}: VimGuideProps): JSX.Element {
+  const [showHint, setShowHint] = useState(() => showVimHintSignal.value);
   const step = useComputed(() => currentVimStepSignal.value).value;
   const stepIndex = useComputed(() => vimTutorialStepIndexSignal.value).value;
   const isCompleted = useComputed(() => vimStepCompletedSignal.value).value;
   const successMsg = useComputed(() => vimStepMessageSignal.value).value;
   const lastAccomplishment = useComputed(() => lastVimAccomplishmentSignal.value).value;
 
+  useEffect(() => {
+    return showVimHintSignal.subscribe((val) => {
+      setShowHint(val);
+    });
+  }, []);
+
   const totalSteps = VIM_TUTORIAL_STEPS.length;
   const isLastStep = stepIndex >= totalSteps - 1;
 
+  const handleToggleHint = () => {
+    toggleVimHint();
+  };
+
   const handleNext = () => {
     advanceVimTutorial();
-    setShowHint(false);
     onAdvanceStep?.();
   };
 
@@ -54,48 +65,56 @@ export function VimTutHeader({
   };
 
   return (
-    <div className="vimtut-header-container" data-testid="vimtut-header">
-      <div className="vimtut-header-top">
-        <div className="vimtut-header-title-badge">
-          <span className="vimtut-badge">
-            Step {stepIndex + 1} of {totalSteps}
+    <div className="vim-guide vimtut-header-container" data-testid="vimtut-header">
+      <div className="vim-guide-header vimtut-header-top">
+        <div className="vim-guide-title-group vimtut-header-title-badge">
+          <span className="vim-guide-step-tag vimtut-badge">
+            Step {stepIndex + 1} of {totalSteps}:
           </span>
-          <h2 className="vimtut-header-title">{step.title}</h2>
+          <h2 className="vim-guide-title vimtut-header-title">{step.title}</h2>
         </div>
 
-        <div className="vimtut-controls">
+        <div className="vim-guide-commands vimtut-controls">
           {step.hint && (
-            <button
-              type="button"
-              className="vimtut-btn"
-              onClick={() => setShowHint(!showHint)}
+            <span
+              role="button"
+              tabIndex={0}
+              className="vim-guide-cmd vimtut-btn"
+              onClick={handleToggleHint}
+              onKeyDown={(e) => { if (e.key === 'Enter') handleToggleHint(); }}
             >
-              {showHint ? 'Hide Hint' : '💡 Hint'}
-            </button>
+              {showHint ? '[:h hide hint]' : '[:h hint]'}
+            </span>
           )}
-          <button
-            type="button"
-            className="vimtut-btn"
+          <span
+            role="button"
+            tabIndex={0}
+            className="vim-guide-cmd vimtut-btn"
             onClick={handleRestart}
+            onKeyDown={(e) => { if (e.key === 'Enter') handleRestart(); }}
           >
-            Restart Step
-          </button>
-          {isCompleted && !isLastStep && (
-            <button
-              type="button"
-              className="vimtut-btn vimtut-btn-primary"
+            [:r restart]
+          </span>
+          {!isLastStep && (
+            <span
+              role="button"
+              tabIndex={0}
+              className="vim-guide-cmd vimtut-btn"
               onClick={handleNext}
+              onKeyDown={(e) => { if (e.key === 'Enter') handleNext(); }}
             >
-              Next Step ➔
-            </button>
+              [:n next]
+            </span>
           )}
-          <button
-            type="button"
-            className="vimtut-btn"
+          <span
+            role="button"
+            tabIndex={0}
+            className="vim-guide-cmd vimtut-btn"
             onClick={handleExit}
+            onKeyDown={(e) => { if (e.key === 'Enter') handleExit(); }}
           >
-            Exit (:q)
-          </button>
+            [:q exit]
+          </span>
         </div>
       </div>
 
@@ -110,37 +129,41 @@ export function VimTutHeader({
         </div>
       )}
 
-      <div className="vimtut-instruction-box">
+      <div className="vim-guide-instruction vimtut-instruction-box">
         {step.instruction}
       </div>
 
       {showHint && step.hint && (
-        <div className="vimtut-hint-box">
-          <strong>Hint:</strong> {step.hint}
+        <div className="vim-guide-hint vimtut-hint-box">
+          <strong className="vimtut-hint-label">Hint:</strong> {step.hint}
         </div>
       )}
 
       {isCompleted && (
         <div className="vimtut-success-banner" data-testid="vimtut-success-banner">
-          <span>🎉 {successMsg ?? step.successMessage ?? 'Step completed!'}</span>
+          <span>✓ {successMsg ?? step.successMessage ?? 'Step completed!'}</span>
           {!isLastStep ? (
-            <span className="vimtut-autoadvance-indicator">Advancing to next task...</span>
+            <span className="vimtut-autoadvance-indicator"> (Advancing to next task...)</span>
           ) : (
-            <span className="vimtut-autoadvance-indicator">All lessons completed! Type :q to exit</span>
+            <span className="vimtut-autoadvance-indicator"> (All lessons completed! Type :q to exit)</span>
           )}
         </div>
       )}
 
-      <div className="vimtut-status-bar">
+      <div className="vim-guide-status vimtut-status-bar">
         <div className="vimtut-status-indicators">
           <span className="vimtut-status-tag">
-            <strong>Mode:</strong> {currentMode.toUpperCase()}
+            -- {currentMode.toUpperCase()} --
           </span>
           <span className="vimtut-status-tag">
-            <strong>Position:</strong> Ln {currentCursor.lineNumber}, Col {currentCursor.column}
+            Ln {currentCursor.lineNumber}, Col {currentCursor.column}
           </span>
         </div>
       </div>
     </div>
   );
 }
+
+// Re-export as VimTutHeader for backward compatibility
+export const VimTutHeader = VimGuide;
+export type VimTutHeaderProps = VimGuideProps;
