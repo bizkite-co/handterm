@@ -43,6 +43,8 @@ describe('MonacoCore - defineVimCommands', () => {
     defineVimCommands(mockEditorRef);
 
     expect(defineExSpy).toBeDefined();
+    expect(defineExSpy).toHaveBeenCalledWith('q', '', expect.any(Function));
+    expect(defineExSpy).toHaveBeenCalledWith('quit', 'q', expect.any(Function));
     expect(defineExSpy).toHaveBeenCalledWith('q!', '', expect.any(Function));
 
     const qCommandCallback = defineExSpy.mock.calls.find(call => call[0] === 'q!')[2];

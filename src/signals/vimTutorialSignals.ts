@@ -97,6 +97,11 @@ export function evaluateVimStepConditions(
   text: string,
   mode: string
 ): boolean {
+  // Lesson 1.6 completes upon executing :q / :quit to exit the editor
+  if (step.id === 'vim-06-exiting-vim') {
+    return false;
+  }
+
   // If targetMode is required, check it
   if (step.targetMode) {
     const modeMatches = typeof step.targetMode === 'function'

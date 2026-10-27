@@ -13,6 +13,7 @@ import {
 } from '../signals/vimTutorialSignals';
 import { VIM_TUTORIAL_STEPS } from '../utils/vimTutorialCurriculum';
 import { navigate } from '../utils/navigationUtils';
+import { setActivity } from '../signals/appSignals';
 import { ActivityType } from '@handterm/types';
 import './VimTutHeader.css';
 
@@ -61,6 +62,7 @@ export function VimGuide({
   };
 
   const handleExit = () => {
+    setActivity(ActivityType.NORMAL);
     navigate({ activityKey: ActivityType.NORMAL });
   };
 

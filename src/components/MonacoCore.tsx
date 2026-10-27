@@ -13,7 +13,7 @@ import type { JSX } from 'react';
 import { createLogger, LogLevel } from '../utils/Logger';
 import type { IAuthProps } from '../types/HandTerm';
 import { putFile } from '../utils/awsApiClient';
-import { setChordGlyphScale, appendToOutput } from '../signals/appSignals';
+import { setChordGlyphScale, appendToOutput, setActivity } from '../signals/appSignals';
 import { Data, Either } from 'effect';
 import { VimGuide } from './VimGuide';
 import { VIM_TUTORIAL_STEPS } from '../utils/vimTutorialCurriculum';
@@ -128,31 +128,35 @@ export function defineVimCommands(
       }
     });
 
-    // --- Restore :q definition with error handling ---
-    Vim.defineEx('q', '', () => {
-      logger.debug(':q command triggered. Attempting to navigate...');
+    const handleQuit = () => {
+      logger.debug(':q / :quit command triggered. Attempting to navigate...');
       try {
+        const contentKey = parseLocation?.()?.contentKey;
+        if (contentKey === 'vimtut') {
+          updateCompletedVimTutorials(prev => new Set(prev).add('vim-06-exiting-vim'));
+          appendToOutput({
+            command: { command: 'vimtut', args: ['completed'], switches: {} },
+            response: `<div class="vimtut-accomplished-entry">
+              <span class="vimtut-check">✓</span> <strong>Vim Tutor Completed!</strong>
+              <div class="vimtut-step-msg">Exited Vim and returned to Handterm terminal prompt.</div>
+            </div>`,
+            status: 200,
+            commandTime: new Date(),
+          });
+        }
+        setActivity(ActivityType.NORMAL);
         navigate({ activityKey: ActivityType.NORMAL });
         logger.debug(':q command: navigate called. Removing editContent from localStorage.');
         localStorage.removeItem(StorageKeys.editContent);
       } catch (error) {
         logger.error(':q command: Error during navigation or localStorage removal', { error });
       }
-    });
-    // --- End Restore :q ---
+    };
 
-    // ENHANCED: Add error handling to :q! definition
-    Vim.defineEx('q!', '', () => {
-      logger.debug(':q! command triggered. Attempting to navigate...');
-      try {
-        navigate({ activityKey: ActivityType.NORMAL });
-        logger.debug(':q! command: navigate called. Removing editContent from localStorage.');
-        localStorage.removeItem(StorageKeys.editContent);
-      } catch (error) {
-        logger.error(':q! command: Error during navigation or localStorage removal', { error });
-      }
-    });
-    // END ENHANCED
+    // Define :q, :quit, and :q!
+    Vim.defineEx('q', '', handleQuit);
+    Vim.defineEx('quit', 'q', handleQuit);
+    Vim.defineEx('q!', '', handleQuit);
 
     // ENHANCED: Add error handling to :wq definition
     Vim.defineEx('wq', '', () => {
@@ -165,6 +169,7 @@ export function defineVimCommands(
           logger.debug(':wq command: content saved.');
           void saveToAWS(content).then(handleSaveResult);
         }
+        setActivity(ActivityType.NORMAL);
         navigate({ activityKey: ActivityType.NORMAL });
         logger.debug(':wq command: navigate called. Removing editContent from localStorage.');
         localStorage.removeItem(StorageKeys.editContent);
@@ -172,7 +177,6 @@ export function defineVimCommands(
         logger.error(':wq command: Error during save, navigation, or localStorage removal', { error });
       }
     });
-    // END ENHANCED
 
     Vim.defineEx('vid', '', () => {
       if (toggleVideo) {
@@ -456,7 +460,8 @@ export default function MonacoCore({ value, language = 'text', toggleVideo, mode
             // and Enter to advance completed vimtut step
             editorKeydownRef.current = editor.onKeyDown((e) => {
               if (isVimTut) {
-                if (vimStepCompletedSignal.value && (e.browserEvent.key === 'Enter' || e.keyCode === monaco.KeyCode.Enter)) {
+                const isLastStep = vimTutorialStepIndexSignal.value >= VIM_TUTORIAL_STEPS.length - 1;
+                if (!isLastStep && vimStepCompletedSignal.value && (e.browserEvent.key === 'Enter' || e.keyCode === monaco.KeyCode.Enter)) {
                   e.preventDefault();
                   e.stopPropagation();
                   handleVimTutAdvanceRef.current();
@@ -486,18 +491,29 @@ export default function MonacoCore({ value, language = 'text', toggleVideo, mode
               }
             });
 
-            defineCommandsTimeoutRef.current = setTimeout(() => {
-              logger.debug("Timeout triggered: Attempting to define Vim commands now.");
-              defineVimCommands(
-                editorRef,
-                auth,
-                toggleVideo,
-                onSaveResult,
-                () => handleVimTutAdvanceRef.current(),
-                () => handleVimTutRestartRef.current()
-              );
-              defineCommandsTimeoutRef.current = null;
-            }, 500);
+            const registered = defineVimCommands(
+              editorRef,
+              auth,
+              toggleVideo,
+              onSaveResult,
+              () => handleVimTutAdvanceRef.current(),
+              () => handleVimTutRestartRef.current()
+            );
+
+            if (!registered) {
+              defineCommandsTimeoutRef.current = setTimeout(() => {
+                logger.debug("Timeout triggered: Attempting to define Vim commands now.");
+                defineVimCommands(
+                  editorRef,
+                  auth,
+                  toggleVideo,
+                  onSaveResult,
+                  () => handleVimTutAdvanceRef.current(),
+                  () => handleVimTutRestartRef.current()
+                );
+                defineCommandsTimeoutRef.current = null;
+              }, 200);
+            }
           } else {
             // Terminal should start in insert mode so the user can type commands
             try {
@@ -658,7 +674,10 @@ export default function MonacoCore({ value, language = 'text', toggleVideo, mode
     if (!isVimTut) return;
 
     const handleWindowKeyDown = (e: KeyboardEvent) => {
-      if (vimStepCompletedSignal.value && e.key === 'Enter') {
+      const isInput = (e.target as HTMLElement)?.tagName === 'INPUT' || (e.target as HTMLElement)?.tagName === 'TEXTAREA';
+      const isLastStep = vimTutorialStepIndexSignal.value >= VIM_TUTORIAL_STEPS.length - 1;
+
+      if (!isInput && !isLastStep && vimStepCompletedSignal.value && e.key === 'Enter') {
         e.preventDefault();
         e.stopPropagation();
         handleVimTutAdvanceRef.current();
