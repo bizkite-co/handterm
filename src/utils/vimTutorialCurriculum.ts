@@ -49,16 +49,16 @@ export const VIM_TUTORIAL_STEPS: VimTutorialStep[] = [
   },
   {
     id: 'vim-04-insert-mode',
-    title: 'Lesson 1.4: Inserting Text (i ... <Esc>)',
-    instruction: "Move cursor to the gap before the period on line 2. Press 'i' to enter INSERT mode, type 'line', and press <Esc> or Alt+S to return to NORMAL mode.",
-    hint: "Position cursor before the period, press 'i', type 'line', then press <Esc> (or Alt+S) to finish insertion.",
+    title: 'Lesson 1.4: Inserting Text (i / a ... <Esc>)',
+    instruction: "To insert text, move cursor onto the period '.' and press 'i' (insert before) — or onto the space and press 'a' (append after). Type 'line' and press <Esc> or Alt+S to return to NORMAL mode.",
+    hint: "Move onto the period and press 'i' (or stay on the space and press 'a'), type 'line', then press <Esc> or Alt+S.",
     initialText: [
       'Insert the missing word:',
       'There is text missing from this .',
       '',
-      "Remember: type 'i' to insert, and <Esc> (or Alt+S) to return to NORMAL mode."
+      "Remember: 'i' inserts before cursor, 'a' appends after cursor. Press <Esc> or Alt+S for NORMAL mode."
     ].join('\n'),
-    initialCursor: { lineNumber: 2, column: 32 },
+    initialCursor: { lineNumber: 2, column: 33 },
     targetText: (text: string) => text.includes('There is text missing from this line.'),
     targetMode: 'normal',
     successMessage: "Well done! You entered INSERT mode, added text, and returned to NORMAL mode.",

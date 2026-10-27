@@ -8,6 +8,7 @@ import type { VimModeInstance } from 'monaco-vim';
 import { ActivityType, StorageKeys, type IStandaloneCodeEditor, type ITerminalAdapter } from '@handterm/types';
 import type { IDisposable, IWindowWithMonacoEditor } from 'packages/types/src/monaco';
 import { navigate, parseLocation } from '../utils/navigationUtils';
+import { isVimEscapeKey, exitVimInsertMode } from '../utils/vimUtils';
 import type { JSX } from 'react';
 import { createLogger, LogLevel } from '../utils/Logger';
 import type { IAuthProps } from '../types/HandTerm';
@@ -241,6 +242,7 @@ export default function MonacoCore({ value, language = 'text', toggleVideo, mode
   const [vimCursor, setVimCursor] = useState<{ lineNumber: number; column: number }>({ lineNumber: 1, column: 1 });
   const [vimModeState, setVimModeState] = useState<string>('normal');
   const autoAdvanceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const checkVimTutConditionsRef = useRef<(() => void) | null>(null);
 
   const handleVimTutAdvanceRef = useRef<() => void>(() => {});
   const handleVimTutAdvance = useCallback(() => {
@@ -256,6 +258,9 @@ export default function MonacoCore({ value, language = 'text', toggleVideo, mode
         editorRef.current.revealPosition(nextStep.initialCursor);
         setVimCursor(nextStep.initialCursor);
       }
+      if (vimModeRef.current && currentVimModeRef.current !== 'normal') {
+        exitVimInsertMode(vimModeRef.current as unknown as VimModeInstance);
+      }
       editorRef.current.focus();
     }
   }, []);
@@ -270,6 +275,9 @@ export default function MonacoCore({ value, language = 'text', toggleVideo, mode
         editorRef.current.setPosition(currentStep.initialCursor);
         editorRef.current.revealPosition(currentStep.initialCursor);
         setVimCursor(currentStep.initialCursor);
+      }
+      if (vimModeRef.current && currentVimModeRef.current !== 'normal') {
+        exitVimInsertMode(vimModeRef.current as unknown as VimModeInstance);
       }
       editorRef.current.focus();
     }
@@ -440,6 +448,7 @@ export default function MonacoCore({ value, language = 'text', toggleVideo, mode
             currentVimModeRef.current = modeInfo.mode;
             setVimModeState(modeInfo.mode);
             onVimModeChange?.(modeInfo.mode);
+            checkVimTutConditionsRef.current?.();
           });
 
           if (mode === 'editor') {
@@ -467,16 +476,12 @@ export default function MonacoCore({ value, language = 'text', toggleVideo, mode
                 }
               }
 
-              if (e.browserEvent.key === 's' && e.altKey) {
+              if (isVimEscapeKey(e)) {
                 e.preventDefault();
                 e.stopPropagation();
                 if (currentVimModeRef.current !== 'normal' && vimModeRef.current) {
-                  try {
-                    monacoVim.VimMode.Vim.handleKey(vimModeRef.current as unknown as VimModeInstance, '<Esc>');
-                    currentVimModeRef.current = 'normal';
-                  } catch (err) {
-                    logger.warn('Alt+S: could not trigger vim exit-insert', err);
-                  }
+                  exitVimInsertMode(vimModeRef.current as unknown as VimModeInstance);
+                  currentVimModeRef.current = 'normal';
                 }
               }
             });
@@ -528,10 +533,10 @@ export default function MonacoCore({ value, language = 'text', toggleVideo, mode
     };
   }, []); // Empty dependency array: runs once on mount and once on unmount
 
-  // Effect 5: Value Synchronization (editor mode only — terminal manages its own model)
+  // Effect 5: Value Synchronization (editor mode only — terminal manages its own model; vimtut manages its own step content)
   useEffect(() => {
     const editor = editorRef.current;
-    if (!editor || mode !== 'editor') return;
+    if (!editor || mode !== 'editor' || isVimTut) return;
 
     // Type guard for ITextModel
     function isTextModel(model: monaco.editor.ITextModel | null): model is monaco.editor.ITextModel {
@@ -543,9 +548,9 @@ export default function MonacoCore({ value, language = 'text', toggleVideo, mode
       logger.debug("ValueSync effect: Updating editor value.");
       editor.setValue(value);
     }
-  }, [value, mode]); // Depend on value, editor instance, and mode
+  }, [value, mode, isVimTut]); // Depend on value, editor instance, mode, and isVimTut
 
-  // Effect 6: Vim Tutorial Verification Runner
+  // Effect 6: Vim Tutorial Step Initialization (runs ONLY when step index changes)
   useEffect(() => {
     const editor = editorRef.current;
     if (!editor || !isVimTut) return;
@@ -553,15 +558,21 @@ export default function MonacoCore({ value, language = 'text', toggleVideo, mode
     const step = getCurrentVimStep();
     if (!step) return;
 
-    // Set initial text & cursor for the step if editor is not yet set
-    if (editor.getValue() !== step.initialText && !vimStepCompletedSignal.value) {
-      editor.setValue(step.initialText);
-    }
+    editor.setValue(step.initialText);
     if (step.initialCursor) {
       editor.setPosition(step.initialCursor);
       editor.revealPosition(step.initialCursor);
       setVimCursor(step.initialCursor);
     }
+    if (vimModeRef.current && currentVimModeRef.current !== 'normal') {
+      exitVimInsertMode(vimModeRef.current as unknown as VimModeInstance);
+    }
+  }, [isVimTut, vimTutorialStepIndexSignal.value]);
+
+  // Effect 7: Vim Tutorial Verification Runner (monitors progress without resetting user edits)
+  useEffect(() => {
+    const editor = editorRef.current;
+    if (!editor || !isVimTut) return;
 
     const checkConditions = () => {
       if (vimStepCompletedSignal.value) return;
@@ -571,6 +582,7 @@ export default function MonacoCore({ value, language = 'text', toggleVideo, mode
 
       setVimCursor({ lineNumber: currentPos.lineNumber, column: currentPos.column });
 
+      const step = getCurrentVimStep();
       const passed = evaluateVimStepConditions(
         step,
         { lineNumber: currentPos.lineNumber, column: currentPos.column },
@@ -615,6 +627,9 @@ export default function MonacoCore({ value, language = 'text', toggleVideo, mode
       }
     };
 
+    checkVimTutConditionsRef.current = checkConditions;
+
+    // Check conditions initially
     checkConditions();
 
     const cursorSub = editor.onDidChangeCursorPosition((e) => {
@@ -633,8 +648,9 @@ export default function MonacoCore({ value, language = 'text', toggleVideo, mode
         clearTimeout(autoAdvanceTimerRef.current);
         autoAdvanceTimerRef.current = null;
       }
+      checkVimTutConditionsRef.current = null;
     };
-  }, [isVimTut, vimTutorialStepIndexSignal.value, vimModeState]);
+  }, [isVimTut, vimTutorialStepIndexSignal.value]);
 
   // Capture Enter globally when a vimtut step is completed so keyboard-only users
   // can immediately advance to the next step without reaching for a mouse.

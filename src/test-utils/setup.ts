@@ -40,13 +40,32 @@ window.ResizeObserver = ResizeObserverMock as unknown as typeof ResizeObserver;
 (window as any).setNextTutorial = vi.fn();
 
 // Mock monaco-vim before any imports
-vi.mock('monaco-vim', () => ({
-  default: {
-    initVimMode: vi.fn().mockReturnValue({
-      dispose: vi.fn()
-    })
-  }
-}));
+vi.mock('monaco-vim', () => {
+  const vimInstanceMock = {
+    dispose: vi.fn(),
+    on: vi.fn(),
+    attach: vi.fn(),
+  };
+  const VimApiMock = {
+    defineEx: vi.fn(),
+    handleKey: vi.fn(),
+    exitInsertMode: vi.fn(),
+    map: vi.fn(),
+    unmap: vi.fn(),
+  };
+  return {
+    default: {
+      initVimMode: vi.fn().mockReturnValue(vimInstanceMock),
+      VimMode: {
+        Vim: VimApiMock,
+      },
+    },
+    initVimMode: vi.fn().mockReturnValue(vimInstanceMock),
+    VimMode: {
+      Vim: VimApiMock,
+    },
+  };
+});
 
 // Mock monaco-editor
 vi.mock('monaco-editor', () => ({

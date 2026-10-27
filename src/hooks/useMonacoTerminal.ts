@@ -23,16 +23,10 @@ import {
 import { addKeystroke, commandLineSignal, setCommandLine } from 'src/signals/commandLineSignals';
 import { parseCommand } from 'src/utils/commandUtils';
 import { createLogger, LogLevel } from 'src/utils/Logger';
+import { isVimEscapeKey, exitVimInsertMode } from 'src/utils/vimUtils';
 import { useCharacterHandler } from './useCharacterHandler';
 import { useCommand } from './useCommand';
 import { useWPMCalculator } from './useWPMCaculator';
-
-// ── Configurable vim keybinding ──────────────────────────────────────────────
-// Which key combination exits vim insert mode (like NVim's `:imap`).
-// Set to 'Escape' for traditional vim, or 'Alt+s' to avoid Monaco stealing focus.
-// To change: update this constant, or lift to a localStorage/signal-based setting.
-const VIM_ESCAPE_KEY_COMBO = 'Alt+s';
-// ─────────────────────────────────────────────────────────────────────────────
 
 const logger = createLogger({ prefix: 'useMonacoTerminal', level: LogLevel.WARN });
 
@@ -330,15 +324,11 @@ export const useMonacoTerminal = (
         }
 
         // Handle configurable insert-mode exit key (Alt+S by default, like NVim's imap)
-        if (VIM_ESCAPE_KEY_COMBO === 'Alt+s' && e.browserEvent.key === 's' && e.altKey) {
+        if (isVimEscapeKey(e)) {
           if (currentModeRefLocal.current !== 'normal' && vimInstanceRefLocal.current) {
             e.preventDefault();
             e.stopPropagation();
-            try {
-              monacoVim.VimMode.Vim.handleKey(vimInstanceRefLocal.current, '<Esc>');
-            } catch (err) {
-              logger.warn('Alt+S: could not trigger vim exit-insert', err);
-            }
+            exitVimInsertMode(vimInstanceRefLocal.current);
           } else {
             // Already in normal mode — just consume the event
             e.preventDefault();
