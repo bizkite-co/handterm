@@ -307,4 +307,30 @@ describe('BrowseView', () => {
     expect(currentCol).not.toBeNull();
     expect(childCol).not.toBeNull();
   });
+
+  it('renders a blank line separator and cyan path headers for both columns', async () => {
+    render(<BrowseView auth={auth} deps={stubDeps()} />);
+    const view = await screen.findByTestId('browse-view');
+    await waitFor(() => {
+      expect(view.textContent).toContain('S3');
+    });
+
+    // Check blank line separator between grey info and columns
+    const separator = view.querySelector('.browse-blank-line');
+    expect(separator).not.toBeNull();
+
+    // Check top column path header
+    const topPath = screen.getByTestId('top-col-path');
+    expect(topPath.textContent?.trim()).toBe('/');
+
+    // Check bottom column path header (initially GitHub is selected)
+    const bottomPath = screen.getByTestId('bottom-col-path');
+    expect(bottomPath.textContent?.trim()).toBe('/github');
+
+    // Move to S3 and verify bottom column path updates
+    fireEvent.keyDown(window, { key: 'j' });
+    await waitFor(() => {
+      expect(bottomPath.textContent?.trim()).toBe('/s3');
+    });
+  });
 });

@@ -602,72 +602,89 @@ export function BrowseView(props: BrowseViewProps): JSX.Element {
       ref={rootRef}
     >
       <div className="browse-hint">
-        <span className="browse-breadcrumb">{path === '' ? '/' : `/${path}`}</span>
         {(isLoading || isChildLoading || isPreviewLoading) && (
-          <span className="browse-spinner-tag"> {spinner} syncing...</span>
+          <span className="browse-spinner-tag">{spinner} syncing... — </span>
         )}
-        {' — '}
         h parent, j/k move, l/Enter open, / root, a new, s search, J/K scroll, q/Esc leave
         {statusMessage !== null ? ` — ${statusMessage}` : ''}
       </div>
 
+      <div className="browse-blank-line" />
+
       <div className="browse-columns">
-        <Column
-          className="parent"
-          entries={parentEntries}
-          selectedPath={path === '' ? null : path}
-          onSelect={() => { navigateToPath(parentPath(path)); }}
-        />
-        <Column
-          className="current"
-          entries={displayEntries}
-          selectedPath={selected?.path ?? null}
-          onSelect={setSelectedIndex}
-          isLoading={isLoading}
-          spinnerChar={spinner}
-          searchQuery={searchQuery}
-        />
-        {selected?.kind === 'file' ? (
-          <div
-            className="browse-col child browse-preview-col"
-            ref={previewRef}
-            tabIndex={-1}
-            data-testid="browse-preview"
-          >
-            {isPreviewLoading && previewContent === null ? (
-              <div className="browse-empty browse-loading">
-                <span className="browse-spinner">{spinner}</span> loading preview...
-              </div>
-            ) : previewError ? (
-              <div className="browse-empty">{previewError}</div>
-            ) : previewContent !== null ? (
-              <pre className="browse-preview-content">
-                {renderHighlightedText(previewContent, searchQuery)}
-              </pre>
-            ) : (
-              <div className="browse-preview-empty">Empty file</div>
-            )}
+        <div className="browse-column-wrapper parent">
+          <div className="browse-col-path">
+            {parentPath(path) === '' ? (path === '' ? '' : '/') : `/${parentPath(path)}`}
           </div>
-        ) : (
           <Column
-            className="child"
-            entries={childEntries}
-            selectedPath={null}
-            isLoading={isChildLoading}
-            spinnerChar={spinner}
-            onSelect={(index) => {
-              const child = childEntries[index];
-              if (child !== undefined && (child.kind === 'dir' || child.kind === 'mount' || child.kind === 'file')) {
-                setSelectedIndex(entries.findIndex((e) => e.path === selected?.path));
-                if (child.kind === 'file') {
-                  navigateToPath(parentPath(child.path));
-                } else {
-                  navigateToPath(child.path);
-                }
-              }
-            }}
+            className="parent"
+            entries={parentEntries}
+            selectedPath={path === '' ? null : path}
+            onSelect={() => { navigateToPath(parentPath(path)); }}
           />
-        )}
+        </div>
+
+        <div className="browse-column-wrapper current">
+          <div className="browse-col-path browse-breadcrumb" data-testid="top-col-path">
+            {path === '' ? '/' : `/${path}`}
+          </div>
+          <Column
+            className="current"
+            entries={displayEntries}
+            selectedPath={selected?.path ?? null}
+            onSelect={setSelectedIndex}
+            isLoading={isLoading}
+            spinnerChar={spinner}
+            searchQuery={searchQuery}
+          />
+        </div>
+
+        <div className="browse-column-wrapper child">
+          <div className="browse-col-path" data-testid="bottom-col-path">
+            {selected ? (selected.path === '' ? '/' : `/${selected.path}`) : ''}
+          </div>
+          {selected?.kind === 'file' ? (
+            <div
+              className="browse-col child browse-preview-col"
+              ref={previewRef}
+              tabIndex={-1}
+              data-testid="browse-preview"
+            >
+              {isPreviewLoading && previewContent === null ? (
+                <div className="browse-empty browse-loading">
+                  <span className="browse-spinner">{spinner}</span> loading preview...
+                </div>
+              ) : previewError ? (
+                <div className="browse-empty">{previewError}</div>
+              ) : previewContent !== null ? (
+                <pre className="browse-preview-content">
+                  {renderHighlightedText(previewContent, searchQuery)}
+                </pre>
+              ) : (
+                <div className="browse-preview-empty">Empty file</div>
+              )}
+            </div>
+          ) : (
+            <Column
+              className="child"
+              entries={childEntries}
+              selectedPath={null}
+              isLoading={isChildLoading}
+              spinnerChar={spinner}
+              onSelect={(index) => {
+                const child = childEntries[index];
+                if (child !== undefined && (child.kind === 'dir' || child.kind === 'mount' || child.kind === 'file')) {
+                  setSelectedIndex(entries.findIndex((e) => e.path === selected?.path));
+                  if (child.kind === 'file') {
+                    navigateToPath(parentPath(child.path));
+                  } else {
+                    navigateToPath(child.path);
+                  }
+                }
+              }}
+            />
+          )}
+        </div>
       </div>
 
       {promptMode !== 'none' && (
