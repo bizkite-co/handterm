@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { ActivityType, StorageKeys, TokenKeys, type IAuthProps } from '@handterm/types';
-import { getFile, listFiles } from '../utils/awsApiClient';
-import { getRepoTree, listRecentRepos } from '../utils/apiClient';
+import { getFile, listFiles, putFile } from '../utils/awsApiClient';
+import { getRepoContent, getRepoTree, listRecentRepos } from '../utils/apiClient';
 import {
+  githubFileDetails,
   listBrowsePath,
   moveSelection,
   parentPath,
@@ -55,6 +56,38 @@ function setBrowseCache(key: string, entries: BrowseEntry[]): void {
   }
 }
 
+const PREVIEW_CACHE_PREFIX = 'browse_preview:';
+function getPreviewCache(key: string): string | null {
+  try {
+    return typeof localStorage !== 'undefined' ? localStorage.getItem(PREVIEW_CACHE_PREFIX + key) : null;
+  } catch {
+    return null;
+  }
+}
+
+function setPreviewCache(key: string, content: string): void {
+  try {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(PREVIEW_CACHE_PREFIX + key, content);
+    }
+  } catch {
+    // Ignore quota errors
+  }
+}
+
+function renderHighlightedText(text: string, query: string): React.ReactNode {
+  const trimmed = query.trim();
+  if (!trimmed) {
+    return text;
+  }
+  const escaped = trimmed.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const regex = new RegExp(`(${escaped})`, 'gi');
+  const parts = text.split(regex);
+  return parts.map((part, index) =>
+    regex.test(part) ? <mark key={index}>{part}</mark> : part
+  );
+}
+
 function iconFor(entry: BrowseEntry): string {
   if (entry.kind === 'message') {
     return '!';
@@ -72,6 +105,7 @@ function Column(props: {
   onSelect: (index: number) => void;
   isLoading?: boolean;
   spinnerChar?: string;
+  searchQuery?: string;
 }): JSX.Element {
   return (
     <div className={`browse-col ${props.className}`} role="list">
@@ -90,7 +124,11 @@ function Column(props: {
             onMouseDown={() => { props.onSelect(index); }}
           >
             <span>{iconFor(entry)}</span>
-            <span>{entry.name}</span>
+            <span>
+              {props.searchQuery
+                ? renderHighlightedText(entry.name, props.searchQuery)
+                : entry.name}
+            </span>
           </div>
         ))
       )}
@@ -100,6 +138,9 @@ function Column(props: {
 
 export function BrowseView(props: BrowseViewProps): JSX.Element {
   const rootRef = useRef<HTMLDivElement>(null);
+  const previewRef = useRef<HTMLDivElement>(null);
+  const promptInputRef = useRef<HTMLInputElement>(null);
+
   const [path, setPath] = useState(() => parseLocation().contentKey ?? '');
   const [entries, setEntries] = useState<BrowseEntry[]>(() => getBrowseCache(parseLocation().contentKey ?? 'root') ?? []);
   const [parentEntries, setParentEntries] = useState<BrowseEntry[]>([]);
@@ -109,7 +150,17 @@ export function BrowseView(props: BrowseViewProps): JSX.Element {
   const [isLoading, setIsLoading] = useState(false);
   const [isChildLoading, setIsChildLoading] = useState(false);
 
-  const spinner = useTerminalSpinner(isLoading || isChildLoading);
+  // Preview state
+  const [previewContent, setPreviewContent] = useState<string | null>(null);
+  const [isPreviewLoading, setIsPreviewLoading] = useState(false);
+  const [previewError, setPreviewError] = useState<string | null>(null);
+
+  // Prompt / Search state
+  const [promptMode, setPromptMode] = useState<'none' | 'create' | 'search'>('none');
+  const [promptValue, setPromptValue] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const spinner = useTerminalSpinner(isLoading || isChildLoading || isPreviewLoading);
 
   const githubUsername = typeof localStorage !== 'undefined'
     ? localStorage.getItem(TokenKeys.GithubUsername)
@@ -130,8 +181,31 @@ export function BrowseView(props: BrowseViewProps): JSX.Element {
       const response = await getRepoTree(props.auth, repo);
       return { status: response.status, items: response.data, error: response.error };
     },
+    getS3Content: async (key: string) => {
+      const response = await getFile(props.auth, key);
+      return { status: response.status, content: response.data?.content, error: response.error };
+    },
+    getGithubContent: async (repo: string, filePath: string) => {
+      const response = await getRepoContent(props.auth, repo, filePath);
+      return { status: response.status, content: response.data?.content, error: response.error };
+    },
+    createS3Resource: async (key: string, content = '') => {
+      const response = await putFile(props.auth, key, content);
+      return { status: response.status, error: response.error };
+    },
     ...props.deps,
   }), [props.auth, githubUsername, props.deps]);
+
+  const displayEntries = useMemo(() => {
+    if (!searchQuery.trim()) {
+      return entries;
+    }
+    const q = searchQuery.toLowerCase();
+    const filtered = entries.filter((e) => e.name.toLowerCase().includes(q));
+    return filtered.length > 0 ? filtered : entries;
+  }, [entries, searchQuery]);
+
+  const selected = displayEntries[selectedIndex] ?? entries[selectedIndex] ?? null;
 
   const load = useCallback(async (nextPath: string, keepIndex = 0) => {
     const cacheKey = nextPath === '' ? 'root' : nextPath;
@@ -171,8 +245,7 @@ export function BrowseView(props: BrowseViewProps): JSX.Element {
     void load(path);
   }, [path, load, props.auth.isLoggedIn]);
 
-  const selected = entries[selectedIndex] ?? null;
-
+  // Child directory entries effect
   useEffect(() => {
     if (selected === null || (selected.kind !== 'dir' && selected.kind !== 'mount')) {
       setChildEntries([]);
@@ -204,67 +277,262 @@ export function BrowseView(props: BrowseViewProps): JSX.Element {
     };
   }, [selected?.path, selected?.kind, deps]);
 
+  // File preview effect
+  useEffect(() => {
+    if (selected === null || selected.kind !== 'file') {
+      setPreviewContent(null);
+      setPreviewError(null);
+      setIsPreviewLoading(false);
+      return;
+    }
+
+    const cached = getPreviewCache(selected.path);
+    if (cached !== null) {
+      setPreviewContent(cached);
+    } else {
+      setPreviewContent(null);
+    }
+
+    let cancelled = false;
+    setIsPreviewLoading(true);
+    setPreviewError(null);
+
+    const fetchPreview = async () => {
+      const { mount } = parseBrowsePath(selected.path);
+      try {
+        if (mount === 's3') {
+          const key = s3ObjectKey(selected.path);
+          const res = deps.getS3Content
+            ? await deps.getS3Content(key)
+            : await getFile(props.auth, key).then((r) => ({
+                status: r.status,
+                content: r.data?.content,
+                error: r.error,
+              }));
+          if (!cancelled) {
+            if (res.status === 200 && res.content !== undefined) {
+              setPreviewContent(res.content);
+              setPreviewCache(selected.path, res.content);
+            } else {
+              setPreviewError(res.error ?? 'Could not load S3 preview.');
+            }
+          }
+        } else if (mount === 'github') {
+          const details = githubFileDetails(selected.path);
+          if (details) {
+            const res = deps.getGithubContent
+              ? await deps.getGithubContent(details.repo, details.path)
+              : await getRepoContent(props.auth, details.repo, details.path).then((r) => ({
+                  status: r.status,
+                  content: r.data?.content,
+                  error: r.error,
+                }));
+            if (!cancelled) {
+              if (res.status === 200 && res.content !== undefined) {
+                setPreviewContent(res.content);
+                setPreviewCache(selected.path, res.content);
+              } else {
+                setPreviewError(res.error ?? 'Could not load GitHub preview.');
+              }
+            }
+          } else {
+            if (!cancelled) setPreviewError('Invalid GitHub path.');
+          }
+        }
+      } catch (err: any) {
+        if (!cancelled) {
+          setPreviewError(err?.message ?? 'Failed to load preview.');
+        }
+      } finally {
+        if (!cancelled) {
+          setIsPreviewLoading(false);
+        }
+      }
+    };
+
+    void fetchPreview();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selected?.path, selected?.kind, deps, props.auth]);
+
   useEffect(() => {
     rootRef.current?.focus();
   }, []);
 
-  const openSelected = useCallback(() => {
+  useEffect(() => {
+    if (promptMode !== 'none') {
+      promptInputRef.current?.focus();
+    }
+  }, [promptMode]);
+
+  const openSelected = useCallback(async () => {
     if (selected === null || selected.kind === 'message') {
       return;
     }
     if (selected.kind === 'dir' || selected.kind === 'mount') {
       setPath(selected.path);
+      setSearchQuery('');
       return;
     }
-    const { mount } = parseBrowsePath(selected.path);
-    if (mount !== 's3') {
-      setStatusMessage('Opening GitHub files lands in a later slice. Use Enter on S3 files.');
+    if (selected.kind === 'file') {
+      const { mount } = parseBrowsePath(selected.path);
+      if (mount === 's3') {
+        const filename = s3ObjectKey(selected.path);
+        let content = previewContent;
+        if (content === null) {
+          const res = deps.getS3Content
+            ? await deps.getS3Content(filename)
+            : await getFile(props.auth, filename).then((r) => ({
+                status: r.status,
+                content: r.data?.content,
+              }));
+          content = res.content ?? '';
+        }
+        localStorage.setItem(StorageKeys.editContent, JSON.stringify(content));
+        navigate({
+          activityKey: ActivityType.EDIT,
+          contentKey: filename,
+          groupKey: null,
+        });
+      } else if (mount === 'github') {
+        const details = githubFileDetails(selected.path);
+        if (!details) {
+          setStatusMessage('Could not parse GitHub file path.');
+          return;
+        }
+        let content = previewContent;
+        if (content === null) {
+          const res = deps.getGithubContent
+            ? await deps.getGithubContent(details.repo, details.path)
+            : await getRepoContent(props.auth, details.repo, details.path).then((r) => ({
+                status: r.status,
+                content: r.data?.content,
+              }));
+          content = res.content ?? '';
+        }
+        localStorage.setItem(StorageKeys.editContent, JSON.stringify(content));
+        navigate({
+          activityKey: ActivityType.EDIT,
+          contentKey: `${details.repo}/${details.path}`,
+          groupKey: null,
+        });
+      }
+    }
+  }, [deps, previewContent, props.auth, selected]);
+
+  const handleCreateResource = useCallback(async (value: string) => {
+    const trimmed = value.trim();
+    if (!trimmed) {
+      setPromptMode('none');
+      rootRef.current?.focus();
       return;
     }
-    const filename = s3ObjectKey(selected.path);
-    void (async () => {
-      const response = await getFile(props.auth, filename);
-      const content = response.data?.content ?? '';
-      localStorage.setItem(StorageKeys.editContent, JSON.stringify(content));
-      navigate({
-        activityKey: ActivityType.EDIT,
-        contentKey: filename,
-        groupKey: null,
-      });
-    })();
-  }, [props.auth, selected]);
+    const prefix = s3ObjectKey(path);
+    const cleanPrefix = prefix.replace(/\/+$/, '');
+    const fullKey = cleanPrefix ? `${cleanPrefix}/${trimmed}` : trimmed;
+
+    setIsLoading(true);
+    try {
+      if (deps.createS3Resource) {
+        const result = await deps.createS3Resource(fullKey, '');
+        if (result.status === 200 || result.status === 201) {
+          setStatusMessage(`Created ${fullKey}`);
+        } else {
+          setStatusMessage(result.error ?? `Failed to create ${fullKey}`);
+        }
+      } else {
+        const result = await putFile(props.auth, fullKey, '');
+        if (result.status === 200 || result.status === 201) {
+          setStatusMessage(`Created ${fullKey}`);
+        } else {
+          setStatusMessage(result.error ?? `Failed to create ${fullKey}`);
+        }
+      }
+      try {
+        localStorage.removeItem(CACHE_PREFIX + (path === '' ? 'root' : path));
+      } catch {
+        // Ignore storage errors
+      }
+      await load(path);
+    } catch (err: any) {
+      setStatusMessage(err?.message ?? 'Creation failed');
+    } finally {
+      setIsLoading(false);
+      setPromptMode('none');
+      setPromptValue('');
+      rootRef.current?.focus();
+    }
+  }, [path, deps, props.auth, load]);
 
   const onKeyDown = useCallback((event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (promptMode !== 'none') {
+      return;
+    }
     const key = event.key;
-    if (!['h', 'j', 'k', 'l', 'Enter', 'Escape'].includes(key)) {
+    if (
+      !['h', 'j', 'k', 'l', 'Enter', 'Escape', 'q', '/', 'a', 's', 'f', 'J', 'K'].includes(key)
+    ) {
       return;
     }
     event.preventDefault();
     event.stopPropagation();
-    if (key === 'j') {
-      setSelectedIndex((index) => moveSelection(index, entries.length, 1));
-      return;
-    }
-    if (key === 'k') {
-      setSelectedIndex((index) => moveSelection(index, entries.length, -1));
-      return;
-    }
-    if (key === 'h') {
-      setPath(parentPath(path));
-      return;
-    }
-    if (key === 'l' || key === 'Enter') {
-      openSelected();
-      return;
-    }
-    if (key === 'Escape') {
+
+    if (key === 'Escape' || key === 'q') {
       navigate({
         activityKey: ActivityType.NORMAL,
         contentKey: null,
         groupKey: null,
       });
+      return;
     }
-  }, [entries.length, openSelected, path]);
+    if (key === 'j') {
+      setSelectedIndex((index) => moveSelection(index, displayEntries.length, 1));
+      return;
+    }
+    if (key === 'k') {
+      setSelectedIndex((index) => moveSelection(index, displayEntries.length, -1));
+      return;
+    }
+    if (key === 'h') {
+      setPath(parentPath(path));
+      setSearchQuery('');
+      return;
+    }
+    if (key === 'l' || key === 'Enter') {
+      void openSelected();
+      return;
+    }
+    if (key === '/') {
+      setPath('');
+      setSearchQuery('');
+      return;
+    }
+    if (key === 's' || key === 'f') {
+      setPromptMode('search');
+      setPromptValue(searchQuery);
+      return;
+    }
+    if (key === 'a') {
+      const { mount } = parseBrowsePath(path);
+      if (mount !== 's3') {
+        setStatusMessage('Resource creation is supported in S3 directories.');
+        return;
+      }
+      setPromptMode('create');
+      setPromptValue('');
+      return;
+    }
+    if (key === 'J') {
+      previewRef.current?.scrollBy({ top: 80, behavior: 'smooth' });
+      return;
+    }
+    if (key === 'K') {
+      previewRef.current?.scrollBy({ top: -80, behavior: 'smooth' });
+      return;
+    }
+  }, [promptMode, displayEntries.length, path, searchQuery, openSelected]);
 
   return (
     <div
@@ -277,13 +545,14 @@ export function BrowseView(props: BrowseViewProps): JSX.Element {
     >
       <div className="browse-hint">
         <span className="browse-breadcrumb">{path === '' ? '/' : `/${path}`}</span>
-        {(isLoading || isChildLoading) && (
+        {(isLoading || isChildLoading || isPreviewLoading) && (
           <span className="browse-spinner-tag"> {spinner} syncing...</span>
         )}
         {' — '}
-        h parent, j/k move, l/Enter open, Escape leave
+        h parent, j/k move, l/Enter open, / root, a new, s search, J/K scroll, q/Esc leave
         {statusMessage !== null ? ` — ${statusMessage}` : ''}
       </div>
+
       <div className="browse-columns">
         <Column
           className="parent"
@@ -293,31 +562,95 @@ export function BrowseView(props: BrowseViewProps): JSX.Element {
         />
         <Column
           className="current"
-          entries={entries}
+          entries={displayEntries}
           selectedPath={selected?.path ?? null}
           onSelect={setSelectedIndex}
           isLoading={isLoading}
           spinnerChar={spinner}
+          searchQuery={searchQuery}
         />
-        <Column
-          className="child"
-          entries={childEntries}
-          selectedPath={null}
-          isLoading={isChildLoading}
-          spinnerChar={spinner}
-          onSelect={(index) => {
-            const child = childEntries[index];
-            if (child !== undefined && (child.kind === 'dir' || child.kind === 'mount' || child.kind === 'file')) {
-              setSelectedIndex(entries.findIndex((e) => e.path === selected?.path));
-              if (child.kind === 'file') {
-                setPath(parentPath(child.path));
-              } else {
-                setPath(child.path);
+        {selected?.kind === 'file' ? (
+          <div
+            className="browse-col child browse-preview-col"
+            ref={previewRef}
+            tabIndex={-1}
+            data-testid="browse-preview"
+          >
+            {isPreviewLoading && previewContent === null ? (
+              <div className="browse-empty browse-loading">
+                <span className="browse-spinner">{spinner}</span> loading preview...
+              </div>
+            ) : previewError ? (
+              <div className="browse-empty">{previewError}</div>
+            ) : previewContent !== null ? (
+              <pre className="browse-preview-content">
+                {renderHighlightedText(previewContent, searchQuery)}
+              </pre>
+            ) : (
+              <div className="browse-preview-empty">Empty file</div>
+            )}
+          </div>
+        ) : (
+          <Column
+            className="child"
+            entries={childEntries}
+            selectedPath={null}
+            isLoading={isChildLoading}
+            spinnerChar={spinner}
+            onSelect={(index) => {
+              const child = childEntries[index];
+              if (child !== undefined && (child.kind === 'dir' || child.kind === 'mount' || child.kind === 'file')) {
+                setSelectedIndex(entries.findIndex((e) => e.path === selected?.path));
+                if (child.kind === 'file') {
+                  setPath(parentPath(child.path));
+                } else {
+                  setPath(child.path);
+                }
               }
-            }
-          }}
-        />
+            }}
+          />
+        )}
       </div>
+
+      {promptMode !== 'none' && (
+        <div className="browse-prompt-bar">
+          <span className="browse-prompt-label">
+            {promptMode === 'create' ? 'New S3 item (trailing / for folder):' : 'Search:'}
+          </span>
+          <input
+            ref={promptInputRef}
+            className="browse-prompt-input"
+            type="text"
+            value={promptValue}
+            onChange={(e) => {
+              setPromptValue(e.target.value);
+              if (promptMode === 'search') {
+                setSearchQuery(e.target.value);
+              }
+            }}
+            onKeyDown={(e) => {
+              e.stopPropagation();
+              if (e.key === 'Escape') {
+                e.preventDefault();
+                if (promptMode === 'search') {
+                  setSearchQuery('');
+                }
+                setPromptMode('none');
+                setPromptValue('');
+                rootRef.current?.focus();
+              } else if (e.key === 'Enter') {
+                e.preventDefault();
+                if (promptMode === 'create') {
+                  void handleCreateResource(promptValue);
+                } else {
+                  setPromptMode('none');
+                  rootRef.current?.focus();
+                }
+              }
+            }}
+          />
+        </div>
+      )}
     </div>
   );
 }

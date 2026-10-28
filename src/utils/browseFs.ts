@@ -26,6 +26,9 @@ export interface BrowseListDeps {
     items?: Array<{ path: string; type: string }>;
     error?: string;
   }>;
+  getS3Content?: (key: string) => Promise<{ status: number; content?: string; error?: string }>;
+  getGithubContent?: (repo: string, path: string) => Promise<{ status: number; content?: string; error?: string }>;
+  createS3Resource?: (key: string, content?: string) => Promise<{ status: number; error?: string }>;
 }
 
 export const ROOT_ENTRIES: BrowseEntry[] = [
@@ -70,6 +73,20 @@ export function githubRepoId(browsePath: string): string | null {
     return rest;
   }
   return `${parts[0]}/${parts[1]}`;
+}
+
+export function githubFileDetails(browsePath: string): { repo: string; path: string } | null {
+  const { mount, rest } = parseBrowsePath(browsePath);
+  if (mount !== 'github') {
+    return null;
+  }
+  const parts = rest.split('/').filter(Boolean);
+  if (parts.length < 3) {
+    return null;
+  }
+  const repo = `${parts[0]}/${parts[1]}`;
+  const path = parts.slice(2).join('/');
+  return { repo, path };
 }
 
 function sortEntries(entries: BrowseEntry[]): BrowseEntry[] {
