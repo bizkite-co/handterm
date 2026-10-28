@@ -16,7 +16,8 @@ function initialPath(args: string[]): string {
 
 export const BrCommand: ICommand = {
   name: 'br',
-  description: 'Browse GitHub and S3 files',
+  aliases: ['y'],
+  description: 'Browse GitHub and S3 files (Yazi-style miller columns)',
   execute: async (
     _context: ICommandContext,
     parsedCommand: ParsedCommand,

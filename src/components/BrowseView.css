@@ -56,6 +56,23 @@
   opacity: 0.6;
 }
 
+.browse-empty.browse-loading {
+  opacity: 0.8;
+  color: #88c0d0;
+}
+
+.browse-spinner {
+  display: inline-block;
+  color: #88c0d0;
+  font-weight: bold;
+}
+
+.browse-spinner-tag {
+  color: #88c0d0;
+  font-weight: bold;
+  margin-left: 4px;
+}
+
 @media (max-width: 600px) {
   .browse-col.parent,
   .browse-col.child {

@@ -28,11 +28,14 @@ describe('BrCommand', () => {
     vi.mocked(navigate).mockClear();
   });
 
-  it('is named br and appears in help', () => {
+  it('is named br with alias y and appears in help', () => {
     expect(BrCommand.name).toBe('br');
+    expect(BrCommand.aliases).toContain('y');
     const registry = new CommandRegistry();
     registry.register(BrCommand);
     expect(registry.getHelp()).toContain('br');
+    expect(registry.getHelp()).toContain('y');
+    expect(registry.getCommand('y')).toBe(BrCommand);
     expect(registry.getHelp()).toContain('Browse GitHub and S3 files');
   });
 
