@@ -6,6 +6,7 @@ import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 import * as monacoVim from 'monaco-vim';
 import { TERMINAL_CONSTANTS } from 'src/constants/terminal';
 import {
+  activitySignal,
   isInLoginProcessSignal,
   isInSignUpProcessSignal,
   isInVerifyProcessSignal,
@@ -20,6 +21,7 @@ import {
   tempPasswordSignal,
   tempUserNameSignal
 } from 'src/signals/appSignals';
+import { commandRegistry } from 'src/commands/commandRegistry';
 import { addKeystroke, commandLineSignal, setCommandLine } from 'src/signals/commandLineSignals';
 import { parseCommand } from 'src/utils/commandUtils';
 import { createLogger, LogLevel } from 'src/utils/Logger';
@@ -135,6 +137,23 @@ export const useMonacoTerminal = (
 
     const currentLine = m.getLineCount();
     const currentCommand = m.getLineContent(currentLine).replace(TERMINAL_CONSTANTS.PROMPT, '');
+
+    // In GAME mode with a partially typed phrase, if the line is NOT a valid command,
+    // register Enter like any other wrongly typed character (with a newline indicator '↵')
+    // so the user can backspace over it instead of resetting the level/phrase.
+    if (activitySignal.value === ActivityType.GAME && currentCommand.length > 0) {
+      const trimmed = currentCommand.trim();
+      const parsedCmd = parseCommand(trimmed);
+      const isRegisteredCommand = Boolean(parsedCmd.command && commandRegistry.getCommand(parsedCmd.command));
+      if (!isRegisteredCommand) {
+        const newlineIndicator = '↵';
+        const newCommandLine = commandLineSignal.value + newlineIndicator;
+        setValueAndFocusEnd(m.getValue() + newlineIndicator);
+        setCommandLine(newCommandLine);
+        addKeystroke(newlineIndicator);
+        return;
+      }
+    }
     
     // Process the command
     if (isInLoginProcessSignal.value) {
@@ -292,7 +311,7 @@ export const useMonacoTerminal = (
         }
 
         // Handle Shift+Enter → insert newline
-        if (e.keyCode === monaco.KeyCode.Enter && e.shiftKey) {
+        if ((e.keyCode === monaco.KeyCode.Enter || e.browserEvent?.key === 'Enter') && e.shiftKey) {
           e.preventDefault();
           e.stopPropagation();
           handleDataRef.current('\n');
@@ -300,7 +319,7 @@ export const useMonacoTerminal = (
         }
 
         // Handle Enter → submit command
-        if (e.keyCode === monaco.KeyCode.Enter) {
+        if (e.keyCode === monaco.KeyCode.Enter || e.browserEvent?.key === 'Enter') {
           e.preventDefault();
           e.stopPropagation();
           handleDataRef.current('\r');
@@ -308,7 +327,7 @@ export const useMonacoTerminal = (
         }
 
         // Handle Backspace
-        if (e.keyCode === monaco.KeyCode.Backspace) {
+        if (e.keyCode === monaco.KeyCode.Backspace || e.browserEvent?.key === 'Backspace') {
           e.preventDefault();
           e.stopPropagation();
           handleDataRef.current('\x7F');

@@ -4,7 +4,9 @@ import { useRef } from 'react';
 import { useMonacoTerminal } from './useMonacoTerminal';
 import { commandLineSignal, setCommandLine } from '../signals/commandLineSignals';
 import { gamePhraseSignal } from '../signals/gameSignals';
-import { type GamePhrase } from '@handterm/types';
+import { activitySignal } from '../signals/appSignals';
+import { ActivityType, type GamePhrase } from '@handterm/types';
+import { commandRegistry } from '../commands/commandRegistry';
 import NextCharsDisplay from '../components/NextCharsDisplay';
 
 vi.mock('monaco-vim', () => ({
@@ -220,5 +222,64 @@ describe('useMonacoTerminal level-transition reset contract', () => {
     });
     expect(commandLineSignal.value).toBe('Al');
     expect(screen.getByText('l sad lads ask dad; alas fads fall')).toBeInTheDocument();
+  });
+
+  test('registers ENTER as ↵ when in GAME mode with partially typed non-command phrase', async () => {
+    activitySignal.value = ActivityType.GAME;
+    await act(async () => {
+      gamePhraseSignal.value = firstPhrase;
+    });
+    render(<FullGameHarness />);
+
+    await act(async () => {
+      pressKey('A');
+      pressKey('l');
+    });
+    expect(commandLineSignal.value).toBe('Al');
+
+    // Accidentally hit Enter in the middle of typing
+    await act(async () => {
+      pressKey('Enter');
+    });
+
+    // Does NOT clear the command line or reset level; registers '↵' as typo
+    expect(commandLineSignal.value).toBe('Al↵');
+    expect(model._value).toContain('Al↵');
+
+    // Hit Backspace to undo accidental Enter
+    await act(async () => {
+      pressKey('Backspace');
+    });
+    expect(commandLineSignal.value).toBe('Al');
+    expect(model._value).toBe('> Al');
+  });
+
+  test('executes command when full line in GAME mode is a registered command like reset', async () => {
+    activitySignal.value = ActivityType.GAME;
+    commandRegistry.register({
+      name: 'reset',
+      description: 'Reset command',
+      execute: vi.fn(),
+    } as any);
+
+    render(<FullGameHarness />);
+    const adapter = assertAdapter();
+
+    // Type 'reset'
+    await act(async () => {
+      for (const char of 'reset') {
+        pressKey(char);
+      }
+    });
+    expect(commandLineSignal.value).toBe('reset');
+
+    // Press Enter on command
+    await act(async () => {
+      pressKey('Enter');
+    });
+
+    // Command executed: resets command line and prompt
+    expect(commandLineSignal.value).toBe('');
+    expect(model._value).toBe('> ');
   });
 });
