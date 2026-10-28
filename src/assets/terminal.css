@@ -469,14 +469,23 @@ pre#prompt {
 }
 
 .vim-status-bar {
-  opacity: 0.25;
+  opacity: 0.9;
+  background: transparent;
+}
+
+.vim-status-bar span,
+.vim-status-bar input {
+  background-color: #0007;
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 2px;
 }
 
 div.cm-content {
   background-color: #0007;
 }
 
-/* Monaco editor styling — transparent background for terminal mode via 'handterm-transparent' theme */
+/* Monaco editor styling — transparent background for terminal and editor modes via 'handterm-transparent' theme */
 
 div.monaco-editor-container {
   background: #0000;
@@ -500,8 +509,12 @@ div.view-line {
 }
 
 div.view-line > span {
-  background: #0000;
+  background: #0007;
   display: inline-block;
+}
+
+.monaco-editor .line-numbers {
+  background-color: #0007;
 }
 
 div.monaco-editor-container
@@ -530,6 +543,14 @@ pre#prompt-header {
   font-size: var(--terminal-font-size);
   line-height: var(--terminal-line-height);
   font-family: var(--terminal-font-family);
+  background: transparent;
+}
+
+pre#prompt-header span {
+  background-color: #0007;
+  display: inline-block;
+  padding: 0 4px;
+  border-radius: 2px;
 }
 
 pre#prompt-header .timestamp {

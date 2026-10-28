@@ -317,7 +317,7 @@ describe('HandTermWrapper', () => {
     });
 
     const createCalls = (monaco.editor.create as any).mock.calls;
-    const editorCall = createCalls.find((call: any[]) => call[1]?.theme === 'vs-dark');
+    const editorCall = createCalls.find((call: any[]) => call[1]?.value === '# Fresh content');
     expect(editorCall).toBeDefined();
     expect(editorCall[1].value).toBe('# Fresh content');
   }, 10000);

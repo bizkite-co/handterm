@@ -91,15 +91,16 @@ function Column(props: {
           className={`browse-col-path${props.className === 'current' ? ' browse-breadcrumb' : ''}`}
           data-testid={props.headerTestId}
         >
-          {props.headerPath}
+          <span>{props.headerPath}</span>
         </div>
       )}
       {props.isLoading && props.entries.length === 0 ? (
         <div className="browse-empty browse-loading">
-          <span className="browse-spinner">{props.spinnerChar ?? '⠋'}</span> loading...
+          <span className="browse-spinner">{props.spinnerChar ?? '⠋'}</span>
+          <span> loading...</span>
         </div>
       ) : props.entries.length === 0 ? (
-        <div className="browse-empty">Empty</div>
+        <div className="browse-empty"><span>Empty</span></div>
       ) : (
         props.entries.map((entry, index) => {
           const isSelected = entry.path === props.selectedPath;
@@ -647,8 +648,10 @@ export function BrowseView(props: BrowseViewProps): JSX.Element {
         {(isLoading || isChildLoading || isPreviewLoading) && (
           <span className="browse-spinner-tag">{spinner} syncing... — </span>
         )}
-        h parent, j/k move, l/Enter open, / root, a new, s search, J/K scroll, q/Esc leave
-        {statusMessage !== null ? ` — ${statusMessage}` : ''}
+        <span>
+          h parent, j/k move, l/Enter open, / root, a new, s search, J/K scroll, q/Esc leave
+          {statusMessage !== null ? ` — ${statusMessage}` : ''}
+        </span>
       </div>
 
       <div className="browse-blank-line" />
@@ -683,14 +686,15 @@ export function BrowseView(props: BrowseViewProps): JSX.Element {
             data-testid="browse-preview"
           >
             <div className="browse-col-path" data-testid="bottom-col-path">
-              {bottomPath}
+              <span>{bottomPath}</span>
             </div>
             {isPreviewLoading && previewContent === null ? (
               <div className="browse-empty browse-loading">
-                <span className="browse-spinner">{spinner}</span> loading preview...
+                <span className="browse-spinner">{spinner}</span>
+                <span> loading preview...</span>
               </div>
             ) : previewError ? (
-              <div className="browse-empty">{previewError}</div>
+              <div className="browse-empty"><span>{previewError}</span></div>
             ) : previewContent !== null ? (
               <pre
                 className="browse-preview-content"
@@ -699,7 +703,7 @@ export function BrowseView(props: BrowseViewProps): JSX.Element {
                 }}
               />
             ) : (
-              <div className="browse-preview-empty">Empty file</div>
+              <div className="browse-preview-empty"><span>Empty file</span></div>
             )}
           </div>
         ) : (

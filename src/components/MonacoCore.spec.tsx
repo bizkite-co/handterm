@@ -97,7 +97,7 @@ describe('MonacoCore', () => {
     }, { timeout: 2000 });
   });
 
-  it('restores the terminal theme when an editor-mode editor unmounts', async () => {
+  it('applies the handterm-transparent theme for editor-mode editor', async () => {
     const mockEditor = {
       dispose: vi.fn(),
       getModel: vi.fn(() => ({
@@ -116,7 +116,7 @@ describe('MonacoCore', () => {
     const { unmount } = render(<MonacoCore mode="editor" value="" {...{containerRef: mockContainerRef, statusBarRef: mockStatusBarRef}} /> as any);
 
     await waitFor(() => {
-      expect(monaco.editor.setTheme).toHaveBeenCalledWith('vs-dark');
+      expect(monaco.editor.setTheme).toHaveBeenCalledWith('handterm-transparent');
     });
 
     unmount();

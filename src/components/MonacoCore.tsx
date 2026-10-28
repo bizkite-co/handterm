@@ -38,19 +38,20 @@ const logger = createLogger({
 // being swallowed in a .catch(logger.error).
 export class SaveError extends Data.TaggedError('SaveError')<{ message: string }> {}
 
-// Custom Monaco theme with transparent background for terminal mode
+// Custom Monaco theme with transparent background for terminal and editor modes
 monaco.editor.defineTheme('handterm-transparent', {
   base: 'vs-dark',
   inherit: true,
   rules: [],
   colors: {
     'editor.background': '#00000000',
+    'editorGutter.background': '#00000000',
     'editor.foreground': '#ffffff',
     'editorCursor.foreground': '#ffffff',
     'editor.lineHighlightBackground': '#00000000',
-    'editor.selectionBackground': '#000000',
-    'editor.inactiveSelectionBackground': '#00000000',
-    'editor.selectionForeground': '#808080',
+    'editor.selectionBackground': '#264f7866',
+    'editor.inactiveSelectionBackground': '#3a3d4100',
+    'editor.selectionForeground': '#ffffff',
   }
 });
 
@@ -320,7 +321,7 @@ export default function MonacoCore({ value, language = 'text', toggleVideo, mode
     const editorInstance = monaco.editor.create(containerRef.current, {
       value,
       language,
-      theme: mode === 'terminal' ? 'handterm-transparent' : 'vs-dark',
+      theme: 'handterm-transparent',
       // Initial options, will be updated by another effect
       minimap: { enabled: false },
       automaticLayout: true,
@@ -407,8 +408,8 @@ export default function MonacoCore({ value, language = 'text', toggleVideo, mode
 
     editor.updateOptions(getMonacoOptions(mode));
 
-    // Apply the correct Monaco theme based on mode
-    monaco.editor.setTheme(mode === 'terminal' ? 'handterm-transparent' : 'vs-dark');
+    // Apply the transparent Monaco theme across both terminal and editor modes
+    monaco.editor.setTheme('handterm-transparent');
 
     // Handle model language for editor mode
     if (mode === 'editor') {
