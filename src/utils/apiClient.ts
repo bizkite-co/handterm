@@ -134,9 +134,12 @@ export async function makeAuthenticatedRequest<T>(
                     error: message
                 };
             }
+            const isNetworkError = error.message === 'Network Error' || error.code === 'ERR_NETWORK';
             return {
                 status: 500,
-                error: typeof error.message === 'string' ? error.message : 'Request failed'
+                error: isNetworkError
+                    ? 'Network error: check proxy, VPN, or internet connection.'
+                    : (typeof error.message === 'string' ? error.message : 'Request failed')
             };
         }
 
