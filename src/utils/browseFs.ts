@@ -21,7 +21,7 @@ export interface BrowseListDeps {
     repos?: Array<{ name: string; full_name?: string }>;
     error?: string;
   }>;
-  listGithubTree?: (repo: string) => Promise<{
+  listGithubTree?: (repo: string, path?: string) => Promise<{
     status: number;
     items?: Array<{ path: string; type: string }>;
     error?: string;
@@ -157,14 +157,66 @@ export function moveSelection(index: number, count: number, delta: number): numb
 }
 
 export function topLevelTreeKeys(items: Array<{ path: string; type: string }>): string[] {
-  return items
-    .filter((item) => item.path !== '')
-    .map((item) => {
-      if (item.type === 'tree' || item.type === 'directory') {
-        return item.path.endsWith('/') ? `${item.path}child` : `${item.path}/child`;
+  return items.filter((item) => item.path !== '').map((item) => item.path);
+}
+
+export function parseGithubTreeEntries(
+  items: Array<{ path: string; type: string }>,
+  nested: string,
+  repoPrefix: string,
+): BrowseEntry[] {
+  const nestedParts = nested === '' ? [] : nested.split('/').filter(Boolean);
+  const seen = new Map<string, BrowseEntry>();
+
+  const hasAnyPrefix = nestedParts.length > 0 && items.some((item) => {
+    const p = item.path.split('/').filter(Boolean);
+    return p.length > nestedParts.length && nestedParts.every((np, idx) => p[idx] === np);
+  });
+
+  for (const item of items) {
+    if (!item.path) continue;
+    const parts = item.path.split('/').filter(Boolean);
+
+    // Skip the directory itself if present in results
+    if (nestedParts.length > 0 && parts.length === nestedParts.length && nestedParts.every((p, i) => parts[i] === p)) {
+      continue;
+    }
+
+    let relParts: string[];
+    if (hasAnyPrefix) {
+      const matchesNested = parts.length > nestedParts.length &&
+        nestedParts.every((np, idx) => parts[idx] === np);
+      if (!matchesNested) {
+        continue;
       }
-      return item.path;
-    });
+      relParts = parts.slice(nestedParts.length);
+    } else {
+      relParts = parts;
+    }
+
+    const name = relParts[0];
+    if (!name || name === 'child') {
+      continue;
+    }
+
+    const isExplicitDir = item.type === 'tree' || item.type === 'dir' || item.type === 'directory';
+    const isImplicitDir = relParts.length > 1;
+    const isDir = isExplicitDir || isImplicitDir;
+
+    const childPath = [repoPrefix, ...nestedParts, name].filter(Boolean).join('/');
+    const existing = seen.get(name);
+    if (!existing) {
+      seen.set(name, {
+        name,
+        path: childPath,
+        kind: isDir ? 'dir' : 'file',
+      });
+    } else if (isDir) {
+      existing.kind = 'dir';
+    }
+  }
+
+  return sortEntries([...seen.values()]);
 }
 
 export async function listBrowsePath(
@@ -250,7 +302,12 @@ export async function listBrowsePath(
     return { status: 200, entries: [] };
   }
 
-  const tree = await deps.listGithubTree(repo);
+  const repoPrefix = `github/${repo}`;
+  const nested = rest.split('/').slice(2).join('/');
+  const tree = nested
+    ? await deps.listGithubTree(repo, nested)
+    : await deps.listGithubTree(repo);
+
   if (tree.status !== 200 || tree.items === undefined) {
     return {
       status: tree.status,
@@ -263,10 +320,8 @@ export async function listBrowsePath(
     };
   }
 
-  const repoPrefix = `github/${repo}`;
-  const nested = rest.split('/').slice(2).join('/');
   return {
     status: 200,
-    entries: groupKeys(topLevelTreeKeys(tree.items), nested, repoPrefix),
+    entries: parseGithubTreeEntries(tree.items, nested, repoPrefix),
   };
 }

@@ -123,6 +123,34 @@ describe('browseFs', () => {
     expect(result.entries[0]?.name).toBe('README.md');
   });
 
+  it('lists GitHub subdirectory contents without creating synthetic child items', async () => {
+    const listTreeMock = vi.fn().mockResolvedValue({
+      status: 200,
+      items: [
+        { path: 'src/BrowseView.tsx', type: 'blob' },
+        { path: 'src/components', type: 'tree' },
+      ],
+    });
+
+    const result = await listBrowsePath('github/InTEGr8or/cliqz/src', {
+      isLoggedIn: true,
+      githubUsername: 'InTEGr8or',
+      listS3: async () => ({ status: 200, files: [] }),
+      listGithubRepos: async () => ({ status: 200, repos: [] }),
+      listGithubTree: listTreeMock,
+    });
+
+    expect(listTreeMock).toHaveBeenCalledWith('InTEGr8or/cliqz', 'src');
+    expect(result.entries.some((e) => e.name === 'child')).toBe(false);
+    expect(result.entries.map((e) => `${e.kind}:${e.name}`)).toEqual([
+      'dir:components',
+      'file:BrowseView.tsx',
+    ]);
+    expect(result.entries.find((e) => e.name === 'BrowseView.tsx')?.path).toBe(
+      'github/InTEGr8or/cliqz/src/BrowseView.tsx',
+    );
+  });
+
   it('gracefully handles 500 error from tree API without throwing', async () => {
     const result = await listBrowsePath('github/owner/broken-repo', {
       isLoggedIn: true,

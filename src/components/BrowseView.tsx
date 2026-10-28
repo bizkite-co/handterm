@@ -13,6 +13,15 @@ import {
   type BrowseEntry,
   type BrowseListDeps,
 } from '../utils/browseFs';
+import {
+  clearLegacyBrowseLocalStorage,
+  getCachedEntries,
+  getCachedEntriesSync,
+  getCachedPreview,
+  getCachedPreviewSync,
+  setCachedEntries,
+  setCachedPreview,
+} from '../utils/browseStorage';
 import { getFileIcon, getFolderIcon } from '../utils/fileIcons';
 import { navigate, parseLocation } from '../utils/navigationUtils';
 import './BrowseView.css';
@@ -36,44 +45,7 @@ function useTerminalSpinner(isActive: boolean): string {
   return SPINNER_FRAMES[frameIndex] ?? '⠋';
 }
 
-const CACHE_PREFIX = 'browse_cache:';
-function getBrowseCache(key: string): BrowseEntry[] | null {
-  try {
-    const raw = typeof localStorage !== 'undefined' ? localStorage.getItem(CACHE_PREFIX + key) : null;
-    return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
-  }
-}
 
-function setBrowseCache(key: string, entries: BrowseEntry[]): void {
-  try {
-    if (typeof localStorage !== 'undefined' && entries.length > 0 && !entries.some((e) => e.kind === 'message')) {
-      localStorage.setItem(CACHE_PREFIX + key, JSON.stringify(entries));
-    }
-  } catch {
-    // Ignore quota or private-browsing errors
-  }
-}
-
-const PREVIEW_CACHE_PREFIX = 'browse_preview:';
-function getPreviewCache(key: string): string | null {
-  try {
-    return typeof localStorage !== 'undefined' ? localStorage.getItem(PREVIEW_CACHE_PREFIX + key) : null;
-  } catch {
-    return null;
-  }
-}
-
-function setPreviewCache(key: string, content: string): void {
-  try {
-    if (typeof localStorage !== 'undefined') {
-      localStorage.setItem(PREVIEW_CACHE_PREFIX + key, content);
-    }
-  } catch {
-    // Ignore quota errors
-  }
-}
 
 function renderHighlightedText(text: string, query: string): React.ReactNode {
   const trimmed = query.trim();
@@ -159,7 +131,7 @@ export function BrowseView(props: BrowseViewProps): JSX.Element {
   const promptInputRef = useRef<HTMLInputElement>(null);
 
   const [path, setPath] = useState(() => parseLocation().contentKey ?? '');
-  const [entries, setEntries] = useState<BrowseEntry[]>(() => getBrowseCache(parseLocation().contentKey ?? 'root') ?? []);
+  const [entries, setEntries] = useState<BrowseEntry[]>(() => getCachedEntriesSync(parseLocation().contentKey ?? 'root') ?? []);
   const [parentEntries, setParentEntries] = useState<BrowseEntry[]>([]);
   const [childEntries, setChildEntries] = useState<BrowseEntry[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -203,10 +175,10 @@ export function BrowseView(props: BrowseViewProps): JSX.Element {
       const response = await listRecentRepos(authRef.current);
       return { status: response.status, repos: response.data, error: response.error };
     },
-    listGithubTree: async (repo: string) => {
+    listGithubTree: async (repo: string, path?: string) => {
       const custom = customDepsRef.current?.listGithubTree;
-      if (custom) return custom(repo);
-      const response = await getRepoTree(authRef.current, repo);
+      if (custom) return custom(repo, path);
+      const response = await getRepoTree(authRef.current, repo, path);
       return { status: response.status, items: response.data, error: response.error };
     },
     getS3Content: async (key: string) => {
@@ -273,19 +245,29 @@ export function BrowseView(props: BrowseViewProps): JSX.Element {
     };
   }, []);
 
+  useEffect(() => {
+    clearLegacyBrowseLocalStorage();
+  }, []);
+
   const load = useCallback(async (nextPath: string, keepIndex = 0) => {
     const cacheKey = nextPath === '' ? 'root' : nextPath;
-    const cached = getBrowseCache(cacheKey);
+    const cached = getCachedEntriesSync(cacheKey);
     if (cached && cached.length > 0) {
       setEntries(cached);
       setSelectedIndex(Math.min(keepIndex, Math.max(0, cached.length - 1)));
+    } else {
+      void getCachedEntries(cacheKey).then((asyncEntries) => {
+        if (asyncEntries && asyncEntries.length > 0) {
+          setEntries(asyncEntries);
+        }
+      });
     }
 
     setIsLoading(true);
     try {
       const current = await listBrowsePath(nextPath, deps);
       setEntries(current.entries);
-      setBrowseCache(cacheKey, current.entries);
+      void setCachedEntries(cacheKey, current.entries);
       setSelectedIndex(Math.min(keepIndex, Math.max(0, current.entries.length - 1)));
       setStatusMessage(current.entries.find((e) => e.kind === 'message')?.message ?? null);
 
@@ -294,13 +276,13 @@ export function BrowseView(props: BrowseViewProps): JSX.Element {
         setParentEntries([]);
       } else {
         const parentCacheKey = parent === '' ? 'root' : parent;
-        const cachedParent = getBrowseCache(parentCacheKey);
+        const cachedParent = getCachedEntriesSync(parentCacheKey);
         if (cachedParent && cachedParent.length > 0) {
           setParentEntries(cachedParent);
         }
         const parentResult = await listBrowsePath(parent, deps);
         setParentEntries(parentResult.entries);
-        setBrowseCache(parentCacheKey, parentResult.entries);
+        void setCachedEntries(parentCacheKey, parentResult.entries);
       }
     } finally {
       setIsLoading(false);
@@ -318,9 +300,15 @@ export function BrowseView(props: BrowseViewProps): JSX.Element {
       return;
     }
 
-    const cachedChild = getBrowseCache(selected.path);
+    const cachedChild = getCachedEntriesSync(selected.path);
     if (cachedChild && cachedChild.length > 0) {
       setChildEntries(cachedChild);
+    } else {
+      void getCachedEntries(selected.path).then((asyncChild) => {
+        if (asyncChild && asyncChild.length > 0) {
+          setChildEntries(asyncChild);
+        }
+      });
     }
 
     setIsChildLoading(true);
@@ -328,7 +316,7 @@ export function BrowseView(props: BrowseViewProps): JSX.Element {
     void listBrowsePath(selected.path, deps).then((result) => {
       if (!cancelled) {
         setChildEntries(result.entries);
-        setBrowseCache(selected.path, result.entries);
+        void setCachedEntries(selected.path, result.entries);
         setIsChildLoading(false);
       }
     }).catch(() => {
@@ -352,11 +340,16 @@ export function BrowseView(props: BrowseViewProps): JSX.Element {
       return;
     }
 
-    const cached = getPreviewCache(selected.path);
+    const cached = getCachedPreviewSync(selected.path);
     if (cached !== null) {
       setPreviewContent(cached);
     } else {
       setPreviewContent(null);
+      void getCachedPreview(selected.path).then((asyncPreview) => {
+        if (asyncPreview !== null && !cancelled) {
+          setPreviewContent(asyncPreview);
+        }
+      });
     }
 
     let cancelled = false;
@@ -378,7 +371,7 @@ export function BrowseView(props: BrowseViewProps): JSX.Element {
           if (!cancelled) {
             if (res.status === 200 && res.content !== undefined) {
               setPreviewContent(res.content);
-              setPreviewCache(selected.path, res.content);
+              void setCachedPreview(selected.path, res.content);
             } else {
               setPreviewError(res.error ?? 'Could not load S3 preview.');
             }
@@ -396,7 +389,7 @@ export function BrowseView(props: BrowseViewProps): JSX.Element {
             if (!cancelled) {
               if (res.status === 200 && res.content !== undefined) {
                 setPreviewContent(res.content);
-                setPreviewCache(selected.path, res.content);
+                void setCachedPreview(selected.path, res.content);
               } else {
                 setPreviewError(res.error ?? 'Could not load GitHub preview.');
               }
