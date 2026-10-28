@@ -131,7 +131,9 @@ export function defineVimCommands(
     const handleQuit = () => {
       logger.debug(':q / :quit command triggered. Attempting to navigate...');
       try {
-        const contentKey = parseLocation?.()?.contentKey;
+        const loc = parseLocation?.();
+        const contentKey = loc?.contentKey;
+        const groupKey = loc?.groupKey;
         if (contentKey === 'vimtut') {
           updateCompletedVimTutorials(prev => new Set(prev).add('vim-06-exiting-vim'));
           appendToOutput({
@@ -144,8 +146,14 @@ export function defineVimCommands(
             commandTime: new Date(),
           });
         }
-        setActivity(ActivityType.NORMAL);
-        navigate({ activityKey: ActivityType.NORMAL });
+        if (groupKey && (groupKey.startsWith('github') || groupKey.startsWith('s3') || groupKey === 'root' || groupKey === 'browse')) {
+          const returnPath = groupKey === 'browse' ? '' : groupKey;
+          setActivity(ActivityType.BROWSE);
+          void navigate({ activityKey: ActivityType.BROWSE, contentKey: returnPath, groupKey: null });
+        } else {
+          setActivity(ActivityType.NORMAL);
+          void navigate({ activityKey: ActivityType.NORMAL });
+        }
         logger.debug(':q command: navigate called. Removing editContent from localStorage.');
         localStorage.removeItem(StorageKeys.editContent);
       } catch (error) {
@@ -162,6 +170,8 @@ export function defineVimCommands(
     Vim.defineEx('wq', '', () => {
       logger.debug(':wq command triggered. Attempting to save and navigate...');
       try {
+        const loc = parseLocation?.();
+        const groupKey = loc?.groupKey;
         if (editorRef.current) {
           const content = editorRef.current.getValue();
           localStorage.setItem(StorageKeys.editContent, JSON.stringify(content));
@@ -169,8 +179,14 @@ export function defineVimCommands(
           logger.debug(':wq command: content saved.');
           void saveToAWS(content).then(handleSaveResult);
         }
-        setActivity(ActivityType.NORMAL);
-        navigate({ activityKey: ActivityType.NORMAL });
+        if (groupKey && (groupKey.startsWith('github') || groupKey.startsWith('s3') || groupKey === 'root' || groupKey === 'browse')) {
+          const returnPath = groupKey === 'browse' ? '' : groupKey;
+          setActivity(ActivityType.BROWSE);
+          void navigate({ activityKey: ActivityType.BROWSE, contentKey: returnPath, groupKey: null });
+        } else {
+          setActivity(ActivityType.NORMAL);
+          void navigate({ activityKey: ActivityType.NORMAL });
+        }
         logger.debug(':wq command: navigate called. Removing editContent from localStorage.');
         localStorage.removeItem(StorageKeys.editContent);
       } catch (error) {
@@ -236,7 +252,12 @@ export default function MonacoCore({ value, language = 'text', toggleVideo, mode
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const statusBarRef = useRef<HTMLDivElement>(null);
-  const [containerStyle] = useState({ flexGrow: 1, height: '100%', minHeight: '300px' });
+  const [containerStyle] = useState({
+    flexGrow: 1,
+    flex: '1 1 auto',
+    height: '100%',
+    minHeight: mode === 'editor' ? 'calc(100vh - 60px)' : '300px',
+  });
   const vimModeRef = useRef<IDisposable | null>(null);
   const defineCommandsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const currentVimModeRef = useRef<string>('insert');
@@ -691,7 +712,17 @@ export default function MonacoCore({ value, language = 'text', toggleVideo, mode
   }, [isVimTut]);
 
   return (
-    <div data-testid="monaco-editor-container" className="monaco-editor-container" style={{ display: 'flex', flexDirection: 'column', height: '100%', flex: '1 1 auto' }}>
+    <div
+      data-testid="monaco-editor-container"
+      className="monaco-editor-container"
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        height: mode === 'editor' ? 'calc(100vh - 35px)' : '100%',
+        minHeight: mode === 'editor' ? 'calc(100vh - 45px)' : undefined,
+        flex: '1 1 auto',
+      }}
+    >
       {isVimTut && (
         <VimGuide
           currentCursor={vimCursor}

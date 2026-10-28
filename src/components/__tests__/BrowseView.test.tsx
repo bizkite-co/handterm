@@ -237,10 +237,34 @@ describe('BrowseView', () => {
       expect(navigate).toHaveBeenCalledWith({
         activityKey: ActivityType.EDIT,
         contentKey: '_index.md',
-        groupKey: null,
+        groupKey: 's3',
       });
       const stored = localStorage.getItem(StorageKeys.editContent);
       expect(stored).toContain('Hello S3');
+    });
+  });
+
+  it('navigates to parent directory on Backspace just like h', async () => {
+    render(<BrowseView auth={auth} deps={stubDeps()} />);
+    const view = await screen.findByTestId('browse-view');
+    await waitFor(() => {
+      expect(view.textContent).toContain('S3');
+    });
+
+    // Go to S3
+    fireEvent.keyDown(window, { key: 'j' });
+    fireEvent.keyDown(window, { key: 'Enter' });
+
+    await waitFor(() => {
+      expect(view.querySelector('.browse-breadcrumb')?.textContent).toContain('/s3');
+    });
+
+    // Press Backspace to navigate up to root
+    fireEvent.keyDown(window, { key: 'Backspace' });
+
+    await waitFor(() => {
+      expect(view.querySelector('.browse-breadcrumb')?.textContent).toBe('/');
+      expect(view.textContent).toContain('GitHub');
     });
   });
 

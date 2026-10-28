@@ -2,7 +2,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { defineVimCommands } from './MonacoCore'; // Import the named export
 import { ActivityType } from '@handterm/types';
-import { navigate } from '../utils/navigationUtils';
+import { navigate, parseLocation } from '../utils/navigationUtils';
 
 // Mock the entire monaco-editor module *once* before all tests.
 vi.mock('monaco-editor/esm/vs/editor/editor.api', () => ({
@@ -52,6 +52,32 @@ describe('MonacoCore - defineVimCommands', () => {
 
     expect(navigate).toHaveBeenCalledWith({ activityKey: ActivityType.NORMAL });
     expect(localStorage.getItem('editContent')).toBeNull();
+  });
+
+  it('returns to browse view on :q when opened from browse mode', () => {
+    vi.mocked(parseLocation).mockReturnValue({
+      activityKey: ActivityType.EDIT,
+      contentKey: 'owner/repo/main.py',
+      groupKey: 'github/owner/repo',
+      clearParams: false,
+    });
+
+    const defineExSpy = vi.fn();
+    (monacoVim as any).VimMode = {
+      Vim: {
+        defineEx: defineExSpy,
+      },
+    };
+
+    defineVimCommands(mockEditorRef);
+    const qCommandCallback = defineExSpy.mock.calls.find(call => call[0] === 'q')[2];
+    qCommandCallback();
+
+    expect(navigate).toHaveBeenCalledWith({
+      activityKey: ActivityType.BROWSE,
+      contentKey: 'github/owner/repo',
+      groupKey: null,
+    });
   });
 
   it('defines the :next / :n command for vimtut step advancement', () => {

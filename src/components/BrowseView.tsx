@@ -24,6 +24,7 @@ import {
 } from '../utils/browseStorage';
 import { getFileIcon, getFolderIcon } from '../utils/fileIcons';
 import { navigate, parseLocation } from '../utils/navigationUtils';
+import { renderHighlightedCode } from '../utils/syntaxHighlight';
 import './BrowseView.css';
 
 export interface BrowseViewProps {
@@ -452,7 +453,7 @@ export function BrowseView(props: BrowseViewProps): JSX.Element {
         void navigate({
           activityKey: ActivityType.EDIT,
           contentKey: filename,
-          groupKey: null,
+          groupKey: path === '' ? 'browse' : path,
         });
       } else if (mount === 'github') {
         const details = githubFileDetails(selected.path, githubUsername);
@@ -474,11 +475,11 @@ export function BrowseView(props: BrowseViewProps): JSX.Element {
         void navigate({
           activityKey: ActivityType.EDIT,
           contentKey: `${details.repo}/${details.path}`,
-          groupKey: null,
+          groupKey: path === '' ? 'browse' : path,
         });
       }
     }
-  }, [deps, githubUsername, navigateToPath, previewContent, selected]);
+  }, [deps, githubUsername, navigateToPath, path, previewContent, selected]);
 
   const handleCreateResource = useCallback(async (value: string) => {
     const trimmed = value.trim();
@@ -572,7 +573,7 @@ export function BrowseView(props: BrowseViewProps): JSX.Element {
       }
 
       if (
-        !['h', 'j', 'k', 'l', 'Enter', 'Escape', 'q', '/', 'a', 's', 'f'].includes(key)
+        !['h', 'Backspace', 'j', 'k', 'l', 'Enter', 'Escape', 'q', '/', 'a', 's', 'f'].includes(key)
       ) {
         return;
       }
@@ -595,7 +596,7 @@ export function BrowseView(props: BrowseViewProps): JSX.Element {
         setSelectedIndex((index) => moveSelection(index, displayEntries.length, -1));
         return;
       }
-      if (key === 'h') {
+      if (key === 'h' || key === 'Backspace') {
         navigateToPath(parentPath(path));
         return;
       }
@@ -691,9 +692,12 @@ export function BrowseView(props: BrowseViewProps): JSX.Element {
             ) : previewError ? (
               <div className="browse-empty">{previewError}</div>
             ) : previewContent !== null ? (
-              <pre className="browse-preview-content">
-                {renderHighlightedText(previewContent, searchQuery)}
-              </pre>
+              <pre
+                className="browse-preview-content"
+                dangerouslySetInnerHTML={{
+                  __html: renderHighlightedCode(previewContent, selected?.name ?? '', searchQuery),
+                }}
+              />
             ) : (
               <div className="browse-preview-empty">Empty file</div>
             )}

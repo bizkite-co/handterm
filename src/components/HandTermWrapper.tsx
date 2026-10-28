@@ -30,6 +30,7 @@ import GamePhrases from '../utils/GamePhrases';
 import { Chord } from './Chord';
 import { IntroText } from './IntroText';
 import { KeyIndicator } from './KeyIndicator';
+import { getMonacoLanguageForFile } from '../utils/syntaxHighlight';
 import MonacoCore from './MonacoCore';
 import NextCharsDisplay, { type NextCharsDisplayHandle } from './NextCharsDisplay';
 import { PromptHeader } from './PromptHeader';
@@ -247,7 +248,7 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
   const editorComponent = useMemo(() => {
     logger.debug("Memoizing MonacoCore (Editor) component instance");
     const activeFile = parseLocation().contentKey ?? '';
-    const language = activeFile.endsWith('.json') ? 'json' : 'markdown';
+    const language = getMonacoLanguageForFile(activeFile);
     return (
       <MonacoCore
         key={ActivityType.EDIT}
