@@ -207,6 +207,34 @@ export function BrowseView(props: BrowseViewProps): JSX.Element {
 
   const selected = displayEntries[selectedIndex] ?? entries[selectedIndex] ?? null;
 
+  // Navigate to a new path and sync with the URL querystring for GitHub Pages / reloads
+  const navigateToPath = useCallback((nextPath: string) => {
+    setPath(nextPath);
+    setSearchQuery('');
+    void navigate({
+      activityKey: ActivityType.BROWSE,
+      contentKey: nextPath === '' ? null : nextPath,
+      groupKey: null,
+    });
+  }, []);
+
+  // Listen to external location changes (e.g. browser back/forward buttons or direct navigations)
+  useEffect(() => {
+    const handleUrlChange = () => {
+      const parsed = parseLocation();
+      if (parsed.activityKey === ActivityType.BROWSE) {
+        const urlPath = parsed.contentKey ?? '';
+        setPath((curr) => (curr !== urlPath ? urlPath : curr));
+      }
+    };
+    window.addEventListener('locationchange', handleUrlChange);
+    window.addEventListener('popstate', handleUrlChange);
+    return () => {
+      window.removeEventListener('locationchange', handleUrlChange);
+      window.removeEventListener('popstate', handleUrlChange);
+    };
+  }, []);
+
   const load = useCallback(async (nextPath: string, keepIndex = 0) => {
     const cacheKey = nextPath === '' ? 'root' : nextPath;
     const cached = getBrowseCache(cacheKey);
@@ -372,8 +400,7 @@ export function BrowseView(props: BrowseViewProps): JSX.Element {
       return;
     }
     if (selected.kind === 'dir' || selected.kind === 'mount') {
-      setPath(selected.path);
-      setSearchQuery('');
+      navigateToPath(selected.path);
       return;
     }
     if (selected.kind === 'file') {
@@ -391,7 +418,7 @@ export function BrowseView(props: BrowseViewProps): JSX.Element {
           content = res.content ?? '';
         }
         localStorage.setItem(StorageKeys.editContent, JSON.stringify(content));
-        navigate({
+        void navigate({
           activityKey: ActivityType.EDIT,
           contentKey: filename,
           groupKey: null,
@@ -413,14 +440,14 @@ export function BrowseView(props: BrowseViewProps): JSX.Element {
           content = res.content ?? '';
         }
         localStorage.setItem(StorageKeys.editContent, JSON.stringify(content));
-        navigate({
+        void navigate({
           activityKey: ActivityType.EDIT,
           contentKey: `${details.repo}/${details.path}`,
           groupKey: null,
         });
       }
     }
-  }, [deps, previewContent, props.auth, selected]);
+  }, [deps, navigateToPath, previewContent, props.auth, selected]);
 
   const handleCreateResource = useCallback(async (value: string) => {
     const trimmed = value.trim();
@@ -466,73 +493,89 @@ export function BrowseView(props: BrowseViewProps): JSX.Element {
     }
   }, [path, deps, props.auth, load]);
 
-  const onKeyDown = useCallback((event: React.KeyboardEvent<HTMLDivElement>) => {
-    if (promptMode !== 'none') {
-      return;
-    }
-    const key = event.key;
-    if (
-      !['h', 'j', 'k', 'l', 'Enter', 'Escape', 'q', '/', 'a', 's', 'f', 'J', 'K'].includes(key)
-    ) {
-      return;
-    }
-    event.preventDefault();
-    event.stopPropagation();
-
-    if (key === 'Escape' || key === 'q') {
-      navigate({
-        activityKey: ActivityType.NORMAL,
-        contentKey: null,
-        groupKey: null,
-      });
-      return;
-    }
-    if (key === 'j') {
-      setSelectedIndex((index) => moveSelection(index, displayEntries.length, 1));
-      return;
-    }
-    if (key === 'k') {
-      setSelectedIndex((index) => moveSelection(index, displayEntries.length, -1));
-      return;
-    }
-    if (key === 'h') {
-      setPath(parentPath(path));
-      setSearchQuery('');
-      return;
-    }
-    if (key === 'l' || key === 'Enter') {
-      void openSelected();
-      return;
-    }
-    if (key === '/') {
-      setPath('');
-      setSearchQuery('');
-      return;
-    }
-    if (key === 's' || key === 'f') {
-      setPromptMode('search');
-      setPromptValue(searchQuery);
-      return;
-    }
-    if (key === 'a') {
-      const { mount } = parseBrowsePath(path);
-      if (mount !== 's3') {
-        setStatusMessage('Resource creation is supported in S3 directories.');
+  // Window-level keydown handler ensures h/j/k/l work even if container div does not currently have focus
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Allow input elements (search / resource creation) to receive native keystrokes
+      if (
+        event.target instanceof HTMLInputElement ||
+        event.target instanceof HTMLTextAreaElement ||
+        (event.target as HTMLElement)?.isContentEditable
+      ) {
         return;
       }
-      setPromptMode('create');
-      setPromptValue('');
-      return;
-    }
-    if (key === 'J') {
-      previewRef.current?.scrollBy({ top: 80, behavior: 'smooth' });
-      return;
-    }
-    if (key === 'K') {
-      previewRef.current?.scrollBy({ top: -80, behavior: 'smooth' });
-      return;
-    }
-  }, [promptMode, displayEntries.length, path, searchQuery, openSelected]);
+
+      if (promptMode !== 'none') {
+        return;
+      }
+
+      const key = event.key;
+      if (
+        !['h', 'j', 'k', 'l', 'Enter', 'Escape', 'q', '/', 'a', 's', 'f', 'J', 'K'].includes(key)
+      ) {
+        return;
+      }
+      event.preventDefault();
+      event.stopPropagation();
+
+      if (key === 'Escape' || key === 'q') {
+        void navigate({
+          activityKey: ActivityType.NORMAL,
+          contentKey: null,
+          groupKey: null,
+        });
+        return;
+      }
+      if (key === 'j') {
+        setSelectedIndex((index) => moveSelection(index, displayEntries.length, 1));
+        return;
+      }
+      if (key === 'k') {
+        setSelectedIndex((index) => moveSelection(index, displayEntries.length, -1));
+        return;
+      }
+      if (key === 'h') {
+        navigateToPath(parentPath(path));
+        return;
+      }
+      if (key === 'l' || key === 'Enter') {
+        void openSelected();
+        return;
+      }
+      if (key === '/') {
+        navigateToPath('');
+        return;
+      }
+      if (key === 's' || key === 'f') {
+        setPromptMode('search');
+        setPromptValue(searchQuery);
+        return;
+      }
+      if (key === 'a') {
+        const { mount } = parseBrowsePath(path);
+        if (mount !== 's3') {
+          setStatusMessage('Resource creation is supported in S3 directories.');
+          return;
+        }
+        setPromptMode('create');
+        setPromptValue('');
+        return;
+      }
+      if (key === 'J') {
+        previewRef.current?.scrollBy({ top: 80, behavior: 'smooth' });
+        return;
+      }
+      if (key === 'K') {
+        previewRef.current?.scrollBy({ top: -80, behavior: 'smooth' });
+        return;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [promptMode, displayEntries.length, path, searchQuery, openSelected, navigateToPath]);
 
   return (
     <div
@@ -541,7 +584,6 @@ export function BrowseView(props: BrowseViewProps): JSX.Element {
       data-testid="browse-view"
       tabIndex={0}
       ref={rootRef}
-      onKeyDown={onKeyDown}
     >
       <div className="browse-hint">
         <span className="browse-breadcrumb">{path === '' ? '/' : `/${path}`}</span>
@@ -558,7 +600,7 @@ export function BrowseView(props: BrowseViewProps): JSX.Element {
           className="parent"
           entries={parentEntries}
           selectedPath={path === '' ? null : path}
-          onSelect={() => { setPath(parentPath(path)); }}
+          onSelect={() => { navigateToPath(parentPath(path)); }}
         />
         <Column
           className="current"
@@ -602,9 +644,9 @@ export function BrowseView(props: BrowseViewProps): JSX.Element {
               if (child !== undefined && (child.kind === 'dir' || child.kind === 'mount' || child.kind === 'file')) {
                 setSelectedIndex(entries.findIndex((e) => e.path === selected?.path));
                 if (child.kind === 'file') {
-                  setPath(parentPath(child.path));
+                  navigateToPath(parentPath(child.path));
                 } else {
-                  setPath(child.path);
+                  navigateToPath(child.path);
                 }
               }
             }}

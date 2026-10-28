@@ -128,8 +128,25 @@
 }
 
 @media (max-width: 600px) {
-  .browse-col.parent,
-  .browse-col.child {
+  .browse-col.parent {
     display: none;
+  }
+
+  .browse-columns {
+    flex-direction: column;
+  }
+
+  .browse-col.current {
+    flex: 1;
+    border-right: none;
+    border-bottom: 1px solid #2e3440;
+  }
+
+  .browse-col.child {
+    display: block;
+    flex: 1;
+    margin-left: 2ch;
+    border-left: 1px solid #2e3440;
+    border-right: none;
   }
 }
