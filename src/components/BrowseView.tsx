@@ -162,39 +162,55 @@ export function BrowseView(props: BrowseViewProps): JSX.Element {
 
   const spinner = useTerminalSpinner(isLoading || isChildLoading || isPreviewLoading);
 
+  const authRef = useRef(props.auth);
+  authRef.current = props.auth;
+  const customDepsRef = useRef(props.deps);
+  customDepsRef.current = props.deps;
+
   const githubUsername = typeof localStorage !== 'undefined'
-    ? localStorage.getItem(TokenKeys.GithubUsername)
+    ? (localStorage.getItem(TokenKeys.GithubUsername) ?? localStorage.getItem('github_username'))
     : null;
 
   const deps: BrowseListDeps = useMemo(() => ({
     isLoggedIn: props.auth.isLoggedIn,
     githubUsername,
     listS3: async () => {
-      const response = await listFiles(props.auth);
+      const custom = customDepsRef.current?.listS3;
+      if (custom) return custom();
+      const response = await listFiles(authRef.current);
       return { status: response.status, files: response.data?.files, error: response.error };
     },
     listGithubRepos: async () => {
-      const response = await listRecentRepos(props.auth);
+      const custom = customDepsRef.current?.listGithubRepos;
+      if (custom) return custom();
+      const response = await listRecentRepos(authRef.current);
       return { status: response.status, repos: response.data, error: response.error };
     },
     listGithubTree: async (repo: string) => {
-      const response = await getRepoTree(props.auth, repo);
+      const custom = customDepsRef.current?.listGithubTree;
+      if (custom) return custom(repo);
+      const response = await getRepoTree(authRef.current, repo);
       return { status: response.status, items: response.data, error: response.error };
     },
     getS3Content: async (key: string) => {
-      const response = await getFile(props.auth, key);
+      const custom = customDepsRef.current?.getS3Content;
+      if (custom) return custom(key);
+      const response = await getFile(authRef.current, key);
       return { status: response.status, content: response.data?.content, error: response.error };
     },
     getGithubContent: async (repo: string, filePath: string) => {
-      const response = await getRepoContent(props.auth, repo, filePath);
+      const custom = customDepsRef.current?.getGithubContent;
+      if (custom) return custom(repo, filePath);
+      const response = await getRepoContent(authRef.current, repo, filePath);
       return { status: response.status, content: response.data?.content, error: response.error };
     },
     createS3Resource: async (key: string, content = '') => {
-      const response = await putFile(props.auth, key, content);
+      const custom = customDepsRef.current?.createS3Resource;
+      if (custom) return custom(key, content);
+      const response = await putFile(authRef.current, key, content);
       return { status: response.status, error: response.error };
     },
-    ...props.deps,
-  }), [props.auth, githubUsername, props.deps]);
+  }), [props.auth.isLoggedIn, githubUsername]);
 
   const displayEntries = useMemo(() => {
     if (!searchQuery.trim()) {
@@ -346,7 +362,7 @@ export function BrowseView(props: BrowseViewProps): JSX.Element {
             }
           }
         } else if (mount === 'github') {
-          const details = githubFileDetails(selected.path);
+          const details = githubFileDetails(selected.path, githubUsername);
           if (details) {
             const res = deps.getGithubContent
               ? await deps.getGithubContent(details.repo, details.path)
@@ -424,7 +440,7 @@ export function BrowseView(props: BrowseViewProps): JSX.Element {
           groupKey: null,
         });
       } else if (mount === 'github') {
-        const details = githubFileDetails(selected.path);
+        const details = githubFileDetails(selected.path, githubUsername);
         if (!details) {
           setStatusMessage('Could not parse GitHub file path.');
           return;

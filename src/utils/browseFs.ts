@@ -63,30 +63,38 @@ export function s3ObjectKey(browsePath: string): string {
   return browsePath.replace(/^s3\/?/, '');
 }
 
-export function githubRepoId(browsePath: string): string | null {
+export function githubRepoId(browsePath: string, fallbackOwner?: string | null): string | null {
   const { mount, rest } = parseBrowsePath(browsePath);
   if (mount !== 'github' || rest === '') {
     return null;
   }
-  const parts = rest.split('/');
-  if (parts.length < 2) {
-    return rest;
+  const parts = rest.split('/').filter(Boolean);
+  if (parts.length >= 2) {
+    return `${parts[0]}/${parts[1]}`;
   }
-  return `${parts[0]}/${parts[1]}`;
+  if (parts.length === 1 && fallbackOwner) {
+    return `${fallbackOwner}/${parts[0]}`;
+  }
+  return null;
 }
 
-export function githubFileDetails(browsePath: string): { repo: string; path: string } | null {
+export function githubFileDetails(browsePath: string, fallbackOwner?: string | null): { repo: string; path: string } | null {
   const { mount, rest } = parseBrowsePath(browsePath);
   if (mount !== 'github') {
     return null;
   }
   const parts = rest.split('/').filter(Boolean);
-  if (parts.length < 3) {
-    return null;
+  if (parts.length >= 3) {
+    const repo = `${parts[0]}/${parts[1]}`;
+    const path = parts.slice(2).join('/');
+    return { repo, path };
   }
-  const repo = `${parts[0]}/${parts[1]}`;
-  const path = parts.slice(2).join('/');
-  return { repo, path };
+  if (parts.length >= 2 && fallbackOwner) {
+    const repo = `${fallbackOwner}/${parts[0]}`;
+    const path = parts.slice(1).join('/');
+    return { repo, path };
+  }
+  return null;
 }
 
 function sortEntries(entries: BrowseEntry[]): BrowseEntry[] {
@@ -212,8 +220,10 @@ export async function listBrowsePath(
         }],
       };
     }
-    const entries = sortEntries(response.repos.map((repo) => {
-      const id = repo.full_name ?? repo.name;
+    const entries = sortEntries(response.repos.map((repo: any) => {
+      const owner = repo.owner?.login ?? (typeof repo.owner === 'string' ? repo.owner : deps.githubUsername);
+      const fullName = repo.full_name ?? (owner ? `${owner}/${repo.name}` : null);
+      const id = fullName ?? repo.name;
       return {
         name: repo.name,
         path: `github/${id}`,
@@ -223,8 +233,20 @@ export async function listBrowsePath(
     return { status: 200, entries };
   }
 
-  const repo = githubRepoId(path);
+  const repo = githubRepoId(path, deps.githubUsername);
   if (repo === null || deps.listGithubTree === undefined) {
+    const { rest: repoRest } = parseBrowsePath(path);
+    if (repoRest !== '' && !repoRest.includes('/')) {
+      return {
+        status: 200,
+        entries: [{
+          name: 'Owner required',
+          path,
+          kind: 'message',
+          message: `Repository "${repoRest}" requires an owner (e.g. owner/${repoRest}). Please link GitHub or configure username.`,
+        }],
+      };
+    }
     return { status: 200, entries: [] };
   }
 

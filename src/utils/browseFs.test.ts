@@ -90,4 +90,49 @@ describe('browseFs', () => {
       kind: 'dir',
     });
   });
+
+  it('safely handles GitHub repositories without owner without triggering 500 requests', async () => {
+    const listTreeMock = vi.fn();
+    const result = await listBrowsePath('github/InTEGr8or', {
+      isLoggedIn: true,
+      githubUsername: null,
+      listS3: async () => ({ status: 200, files: [] }),
+      listGithubRepos: async () => ({ status: 200, repos: [] }),
+      listGithubTree: listTreeMock,
+    });
+
+    expect(listTreeMock).not.toHaveBeenCalled();
+    expect(result.entries[0]?.kind).toBe('message');
+    expect(result.entries[0]?.name).toBe('Owner required');
+  });
+
+  it('uses fallback GitHub username when available for single-segment repo', async () => {
+    const listTreeMock = vi.fn().mockResolvedValue({
+      status: 200,
+      items: [{ path: 'README.md', type: 'blob' }],
+    });
+    const result = await listBrowsePath('github/InTEGr8or', {
+      isLoggedIn: true,
+      githubUsername: 'InTEGr8or',
+      listS3: async () => ({ status: 200, files: [] }),
+      listGithubRepos: async () => ({ status: 200, repos: [] }),
+      listGithubTree: listTreeMock,
+    });
+
+    expect(listTreeMock).toHaveBeenCalledWith('InTEGr8or/InTEGr8or');
+    expect(result.entries[0]?.name).toBe('README.md');
+  });
+
+  it('gracefully handles 500 error from tree API without throwing', async () => {
+    const result = await listBrowsePath('github/owner/broken-repo', {
+      isLoggedIn: true,
+      githubUsername: 'owner',
+      listS3: async () => ({ status: 200, files: [] }),
+      listGithubRepos: async () => ({ status: 200, repos: [] }),
+      listGithubTree: async () => ({ status: 500, error: 'Internal Server Error' }),
+    });
+
+    expect(result.entries[0]?.kind).toBe('message');
+    expect(result.entries[0]?.name).toBe('Tree unavailable');
+  });
 });
