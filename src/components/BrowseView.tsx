@@ -100,15 +100,27 @@ function iconFor(entry: BrowseEntry): string {
 
 function Column(props: {
   className: string;
+  headerPath?: string;
+  headerTestId?: string;
   entries: BrowseEntry[];
   selectedPath: string | null;
   onSelect: (index: number) => void;
   isLoading?: boolean;
   spinnerChar?: string;
   searchQuery?: string;
+  selectedRowRef?: React.RefObject<HTMLDivElement | null>;
+  colRef?: React.RefObject<HTMLDivElement | null>;
 }): JSX.Element {
   return (
-    <div className={`browse-col ${props.className}`} role="list">
+    <div className={`browse-col ${props.className}`} ref={props.colRef} role="list">
+      {props.headerPath !== undefined && (
+        <div
+          className={`browse-col-path${props.className === 'current' ? ' browse-breadcrumb' : ''}`}
+          data-testid={props.headerTestId}
+        >
+          {props.headerPath}
+        </div>
+      )}
       {props.isLoading && props.entries.length === 0 ? (
         <div className="browse-empty browse-loading">
           <span className="browse-spinner">{props.spinnerChar ?? '⠋'}</span> loading...
@@ -116,21 +128,25 @@ function Column(props: {
       ) : props.entries.length === 0 ? (
         <div className="browse-empty">Empty</div>
       ) : (
-        props.entries.map((entry, index) => (
-          <div
-            key={entry.path + entry.name}
-            role="listitem"
-            className={`browse-row${entry.path === props.selectedPath ? ' selected' : ''}${entry.kind === 'message' ? ' message' : ''}`}
-            onMouseDown={() => { props.onSelect(index); }}
-          >
-            <span>{iconFor(entry)}</span>
-            <span>
-              {props.searchQuery
-                ? renderHighlightedText(entry.name, props.searchQuery)
-                : entry.name}
-            </span>
-          </div>
-        ))
+        props.entries.map((entry, index) => {
+          const isSelected = entry.path === props.selectedPath;
+          return (
+            <div
+              key={entry.path + entry.name}
+              ref={isSelected ? props.selectedRowRef : undefined}
+              role="listitem"
+              className={`browse-row${isSelected ? ' selected' : ''}${entry.kind === 'message' ? ' message' : ''}`}
+              onMouseDown={() => { props.onSelect(index); }}
+            >
+              <span>{iconFor(entry)}</span>
+              <span>
+                {props.searchQuery
+                  ? renderHighlightedText(entry.name, props.searchQuery)
+                  : entry.name}
+              </span>
+            </div>
+          );
+        })
       )}
     </div>
   );
@@ -138,7 +154,8 @@ function Column(props: {
 
 export function BrowseView(props: BrowseViewProps): JSX.Element {
   const rootRef = useRef<HTMLDivElement>(null);
-  const previewRef = useRef<HTMLDivElement>(null);
+  const bottomColRef = useRef<HTMLDivElement>(null);
+  const selectedRowRef = useRef<HTMLDivElement>(null);
   const promptInputRef = useRef<HTMLInputElement>(null);
 
   const [path, setPath] = useState(() => parseLocation().contentKey ?? '');
@@ -222,6 +239,11 @@ export function BrowseView(props: BrowseViewProps): JSX.Element {
   }, [entries, searchQuery]);
 
   const selected = displayEntries[selectedIndex] ?? entries[selectedIndex] ?? null;
+
+  // Scroll active item into view within the 7-row limit
+  useEffect(() => {
+    selectedRowRef.current?.scrollIntoView?.({ block: 'nearest' });
+  }, [selectedIndex]);
 
   // Navigate to a new path and sync with the URL querystring for GitHub Pages / reloads
   const navigateToPath = useCallback((nextPath: string) => {
@@ -348,7 +370,7 @@ export function BrowseView(props: BrowseViewProps): JSX.Element {
           const key = s3ObjectKey(selected.path);
           const res = deps.getS3Content
             ? await deps.getS3Content(key)
-            : await getFile(props.auth, key).then((r) => ({
+            : await getFile(authRef.current, key).then((r) => ({
                 status: r.status,
                 content: r.data?.content,
                 error: r.error,
@@ -366,7 +388,7 @@ export function BrowseView(props: BrowseViewProps): JSX.Element {
           if (details) {
             const res = deps.getGithubContent
               ? await deps.getGithubContent(details.repo, details.path)
-              : await getRepoContent(props.auth, details.repo, details.path).then((r) => ({
+              : await getRepoContent(authRef.current, details.repo, details.path).then((r) => ({
                   status: r.status,
                   content: r.data?.content,
                   error: r.error,
@@ -399,7 +421,7 @@ export function BrowseView(props: BrowseViewProps): JSX.Element {
     return () => {
       cancelled = true;
     };
-  }, [selected?.path, selected?.kind, deps, props.auth]);
+  }, [selected?.path, selected?.kind, deps, githubUsername]);
 
   useEffect(() => {
     rootRef.current?.focus();
@@ -427,7 +449,7 @@ export function BrowseView(props: BrowseViewProps): JSX.Element {
         if (content === null) {
           const res = deps.getS3Content
             ? await deps.getS3Content(filename)
-            : await getFile(props.auth, filename).then((r) => ({
+            : await getFile(authRef.current, filename).then((r) => ({
                 status: r.status,
                 content: r.data?.content,
               }));
@@ -449,7 +471,7 @@ export function BrowseView(props: BrowseViewProps): JSX.Element {
         if (content === null) {
           const res = deps.getGithubContent
             ? await deps.getGithubContent(details.repo, details.path)
-            : await getRepoContent(props.auth, details.repo, details.path).then((r) => ({
+            : await getRepoContent(authRef.current, details.repo, details.path).then((r) => ({
                 status: r.status,
                 content: r.data?.content,
               }));
@@ -463,7 +485,7 @@ export function BrowseView(props: BrowseViewProps): JSX.Element {
         });
       }
     }
-  }, [deps, navigateToPath, previewContent, props.auth, selected]);
+  }, [deps, githubUsername, navigateToPath, previewContent, selected]);
 
   const handleCreateResource = useCallback(async (value: string) => {
     const trimmed = value.trim();
@@ -486,7 +508,7 @@ export function BrowseView(props: BrowseViewProps): JSX.Element {
           setStatusMessage(result.error ?? `Failed to create ${fullKey}`);
         }
       } else {
-        const result = await putFile(props.auth, fullKey, '');
+        const result = await putFile(authRef.current, fullKey, '');
         if (result.status === 200 || result.status === 201) {
           setStatusMessage(`Created ${fullKey}`);
         } else {
@@ -507,7 +529,7 @@ export function BrowseView(props: BrowseViewProps): JSX.Element {
       setPromptValue('');
       rootRef.current?.focus();
     }
-  }, [path, deps, props.auth, load]);
+  }, [path, deps, load]);
 
   // Window-level keydown handler ensures h/j/k/l work even if container div does not currently have focus
   useEffect(() => {
@@ -526,8 +548,38 @@ export function BrowseView(props: BrowseViewProps): JSX.Element {
       }
 
       const key = event.key;
+
+      // Scroll bottom column up or down with Shift+J / Shift+K
+      const isScrollDown = key === 'J' || (event.shiftKey && (key === 'j' || key === 'J'));
+      const isScrollUp = key === 'K' || (event.shiftKey && (key === 'k' || key === 'K'));
+
+      if (isScrollDown) {
+        event.preventDefault();
+        event.stopPropagation();
+        if (bottomColRef.current) {
+          if (typeof bottomColRef.current.scrollBy === 'function') {
+            bottomColRef.current.scrollBy({ top: 80, behavior: 'smooth' });
+          } else {
+            bottomColRef.current.scrollTop += 80;
+          }
+        }
+        return;
+      }
+      if (isScrollUp) {
+        event.preventDefault();
+        event.stopPropagation();
+        if (bottomColRef.current) {
+          if (typeof bottomColRef.current.scrollBy === 'function') {
+            bottomColRef.current.scrollBy({ top: -80, behavior: 'smooth' });
+          } else {
+            bottomColRef.current.scrollTop -= 80;
+          }
+        }
+        return;
+      }
+
       if (
-        !['h', 'j', 'k', 'l', 'Enter', 'Escape', 'q', '/', 'a', 's', 'f', 'J', 'K'].includes(key)
+        !['h', 'j', 'k', 'l', 'Enter', 'Escape', 'q', '/', 'a', 's', 'f'].includes(key)
       ) {
         return;
       }
@@ -577,14 +629,6 @@ export function BrowseView(props: BrowseViewProps): JSX.Element {
         setPromptValue('');
         return;
       }
-      if (key === 'J') {
-        previewRef.current?.scrollBy({ top: 80, behavior: 'smooth' });
-        return;
-      }
-      if (key === 'K') {
-        previewRef.current?.scrollBy({ top: -80, behavior: 'smooth' });
-        return;
-      }
     };
 
     window.addEventListener('keydown', handleKeyDown);
@@ -592,6 +636,10 @@ export function BrowseView(props: BrowseViewProps): JSX.Element {
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [promptMode, displayEntries.length, path, searchQuery, openSelected, navigateToPath]);
+
+  const topPath = path === '' ? '/' : `/${path}`;
+  const bottomPath = selected ? (selected.path === '' ? '/' : `/${selected.path}`) : '';
+  const parentHeader = parentPath(path) === '' ? (path === '' ? '' : '/') : `/${parentPath(path)}`;
 
   return (
     <div
@@ -612,79 +660,74 @@ export function BrowseView(props: BrowseViewProps): JSX.Element {
       <div className="browse-blank-line" />
 
       <div className="browse-columns">
-        <div className="browse-column-wrapper parent">
-          <div className="browse-col-path">
-            {parentPath(path) === '' ? (path === '' ? '' : '/') : `/${parentPath(path)}`}
-          </div>
-          <Column
-            className="parent"
-            entries={parentEntries}
-            selectedPath={path === '' ? null : path}
-            onSelect={() => { navigateToPath(parentPath(path)); }}
-          />
-        </div>
+        <Column
+          className="parent"
+          headerPath={parentHeader}
+          entries={parentEntries}
+          selectedPath={path === '' ? null : path}
+          onSelect={() => { navigateToPath(parentPath(path)); }}
+        />
 
-        <div className="browse-column-wrapper current">
-          <div className="browse-col-path browse-breadcrumb" data-testid="top-col-path">
-            {path === '' ? '/' : `/${path}`}
-          </div>
-          <Column
-            className="current"
-            entries={displayEntries}
-            selectedPath={selected?.path ?? null}
-            onSelect={setSelectedIndex}
-            isLoading={isLoading}
-            spinnerChar={spinner}
-            searchQuery={searchQuery}
-          />
-        </div>
+        <Column
+          className="current"
+          headerPath={topPath}
+          headerTestId="top-col-path"
+          entries={displayEntries}
+          selectedPath={selected?.path ?? null}
+          onSelect={setSelectedIndex}
+          isLoading={isLoading}
+          spinnerChar={spinner}
+          searchQuery={searchQuery}
+          selectedRowRef={selectedRowRef}
+        />
 
-        <div className="browse-column-wrapper child">
-          <div className="browse-col-path" data-testid="bottom-col-path">
-            {selected ? (selected.path === '' ? '/' : `/${selected.path}`) : ''}
-          </div>
-          {selected?.kind === 'file' ? (
-            <div
-              className="browse-col child browse-preview-col"
-              ref={previewRef}
-              tabIndex={-1}
-              data-testid="browse-preview"
-            >
-              {isPreviewLoading && previewContent === null ? (
-                <div className="browse-empty browse-loading">
-                  <span className="browse-spinner">{spinner}</span> loading preview...
-                </div>
-              ) : previewError ? (
-                <div className="browse-empty">{previewError}</div>
-              ) : previewContent !== null ? (
-                <pre className="browse-preview-content">
-                  {renderHighlightedText(previewContent, searchQuery)}
-                </pre>
-              ) : (
-                <div className="browse-preview-empty">Empty file</div>
-              )}
+        {selected?.kind === 'file' ? (
+          <div
+            className="browse-col child browse-preview-col"
+            ref={bottomColRef}
+            tabIndex={-1}
+            data-testid="browse-preview"
+          >
+            <div className="browse-col-path" data-testid="bottom-col-path">
+              {bottomPath}
             </div>
-          ) : (
-            <Column
-              className="child"
-              entries={childEntries}
-              selectedPath={null}
-              isLoading={isChildLoading}
-              spinnerChar={spinner}
-              onSelect={(index) => {
-                const child = childEntries[index];
-                if (child !== undefined && (child.kind === 'dir' || child.kind === 'mount' || child.kind === 'file')) {
-                  setSelectedIndex(entries.findIndex((e) => e.path === selected?.path));
-                  if (child.kind === 'file') {
-                    navigateToPath(parentPath(child.path));
-                  } else {
-                    navigateToPath(child.path);
-                  }
+            {isPreviewLoading && previewContent === null ? (
+              <div className="browse-empty browse-loading">
+                <span className="browse-spinner">{spinner}</span> loading preview...
+              </div>
+            ) : previewError ? (
+              <div className="browse-empty">{previewError}</div>
+            ) : previewContent !== null ? (
+              <pre className="browse-preview-content">
+                {renderHighlightedText(previewContent, searchQuery)}
+              </pre>
+            ) : (
+              <div className="browse-preview-empty">Empty file</div>
+            )}
+          </div>
+        ) : (
+          <Column
+            className="child"
+            colRef={bottomColRef}
+            headerPath={bottomPath}
+            headerTestId="bottom-col-path"
+            entries={childEntries}
+            selectedPath={null}
+            isLoading={isChildLoading}
+            spinnerChar={spinner}
+            onSelect={(index) => {
+              const child = childEntries[index];
+              if (child !== undefined && (child.kind === 'dir' || child.kind === 'mount' || child.kind === 'file')) {
+                setSelectedIndex(entries.findIndex((e) => e.path === selected?.path));
+                if (child.kind === 'file') {
+                  navigateToPath(parentPath(child.path));
+                } else {
+                  navigateToPath(child.path);
                 }
-              }}
-            />
-          )}
-        </div>
+              }
+            }}
+          />
+        )}
       </div>
 
       {promptMode !== 'none' && (

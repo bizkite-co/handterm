@@ -333,4 +333,22 @@ describe('BrowseView', () => {
       expect(bottomPath.textContent?.trim()).toBe('/s3');
     });
   });
+
+  it('scrolls bottom column with Shift+J and Shift+K when bottom column is a directory', async () => {
+    render(<BrowseView auth={auth} deps={stubDeps()} />);
+    const view = await screen.findByTestId('browse-view');
+    await waitFor(() => {
+      expect(view.textContent).toContain('GitHub');
+    });
+
+    const bottomCol = view.querySelector('.browse-col.child') as HTMLElement;
+    expect(bottomCol).not.toBeNull();
+    bottomCol.scrollBy = vi.fn();
+
+    fireEvent.keyDown(window, { key: 'J', shiftKey: true });
+    expect(bottomCol.scrollBy).toHaveBeenCalledWith({ top: 80, behavior: 'smooth' });
+
+    fireEvent.keyDown(window, { key: 'K', shiftKey: true });
+    expect(bottomCol.scrollBy).toHaveBeenCalledWith({ top: -80, behavior: 'smooth' });
+  });
 });
