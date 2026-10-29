@@ -73,12 +73,12 @@ const Timer: ForwardRefRenderFunction<TimerHandle, TimerProps> = (_props, ref) =
   };
 
   return (
-    <React.Fragment>
-      <span id="timer">{(centiSecond / 100).toFixed(1)}</span>
-      <svg width="15" height="20" style={{ float: 'left' }}>
+    <div id="timer-root">
+      <svg width="15" height="20" style={{ verticalAlign: 'middle', marginRight: '4px' }}>
         {renderSvg()}
       </svg>
-    </React.Fragment>
+      <span id="timer">{(centiSecond / 100).toFixed(1)}</span>
+    </div>
   );
 };
 

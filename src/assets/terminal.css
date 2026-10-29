@@ -176,6 +176,7 @@ pre#next-chars {
   /* Ensures words break to prevent overflow */
   font-family: var(--terminal-font-family);
   /* Maintains monospace font */
+  clear: both;
 }
 
 video#terminal-video {
@@ -205,7 +206,8 @@ div.terminal {
 
 #timer-root {
   color: white;
-  float: left;
+  display: inline-flex;
+  align-items: center;
 }
 
 .wpm-table-row .number {
