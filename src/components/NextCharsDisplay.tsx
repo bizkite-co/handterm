@@ -249,9 +249,18 @@ const NextCharsDisplay = forwardRef<NextCharsDisplayHandle, INextCharsDisplayPro
                 <Timer ref={timerRef} />
                 <div id={TerminalCssClasses.nextCharsRate} ref={nextCharsRateRef}></div>
                 <span id={TerminalCssClasses.wpm} ref={wpmRef}></span>
-                <span className="next-chars-cursor" id="next-chars-cursor" aria-hidden="true"></span>
                 <pre id={TerminalCssClasses.nextChars} ref={nextCharsRef}>
-                    {_nextChars}
+                    {_nextChars.length > 0 ? (
+                        <>
+                            <span
+                                className="next-chars-cursor next-char-highlight"
+                                id="next-chars-cursor"
+                            >
+                                {_nextChars.slice(0, 1)}
+                            </span>
+                            {_nextChars.slice(1)}
+                        </>
+                    ) : null}
                 </pre>
             </div>
         )

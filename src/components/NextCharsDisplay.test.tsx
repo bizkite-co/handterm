@@ -29,6 +29,10 @@ const tutorialPhrase: GamePhrase = {
   value: 'Type `fdsa` and Enter.',
 };
 
+const hasPhraseText = (expected: string) => (_content: string, element: Element | null) => {
+  return element?.tagName.toLowerCase() === 'pre' && element.id === 'next-chars' && element.textContent === expected;
+};
+
 describe('NextCharsDisplay', () => {
   beforeEach(() => {
     gamePhraseSignal.value = null;
@@ -42,7 +46,8 @@ describe('NextCharsDisplay', () => {
     const { container } = render(
       <NextCharsDisplay isInPhraseMode={true} onPhraseSuccess={vi.fn()} onError={vi.fn()} />
     );
-    expect(screen.getByText('All sad lads ask dad; alas fads fall')).toBeInTheDocument();
+    expect(screen.getByText(hasPhraseText('All sad lads ask dad; alas fads fall'))).toBeInTheDocument();
+    expect(container.querySelector('#next-chars-cursor')?.textContent).toBe('A');
 
     // Each keystroke flows through handleData -> setCommandLine -> this component
     for (const prefix of ['A', 'Al', 'All', 'All ', 'All s', 'All sa']) {
@@ -51,8 +56,9 @@ describe('NextCharsDisplay', () => {
       });
     }
 
-    expect(screen.getByText('d lads ask dad; alas fads fall')).toBeInTheDocument();
-    expect(screen.queryByText('All sad lads ask dad; alas fads fall')).not.toBeInTheDocument();
+    expect(screen.getByText(hasPhraseText('d lads ask dad; alas fads fall'))).toBeInTheDocument();
+    expect(container.querySelector('#next-chars-cursor')?.textContent).toBe('d');
+    expect(screen.queryByText(hasPhraseText('All sad lads ask dad; alas fads fall'))).not.toBeInTheDocument();
 
     // Finishing the phrase empties nextChars (and fires onPhraseSuccess)
     await act(async () => {
@@ -79,7 +85,7 @@ describe('NextCharsDisplay', () => {
     });
 
     expect(container.querySelector('#next-chars')?.textContent).toBe('');
-    expect(screen.queryByText('All sad lads ask dad; alas fads fall')).not.toBeInTheDocument();
+    expect(screen.queryByText(hasPhraseText('All sad lads ask dad; alas fads fall'))).not.toBeInTheDocument();
   });
 
   test('clears nextChars when the game phrase signal is nulled', async () => {
@@ -89,41 +95,57 @@ describe('NextCharsDisplay', () => {
     render(
       <NextCharsDisplay isInPhraseMode={true} onPhraseSuccess={vi.fn()} onError={vi.fn()} />
     );
-    expect(screen.getByText('All sad lads ask dad; alas fads fall')).toBeInTheDocument();
+    expect(screen.getByText(hasPhraseText('All sad lads ask dad; alas fads fall'))).toBeInTheDocument();
 
     await act(async () => {
       gamePhraseSignal.value = null;
     });
 
-    expect(screen.queryByText('All sad lads ask dad; alas fads fall')).not.toBeInTheDocument();
+    expect(screen.queryByText(hasPhraseText('All sad lads ask dad; alas fads fall'))).not.toBeInTheDocument();
   });
 
   test('shows the current game phrase from gamePhraseSignal', async () => {
     await act(async () => {
       gamePhraseSignal.value = firstPhrase;
     });
-    render(
+    const { container } = render(
       <NextCharsDisplay isInPhraseMode={true} onPhraseSuccess={vi.fn()} onError={vi.fn()} />
     );
-    expect(screen.getByText('All sad lads ask dad; alas fads fall')).toBeInTheDocument();
+    expect(screen.getByText(hasPhraseText('All sad lads ask dad; alas fads fall'))).toBeInTheDocument();
+    expect(container.querySelector('#next-chars-cursor')?.textContent).toBe('A');
   });
 
   test('switches to the next phrase when gamePhraseSignal changes (level-up)', async () => {
     await act(async () => {
       gamePhraseSignal.value = firstPhrase;
     });
-    render(
+    const { container } = render(
       <NextCharsDisplay isInPhraseMode={true} onPhraseSuccess={vi.fn()} onError={vi.fn()} />
     );
-    expect(screen.getByText('All sad lads ask dad; alas fads fall')).toBeInTheDocument();
+    expect(screen.getByText(hasPhraseText('All sad lads ask dad; alas fads fall'))).toBeInTheDocument();
+    expect(container.querySelector('#next-chars-cursor')?.textContent).toBe('A');
 
     // The mediator sets the next phrase on level-up; the display must reload it
     await act(async () => {
       gamePhraseSignal.value = secondPhrase;
     });
 
-    expect(screen.getByText('0123 4567 8901 2345 6789 0987')).toBeInTheDocument();
-    expect(screen.queryByText('All sad lads ask dad; alas fads fall')).not.toBeInTheDocument();
+    expect(screen.getByText(hasPhraseText('0123 4567 8901 2345 6789 0987'))).toBeInTheDocument();
+    expect(container.querySelector('#next-chars-cursor')?.textContent).toBe('0');
+    expect(screen.queryByText(hasPhraseText('All sad lads ask dad; alas fads fall'))).not.toBeInTheDocument();
+  });
+
+  test('highlights the first character in a transparent yellow box with id next-chars-cursor', async () => {
+    await act(async () => {
+      gamePhraseSignal.value = firstPhrase;
+    });
+    const { container } = render(
+      <NextCharsDisplay isInPhraseMode={true} onPhraseSuccess={vi.fn()} onError={vi.fn()} />
+    );
+    const cursor = container.querySelector('#next-chars-cursor');
+    expect(cursor).toBeInTheDocument();
+    expect(cursor?.textContent).toBe('A');
+    expect(cursor).toHaveClass('next-char-highlight');
   });
 
   test('does not render tutorial explanatory text as a typing phrase', async () => {

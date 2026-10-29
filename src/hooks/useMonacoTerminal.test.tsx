@@ -132,6 +132,10 @@ const firstPhrase: GamePhrase = {
   tutorialGroup: 'single-click',
 };
 
+const hasPhraseText = (expected: string) => (_content: string, element: Element | null) => {
+  return element?.tagName.toLowerCase() === 'pre' && element.id === 'next-chars' && element.textContent === expected;
+};
+
 function FullGameHarness() {
   const modeRef = useRef<string>('insert');
   const vimInstanceRef = useRef<{ dispose: () => void } | null>(null);
@@ -191,14 +195,14 @@ describe('useMonacoTerminal level-transition reset contract', () => {
       pressKey('A');
     });
     expect(commandLineSignal.value).toBe('A');
-    expect(screen.getByText('ll sad lads ask dad; alas fads fall')).toBeInTheDocument();
-    expect(screen.queryByText('All sad lads ask dad; alas fads fall')).not.toBeInTheDocument();
+    expect(screen.getByText(hasPhraseText('ll sad lads ask dad; alas fads fall'))).toBeInTheDocument();
+    expect(screen.queryByText(hasPhraseText('All sad lads ask dad; alas fads fall'))).not.toBeInTheDocument();
 
     await act(async () => {
       pressKey('l');
     });
     expect(commandLineSignal.value).toBe('Al');
-    expect(screen.getByText('l sad lads ask dad; alas fads fall')).toBeInTheDocument();
+    expect(screen.getByText(hasPhraseText('l sad lads ask dad; alas fads fall'))).toBeInTheDocument();
 
     // Level transition: reset the prompt AND the command line, so the next
     // level starts typing cleanly (this is what handlePhraseSuccess does).
@@ -215,13 +219,13 @@ describe('useMonacoTerminal level-transition reset contract', () => {
       pressKey('A');
     });
     expect(commandLineSignal.value).toBe('A');
-    expect(screen.getByText('ll sad lads ask dad; alas fads fall')).toBeInTheDocument();
+    expect(screen.getByText(hasPhraseText('ll sad lads ask dad; alas fads fall'))).toBeInTheDocument();
 
     await act(async () => {
       pressKey('l');
     });
     expect(commandLineSignal.value).toBe('Al');
-    expect(screen.getByText('l sad lads ask dad; alas fads fall')).toBeInTheDocument();
+    expect(screen.getByText(hasPhraseText('l sad lads ask dad; alas fads fall'))).toBeInTheDocument();
   });
 
   test('registers ENTER as ↵ when in GAME mode with partially typed non-command phrase', async () => {
