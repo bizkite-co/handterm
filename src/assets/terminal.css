@@ -179,13 +179,17 @@ pre#next-chars {
 }
 
 video#terminal-video {
-  width: 100%;
+  position: fixed;
   top: 0;
   left: 0;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  object-fit: cover;
   margin: 0;
   padding: 0;
-  position: absolute;
   z-index: -1;
+  pointer-events: none;
 }
 
 div.terminal {

@@ -59,7 +59,7 @@ const WebCam: React.FC<WebCamProps> = ({ setOn }): JSX.Element => {
 
     return (
       // eslint-disable-next-line jsx-a11y/media-has-caption -- live webcam feed; captions are not applicable
-      <video ref={videoRef} style={{ width: '100%', height: 'auto' }} />
+      <video ref={videoRef} id="terminal-video" />
     );
 };
 
