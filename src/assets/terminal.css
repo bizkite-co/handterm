@@ -346,7 +346,10 @@ pre#prompt {
   display: inline-block;
   min-width: 1ch;
   background-color: transparent;
-  outline: 1.5px solid yellow; /* hollow outline box around the next character */
+  border: 2px solid #ffff00; /* crisp, high-visibility solid yellow box */
+  box-shadow: 0 0 5px rgba(255, 255, 0, 0.8); /* subtle yellow glow for mobile/high-DPI visibility */
+  box-sizing: border-box;
+  margin: -2px 0; /* offset border so line-height and baseline stay aligned */
   color: inherit; /* leaves the subject character green like the rest of the phrase */
   font-weight: bold;
   border-radius: 2px;
