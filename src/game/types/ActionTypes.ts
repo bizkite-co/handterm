@@ -1,7 +1,7 @@
 // ActionTypes.ts
 import { type  ActionType } from '@handterm/types';
 export type { ActionType };
-import { LuciaAnimations } from '../characters/lucia/LuciaAnimations';
+import { HeroAnimations } from '../characters/hero/HeroAnimations';
 import { Zombie4Animations } from '../characters/zombie4/Zombie4Animations';
 
 import { type SpriteAnimation } from './SpriteTypes';
@@ -15,49 +15,49 @@ export type Action = {
 
 export const HeroActions: Record<ActionType, Action> = {
   Run: {
-    animation: LuciaAnimations.Run,
+    animation: HeroAnimations.Run,
     dx: 2,
     dy: 0,
     continueous: true,
   },
   Idle: {
-    animation: LuciaAnimations.Idle,
+    animation: HeroAnimations.Idle,
     dx: 0,
     dy: 0,
     continueous: true,
   },
   Walk: {
-    animation: LuciaAnimations.Walk,
+    animation: HeroAnimations.Walk,
     dx: 1,
     dy: 0,
     continueous: true,
   },
   Jump: {
-    animation: LuciaAnimations.Jump,
+    animation: HeroAnimations.Jump,
     dx: 0,
     dy: 0,
     continueous: false
   },
   Attack: {
-    animation: LuciaAnimations.Attack,
+    animation: HeroAnimations.Attack,
     dx: 0,
     dy: 0,
     continueous: false
   },
   Summersault: {
-    animation: LuciaAnimations.Summersault,
+    animation: HeroAnimations.Summersault,
     dx: 3,
     dy: 1,
     continueous: false
   },
   Death: {
-    animation: LuciaAnimations.Death,
+    animation: HeroAnimations.Death,
     dx: 0,
     dy: 0,
     continueous: false
   },
   Hurt: {
-    animation: LuciaAnimations.Hurt,
+    animation: HeroAnimations.Hurt,
     dx: 0,
     dy: 0,
     continueous: false

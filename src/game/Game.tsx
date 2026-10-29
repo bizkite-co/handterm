@@ -86,9 +86,7 @@ const GAME_TUNING = {
   zombieFloorLeftX: -130,  // retreat floor — zombie never goes far off the left edge
 
   // Body footprints (relative to logical leftX).
-  // Lucia's 579px cell renders ~75px wide at scale 0.13; the hitbox is the
-  // torso footprint (centered ~x+38) where contact with the zombie is judged.
-  heroHitbox: { left: 22, width: 32 },    // torso of Lucia's cell @0.13
+  heroHitbox: { left: 29, width: 43 },    // body x[15..36] of 50px frame @1.95
   zombieHitbox: { left: 83, width: 36 },  // body x[22..40] of 62px frame, incl. the 41 xOffset
 } as const;
 
@@ -108,6 +106,7 @@ function GameFunction(props: IGameProps, ref: ForwardedRef<IGameHandle>): JSX.El
   const animationFrameIndex = useRef<number | undefined>(undefined);
   const zombie4DeathTimeout = useRef<NodeJS.Timeout | null>(null);
   const heroDeathTimeout = useRef<NodeJS.Timeout | null>(null);
+  const heroHurtTimeout = useRef<NodeJS.Timeout | null>(null);
   const heroRunTimeoutRef = useRef<number | null>(null);
   const lastRunCharCountRef = useRef<number>(0);
   const [failCount, setFailCount] = useState<number>(0);
@@ -204,7 +203,25 @@ function GameFunction(props: IGameProps, ref: ForwardedRef<IGameHandle>): JSX.El
     }, 3000);
   }, [zombie4StartPosition]);
 
+  const clearHeroHurtTimer = useCallback(() => {
+    const timeout = heroHurtTimeout.current;
+    if (isNotNullOrUndefined(timeout)) {
+      clearTimeout(timeout);
+      heroHurtTimeout.current = null;
+    }
+  }, []);
+
+  const clearRunSwingTimer = useCallback(() => {
+    const timeout = heroRunTimeoutRef.current;
+    if (isNotNullOrUndefined(timeout)) {
+      clearTimeout(timeout);
+      heroRunTimeoutRef.current = null;
+    }
+  }, []);
+
   const respawnHero = useCallback(() => {
+    clearHeroHurtTimer();
+    clearRunSwingTimer();
     isHeroDeadRef.current = false;
     heroLivesRef.current = GAME_TUNING.maxHeroLives;
     setHeroLives(GAME_TUNING.maxHeroLives);
@@ -219,7 +236,7 @@ function GameFunction(props: IGameProps, ref: ForwardedRef<IGameHandle>): JSX.El
     lastStrikeAtRef.current = 0;
     lastRunCharCountRef.current = 0;
     commandLineSignal.value = '';
-  }, [zombie4StartPosition]);
+  }, [zombie4StartPosition, clearHeroHurtTimer, clearRunSwingTimer]);
 
   // Land a zombie hit on the hero. Three hits (idle-danger swipes) kill the
   // hero, which triggers a respawn back to the level start rather than
@@ -239,14 +256,16 @@ function GameFunction(props: IGameProps, ref: ForwardedRef<IGameHandle>): JSX.El
         props.onHeroDeath?.();
       }, GAME_TUNING.heroRespawnMs);
     } else {
+      clearHeroHurtTimer();
       setHeroAction('Hurt');
-      setTimeout(() => {
+      heroHurtTimeout.current = setTimeout(() => {
+        heroHurtTimeout.current = null;
         // Return to a neutral idle after being hit; the player re-engages by
         // typing again (the hero is not in a persistent auto-fight).
         setHeroAction(isHeroDeadRef.current ? 'Death' : 'Idle');
       }, 600);
     }
-  }, [respawnHero, props]);
+  }, [respawnHero, props, clearHeroHurtTimer]);
 
   const updateCharacterAndBackgroundPostion = useCallback((context: CanvasRenderingContext2D): number => {
     context.clearRect(0, 0, canvasWidth, canvasHeight);
@@ -263,7 +282,7 @@ function GameFunction(props: IGameProps, ref: ForwardedRef<IGameHandle>): JSX.El
     // zombie (stationary in world terms) is dragged left by the exact same
     // amount — it keeps walking forward along the background, but the hero is
     // genuinely outrunning it, which is what makes running worthwhile.
-    if (heroActionRef.current === 'Run' && !engagedRef.current && !isHeroDeadRef.current) {
+    if (heroActionRef.current === 'Run' && !isHeroDeadRef.current) {
       const { leftX } = heroPositionRef.current;
       const scroll = Math.max(0, leftX + GAME_TUNING.heroRunDxPerFrame - centerX);
       heroPositionRef.current = {
@@ -389,15 +408,6 @@ function GameFunction(props: IGameProps, ref: ForwardedRef<IGameHandle>): JSX.El
     animationFrameIndex.current = requestAnimationFrame(loop);
   }, [isPhraseComplete, drawScrollingText, updateCharacterAndBackgroundPostion, checkProximityAndSetAction, stopAnimationLoop]);
 
-  // Helpers to flash a transient action (Run or Attack) and revert to Idle.
-  const clearRunSwingTimer = useCallback(() => {
-    const timeout = heroRunTimeoutRef.current;
-    if (isNotNullOrUndefined(timeout)) {
-      clearTimeout(timeout);
-      heroRunTimeoutRef.current = null;
-    }
-  }, []);
-
   const flashActionThenIdle = useCallback(() => {
     heroRunTimeoutRef.current = window.setTimeout(() => {
       setHeroAction('Idle');
@@ -405,41 +415,34 @@ function GameFunction(props: IGameProps, ref: ForwardedRef<IGameHandle>): JSX.El
     }, GAME_TUNING.fightSwingMs);
   }, [setHeroAction]);
 
-  // A correctly typed character is the hero's engine. While the zombie is out of
-  // range the hero RUNS (advancing toward center, then scrolling the world past).
-  // Once the zombie is in range, typing is the hero's defense: the player swings
-  // (fights) by typing, turning to face the zombie and nudging it back 3px.
-  // Completing the phrase (upstream) is the fatal blow.
+  // A correctly typed character is the hero's engine. Typing always runs the
+  // hero forward away from the zombie, facing right. Each typed character
+  // also pushes the zombie back slightly and resets the idle-danger timer so the
+  // player is rewarded for typing and cannot be swiped while actively typing.
   const handleCommandLineChange = useCallback(() => {
     if (isHeroDeadRef.current) return;
     clearRunSwingTimer();
+    clearHeroHurtTimer();
 
-    if (engagedRef.current) {
-      // Fighting: turn to face the zombie (on the hero's left) and swing. The
-      // swing is the only time the zombie retreats, and only by 3px. Recording
-      // the strike time also resets the idle-danger clock so the zombie won't
-      // swipe as long as the player keeps striking.
-      zombie4PositionRef.current = {
-        ...zombie4PositionRef.current,
-        leftX: Math.max(
-          GAME_TUNING.zombieFloorLeftX,
-          zombie4PositionRef.current.leftX - GAME_TUNING.zombiePushBackPx
-        )
-      };
-      lastStrikeAtRef.current = performance.now();
-      setHeroFacingLeft(true);
-      setHeroAction('Attack');
-    } else {
-      // Running: set the Run action and face right. Actual on-screen advance
-      // (toward center) and then world-scroll happen in the animation loop so
-      // the movement is smooth instead of a per-keystroke jump.
-      setHeroFacingLeft(false);
-      setHeroAction('Run');
-    }
+    zombie4PositionRef.current = {
+      ...zombie4PositionRef.current,
+      leftX: Math.max(
+        GAME_TUNING.zombieFloorLeftX,
+        zombie4PositionRef.current.leftX - GAME_TUNING.zombiePushBackPx
+      )
+    };
+    lastStrikeAtRef.current = performance.now();
+
+    // Running: set the Run action and face right. Actual on-screen advance
+    // (toward center) and then world-scroll happen in the animation loop so
+    // the movement is smooth instead of a per-keystroke jump.
+    setHeroFacingLeft(false);
+    setHeroAction('Run');
 
     flashActionThenIdle();
   }, [
     clearRunSwingTimer,
+    clearHeroHurtTimer,
     flashActionThenIdle,
     setHeroFacingLeft,
     setHeroAction,
@@ -520,8 +523,10 @@ function GameFunction(props: IGameProps, ref: ForwardedRef<IGameHandle>): JSX.El
       if (isNotNullOrUndefined(heroTimeout)) {
         clearTimeout(heroTimeout);
       }
+      clearHeroHurtTimer();
+      clearRunSwingTimer();
     };
-  }, [setupCanvas, stopAnimationLoop]);
+  }, [setupCanvas, stopAnimationLoop, clearHeroHurtTimer, clearRunSwingTimer]);
 
   useEffect(() => {
     if (isNotNullOrUndefined(context)) {
@@ -588,7 +593,7 @@ function GameFunction(props: IGameProps, ref: ForwardedRef<IGameHandle>): JSX.El
         ref={heroRef}
         positionRef={heroPositionRef}
         currentActionType={heroAction}
-        scale={0.13}
+        scale={1.95}
         flip={heroFacingLeft}
         hitbox={GAME_TUNING.heroHitbox}
       />
