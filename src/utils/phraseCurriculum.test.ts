@@ -58,8 +58,8 @@ describe('phrase curriculum', () => {
     expect(games.map(g => g.key)).toEqual(['wise-owl', 'feed-seeds']);
   });
 
-  test('curriculum continues after eiwo with tynu, cmp, brvx, and qz', () => {
-    const groups = ['tynu', 'cmp', 'brvx', 'qz'];
+  test('curriculum continues after eiwo with tynu, cmp, brvx, and qz, followed by special characters', () => {
+    const groups = ['tynu', 'cmp', 'brvx', 'qz', 'punctuation', 'math', 'brackets', 'braces', 'slash-compare', 'symbols', 'meta-keys'];
     for (const group of groups) {
       const tutorial = Phrases.find(p => p.displayAs === 'Tutorial' && p.tutorialGroup === group);
       const games = Phrases.filter(p => p.displayAs === 'Game' && p.tutorialGroup === group);
@@ -92,7 +92,7 @@ describe('phrase curriculum', () => {
         .flatMap(p => (p.key === '\r' ? [] : [...p.key]))
     );
     for (const ch of tutorialKeys) {
-      const chord = allChords.find(c => c.key === ch || c.key.replace('&#x2581;', ' ') === ch);
+      const chord = allChords.find(c => c.key === ch || c.key.replace('&#x2581;', ' ') === ch || c.alias === ch || c.key.replace('(underscore)', '_') === ch);
       expect(chord, `missing chord for tutorial character: "${ch}"`).toBeDefined();
       expect(chord?.chordCode, `invalid chord code for tutorial character: "${ch}"`).toBeTruthy();
       expect(chord?.chordCode).not.toBe('undefined');

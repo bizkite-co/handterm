@@ -164,6 +164,139 @@ export const Phrases: GamePhrase[] = [
     displayAs: "Game",
     value: "Quiz the kids. It's jazz.",
     tutorialGroup: "qz"
+  },
+  {
+    value: 'Type `,?!:`. Add comma, question mark, exclamation mark, and colon.',
+    displayAs: 'Tutorial',
+    key: ',?!:',
+    tutorialGroup: 'punctuation',
+    introducedKeys: ',?!:',
+  },
+  {
+    key: "who-is-it",
+    displayAs: "Game",
+    value: "Who is it? Look: a fox! Why wait? Go quickly!",
+    tutorialGroup: "punctuation"
+  },
+  {
+    key: "quick-question",
+    displayAs: "Game",
+    value: "Quick question: did you see that? Yes, absolutely!",
+    tutorialGroup: "punctuation"
+  },
+  {
+    value: 'Type `+-=*`. Add plus, minus, equals, and asterisk.',
+    displayAs: 'Tutorial',
+    key: '+-=*',
+    tutorialGroup: 'math',
+    introducedKeys: '+-=*',
+  },
+  {
+    key: "math-quiz",
+    displayAs: "Game",
+    value: "Math quiz: 5 + 5 = 10; 9 - 1 = 8; 2 * 3 = 6.",
+    tutorialGroup: "math"
+  },
+  {
+    key: "quick-calc",
+    displayAs: "Game",
+    value: "Calculate: 10 + 20 = 30 and 4 * 5 - 2 = 18!",
+    tutorialGroup: "math"
+  },
+  {
+    value: 'Type `()[]`. Add parentheses and square brackets.',
+    displayAs: 'Tutorial',
+    key: '()[]',
+    tutorialGroup: 'brackets',
+    introducedKeys: '()[]',
+  },
+  {
+    key: "array-index",
+    displayAs: "Game",
+    value: "Call func(x); check list[0] + items[1] = total.",
+    tutorialGroup: "brackets"
+  },
+  {
+    key: "boxed-items",
+    displayAs: "Game",
+    value: "Items: [box, cup, pen]; total = (2 + 3) * 4.",
+    tutorialGroup: "brackets"
+  },
+  {
+    value: 'Type `{}`. Add curly braces.',
+    displayAs: 'Tutorial',
+    key: '{}',
+    tutorialGroup: 'braces',
+    introducedKeys: '{}',
+  },
+  {
+    key: "code-block",
+    displayAs: "Game",
+    value: "Code block: { let x = (a + b); return [x]; }",
+    tutorialGroup: "braces"
+  },
+  {
+    key: "object-map",
+    displayAs: "Game",
+    value: "Map values: { key: 1, sum: (5 + 5) }; set: { 2, 4 }.",
+    tutorialGroup: "braces"
+  },
+  {
+    value: 'Type `<>/|\\`. Add angle brackets, forward slash, pipe, and backslash.',
+    displayAs: 'Tutorial',
+    key: '<>/|\\',
+    tutorialGroup: 'slash-compare',
+    introducedKeys: '<>/|\\',
+  },
+  {
+    key: "compare-path",
+    displayAs: "Game",
+    value: "Compare: 3 < 5 and 10 > 8; path: /usr/local/bin.",
+    tutorialGroup: "slash-compare"
+  },
+  {
+    key: "pipe-escape",
+    displayAs: "Game",
+    value: "Pipe command: cat file | grep foo; escape: \\n / \\t.",
+    tutorialGroup: "slash-compare"
+  },
+  {
+    value: 'Type `$&%@`. Add dollar sign, ampersand, percent, and at-sign.',
+    displayAs: 'Tutorial',
+    key: '$&%@',
+    tutorialGroup: 'symbols',
+    introducedKeys: '$&%@',
+  },
+  {
+    key: "sale-price",
+    displayAs: "Game",
+    value: "Special sale: $25 & 10% off; contact: sales@domain.com!",
+    tutorialGroup: "symbols"
+  },
+  {
+    key: "shell-vars",
+    displayAs: "Game",
+    value: "Shell: echo $HOME & echo $USER; discount @ 50%!",
+    tutorialGroup: "symbols"
+  },
+  {
+    value: 'Type `~`_`. Add tilde, backtick, and underscore.',
+    displayAs: 'Tutorial',
+    key: '~`_',
+    tutorialGroup: 'meta-keys',
+    introducedKeys: '~`_',
+  },
+  {
+    key: "home-path",
+    displayAs: "Game",
+    value: "Path: ~/repos; run `git status`; set user_name = 'alice'.",
+    tutorialGroup: "meta-keys"
+  },
+  {
+    key: "code-identifier",
+    displayAs: "Game",
+    value: "Function: `get_user_id()`; home dir is ~/_backup.",
+    tutorialGroup: "meta-keys"
   }
 ];
 

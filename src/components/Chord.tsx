@@ -12,18 +12,18 @@ import { chordGlyphScaleSignal } from "../signals/appSignals";
 export const Chord: FC<ChordProps> = ({ displayChar, chordCode }) => {
     let foundChord = chordCode != null && chordCode !== ''
         ? Array.from(allChords).find(x => x.chordCode === chordCode && (
-            x.key === displayChar || x.key.replace('&#x2581;', ' ') === displayChar
+            x.key === displayChar || x.key.replace('&#x2581;', ' ') === displayChar || x.alias === displayChar || x.key.replace('(underscore)', '_') === displayChar
         ))
         : undefined;
 
     if (foundChord == null) {
         foundChord = Array.from(allChords).find(x => {
-            return x.key.replace('&#x2581;', ' ') === displayChar;
+            return x.key.replace('&#x2581;', ' ') === displayChar || x.alias === displayChar || x.key.replace('(underscore)', '_') === displayChar;
         });
     }
 
     if (foundChord == null) {
-        foundChord = Array.from(allChords).find(x => x.key === displayChar);
+        foundChord = Array.from(allChords).find(x => x.key === displayChar || x.alias === displayChar || x.key.replace('(underscore)', '_') === displayChar);
     }
 
     const foundChar = foundChord?.alias ?? foundChord?.key;
