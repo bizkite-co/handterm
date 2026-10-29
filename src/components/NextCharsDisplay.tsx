@@ -12,8 +12,6 @@ import { gamePhraseSignal, setCompletedGamePhrase } from 'src/signals/gameSignal
 import { type GamePhrase } from '@handterm/types';
 import { TerminalCssClasses } from '@handterm/types';
 
-import { Phrase } from '../utils/Phrase';
-
 import ErrorDisplay from './ErrorDisplay';
 import Timer, { type TimerHandle } from './Timer';
 import { isNullOrEmptyString } from 'src/utils/typeSafetyUtils';
@@ -39,12 +37,11 @@ const NextCharsDisplay = forwardRef<NextCharsDisplayHandle, INextCharsDisplayPro
     const [_mismatchedChar, setMismatchedChar] = useState<string | null>(null);
     const [_mismatchedIsVisible, setMismatchedIsVisible] = useState(false);
     const [_nextChars, setNextChars] = useState<string>('');
-    const [_phrase, setPhrase] = useState<Phrase>(new Phrase(['']));
-    const [_gamePhrase, setGamePhrase] = useState<GamePhrase | null>(null);
 
     const nextCharsRef = useRef<HTMLPreElement>(null);
     const nextCharsRateRef = useRef<HTMLDivElement>(null);
     const timerRef = useRef<TimerHandle>(null);
+    const lastCompletedKeyRef = useRef<string | null>(null);
 
     // Create a specialized caller for timerRef
 
@@ -56,30 +53,26 @@ const NextCharsDisplay = forwardRef<NextCharsDisplayHandle, INextCharsDisplayPro
     const gamePhrase = useComputed(() => gamePhraseSignal.value);
 
     const getFirstNonMatchingChar = useCallback((stringBeingTested: string): number => {
-        if (isNullOrEmptyString(_phrase.value)) return 0;
-        const sourcePhrase = _phrase.value;
-        const sourcePhraseString = sourcePhrase.join('');
+        const sourcePhraseString = gamePhraseSignal.value?.value ?? '';
+        if (isNullOrEmptyString(sourcePhraseString)) return 0;
         if (stringBeingTested === sourcePhraseString) return sourcePhraseString.length;
         if (isNullOrEmptyString(stringBeingTested)) {
             return 0;
         }
-        // sourcePhrase is a character ARRAY, so the mismatch check must compare
-        // the typed character against sourcePhrase[i] directly. (A `typeof
-        // sourcePhrase === 'string'` guard here would never fire and would make
-        // this always return the typed length — the "moves along with junk" bug.)
         for (let i = 0; i < stringBeingTested.length; i++) {
-            if (stringBeingTested[i] !== sourcePhrase[i]) {
+            if (stringBeingTested[i] !== sourcePhraseString[i]) {
                 return i;
             }
         }
         return stringBeingTested.length;
-    }, [_phrase.value]);
+    }, []);
 
     const getNextCharacters = useCallback((stringBeingTested: string): string => {
         const nextIndex = getFirstNonMatchingChar(stringBeingTested);
-        const result = _phrase.value.join('').substring(nextIndex);
+        const sourcePhraseString = gamePhraseSignal.value?.value ?? '';
+        const result = sourcePhraseString.substring(nextIndex);
         return result;
-    }, [_phrase.value, getFirstNonMatchingChar]);
+    }, [getFirstNonMatchingChar]);
 
     const showError = useCallback((char: string, charIndex: number) => {
         setMismatchedChar(char);
@@ -97,15 +90,13 @@ const NextCharsDisplay = forwardRef<NextCharsDisplayHandle, INextCharsDisplayPro
         setMismatchedChar('');
         setMismatchedIsVisible(false);
         setNextChars('');
-        setPhrase(new Phrase(['']));
-        setGamePhrase(null);
-        if (nextCharsRef.current !== null && nextCharsRef.current !== undefined) {
-            nextCharsRef.current.innerText = '';
-        }
     }, []);
 
     const handleSuccess = useCallback(() => {
-        const completed = _gamePhrase;
+        const completed = gamePhraseSignal.value;
+        if (completed?.key != null) {
+            lastCompletedKeyRef.current = completed.key;
+        }
         clearPhraseState();
         if (
             completed !== null &&
@@ -116,7 +107,7 @@ const NextCharsDisplay = forwardRef<NextCharsDisplayHandle, INextCharsDisplayPro
             setCompletedGamePhrase(completed.key);
         }
         onPhraseSuccess(completed);
-    }, [_gamePhrase, onPhraseSuccess, clearPhraseState]);
+    }, [onPhraseSuccess, clearPhraseState]);
 
     const stopTimer = useCallback(() => {
         if (timerRef.current) {
@@ -143,7 +134,14 @@ const NextCharsDisplay = forwardRef<NextCharsDisplayHandle, INextCharsDisplayPro
     }, []);
 
     const handleCommandLineChange = useCallback((stringBeingTested: string) => {
-        const phraseText = _phrase.value.join('');
+        const currentPhrase = gamePhraseSignal.value;
+        if (!currentPhrase || currentPhrase.displayAs !== 'Game') {
+            return;
+        }
+        if (currentPhrase.key != null && currentPhrase.key === lastCompletedKeyRef.current) {
+            return;
+        }
+        const phraseText = currentPhrase.value ?? '';
         if (phraseText.trim() === '') {
             return;
         }
@@ -151,14 +149,8 @@ const NextCharsDisplay = forwardRef<NextCharsDisplayHandle, INextCharsDisplayPro
         startOrContinueTimer();
 
         const nextIndex = getFirstNonMatchingChar(stringBeingTested);
-        if (nextIndex < 0 || nextIndex > _phrase.value.length) {
+        if (nextIndex < 0 || nextIndex > phraseText.length) {
             return null;
-        }
-
-        const nextChordHTML = _phrase.chordsHTML[nextIndex];
-
-        if (nextChordHTML !== null && nextChordHTML !== undefined) {
-            nextChordHTML.classList.remove("error");
         }
 
         if (stringBeingTested.length === 0) {
@@ -172,7 +164,7 @@ const NextCharsDisplay = forwardRef<NextCharsDisplayHandle, INextCharsDisplayPro
             hideError();
         } else {
             const firstNonMatchingChar = getFirstNonMatchingChar(stringBeingTested);
-            const mismatchedChar = _phrase.value[firstNonMatchingChar];
+            const mismatchedChar = phraseText[firstNonMatchingChar];
             setMismatchedIsVisible(true);
             setMismatchedChar(mismatchedChar ?? null); // Provide default value of null
             showError(mismatchedChar ?? '', firstNonMatchingChar); // Provide default value of empty string
@@ -190,8 +182,6 @@ const NextCharsDisplay = forwardRef<NextCharsDisplayHandle, INextCharsDisplayPro
     }, [
         startOrContinueTimer,
         getFirstNonMatchingChar,
-        _phrase.value,
-        _phrase.chordsHTML,
         cancelTimer,
         hideError,
         showError,
@@ -212,19 +202,14 @@ const NextCharsDisplay = forwardRef<NextCharsDisplayHandle, INextCharsDisplayPro
     useSignalEffect(() => {
         const foundPhrase = gamePhraseSignal.value;
         if (foundPhrase === null || foundPhrase === undefined || isNullOrEmptyString(foundPhrase.value) || foundPhrase.displayAs !== 'Game') {
-            setGamePhrase(null);
-            setPhrase(new Phrase(['']));
+            lastCompletedKeyRef.current = null;
             setNextChars('');
             return;
         }
 
-        // Prevent unnecessary state updates
-        setGamePhrase(prevPhrase =>
-            prevPhrase?.key === foundPhrase.key ? prevPhrase : foundPhrase
-        );
-        //TODO: Check if we can use the Chord.tsx here.
-        //INFO: This is the only place the Phrase.ts is still used.
-        setPhrase(new Phrase(foundPhrase.value.split('')));
+        if (foundPhrase.key !== lastCompletedKeyRef.current) {
+            lastCompletedKeyRef.current = null;
+        }
         setNextChars(foundPhrase.value);
     });
 
@@ -249,7 +234,11 @@ const NextCharsDisplay = forwardRef<NextCharsDisplayHandle, INextCharsDisplayPro
                 <Timer ref={timerRef} />
                 <div id={TerminalCssClasses.nextCharsRate} ref={nextCharsRateRef}></div>
                 <span id={TerminalCssClasses.wpm} ref={wpmRef}></span>
-                <pre id={TerminalCssClasses.nextChars} ref={nextCharsRef}>
+                <pre
+                    id={TerminalCssClasses.nextChars}
+                    ref={nextCharsRef}
+                    key={gamePhrase.value?.key ?? 'empty'}
+                >
                     {_nextChars.length > 0 ? (
                         <>
                             <span

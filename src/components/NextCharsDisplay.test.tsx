@@ -1,7 +1,7 @@
 import { render, act, screen } from '@testing-library/react';
 import { vi, describe, test, expect, beforeEach } from 'vitest';
 
-import NextCharsDisplay from './NextCharsDisplay';
+import NextCharsDisplay, { type NextCharsDisplayHandle } from './NextCharsDisplay';
 import { gamePhraseSignal } from 'src/signals/gameSignals';
 import { commandLineSignal, setCommandLine } from 'src/signals/commandLineSignals';
 import { type GamePhrase } from '@handterm/types';
@@ -86,6 +86,51 @@ describe('NextCharsDisplay', () => {
 
     expect(container.querySelector('#next-chars')?.textContent).toBe('');
     expect(screen.queryByText(hasPhraseText('All sad lads ask dad; alas fads fall'))).not.toBeInTheDocument();
+  });
+
+  test('retains cursor and next characters on consecutive game levels', async () => {
+    const displayRef = { current: null as NextCharsDisplayHandle | null };
+    await act(async () => {
+      gamePhraseSignal.value = firstPhrase;
+    });
+    const { container } = render(
+      <NextCharsDisplay
+        ref={displayRef}
+        isInPhraseMode={true}
+        onPhraseSuccess={() => {
+          displayRef.current?.clearPhrase();
+          setCommandLine('');
+          gamePhraseSignal.value = secondPhrase;
+        }}
+        onError={vi.fn()}
+      />
+    );
+    expect(container.querySelector('#next-chars-cursor')?.textContent).toBe('A');
+
+    // Complete first phrase
+    await act(async () => {
+      setCommandLine('All sad lads ask dad; alas fads fall');
+    });
+
+    expect(screen.getByText(hasPhraseText('0123 4567 8901 2345 6789 0987'))).toBeInTheDocument();
+    let cursor = container.querySelector('#next-chars-cursor');
+    expect(cursor).toBeInTheDocument();
+    expect(cursor?.textContent).toBe('0');
+
+    // Typing on the second level moves the cursor forward
+    await act(async () => {
+      setCommandLine('0');
+    });
+    cursor = container.querySelector('#next-chars-cursor');
+    expect(cursor?.textContent).toBe('1');
+    expect(screen.getByText(hasPhraseText('123 4567 8901 2345 6789 0987'))).toBeInTheDocument();
+
+    await act(async () => {
+      setCommandLine('012');
+    });
+    cursor = container.querySelector('#next-chars-cursor');
+    expect(cursor?.textContent).toBe('3');
+    expect(screen.getByText(hasPhraseText('3 4567 8901 2345 6789 0987'))).toBeInTheDocument();
   });
 
   test('clears nextChars when the game phrase signal is nulled', async () => {
