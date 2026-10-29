@@ -137,10 +137,23 @@
 }
 
 .vimtut-status-tag {
-  color: #9ca3af;
-  font-family: inherit;
-  font-size: inherit;
-  line-height: inherit;
+  color: #00ffff;
+  background-color: #0007;
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 2px;
+  border: 1px solid rgba(0, 255, 255, 0.3);
+  font-weight: bold;
+}
+
+.vimtut-header-container span,
+.vim-guide span,
+.vimtut-btn,
+.vim-guide-cmd {
+  background-color: #0007;
+  display: inline-block;
+  padding: 1px 4px;
+  border-radius: 2px;
 }
 
 /* Output history accomplishment styling */

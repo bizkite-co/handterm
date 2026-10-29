@@ -521,6 +521,30 @@ div.view-line > span {
   background-color: #0007;
 }
 
+/* Monaco cursor styling — high-visibility, opaque block cursor with glow for mobile & video */
+.monaco-editor .cursors-layer {
+  opacity: 1 !important;
+}
+
+.monaco-editor .cursors-layer > .cursor {
+  visibility: visible !important;
+  opacity: 1 !important;
+  display: block !important;
+  background-color: #00ffff !important;
+  color: #000000 !important;
+  border: 1px solid #ffffff !important;
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.9), 0 0 3px #ffffff !important;
+  border-radius: 1px;
+}
+
+/* Ensure current line highlight remains prominent over video */
+.monaco-editor .current-line {
+  background-color: rgba(0, 255, 255, 0.12) !important;
+  border: 1px solid rgba(0, 255, 255, 0.35) !important;
+  border-left: 3px solid #00ffff !important;
+  box-sizing: border-box;
+}
+
 div.monaco-editor-container
   > section
   > div

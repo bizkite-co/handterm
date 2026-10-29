@@ -47,8 +47,10 @@ monaco.editor.defineTheme('handterm-transparent', {
     'editor.background': '#00000000',
     'editorGutter.background': '#00000000',
     'editor.foreground': '#ffffff',
-    'editorCursor.foreground': '#ffffff',
-    'editor.lineHighlightBackground': '#00000000',
+    'editorCursor.foreground': '#00ffff',
+    'editorCursor.background': '#000000',
+    'editor.lineHighlightBackground': '#00ffff18',
+    'editor.lineHighlightBorder': '#00ffff44',
     'editor.selectionBackground': '#264f7866',
     'editor.inactiveSelectionBackground': '#3a3d4100',
     'editor.selectionForeground': '#ffffff',
@@ -402,6 +404,11 @@ export default function MonacoCore({ value, language = 'text', toggleVideo, mode
             vertical: 'hidden'
           },
           lineNumbersMinChars: 2,
+          renderLineHighlight: 'all',
+          renderLineHighlightOnlyWhenFocus: false,
+          cursorStyle: 'block',
+          cursorBlinking: 'blink',
+          cursorSmoothCaretAnimation: 'on',
         };
       }
     };
@@ -605,6 +612,7 @@ export default function MonacoCore({ value, language = 'text', toggleVideo, mode
     if (vimModeRef.current && currentVimModeRef.current !== 'normal') {
       exitVimInsertMode(vimModeRef.current as unknown as VimModeInstance);
     }
+    editor.focus();
   }, [isVimTut, vimTutorialStepIndexSignal.value]);
 
   // Effect 7: Vim Tutorial Verification Runner (monitors progress without resetting user edits)
