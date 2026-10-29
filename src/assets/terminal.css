@@ -345,8 +345,9 @@ pre#prompt {
 .next-char-highlight {
   display: inline-block;
   min-width: 1ch;
-  background-color: rgba(255, 255, 0, 0.5); /* 50% transparent yellow highlight box */
-  color: #000;
+  background-color: transparent;
+  outline: 1.5px solid yellow; /* hollow outline box around the next character */
+  color: inherit; /* leaves the subject character green like the rest of the phrase */
   font-weight: bold;
   border-radius: 2px;
   text-align: center;

@@ -135,7 +135,7 @@ describe('NextCharsDisplay', () => {
     expect(screen.queryByText(hasPhraseText('All sad lads ask dad; alas fads fall'))).not.toBeInTheDocument();
   });
 
-  test('highlights the first character in a transparent yellow box with id next-chars-cursor', async () => {
+  test('frames the first character in a hollow outline box with id next-chars-cursor', async () => {
     await act(async () => {
       gamePhraseSignal.value = firstPhrase;
     });
