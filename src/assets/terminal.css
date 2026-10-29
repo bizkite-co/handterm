@@ -176,7 +176,7 @@ pre#next-chars {
   /* Ensures words break to prevent overflow */
   font-family: var(--terminal-font-family);
   /* Maintains monospace font */
-  clear: both;
+  flex: 1;
 }
 
 video#terminal-video {
@@ -208,6 +208,7 @@ div.terminal {
   color: white;
   display: inline-flex;
   align-items: center;
+  flex-shrink: 0;
 }
 
 .wpm-table-row .number {
@@ -315,9 +316,24 @@ pre#prompt {
 
 #next-chars {
   background-color: #0007;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 2px 4px;
+
   pre#next-chars {
-    background-color: #0007;
+    background-color: transparent;
   }
+}
+
+.next-chars-cursor {
+  display: inline-block;
+  width: 1ch;
+  height: 1.2em;
+  background-color: #808080; /* 50% gray character-sized inverse cursor block */
+  border-radius: 1px;
+  flex-shrink: 0;
+  margin-top: 2px;
 }
 
 #terminal-output div {
