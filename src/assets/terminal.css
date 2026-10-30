@@ -345,17 +345,29 @@ pre#prompt {
 .next-char-highlight {
   display: inline-block;
   min-width: 1ch;
-  background-color: rgba(255, 255, 0, 0.12); /* subtle luminance backing to cut through outdoor daylight glare */
-  border: 2px solid #ffff00;
-  border-bottom: 4px solid #ffff00; /* bold underline dock for instant daylight visibility */
-  box-shadow: 0 0 6px rgba(255, 255, 0, 0.9), 0 2px 4px rgba(255, 255, 0, 0.7);
+  background-color: transparent;
+  border: 1.5px solid rgba(255, 255, 0, 0.75);
+  box-shadow: 0 0 3px rgba(255, 255, 0, 0.4);
   box-sizing: border-box;
-  margin: -2px 0 -2px 0; /* keeps text baseline aligned while accommodating bottom border */
+  margin: -1.5px 0; /* keeps text baseline aligned with normal line-height */
   color: inherit; /* leaves the subject character green like the rest of the phrase */
   font-weight: bold;
-  border-radius: 2px 2px 1px 1px;
+  border-radius: 2px;
   text-align: center;
   white-space: pre;
+}
+
+/* Mobile: high-contrast, bold underline dock with daylight luminance backing to cut through outdoor glare */
+@media (max-width: 600px) {
+  .next-chars-cursor,
+  .next-char-highlight {
+    background-color: rgba(255, 255, 0, 0.2);
+    border: 2px solid #ffff00;
+    border-bottom: 5px solid #ffff00;
+    box-shadow: 0 0 8px #ffff00, 0 3px 6px rgba(255, 255, 0, 0.85);
+    margin: -2px 0 -3px 0;
+    border-radius: 2px 2px 1px 1px;
+  }
 }
 
 #terminal-output div {
