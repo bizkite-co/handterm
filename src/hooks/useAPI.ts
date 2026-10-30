@@ -36,7 +36,7 @@ interface APIError {
 }
 
 export function useAPI(auth: IAuthProps): {
-    getRepoTree: (repo: string, path?: string, sha?: string) => Promise<APIResponse<TreeItemResponse[]>>,
+    getRepoTree: (repo: string, path?: string, sha?: string, recursive?: boolean) => Promise<APIResponse<TreeItemResponse[]>>,
     getRepoContent: (repo: string, path: string) => Promise<APIResponse<FileContentResponse>>,
     listRecentRepos: () => Promise<APIResponse<RepoResponse[]>>
 } {
@@ -89,11 +89,12 @@ export function useAPI(auth: IAuthProps): {
         }
     }, [validateAndRefreshToken]);
 
-    const getRepoTree = useCallback(async (repo: string, path?: string, sha?: string) => {
+    const getRepoTree = useCallback(async (repo: string, path?: string, sha?: string, recursive?: boolean) => {
         return makeAuthenticatedRequest<TreeItemResponse[]>(ENDPOINTS.api.GetRepoTree, {
             repo,
             ...(path && { path }),
-            ...(sha && { sha })
+            ...(sha && { sha }),
+            ...(recursive != null && { recursive: String(recursive) })
         });
     }, [makeAuthenticatedRequest]);
 

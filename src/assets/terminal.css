@@ -304,8 +304,34 @@ pre#prompt {
 }
 
 .ta-pending {
-  color: #339af0;
+  color: #ffd43b;
   font-weight: bold;
+}
+
+.ta-pri {
+  color: #22b8cf;
+}
+
+.ta-date {
+  color: #868e96;
+}
+
+.ta-blocked {
+  color: #ffd43b;
+}
+
+.ta-tree {
+  color: #22b8cf;
+  opacity: 0.8;
+}
+
+.ta-header {
+  color: #adb5bd;
+  font-weight: bold;
+}
+
+.ta-slug {
+  color: inherit;
 }
 
 .ta-task-list {

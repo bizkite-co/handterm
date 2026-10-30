@@ -8,8 +8,14 @@ import {
   TaCommand,
   slugify,
   parseTasksFromTree,
+  parseFrontmatter,
+  formatDateMMDD,
+  parseMissionUsv,
+  buildHierarchyRows,
+  formatTaskQueueTable,
   extractTitleFromContent,
   DEFAULT_TASK_REPO,
+  type TaskItem,
 } from '../TaCommand';
 
 vi.mock('src/utils/apiClient', () => ({
@@ -63,11 +69,12 @@ describe('TaCommand', () => {
         { path: 'pending/second-task/README.md', mode: '100644', type: 'blob', sha: 'sha1' },
         { path: 'active/first-task/README.md', mode: '100644', type: 'blob', sha: 'sha2' },
         { path: 'completed/old-task/README.md', mode: '100644', type: 'blob', sha: 'sha3' },
-        { path: 'other/file.txt', mode: '100644', type: 'blob', sha: 'sha4' },
+        { path: 'completed/2026/07/archived-task/README.md', mode: '100644', type: 'blob', sha: 'sha4' },
+        { path: 'other/file.txt', mode: '100644', type: 'blob', sha: 'sha5' },
       ];
 
       const tasks = parseTasksFromTree(treeItems);
-      expect(tasks).toHaveLength(3);
+      expect(tasks).toHaveLength(4);
       expect(tasks[0]).toEqual({
         status: 'ACTIVE',
         slug: 'first-task',
@@ -79,6 +86,11 @@ describe('TaCommand', () => {
         path: 'pending/second-task/README.md',
       });
       expect(tasks[2]).toEqual({
+        status: 'COMPLETED',
+        slug: 'archived-task',
+        path: 'completed/2026/07/archived-task/README.md',
+      });
+      expect(tasks[3]).toEqual({
         status: 'COMPLETED',
         slug: 'old-task',
         path: 'completed/old-task/README.md',
@@ -102,6 +114,108 @@ describe('TaCommand', () => {
       ];
       const tasks = parseTasksFromTree(treeItems);
       expect(tasks).toHaveLength(1);
+    });
+  });
+
+  describe('parseFrontmatter and formatDateMMDD', () => {
+    it('parses created_at, blocked_by, and subtask_of from frontmatter', () => {
+      const content = `---
+created_at: 2026-08-25T11:59:13.281330-07:00
+blocked_by: task-a, task-b
+subtask_of: parent-task
+---
+
+# My Task Title
+`;
+      const fm = parseFrontmatter(content);
+      expect(fm.created_at).toBe('2026-08-25T11:59:13.281330-07:00');
+      expect(fm.blocked_by).toEqual(['task-a', 'task-b']);
+      expect(fm.subtask_of).toBe('parent-task');
+      expect(formatDateMMDD(fm.created_at)).toBe('08-25');
+    });
+
+    it('handles frontmatter without dependencies or subtask', () => {
+      const content = `---
+created_at: 2026-10-13T10:00:00Z
+---
+`;
+      const fm = parseFrontmatter(content);
+      expect(fm.created_at).toBe('2026-10-13T10:00:00Z');
+      expect(fm.blocked_by).toBeUndefined();
+      expect(fm.subtask_of).toBeUndefined();
+      expect(formatDateMMDD(fm.created_at)).toBe('10-13');
+    });
+  });
+
+  describe('parseMissionUsv', () => {
+    it('parses USV delimited fields correctly', () => {
+      const usv = [
+        'Root Task\x1froot-task\x1f\x1f',
+        'Subtask A\x1fsub-a\x1f\x1froot-task',
+        'Subtask B\x1fsub-b\x1fsub-a\x1froot-task',
+      ].join('\n');
+
+      const items = parseMissionUsv(usv);
+      expect(items).toHaveLength(3);
+      expect(items[0]).toEqual({ name: 'Root Task', slug: 'root-task', blocked_by: [] });
+      expect(items[1]).toEqual({ name: 'Subtask A', slug: 'sub-a', blocked_by: [], subtask_of: 'root-task' });
+      expect(items[2]).toEqual({ name: 'Subtask B', slug: 'sub-b', blocked_by: ['sub-a'], subtask_of: 'root-task' });
+    });
+  });
+
+  describe('buildHierarchyRows and formatTaskQueueTable', () => {
+    it('nests subtasks under their parent with └─ prefix and formats table', () => {
+      const issues: TaskItem[] = [
+        {
+          name: 'Parent 1',
+          slug: 'parent-1',
+          status: 'ACTIVE',
+          path: 'active/parent-1/README.md',
+          priority: 1,
+          date: '08-25',
+          blocked_by: [],
+        },
+        {
+          name: 'Child 1',
+          slug: 'child-1',
+          status: 'PENDING',
+          path: 'pending/child-1/README.md',
+          priority: 2,
+          date: '08-25',
+          blocked_by: [],
+          subtask_of: 'parent-1',
+        },
+        {
+          name: 'Independent 2',
+          slug: 'independent-2',
+          status: 'ACTIVE',
+          path: 'active/independent-2/README.md',
+          priority: 3,
+          date: '10-13',
+          blocked_by: ['child-1'],
+        },
+      ];
+
+      const slugToIssue = new Map(issues.map(i => [i.slug, i]));
+      const completedSlugs = new Set<string>();
+      const rows = buildHierarchyRows(issues);
+
+      expect(rows).toHaveLength(3);
+      expect(rows[0].issue.slug).toBe('parent-1');
+      expect(rows[0].depth).toBe(0);
+      expect(rows[1].issue.slug).toBe('child-1');
+      expect(rows[1].depth).toBe(1);
+      expect(rows[2].issue.slug).toBe('independent-2');
+      expect(rows[2].depth).toBe(0);
+
+      const table = formatTaskQueueTable('bizkite-co/handterm-tasks', rows, slugToIssue, completedSlugs);
+      expect(table).toContain('Store remote: git@github.com:bizkite-co/handterm-tasks.git');
+      expect(table).toContain('Task Queue');
+      expect(table).toContain('Pri  Date   Status   Blocked   Slug');
+      expect(table).toContain('<span class="ta-pri">  1</span>  <span class="ta-date">08-25</span>  <span class="ta-active">ACTIVE </span>  <span class="ta-blocked">        </span>  <span class="ta-slug">parent-1</span>');
+      expect(table).toContain('<span class="ta-pri">  2</span>  <span class="ta-date">08-25</span>  <span class="ta-pending">PENDING</span>  <span class="ta-blocked">        </span>  <span class="ta-tree">└─ </span><span class="ta-slug">child-1</span>');
+      // independent-2 is blocked by child-1 (pri 2)
+      expect(table).toContain('<span class="ta-pri">  3</span>  <span class="ta-date">10-13</span>  <span class="ta-active">ACTIVE </span>  <span class="ta-blocked">2       </span>  <span class="ta-slug">independent-2</span>');
     });
   });
 
@@ -176,7 +290,7 @@ Details here...`;
         expect(res.message).toContain('No active or pending tasks found');
       });
 
-      it('lists active and pending tasks with titles retrieved from file contents', async () => {
+      it('lists active and pending tasks with titles retrieved from file contents and table formatting', async () => {
         vi.mocked(apiClient.getRepoTree).mockResolvedValue({
           status: 200,
           data: [
@@ -190,7 +304,7 @@ Details here...`;
             return {
               status: 200,
               data: {
-                content: '# Implement Core Engine\n\nSome body',
+                content: '---\ncreated_at: 2026-08-25T11:00:00Z\n---\n\n# Implement Core Engine\n\nSome body',
                 encoding: 'utf-8',
                 sha: 's1',
                 size: 30,
@@ -201,7 +315,7 @@ Details here...`;
             return {
               status: 200,
               data: {
-                content: '# Add Unit Tests\n\nSome body',
+                content: '---\ncreated_at: 2026-10-13T10:00:00Z\n---\n\n# Add Unit Tests\n\nSome body',
                 encoding: 'utf-8',
                 sha: 's2',
                 size: 25,
@@ -220,10 +334,15 @@ Details here...`;
 
         const res = await TaCommand.execute(context, parsedCommand);
         expect(res.status).toBe(200);
-        expect(res.message).toContain('ACTIVE</span>: Implement Core Engine');
-        expect(res.message).toContain('PENDING</span>: Add Unit Tests');
-        expect(res.message).toContain('[1]');
-        expect(res.message).toContain('[2]');
+        expect(res.message).toContain('Store remote: git@github.com:bizkite-co/handterm-tasks.git');
+        expect(res.message).toContain('Task Queue');
+        expect(res.message).toContain('Pri  Date   Status   Blocked   Slug');
+        expect(res.message).toContain('ACTIVE </span>');
+        expect(res.message).toContain('PENDING</span>');
+        expect(res.message).toContain('current-work');
+        expect(res.message).toContain('next-work');
+        expect(res.message).toContain('08-25');
+        expect(res.message).toContain('10-13');
       });
     });
 
@@ -323,7 +442,8 @@ Details here...`;
 
         const res = await TaCommand.execute(context, parsedCommand);
         expect(res.status).toBe(200);
-        expect(res.message).toContain('ACTIVE</span>: Task One In Progress');
+        expect(res.message).toContain('ACTIVE </span>');
+        expect(res.message).toContain('task-one');
         expect(res.message).not.toContain('task-two');
       });
 

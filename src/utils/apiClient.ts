@@ -150,11 +150,18 @@ export async function makeAuthenticatedRequest<T>(
     }
 }
 
-export async function getRepoTree(auth: IAuthProps, repo: string, path?: string, sha?: string): Promise<APIResponse<TreeItemResponse[]>> {
+export async function getRepoTree(
+    auth: IAuthProps,
+    repo: string,
+    path?: string,
+    sha?: string,
+    recursive?: boolean
+): Promise<APIResponse<TreeItemResponse[]>> {
     return makeAuthenticatedRequest<TreeItemResponse[]>(auth, ENDPOINTS.api.GetRepoTree, {
         repo,
         ...(path != null && { path }),
-        ...(sha != null && { sha })
+        ...(sha != null && { sha }),
+        ...(recursive != null && { recursive: String(recursive) })
     });
 }
 
