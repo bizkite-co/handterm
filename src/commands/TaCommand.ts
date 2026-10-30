@@ -2,7 +2,7 @@
 
 import { type ICommand, type ICommandContext, type ICommandResponse } from '../contexts/CommandContext';
 import { type ParsedCommand } from '@handterm/types';
-import { getRepoTree, getRepoContent, saveRepoFile, type TreeItemResponse } from '../utils/apiClient';
+import { getRepoTree, getRepoContent, saveRepoFile, commitRepoFiles, type TreeItemResponse } from '../utils/apiClient';
 import { commandRegistry } from './commandRegistry';
 import { createLogger } from '../utils/Logger';
 
@@ -69,6 +69,31 @@ export function parseTasksFromTree(items: TreeItemResponse[]): TaskEntry[] {
   });
 
   return tasks;
+}
+
+export const HANDTERM_WRITER = 'handterm';
+
+export function buildCreateOp(slug: string, title: string, body: string, at: string, id: string) {
+  return {
+    v: 1,
+    id,
+    writer: HANDTERM_WRITER,
+    at,
+    verb: 'create',
+    slug,
+    payload: {
+      name: title,
+      station: 'pending',
+      body,
+    },
+  };
+}
+
+export function newOpId(at: Date = new Date()): { at: string; id: string } {
+  const iso = at.toISOString();
+  const stamp = iso.replace(/[-:]/g, '').replace(/\.\d{3}Z$/, '').replace('Z', '');
+  const suffix = Math.random().toString(16).slice(2, 8);
+  return { at: iso, id: `${stamp}-${suffix}` };
 }
 
 export function extractTitleFromContent(content: string, fallbackSlug: string): string {
@@ -176,7 +201,13 @@ export const TaCommand: ICommand = {
 
         const taskPath = `pending/${slug}/README.md`;
         const commitMessage = `task: create ${slug}`;
-        const saveRes = await saveRepoFile(context.auth, repo, taskPath, content, commitMessage);
+        const { at, id } = newOpId();
+        const op = buildCreateOp(slug, title, content, at, id);
+        const opPath = `.task-agent/ops/${HANDTERM_WRITER}/${id}.op.json`;
+        const saveRes = await commitRepoFiles(context.auth, repo, commitMessage, [
+          { path: taskPath, content },
+          { path: opPath, content: `${JSON.stringify(op, null, 2)}\n` },
+        ]);
 
         if (saveRes.status !== 200) {
           if (saveRes.status === 401) {

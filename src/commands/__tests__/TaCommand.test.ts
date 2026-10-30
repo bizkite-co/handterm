@@ -16,6 +16,7 @@ vi.mock('src/utils/apiClient', () => ({
   getRepoTree: vi.fn(),
   getRepoContent: vi.fn(),
   saveRepoFile: vi.fn(),
+  commitRepoFiles: vi.fn(),
 }));
 
 describe('TaCommand', () => {
@@ -241,9 +242,9 @@ Details here...`;
       });
 
       it('creates a new task with criteria and body and commits to pending/<slug>/README.md', async () => {
-        vi.mocked(apiClient.saveRepoFile).mockResolvedValue({
+        vi.mocked(apiClient.commitRepoFiles).mockResolvedValue({
           status: 200,
-          data: { content: { sha: 'newsha' } },
+          data: { commit: { sha: 'newsha' }, branch: 'main' },
         });
 
         const context = createMockContext();
@@ -260,22 +261,27 @@ Details here...`;
         expect(res.status).toBe(200);
         expect(res.message).toContain('Created task: support-custom-themes (Status: pending)');
 
-        expect(apiClient.saveRepoFile).toHaveBeenCalledWith(
+        expect(apiClient.commitRepoFiles).toHaveBeenCalledWith(
           context.auth,
           DEFAULT_TASK_REPO,
-          'pending/support-custom-themes/README.md',
-          expect.stringContaining('# Support Custom Themes'),
-          'task: create support-custom-themes'
+          'task: create support-custom-themes',
+          expect.any(Array)
         );
 
-        const savedContent = vi.mocked(apiClient.saveRepoFile).mock.calls[0][3];
-        expect(savedContent).toContain('created_at:');
-        expect(savedContent).toContain('User can choose dark or light mode');
-        expect(savedContent).toContain('## Completion Criteria\n\nAll themes load correctly');
+        const files = vi.mocked(apiClient.commitRepoFiles).mock.calls[0][3];
+        const readme = files.find((file) => file.path === 'pending/support-custom-themes/README.md');
+        const opFile = files.find((file) => file.path.startsWith('.task-agent/ops/handterm/'));
+        expect(readme?.content).toContain('created_at:');
+        expect(readme?.content).toContain('User can choose dark or light mode');
+        expect(readme?.content).toContain('## Completion Criteria\n\nAll themes load correctly');
+        expect(opFile).toBeDefined();
+        const op = JSON.parse(opFile?.content ?? '{}') as { verb: string; payload: { body: string } };
+        expect(op.verb).toBe('create');
+        expect(op.payload.body).toContain('# Support Custom Themes');
       });
 
       it('handles 401 unauthorized on save', async () => {
-        vi.mocked(apiClient.saveRepoFile).mockResolvedValue({
+        vi.mocked(apiClient.commitRepoFiles).mockResolvedValue({
           status: 401,
           error: 'Unauthorized',
         });

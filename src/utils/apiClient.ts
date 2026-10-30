@@ -166,6 +166,33 @@ export async function getRepoContent(auth: IAuthProps, repo: string, path: strin
     });
 }
 
+export interface RepoFileWrite {
+    path: string;
+    content: string;
+}
+
+export interface CommitRepoFilesResponse {
+    commit: {
+        sha: string;
+    };
+    branch: string;
+}
+
+export async function commitRepoFiles(
+    auth: IAuthProps,
+    repo: string,
+    message: string,
+    files: RepoFileWrite[]
+): Promise<APIResponse<CommitRepoFilesResponse>> {
+    return makeAuthenticatedRequest<CommitRepoFilesResponse>(
+        auth,
+        ENDPOINTS.api.CommitRepoFiles,
+        { repo, message },
+        'POST',
+        { files }
+    );
+}
+
 export async function saveRepoFile(
     auth: IAuthProps,
     repo: string,

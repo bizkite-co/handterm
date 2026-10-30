@@ -31,6 +31,7 @@
         "ListRecentRepos": "/list-recent-repos",
         "GetRepoTree": "/get-repo-tree",
         "SaveRepoFile": "/save-repo-file",
+        "CommitRepoFiles": "/commit-repo-files",
         "UnlinkGitHub": "/unlink-github",
         "GitHubAuth": "/github_auth",
         "GitHubDeviceCode": "/github-device-code",
