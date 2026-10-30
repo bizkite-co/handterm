@@ -1,12 +1,23 @@
 // vite.config.ts
 import path from 'path';
+import { execSync } from 'child_process';
 
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
 import { default as crossOriginIsolation } from 'vite-plugin-cross-origin-isolation';
 
+let chordVersion = 'dev';
+try {
+  chordVersion = execSync('git rev-parse --short HEAD').toString().trim();
+} catch {
+  chordVersion = Date.now().toString(36);
+}
+
 export default defineConfig({
+  define: {
+    __CHORD_VERSION__: JSON.stringify(chordVersion),
+  },
   plugins: [
     react(),
     nodePolyfills({

@@ -3,6 +3,7 @@ import { useSignalEffect } from '@preact/signals-react';
 import { type GamePhrase } from '../types/Types';
 import { Chord } from './Chord';
 import { commandLineSignal } from 'src/signals/commandLineSignals';
+import { prefetchPhraseGlyphs } from '../utils/prefetchImages';
 
 interface TutorialManagerProps {
   tutorial: GamePhrase | null;
@@ -30,6 +31,9 @@ export const TutorialManager = memo(({
 
   useEffect(() => {
     setCompletedKey(null);
+    if (tutorial != null) {
+      prefetchPhraseGlyphs(tutorial);
+    }
   }, [tutorial]);
 
   useSignalEffect(() => {
