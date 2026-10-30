@@ -49,7 +49,8 @@
             <use id="me" href="#phalange" transform="translate(0,0)" />
             <use id="mf" href="#phalange" transform="translate(10,0)" />
             <use id="pf" href="#tip" transform="translate(20,0) scale(1,1) skewY(-12)" />
-        <use id="shift-start" href="#start" x="10" /></g>
+        <use id="shift-start" href="#start" x="10" />
+    </g>
         <g id="index" transform="translate(0,10)"> 
             <use id="me" href="#phalange" transform="translate(0,0) scale(2,1)" />
             <use id="mf" href="#phalange" transform="translate(20,0) scale(2,1) " />
@@ -59,7 +60,7 @@
             <use id="me" href="#phalange" transform="translate(0,0) scale(2,1) " />
             <use id="mf" href="#phalange" transform="translate(20,0) scale(2.25,1) " />
             <use id="pf" href="#tip" transform="translate(42.5,0) scale(1.75,1) " />
-        <use id="stop" href="#stop" x="43.5" /><use id="start" href="#start" x="20" /></g>
+        <use id="stop" href="#stop" x="43.5" /><use id="dot2" href="#dot" x="24" fill="#0A0F">2</use><use id="dot1" href="#dot" x="20" fill="#0A0F" /></g>
         <g id="ring" transform="translate(0,30)"> 
             <use id="me" href="#phalange" transform="translate(0,0) scale(2,1) " />
             <use id="mf" href="#phalange" transform="translate(20,0) scale(2,1) " />

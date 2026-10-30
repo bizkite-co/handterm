@@ -49,12 +49,13 @@
             <use id="me" href="#phalange" transform="translate(0,0)" />
             <use id="mf" href="#phalange" transform="translate(10,0)" />
             <use id="pf" href="#tip" transform="translate(20,0) scale(1,1) skewY(-12)" />
-        <use id="shift-start" href="#start" x="10" /></g>
+        <use id="shift-start" href="#start" x="10" />
+    </g>
         <g id="index" transform="translate(0,10)"> 
             <use id="me" href="#phalange" transform="translate(0,0) scale(2,1)" />
             <use id="mf" href="#phalange" transform="translate(20,0) scale(2,1) " />
             <use id="pf" href="#tip" transform="translate(40,0) scale(1.5,1) " />
-        <use id="stop" href="#stop" x="21" /><use id="start" href="#start" x="40" /></g>
+        <use id="stop" href="#stop" x="21" /><use id="dot2" href="#dot" x="44" fill="#0A0F">2</use><use id="dot1" href="#dot" x="40" fill="#0A0F" /></g>
         <g id="middle" transform="translate(0,20)"> 
             <use id="me" href="#phalange" transform="translate(0,0) scale(2,1) " />
             <use id="mf" href="#phalange" transform="translate(20,0) scale(2.25,1) " />

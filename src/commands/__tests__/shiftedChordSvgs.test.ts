@@ -10,7 +10,7 @@ function svg(code: string): string {
 }
 
 function thumbGroup(content: string): string {
-  const match = content.match(/<g id="thumb">[\s\S]*?<\/g>/);
+  const match = content.match(/<g id="thumb"[^>]*>[\s\S]*?<\/g>/);
   if (match == null) {
     throw new Error('missing thumb group');
   }
@@ -18,20 +18,42 @@ function thumbGroup(content: string): string {
 }
 
 describe('shifted chord SVGs', () => {
-  it('rebuilds B (517) from b (17) plus the shift start on thumb', () => {
+  it('rebuilds B (517) with thumb start, index two-dot, and middle stop', () => {
     const unshifted = svg('17');
     const shifted = svg('517');
 
     expect(unshifted).toMatch(/id="index"[\s\S]*href="#start" x="40"/);
-    expect(shifted).toMatch(/id="index"[\s\S]*href="#start" x="40"/);
     expect(thumbGroup(shifted)).toMatch(/href="#start"[^>]*x="10"/);
-    expect(shifted).not.toMatch(/id="index"[\s\S]*href="#dot"/);
+    expect(shifted).toMatch(/id="index"[\s\S]*href="#dot"[^>]*x="44"/);
+    expect(shifted).toMatch(/id="index"[\s\S]*href="#dot"[^>]*x="40"/);
+    expect(shifted).not.toMatch(/id="index"[\s\S]*href="#start"/);
+    expect(shifted).toMatch(/id="middle"[\s\S]*href="#stop" x="21"/);
   });
 
-  it('rebuilds ! (510) from 1 (10) plus the shift start on thumb', () => {
+  it('rebuilds ! (510) with thumb start, index two-dot, and thumb stop', () => {
     const shifted = svg('510');
-    expect(shifted).toMatch(/id="index"[\s\S]*href="#start" x="40"/);
     expect(thumbGroup(shifted)).toMatch(/href="#start"[^>]*x="10"/);
+    expect(shifted).toMatch(/id="index"[\s\S]*href="#dot"[^>]*x="44"/);
+    expect(shifted).toMatch(/id="index"[\s\S]*href="#dot"[^>]*x="40"/);
+    expect(shifted).not.toMatch(/id="index"[\s\S]*href="#start"/);
+    expect(thumbGroup(shifted)).toMatch(/href="#stop"[^>]*x="21"/);
+  });
+
+  it('rebuilds ? (596) with thumb start, pinky two-dot, and index stop', () => {
+    const shifted = svg('596');
+    expect(thumbGroup(shifted)).toMatch(/href="#start"[^>]*x="10"/);
+    expect(shifted).toMatch(/id="pinky"[\s\S]*href="#dot"[^>]*x="19"/);
+    expect(shifted).toMatch(/id="pinky"[\s\S]*href="#dot"[^>]*x="15"/);
+    expect(shifted).not.toMatch(/id="pinky"[\s\S]*href="#start"/);
+    expect(shifted).toMatch(/id="index"[\s\S]*href="#stop" x="21"/);
+  });
+
+  it('rebuilds + (5E0) with thumb start, pinky two-dot, and thumb stop', () => {
+    const shifted = svg('5E0');
+    expect(thumbGroup(shifted)).toMatch(/href="#start"[^>]*x="10"/);
+    expect(shifted).toMatch(/id="pinky"[\s\S]*href="#dot"[^>]*x="4"/);
+    expect(shifted).toMatch(/id="pinky"[\s\S]*href="#dot"[^>]*x="0"/);
+    expect(shifted).not.toMatch(/id="pinky"[\s\S]*href="#start"/);
     expect(thumbGroup(shifted)).toMatch(/href="#stop"[^>]*x="21"/);
   });
 
