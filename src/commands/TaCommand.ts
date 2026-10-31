@@ -56,7 +56,11 @@ export function parseTasksFromTree(items: TreeItemResponse[]): TaskEntry[] {
       isTaskFile = true;
     } else if (trimmed.endsWith('.md')) {
       trimmed = trimmed.slice(0, -'.md'.length);
-      isTaskFile = true;
+      // Flat task file (e.g. pending/foo.md): only if exactly 2 segments.
+      // Secondary documents inside task directories (e.g. active/slug/doc.md) have >2 segments and are not tasks.
+      if (trimmed.split('/').length === 2) {
+        isTaskFile = true;
+      }
     }
 
     if (!isTaskFile) continue;
@@ -329,12 +333,12 @@ export const TaCommand: ICommand = {
     context: ICommandContext,
     parsedCommand: ParsedCommand
   ): Promise<ICommandResponse> => {
-    const subcommand = parsedCommand.args[0] ?? 'list';
+    const subcommand = parsedCommand.args[0];
     const args = parsedCommand.args.slice(1);
     const switches = parsedCommand.switches ?? {};
     const repo = (switches.repo || switches.r || DEFAULT_TASK_REPO) as string;
 
-    if (subcommand === 'help') {
+    if (!subcommand || subcommand === 'help' || switches.help || switches.h) {
       return {
         status: 200,
         message: commandRegistry.formatCommandHelp(TaCommand),

@@ -115,6 +115,19 @@ describe('TaCommand', () => {
       const tasks = parseTasksFromTree(treeItems);
       expect(tasks).toHaveLength(1);
     });
+
+    it('ignores secondary markdown documents inside task directories', () => {
+      const treeItems = [
+        { path: 'active/yazi-like-file-browse-br/README.md', mode: '100644', type: 'blob', sha: 'sha1' },
+        { path: 'active/yazi-like-file-browse-br/findings-and-plan.md', mode: '100644', type: 'blob', sha: 'sha2' },
+        { path: 'active/yazi-like-file-browse-br/progress.md', mode: '100644', type: 'blob', sha: 'sha3' },
+        { path: 'active/yazi-like-file-browse-br/video-mode-transparency.md', mode: '100644', type: 'blob', sha: 'sha4' },
+        { path: 'pending/my-task/implementation-notes.md', mode: '100644', type: 'blob', sha: 'sha5' },
+      ];
+      const tasks = parseTasksFromTree(treeItems);
+      expect(tasks).toHaveLength(1);
+      expect(tasks[0].slug).toBe('yazi-like-file-browse-br');
+    });
   });
 
   describe('parseFrontmatter and formatDateMMDD', () => {
@@ -243,6 +256,21 @@ Details here...`;
       const parsedCommand: ParsedCommand = {
         command: 'ta',
         args: ['help'],
+        switches: {},
+      };
+
+      const res = await TaCommand.execute(context, parsedCommand);
+      expect(res.status).toBe(200);
+      expect(res.message).toContain('ta list');
+      expect(res.message).toContain('ta new');
+      expect(res.message).toContain('ta active');
+    });
+
+    it('returns help output when run with no arguments ("ta")', async () => {
+      const context = createMockContext();
+      const parsedCommand: ParsedCommand = {
+        command: 'ta',
+        args: [],
         switches: {},
       };
 
