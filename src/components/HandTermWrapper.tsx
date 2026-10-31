@@ -29,7 +29,6 @@ import GamePhrases from '../utils/GamePhrases';
 
 import { Chord } from './Chord';
 import { IntroText } from './IntroText';
-import { KeyIndicator } from './KeyIndicator';
 import { getMonacoLanguageForFile } from '../utils/syntaxHighlight';
 import MonacoCore from './MonacoCore';
 import NextCharsDisplay, { type NextCharsDisplayHandle } from './NextCharsDisplay';
@@ -296,16 +295,12 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
         />
       )}
       {currentActivityValue === ActivityType.GAME && (
-        <>
-          <NextCharsDisplay
-            ref={nextCharsDisplayRef}
-            isInPhraseMode={true}
-            onPhraseSuccess={handlePhraseSuccess}
-            onError={handlePhraseErrorState}
-          />
-          <KeyIndicator keyType="enter" />
-          <KeyIndicator keyType="backspace" />
-        </>
+        <NextCharsDisplay
+          ref={nextCharsDisplayRef}
+          isInPhraseMode={true}
+          onPhraseSuccess={handlePhraseSuccess}
+          onError={handlePhraseErrorState}
+        />
       )}
       {lastTypedCharacter !== null && (
         <Chord displayChar={lastTypedCharacter} />

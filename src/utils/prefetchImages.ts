@@ -2,7 +2,7 @@ import { allChords } from '../allChords';
 import { Phrases, type GamePhrase } from '@handterm/types';
 import { getChordSvgUrl } from '../constants/terminal';
 
-const EXTRA_GLYPHS = ['enter-key', 'backspace-key'];
+const EXTRA_GLYPHS: string[] = [];
 const BATCH_SIZE = 4;
 const BATCH_INTERVAL_MS = 60;
 
