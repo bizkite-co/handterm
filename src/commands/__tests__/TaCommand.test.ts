@@ -344,6 +344,78 @@ Details here...`;
         expect(res.message).toContain('08-25');
         expect(res.message).toContain('10-13');
       });
+
+      it('falls back to fetching active and pending subtrees if root returns directory stubs (un-deployed CDK)', async () => {
+        vi.mocked(apiClient.getRepoTree).mockImplementation(async (_auth, _repo, path) => {
+          if (!path) {
+            // Root query on old backend returns only directory stubs
+            return {
+              status: 200,
+              data: [
+                { path: 'active', mode: '040000', type: 'tree', sha: 't1' },
+                { path: 'pending', mode: '040000', type: 'tree', sha: 't2' },
+              ],
+            };
+          }
+          if (path === 'active') {
+            return {
+              status: 200,
+              data: [
+                { path: 'active/current-work/README.md', mode: '100644', type: 'blob', sha: 'sha1' },
+              ],
+            };
+          }
+          if (path === 'pending') {
+            return {
+              status: 200,
+              data: [
+                { path: 'pending/next-work/README.md', mode: '100644', type: 'blob', sha: 'sha2' },
+              ],
+            };
+          }
+          return { status: 200, data: [] };
+        });
+
+        vi.mocked(apiClient.getRepoContent).mockImplementation(async (_auth, _repo, path) => {
+          if (path === 'active/current-work/README.md') {
+            return {
+              status: 200,
+              data: {
+                content: '---\ncreated_at: 2026-08-25T11:00:00Z\n---\n\n# Implement Core Engine',
+                encoding: 'utf-8',
+                sha: 's1',
+                size: 30,
+              },
+            };
+          }
+          if (path === 'pending/next-work/README.md') {
+            return {
+              status: 200,
+              data: {
+                content: '---\ncreated_at: 2026-10-13T10:00:00Z\n---\n\n# Add Unit Tests',
+                encoding: 'utf-8',
+                sha: 's2',
+                size: 25,
+              },
+            };
+          }
+          return { status: 404, error: 'Not found' };
+        });
+
+        const context = createMockContext();
+        const parsedCommand: ParsedCommand = {
+          command: 'ta',
+          args: ['list'],
+          switches: {},
+        };
+
+        const res = await TaCommand.execute(context, parsedCommand);
+        expect(res.status).toBe(200);
+        expect(res.message).toContain('current-work');
+        expect(res.message).toContain('next-work');
+        expect(res.message).toContain('ACTIVE </span>');
+        expect(res.message).toContain('PENDING</span>');
+      });
     });
 
     describe('ta new', () => {

@@ -352,7 +352,28 @@ export const TaCommand: ICommand = {
           };
         }
 
-        const treeTasks = parseTasksFromTree(treeResponse.data);
+        let rawTreeData = treeResponse.data;
+        let treeTasks = parseTasksFromTree(rawTreeData);
+
+        // Fallback if the deployed Lambda backend does not yet support root recursive fetching:
+        // Query station directories directly so Handterm works before CDK redeployment.
+        if (treeTasks.length === 0) {
+          const [activeRes, pendingRes, completedRes] = await Promise.all([
+            getRepoTree(context.auth, repo, 'active'),
+            getRepoTree(context.auth, repo, 'pending'),
+            getRepoTree(context.auth, repo, 'completed'),
+          ]);
+          const fallbackData: TreeItemResponse[] = [
+            ...(activeRes.data || []),
+            ...(pendingRes.data || []),
+            ...(completedRes.data || []),
+          ];
+          if (fallbackData.length > 0) {
+            rawTreeData = fallbackData;
+            treeTasks = parseTasksFromTree(rawTreeData);
+          }
+        }
+
         const activeAndPendingTreeTasks = treeTasks.filter(t => t.status === 'ACTIVE' || t.status === 'PENDING');
 
         if (activeAndPendingTreeTasks.length === 0) {
@@ -362,20 +383,14 @@ export const TaCommand: ICommand = {
           };
         }
 
-        const missionFileItem = treeResponse.data.find(
-          item => item.path === '.task-agent/mission.usv'
-        );
-
         let usvIssues: ReturnType<typeof parseMissionUsv> = [];
-        if (missionFileItem) {
-          try {
-            const usvRes = await getRepoContent(context.auth, repo, '.task-agent/mission.usv');
-            if (usvRes.status === 200 && usvRes.data?.content) {
-              usvIssues = parseMissionUsv(usvRes.data.content);
-            }
-          } catch {
-            // fallback
+        try {
+          const usvRes = await getRepoContent(context.auth, repo, '.task-agent/mission.usv');
+          if (usvRes.status === 200 && usvRes.data?.content) {
+            usvIssues = parseMissionUsv(usvRes.data.content);
           }
+        } catch {
+          // fallback
         }
 
         const taskPathMap = new Map<string, string>();
@@ -551,7 +566,15 @@ export const TaCommand: ICommand = {
             };
           }
 
-          const treeTasks = parseTasksFromTree(treeRes.data);
+          let activeTreeData = treeRes.data;
+          let treeTasks = parseTasksFromTree(activeTreeData);
+          if (treeTasks.length === 0) {
+            const activeOnlyRes = await getRepoTree(context.auth, repo, 'active');
+            if (activeOnlyRes.data && activeOnlyRes.data.length > 0) {
+              activeTreeData = activeOnlyRes.data;
+              treeTasks = parseTasksFromTree(activeTreeData);
+            }
+          }
           const activeTasks = treeTasks.filter(t => t.status === 'ACTIVE');
           if (activeTasks.length === 0) {
             return {
