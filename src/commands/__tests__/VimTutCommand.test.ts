@@ -69,5 +69,18 @@ describe('VimTutCommand', () => {
       expect(res.status).toBe(200);
       expect(vimTutorialSignals.vimTutorialStepIndexSignal.value).toBe(2);
     });
+
+    it('starts tutorial at specific step when vtut-1.X argument provided', async () => {
+      const context = createMockContext();
+      const parsedCommand: ParsedCommand = {
+        command: 'vimtut',
+        args: ['vtut-1.2'],
+        switches: {},
+      };
+
+      const res = await VimTutCommand.execute(context, parsedCommand);
+      expect(res.status).toBe(200);
+      expect(vimTutorialSignals.vimTutorialStepIndexSignal.value).toBe(1);
+    });
   });
 });

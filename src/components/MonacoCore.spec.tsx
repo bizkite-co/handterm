@@ -16,6 +16,9 @@ vi.mock('monaco-editor/esm/vs/editor/editor.api', () => ({
     setModelLanguage: vi.fn(),
     updateOptions: vi.fn(),
   },
+  Range: vi.fn(function(startLine: number, startCol: number, endLine: number, endCol: number) {
+    return { startLineNumber: startLine, startColumn: startCol, endLineNumber: endLine, endColumn: endCol };
+  }),
 }));
 
 // Mock monaco-vim *once* before all tests
@@ -217,6 +220,7 @@ describe('MonacoCore', () => {
       onDidChangeCursorPosition: vi.fn(() => ({ dispose: vi.fn() })),
       onDidChangeModelContent: vi.fn(() => ({ dispose: vi.fn() })),
       updateOptions: vi.fn(),
+      deltaDecorations: vi.fn().mockReturnValue(['mock-decoration-id']),
       onDidBlurEditorText: vi.fn(),
       onDidFocusEditorText: vi.fn(),
       onKeyDown: vi.fn().mockReturnValue({ dispose: vi.fn() }),
@@ -231,14 +235,14 @@ describe('MonacoCore', () => {
 
     // Initial check conditions ran; it passed because cursor is on target
     expect(vimTutorialSignals.vimStepCompletedSignal.value).toBe(true);
-    expect(vimTutorialSignals.lastVimAccomplishmentSignal.value?.stepId).toBe('vim-01-hjkl');
+    expect(vimTutorialSignals.lastVimAccomplishmentSignal.value?.stepId).toBe('vtut-1.1');
 
     // Accomplishment should be recorded into terminal Output elements
     const outputs = appSignals.outputElementsSignal.value;
     expect(outputs.some(o => typeof o.response === 'string' && o.response.includes('Accomplished:'))).toBe(true);
 
-    // Fast-forward past the 300ms auto-advance timer
-    vi.advanceTimersByTime(500);
+    // Fast-forward past the 1000ms auto-advance timer
+    vi.advanceTimersByTime(1100);
 
     // Step index should now be advanced to 1
     expect(vimTutorialSignals.vimTutorialStepIndexSignal.value).toBe(1);

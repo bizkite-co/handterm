@@ -25,8 +25,6 @@ export interface VimGuideProps {
 }
 
 export function VimGuide({
-  currentCursor = { lineNumber: 1, column: 1 },
-  currentMode = 'normal',
   onAdvanceStep,
   onRestartStep,
 }: VimGuideProps): JSX.Element {
@@ -68,12 +66,27 @@ export function VimGuide({
 
   return (
     <div className="vim-guide vimtut-header-container" data-testid="vimtut-header">
+      {/* 1. Previous Achievement (Rich-like borderless formatting) */}
+      {lastAccomplishment && (
+        <div className="vimtut-accomplishment-banner" data-testid="vimtut-accomplishment">
+          <span className="vimtut-accomplishment-check">✓</span>
+          <span className="vimtut-accomplishment-content">
+            <strong className="vimtut-accomplishment-label">Accomplished:</strong>{' '}
+            <span className="vimtut-accomplishment-title">{lastAccomplishment.stepTitle}</span> —{' '}
+            <span className="vimtut-accomplishment-msg">{lastAccomplishment.message}</span>
+          </span>
+        </div>
+      )}
+
+      {/* 2. Current Task Title and Controls */}
       <div className="vim-guide-header vimtut-header-top">
         <div className="vim-guide-title-group vimtut-header-title-badge">
-          <span className="vim-guide-step-tag vimtut-badge">
-            Step {stepIndex + 1} of {totalSteps}:
+          <span className="vim-guide-step-tag vimtut-badge" data-testid="vimtut-step-badge">
+            {step.id}:
           </span>
-          <h2 className="vim-guide-title vimtut-header-title">{step.title}</h2>
+          <h2 className="vim-guide-title vimtut-header-title" data-testid="vimtut-step-title">
+            {step.title}
+          </h2>
         </div>
 
         <div className="vim-guide-commands vimtut-controls">
@@ -120,48 +133,25 @@ export function VimGuide({
         </div>
       </div>
 
-      {lastAccomplishment && (
-        <div className="vimtut-accomplishment-banner" data-testid="vimtut-accomplishment">
-          <span className="vimtut-accomplishment-check">✓</span>
-          <span className="vimtut-accomplishment-content">
-            <strong className="vimtut-accomplishment-label">Accomplished:</strong>{' '}
-            <span className="vimtut-accomplishment-title">{lastAccomplishment.stepTitle}</span> —{' '}
-            <span className="vimtut-accomplishment-msg">{lastAccomplishment.message}</span>
-          </span>
-        </div>
-      )}
-
+      {/* 3. Current Task Instruction */}
       <div className="vim-guide-instruction vimtut-instruction-box">
         {step.instruction}
       </div>
 
-      {showHint && step.hint && (
-        <div className="vim-guide-hint vimtut-hint-box">
-          <strong className="vimtut-hint-label">Hint:</strong> {step.hint}
-        </div>
-      )}
-
+      {/* 4. Completion Achievement Block (displayed for 1000ms success hold) */}
       {isCompleted && (
         <div className="vimtut-success-banner" data-testid="vimtut-success-banner">
-          <span>✓ {successMsg ?? step.successMessage ?? 'Step completed!'}</span>
-          {!isLastStep ? (
-            <span className="vimtut-autoadvance-indicator"> (Advancing to next task...)</span>
-          ) : (
-            <span className="vimtut-autoadvance-indicator"> (All lessons completed! Type :q to exit)</span>
-          )}
+          <span className="vimtut-success-check">✓</span>
+          <span className="vimtut-success-content">
+            <strong>Accomplished:</strong> {step.id}: {step.title} — {successMsg ?? step.successMessage ?? 'Step completed!'}
+            {!isLastStep ? (
+              <span className="vimtut-autoadvance-indicator"> (Advancing to next task...)</span>
+            ) : (
+              <span className="vimtut-autoadvance-indicator"> (All lessons completed! Type :q to exit)</span>
+            )}
+          </span>
         </div>
       )}
-
-      <div className="vim-guide-status vimtut-status-bar">
-        <div className="vimtut-status-indicators">
-          <span className="vimtut-status-tag">
-            -- {currentMode.toUpperCase()} --
-          </span>
-          <span className="vimtut-status-tag">
-            Ln {currentCursor.lineNumber}, Col {currentCursor.column}
-          </span>
-        </div>
-      </div>
     </div>
   );
 }

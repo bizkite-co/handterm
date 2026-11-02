@@ -13,33 +13,27 @@ describe('VimTutHeader', () => {
     vi.clearAllMocks();
   });
 
-  it('renders step title, badge, mode, and position', () => {
-    render(
-      <VimTutHeader
-        currentCursor={{ lineNumber: 3, column: 12 }}
-        currentMode="normal"
-      />
-    );
+  it('renders step title, badge, and instruction', () => {
+    render(<VimTutHeader />);
 
     expect(screen.getByTestId('vimtut-header')).toBeTruthy();
-    expect(screen.getByText(/Step 1 of/i)).toBeTruthy();
-    expect(screen.getByText(/Lesson 1.1/i)).toBeTruthy();
-    expect(screen.getByText(/NORMAL/i)).toBeTruthy();
-    expect(screen.getByText(/Ln 3, Col 12/i)).toBeTruthy();
+    expect(screen.getByTestId('vimtut-step-badge').textContent).toContain('vtut-1.1:');
+    expect(screen.getByTestId('vimtut-step-title').textContent).toBe('Move the cursor to TARGET');
   });
 
   it('toggles hint when hint command clicked', () => {
     render(<VimTutHeader />);
 
     const hintCmd = screen.getByText(/\[:h hint\]/i);
-    expect(screen.queryByText(/Make sure you are in NORMAL mode/i)).toBeNull();
+    expect(vimTutorialSignals.showVimHintSignal.value).toBe(false);
 
     fireEvent.click(hintCmd);
-    expect(screen.getByText(/Make sure you are in NORMAL mode/i)).toBeTruthy();
+    expect(vimTutorialSignals.showVimHintSignal.value).toBe(true);
+    expect(screen.getByText(/\[:h hide hint\]/i)).toBeTruthy();
 
     const hideHintCmd = screen.getByText(/\[:h hide hint\]/i);
     fireEvent.click(hideHintCmd);
-    expect(screen.queryByText(/Make sure you are in NORMAL mode/i)).toBeNull();
+    expect(vimTutorialSignals.showVimHintSignal.value).toBe(false);
   });
 
   it('calls onAdvanceStep when [:n next] clicked', () => {
@@ -65,9 +59,9 @@ describe('VimTutHeader', () => {
 
   it('displays accomplishment banner above instructions when a previous step was completed', () => {
     vimTutorialSignals.lastVimAccomplishmentSignal.value = {
-      stepId: 'vim-01-hjkl',
-      stepTitle: 'Lesson 1.1: Moving the Cursor (h, j, k, l)',
-      message: 'Great job! You navigated to the target using hjkl motions.',
+      stepId: 'vtut-1.1',
+      stepTitle: 'vtut-1.1: Move the cursor to TARGET',
+      message: 'Great job! You navigated to TARGET using hjkl motions.',
     };
 
     render(<VimTutHeader />);
@@ -75,8 +69,8 @@ describe('VimTutHeader', () => {
     const banner = screen.getByTestId('vimtut-accomplishment');
     expect(banner).toBeTruthy();
     expect(screen.getByText(/Accomplished:/i)).toBeTruthy();
-    expect(banner.querySelector('.vimtut-accomplishment-title')?.textContent).toContain('Lesson 1.1: Moving the Cursor');
-    expect(screen.getByText(/Great job! You navigated to the target/i)).toBeTruthy();
+    expect(banner.querySelector('.vimtut-accomplishment-title')?.textContent).toContain('vtut-1.1: Move the cursor to TARGET');
+    expect(screen.getByText(/Great job! You navigated to TARGET/i)).toBeTruthy();
   });
 
   it('calls onRestartStep when [:r restart] clicked', () => {

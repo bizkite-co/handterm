@@ -42,9 +42,25 @@ export const VimTutCommand: ICommand = {
       let stepIndex: number | undefined;
       const arg = parsedCommand.args[0];
       if (arg) {
-        const parsed = parseInt(arg, 10);
-        if (!Number.isNaN(parsed) && parsed >= 1 && parsed <= VIM_TUTORIAL_STEPS.length) {
-          stepIndex = parsed - 1;
+        const directIdx = VIM_TUTORIAL_STEPS.findIndex(s => s.id.toLowerCase() === arg.toLowerCase());
+        if (directIdx !== -1) {
+          stepIndex = directIdx;
+        } else {
+          const minorMatch = arg.match(/1\.(\d+)/);
+          if (minorMatch && minorMatch[1]) {
+            const minor = parseInt(minorMatch[1], 10);
+            if (minor >= 1 && minor <= VIM_TUTORIAL_STEPS.length) {
+              stepIndex = minor - 1;
+            }
+          } else {
+            const numMatch = arg.match(/\d+/);
+            if (numMatch) {
+              const parsed = parseInt(numMatch[0], 10);
+              if (!Number.isNaN(parsed) && parsed >= 1 && parsed <= VIM_TUTORIAL_STEPS.length) {
+                stepIndex = parsed - 1;
+              }
+            }
+          }
         }
       }
 

@@ -35,6 +35,7 @@ import NextCharsDisplay, { type NextCharsDisplayHandle } from './NextCharsDispla
 import { PromptHeader } from './PromptHeader';
 import { TutorialManager } from './TutorialManager';
 import { BrowseView } from './BrowseView';
+import { useResizeCanvasAndFont } from '../hooks/useResizeCanvasAndFont';
 
 const logger = createLogger({
   prefix: 'HandTermWrapper',
@@ -51,8 +52,8 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
   const activityMediator = useActivityMediator();
 
   const [domain] = useState('handterm.com');
-  const initialCanvasHeight = localStorage.getItem('canvasHeight')?.trim() ?? '100';
-  const [canvasHeight] = useState<number>(() => parseInt(initialCanvasHeight, 10));
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const { canvasHeight } = useResizeCanvasAndFont(wrapperRef);
   const [lastTypedCharacter] = useState<string | null>(null);
   const [, setErrorCharIndex] = useState<number | undefined>(undefined);
   const [githubUsername] = useState<string | null>(null);
@@ -284,7 +285,7 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
   logger.debug(`HandTermWrapper rendering with activity: ${currentActivityValue}, forceEditActivity: ${forceEditActivity}`);
 
   return (
-    <div id='handterm-wrapper' data-testid='handterm-wrapper'>
+    <div id='handterm-wrapper' ref={wrapperRef} data-testid='handterm-wrapper'>
       {showIntro && <IntroText />}
       {currentActivityValue === ActivityType.GAME && (
         <Game

@@ -7,9 +7,8 @@
   line-height: var(--terminal-line-height);
   color: #f4f4f5;
   background-color: transparent;
-  padding: 4px 0;
-  border-top: 1px solid #3f3f46;
-  border-bottom: 1px solid #3f3f46;
+  padding: 4px 0 6px 0;
+  border: none;
   margin-bottom: 4px;
   display: flex;
   flex-direction: column;
@@ -25,12 +24,14 @@
   font-family: inherit;
   font-size: inherit;
   line-height: inherit;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .vimtut-header-title-badge,
 .vim-guide-title-group {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   gap: 8px;
   font-family: inherit;
   font-size: inherit;
@@ -46,11 +47,12 @@
   line-height: inherit;
 }
 
+/* Title of the next/current task rendered in 70% opaque yellow */
 .vimtut-header-title,
 .vim-guide-title {
   font-size: inherit;
   font-weight: 600;
-  color: #ffffff;
+  color: rgba(255, 212, 59, 0.7);
   margin: 0;
   font-family: inherit;
   line-height: inherit;
@@ -58,16 +60,7 @@
 
 .vimtut-instruction-box,
 .vim-guide-instruction {
-  color: #f4f4f5;
-  font-family: inherit;
-  font-size: inherit;
-  line-height: inherit;
-  padding: 2px 0;
-}
-
-.vimtut-hint-box,
-.vim-guide-hint {
-  color: #facc15;
+  color: #e4e4e7;
   font-family: inherit;
   font-size: inherit;
   line-height: inherit;
@@ -79,14 +72,14 @@
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 16px;
+  gap: 12px;
   font-family: inherit;
   font-size: inherit;
   line-height: inherit;
   color: #9ca3af;
 }
 
-/* Terminal link commands (e.g. [:h hint], [:r restart], [:q exit]) - NO rounded buttons! */
+/* Terminal link commands (e.g. [:h hint], [:r restart], [:q exit]) */
 .vimtut-btn,
 .vim-guide-cmd {
   background: none;
@@ -117,43 +110,74 @@
   color: #bae6fd;
 }
 
-.vimtut-status-bar,
-.vim-guide-status {
+/* Rich-like borderless accomplishment banner */
+.vimtut-accomplishment-banner {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-family: inherit;
-  font-size: inherit;
-  line-height: inherit;
-  color: #9ca3af;
-}
-
-.vimtut-status-indicators {
-  display: flex;
-  gap: 16px;
+  align-items: baseline;
+  gap: 8px;
+  color: #4ade80;
+  background-color: transparent;
+  border: none;
+  padding: 2px 0;
   font-family: inherit;
   font-size: inherit;
   line-height: inherit;
 }
 
-.vimtut-status-tag {
-  color: #00ffff;
-  background-color: #0007;
-  display: inline-block;
-  padding: 1px 6px;
-  border-radius: 2px;
-  border: 1px solid rgba(0, 255, 255, 0.3);
+.vimtut-accomplishment-check {
+  color: #22c55e;
   font-weight: bold;
 }
 
-.vimtut-header-container span,
-.vim-guide span,
-.vimtut-btn,
-.vim-guide-cmd {
-  background-color: #0007;
-  display: inline-block;
-  padding: 1px 4px;
+.vimtut-accomplishment-label {
+  color: #22c55e;
+  font-weight: 700;
+}
+
+.vimtut-accomplishment-title {
+  color: #86efac;
+  font-weight: 600;
+}
+
+.vimtut-accomplishment-msg {
+  color: #bbf7d0;
+}
+
+/* Success banner shown during the 1000ms delay hold */
+.vimtut-success-banner {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  color: #4ade80;
+  background-color: rgba(34, 197, 94, 0.12);
+  border-left: 3px solid #22c55e;
+  padding: 4px 8px;
   border-radius: 2px;
+  font-size: inherit;
+  font-family: inherit;
+  margin: 2px 0;
+}
+
+.vimtut-success-check {
+  color: #22c55e;
+  font-weight: bold;
+}
+
+.vimtut-autoadvance-indicator {
+  color: #86efac;
+  font-style: italic;
+  font-size: 0.9em;
+}
+
+/* Green highlight applied to Monaco editor line on success */
+.vimtut-success-highlight-line {
+  background-color: rgba(34, 197, 94, 0.22) !important;
+  border-left: 3px solid #22c55e !important;
+}
+
+.vimtut-success-highlight-text {
+  color: #86efac !important;
+  font-weight: bold !important;
 }
 
 /* Output history accomplishment styling */
@@ -166,55 +190,21 @@
 }
 
 .vimtut-accomplished-entry .vimtut-check {
-  color: #4ade80;
-  font-weight: 700;
-  margin-right: 6px;
+  color: #22c55e;
+  font-weight: bold;
+}
+
+.vimtut-accomplished-entry .vimtut-step-id {
+  color: #38bdf8;
+  font-weight: 600;
 }
 
 .vimtut-accomplished-entry .vimtut-step-title {
-  color: #ffffff;
+  color: #86efac;
   font-weight: 600;
 }
 
 .vimtut-accomplished-entry .vimtut-step-msg {
-  color: #a7f3d0;
-  margin-left: 20px;
-}
-
-.vimtut-accomplishment-banner {
-  font-family: inherit;
-  font-size: inherit;
-  line-height: inherit;
-  color: #4ade80;
-  padding: 2px 0;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.vimtut-accomplishment-check {
-  color: #4ade80;
-  font-weight: 700;
-}
-
-.vimtut-accomplishment-label {
-  color: #4ade80;
-  font-weight: 700;
-}
-
-.vimtut-accomplishment-title {
-  color: #ffffff;
-  font-weight: 600;
-}
-
-.vimtut-accomplishment-msg {
-  color: #a7f3d0;
-}
-
-.vimtut-success-banner {
-  font-family: inherit;
-  font-size: inherit;
-  line-height: inherit;
-  color: #4ade80;
-  padding: 2px 0;
+  color: #bbf7d0;
+  margin-left: 16px;
 }

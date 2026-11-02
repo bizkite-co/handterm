@@ -13,7 +13,7 @@ import type { JSX } from 'react';
 import { createLogger, LogLevel } from '../utils/Logger';
 import type { IAuthProps } from '../types/HandTerm';
 import { putFile } from '../utils/awsApiClient';
-import { setChordGlyphScale, appendToOutput, setActivity } from '../signals/appSignals';
+import { setChordGlyphScale, appendToOutput, setActivity, terminalFontSizeSignal } from '../signals/appSignals';
 import { Data, Either } from 'effect';
 import { VimGuide } from './VimGuide';
 import { VIM_TUTORIAL_STEPS } from '../utils/vimTutorialCurriculum';
@@ -27,6 +27,8 @@ import {
   vimTutorialStepIndexSignal,
   updateCompletedVimTutorials,
   toggleVimHint,
+  showVimHintSignal,
+  vimSuccessHoldMsSignal,
 } from '../signals/vimTutorialSignals';
 
 const logger = createLogger({
@@ -269,14 +271,28 @@ export default function MonacoCore({ value, language = 'text', toggleVideo, mode
   const isVimTut = mode === 'editor' && parseLocation().contentKey === 'vimtut';
   const [vimCursor, setVimCursor] = useState<{ lineNumber: number; column: number }>({ lineNumber: 1, column: 1 });
   const [vimModeState, setVimModeState] = useState<string>('normal');
+  const [showHint, setShowHint] = useState<boolean>(() => showVimHintSignal.value);
   const autoAdvanceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const checkVimTutConditionsRef = useRef<(() => void) | null>(null);
+  const successDecorationsRef = useRef<string[]>([]);
+
+  useEffect(() => {
+    return showVimHintSignal.subscribe((val) => {
+      setShowHint(val);
+    });
+  }, []);
 
   const handleVimTutAdvanceRef = useRef<() => void>(() => {});
   const handleVimTutAdvance = useCallback(() => {
     if (autoAdvanceTimerRef.current) {
       clearTimeout(autoAdvanceTimerRef.current);
       autoAdvanceTimerRef.current = null;
+    }
+    if (editorRef.current && successDecorationsRef.current.length > 0) {
+      try {
+        editorRef.current.deltaDecorations(successDecorationsRef.current, []);
+      } catch {}
+      successDecorationsRef.current = [];
     }
     const nextStep = advanceVimTutorial();
     if (nextStep && editorRef.current) {
@@ -296,6 +312,16 @@ export default function MonacoCore({ value, language = 'text', toggleVideo, mode
 
   const handleVimTutRestartRef = useRef<() => void>(() => {});
   const handleVimTutRestart = useCallback(() => {
+    if (autoAdvanceTimerRef.current) {
+      clearTimeout(autoAdvanceTimerRef.current);
+      autoAdvanceTimerRef.current = null;
+    }
+    if (editorRef.current && successDecorationsRef.current.length > 0) {
+      try {
+        editorRef.current.deltaDecorations(successDecorationsRef.current, []);
+      } catch {}
+      successDecorationsRef.current = [];
+    }
     const currentStep = getCurrentVimStep();
     if (currentStep && editorRef.current) {
       editorRef.current.setValue(currentStep.initialText);
@@ -387,7 +413,7 @@ export default function MonacoCore({ value, language = 'text', toggleVideo, mode
           links: false,
           cursorStyle: 'block',
           fontFamily: '"Fira Code", Menlo, "DejaVu Sans Mono", "Lucida Console", monospace',
-          fontSize: 16,
+          fontSize: terminalFontSizeSignal.value,
           lineHeight: 19,
           fontLigatures: true,
           cursorBlinking: 'blink',
@@ -399,6 +425,8 @@ export default function MonacoCore({ value, language = 'text', toggleVideo, mode
           automaticLayout: true,
           scrollBeyondLastLine: false,
           readOnly: false,
+          fontFamily: '"Fira Code", Menlo, "DejaVu Sans Mono", "Lucida Console", monospace',
+          fontSize: terminalFontSizeSignal.value,
           scrollbar: {
             horizontal: 'hidden',
             vertical: 'hidden'
@@ -414,6 +442,10 @@ export default function MonacoCore({ value, language = 'text', toggleVideo, mode
     };
 
     editor.updateOptions(getMonacoOptions(mode));
+
+    const unsubscribeFontSize = terminalFontSizeSignal.subscribe((newSize) => {
+      editor.updateOptions({ fontSize: newSize });
+    });
 
     // Apply the transparent Monaco theme across both terminal and editor modes
     monaco.editor.setTheme('handterm-transparent');
@@ -435,6 +467,7 @@ export default function MonacoCore({ value, language = 'text', toggleVideo, mode
     }
 
     return () => {
+      unsubscribeFontSize();
       if (mode === 'editor') {
         monaco.editor.setTheme('handterm-transparent');
       }
@@ -644,20 +677,41 @@ export default function MonacoCore({ value, language = 'text', toggleVideo, mode
         updateCompletedVimTutorials(prev => new Set(prev).add(step.id));
         lastVimAccomplishmentSignal.value = {
           stepId: step.id,
-          stepTitle: step.title,
+          stepTitle: `${step.id}: ${step.title}`,
           message: msg,
         };
 
         // Append accomplishment directly to the terminal Output history!
         appendToOutput({
-          command: { command: 'vimtut', args: [`step-${vimTutorialStepIndexSignal.value + 1}`], switches: {} },
+          command: { command: 'vimtut', args: [step.id], switches: {} },
           response: `<div class="vimtut-accomplished-entry">
-            <span class="vimtut-check">✓</span> <strong>Accomplished:</strong> <span class="vimtut-step-title">${step.title}</span>
+            <span class="vimtut-check">✓</span> <strong>Accomplished:</strong> <span class="vimtut-step-id">${step.id}</span>: <span class="vimtut-step-title">${step.title}</span>
             <div class="vimtut-step-msg">${msg}</div>
           </div>`,
           status: 200,
           commandTime: new Date(),
         });
+
+        // Highlight the successful move/line in green
+        try {
+          const line = currentPos.lineNumber;
+          const model = editor.getModel();
+          const maxCol = typeof model?.getLineMaxColumn === 'function' ? model.getLineMaxColumn(line) : 100;
+          const range = typeof monaco.Range === 'function'
+            ? new monaco.Range(line, 1, line, maxCol)
+            : ({ startLineNumber: line, startColumn: 1, endLineNumber: line, endColumn: maxCol } as monaco.Range);
+          const decs = editor.deltaDecorations(successDecorationsRef.current, [{
+            range,
+            options: {
+              isWholeLine: true,
+              className: 'vimtut-success-highlight-line',
+              inlineClassName: 'vimtut-success-highlight-text',
+            }
+          }]);
+          successDecorationsRef.current = decs;
+        } catch (e) {
+          logger.warn("Could not set success decoration:", e);
+        }
 
         const totalSteps = VIM_TUTORIAL_STEPS.length;
         const isLastStep = vimTutorialStepIndexSignal.value >= totalSteps - 1;
@@ -665,10 +719,20 @@ export default function MonacoCore({ value, language = 'text', toggleVideo, mode
           if (autoAdvanceTimerRef.current) {
             clearTimeout(autoAdvanceTimerRef.current);
           }
+          const holdMs = typeof window !== 'undefined' && (window as any).__VIM_SUCCESS_HOLD_MS__ !== undefined
+            ? (window as any).__VIM_SUCCESS_HOLD_MS__
+            : vimSuccessHoldMsSignal.value;
+
           autoAdvanceTimerRef.current = setTimeout(() => {
+            if (editorRef.current && successDecorationsRef.current.length > 0) {
+              try {
+                editorRef.current.deltaDecorations(successDecorationsRef.current, []);
+              } catch {}
+              successDecorationsRef.current = [];
+            }
             handleVimTutAdvanceRef.current();
             autoAdvanceTimerRef.current = null;
-          }, 400);
+          }, holdMs);
         }
       }
     };
@@ -693,6 +757,12 @@ export default function MonacoCore({ value, language = 'text', toggleVideo, mode
       if (autoAdvanceTimerRef.current) {
         clearTimeout(autoAdvanceTimerRef.current);
         autoAdvanceTimerRef.current = null;
+      }
+      if (editorRef.current && successDecorationsRef.current.length > 0) {
+        try {
+          editorRef.current.deltaDecorations(successDecorationsRef.current, []);
+        } catch {}
+        successDecorationsRef.current = [];
       }
       checkVimTutConditionsRef.current = null;
     };
@@ -720,6 +790,8 @@ export default function MonacoCore({ value, language = 'text', toggleVideo, mode
     };
   }, [isVimTut]);
 
+  const currentStep = isVimTut ? getCurrentVimStep() : null;
+
   return (
     <div
       data-testid="monaco-editor-container"
@@ -741,7 +813,36 @@ export default function MonacoCore({ value, language = 'text', toggleVideo, mode
         />
       )}
       <div ref={containerRef} style={containerStyle} />
-      <div ref={statusBarRef} className="vim-status-bar" style={{ height: '20px', flexShrink: 0 }} />
+      <div
+        className="editor-status-bar-container"
+        data-testid="editor-status-bar"
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          minHeight: '22px',
+          flexShrink: 0,
+          padding: '1px 8px',
+          fontFamily: 'var(--terminal-font-family)',
+          fontSize: 'var(--terminal-font-size)',
+          lineHeight: 'var(--terminal-line-height)',
+          backgroundColor: '#0000',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+          <div ref={statusBarRef} className="vim-status-bar" style={{ height: '20px', flexShrink: 0 }} />
+          {isVimTut && showHint && currentStep?.hint && (
+            <div className="vimtut-statusbar-hint" style={{ color: '#facc15', fontStyle: 'italic' }}>
+              Hint: {currentStep.hint}
+            </div>
+          )}
+        </div>
+        {isVimTut && (
+          <div className="vimtut-statusbar-cursor" style={{ color: '#9ca3af', marginLeft: 'auto', whiteSpace: 'nowrap' }}>
+            Ln {vimCursor.lineNumber}, Col {vimCursor.column}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

@@ -37,6 +37,28 @@ export const setChordGlyphScale = (scale: number): void => {
   localStorage.setItem(CHORD_GLYPH_SCALE_KEY, String(scale));
 };
 
+// Terminal font size — pinch-to-zoom adjustable and persisted
+export const TERMINAL_FONT_SIZE_KEY = 'terminalFontSize';
+const initialTerminalFontSize = parseInt(
+  localStorage.getItem(TERMINAL_FONT_SIZE_KEY) ?? localStorage.getItem('fontSize') ?? '16',
+  10
+) || 16;
+export const terminalFontSizeSignal = signal<number>(initialTerminalFontSize);
+
+export const setTerminalFontSize = (size: number): void => {
+  const clamped = Math.max(10, Math.min(48, Math.round(size)));
+  terminalFontSizeSignal.value = clamped;
+  localStorage.setItem(TERMINAL_FONT_SIZE_KEY, String(clamped));
+  if (typeof document !== 'undefined') {
+    document.documentElement.style.setProperty('--terminal-font-size', `${clamped}px`);
+  }
+};
+
+// Initialize CSS variable if in browser environment
+if (typeof document !== 'undefined') {
+  document.documentElement.style.setProperty('--terminal-font-size', `${initialTerminalFontSize}px`);
+}
+
 export const isInLoginProcessSignal = signal<boolean>(false);
 export const isInSignUpProcessSignal = signal<boolean>(false);
 export const isInVerifyProcessSignal = signal<boolean>(false);

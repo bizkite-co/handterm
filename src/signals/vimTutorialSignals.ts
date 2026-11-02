@@ -37,6 +37,13 @@ export const vimStepCompletedSignal = signal<boolean>(false);
 export const vimStepMessageSignal = signal<string | null>(null);
 export const showVimHintSignal = signal<boolean>(false);
 
+// Configurable hold duration to display successful move before auto-advancing (default 1000ms)
+export const DEFAULT_VIM_SUCCESS_HOLD_MS = 1000;
+export const vimSuccessHoldMsSignal = signal<number>(DEFAULT_VIM_SUCCESS_HOLD_MS);
+export const setVimSuccessHoldMs = (ms: number): void => {
+  vimSuccessHoldMsSignal.value = ms;
+};
+
 export const toggleVimHint = (): void => {
   showVimHintSignal.value = !showVimHintSignal.value;
 };
