@@ -76,6 +76,63 @@ describe('CharsCommand', () => {
     expect(response.message.match(/class="chord-image-holder"/g)?.length).toBeGreaterThan(0);
   });
 
+  it('matches by descriptor names such as slash to show slash and backslash', async () => {
+    const response = await CharsCommand.execute(mockContext, {
+      ...parsedCommand,
+      args: ['slash'],
+    });
+
+    expect(response.status).toBe(200);
+    // Should include both forward slash and backslash
+    expect(response.message).toContain('96.svg'); // /
+    expect(response.message).toContain('15.svg'); // \
+  });
+
+  it('matches backslash exclusively when searching backslash', async () => {
+    const response = await CharsCommand.execute(mockContext, {
+      ...parsedCommand,
+      args: ['backslash'],
+    });
+
+    expect(response.status).toBe(200);
+    expect(response.message).toContain('15.svg'); // \
+    expect(response.message).not.toContain('96.svg'); // / should not match backslash
+  });
+
+  it('matches question mark when searching question or question mark', async () => {
+    const res1 = await CharsCommand.execute(mockContext, {
+      ...parsedCommand,
+      args: ['question'],
+    });
+    expect(res1.status).toBe(200);
+    expect(res1.message).toContain('596.svg'); // ?
+
+    const res2 = await CharsCommand.execute(mockContext, {
+      ...parsedCommand,
+      args: ['question', 'mark'],
+    });
+    expect(res2.status).toBe(200);
+    expect(res2.message).toContain('596.svg'); // ?
+  });
+
+  it('matches other common punctuation by name like colon and bracket', async () => {
+    const colonRes = await CharsCommand.execute(mockContext, {
+      ...parsedCommand,
+      args: ['colon'],
+    });
+    expect(colonRes.status).toBe(200);
+    expect(colonRes.message).toContain('59.svg'); // :
+    expect(colonRes.message).toContain('9.svg');  // ; (semicolon)
+
+    const bracketRes = await CharsCommand.execute(mockContext, {
+      ...parsedCommand,
+      args: ['bracket'],
+    });
+    expect(bracketRes.status).toBe(200);
+    expect(bracketRes.message).toContain('45.svg'); // [
+    expect(bracketRes.message).toContain('495.svg'); // ]
+  });
+
   it('reports when nothing matches', async () => {
     const response = await CharsCommand.execute(mockContext, {
       ...parsedCommand,
