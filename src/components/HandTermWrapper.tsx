@@ -135,14 +135,16 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
       const words = phrase.value.length / 5;
       const wpm = Math.round(words / (elapsedSec / 60));
       const formattedTime = elapsedSec.toFixed(1);
+      const isTrialMode = Boolean(phrase.tutorialGroup?.includes('trial'));
+      const testTitle = isTrialMode ? 'WPM Time Trial Completed!' : 'WPM Speed Test Completed!';
 
       appendToOutput({
-        command: { command: 'wpm', args: [phrase.tutorialGroup ?? '100'], switches: {} },
+        command: { command: 'wpm', args: [phrase.tutorialGroup ?? '100'], switches: isTrialMode ? { t: true } : {} },
         response: `<div class="wpm-test-result">
-  <div style="color: #4ade80; font-weight: bold; margin-bottom: 4px;">✓ WPM Speed Test Completed!</div>
+  <div style="color: #4ade80; font-weight: bold; margin-bottom: 4px;">✓ ${testTitle}</div>
   <div>Speed: <strong style="color: #38bdf8; font-size: 1.1em;">${wpm} WPM</strong></div>
   <div>Time: ${formattedTime}s | Length: ${phrase.value.length} characters (~${Math.round(words)} words)</div>
-  <div style="color: #94a3b8; font-size: 0.9em; margin-top: 4px;">Level ${phrase.tutorialGroup ?? '100'} completed successfully.</div>
+  <div style="color: #94a3b8; font-size: 0.9em; margin-top: 4px;">${phrase.tutorialGroup ?? '100'} completed successfully.</div>
 </div>`,
         status: 200,
         wpmAverage: wpm,

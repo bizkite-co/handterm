@@ -10,13 +10,24 @@ const logger = createLogger({ prefix: 'WpmCommand' });
 
 export const WpmCommand: ICommand = {
   name: 'wpm',
-  description: 'Typing speed test mode (wpm [100|200])',
+  description: 'Typing speed test mode (wpm [100|200] [-t])',
+  switches: {
+    t: 'Run time trial phrase (short 25-40 char sprint) instead of practice',
+  },
   execute: async (
     _context: ICommandContext,
     parsedCommand: ParsedCommand,
   ): Promise<ICommandResponse> => {
     try {
-      const rawArg = parsedCommand.args[0]?.trim().toLowerCase();
+      const tSwitch = parsedCommand.switches.t ?? parsedCommand.switches.trial;
+      const isTrial = Boolean(tSwitch);
+
+      let rawArg: string | undefined;
+      if (typeof tSwitch === 'string') {
+        rawArg = tSwitch.trim().toLowerCase();
+      } else if (parsedCommand.args[0]) {
+        rawArg = parsedCommand.args[0].trim().toLowerCase();
+      }
 
       if (rawArg === 'cancel' || rawArg === 'stop') {
         setGamePhrase(null);
@@ -51,21 +62,22 @@ export const WpmCommand: ICommand = {
       } else if (rawArg && rawArg !== '100') {
         return {
           status: 400,
-          message: `Unknown WPM level: "${parsedCommand.args[0]}". Supported levels: 100 (basic alphabet & punctuation), 200 (common punctuation & symbols). Usage: wpm [100|200]`,
+          message: `Unknown WPM level: "${rawArg}". Supported levels: 100 (basic alphabet & punctuation), 200 (common punctuation & symbols). Usage: wpm [-t] [100|200]`,
         };
       }
 
-      const phrase = getWpmPhrase(level);
+      const phrase = getWpmPhrase(level, isTrial);
       setGamePhrase(phrase);
       navigate({
         activityKey: ActivityType.WPM,
         contentKey: phrase.key,
-        groupKey: String(level),
+        groupKey: phrase.tutorialGroup ?? String(level),
       });
 
+      const modeLabel = isTrial ? 'Time Trial' : 'Practice';
       return {
         status: 200,
-        message: `Starting WPM Level ${level} speed test (~${phrase.value.length} characters). Type the text shown above. Press Ctrl+C to abort.`,
+        message: `Starting WPM Level ${level} ${modeLabel} (~${phrase.value.length} characters). Type the text shown above. Press Ctrl+C to abort.`,
       };
     } catch (error: unknown) {
       logger.error('Wpm command error:', error);
