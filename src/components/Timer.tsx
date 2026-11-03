@@ -1,18 +1,21 @@
-import React, { useState, useEffect, useImperativeHandle, forwardRef, type ForwardRefRenderFunction } from 'react';
+import React, { useState, useEffect, useImperativeHandle, forwardRef, useRef, type ForwardRefRenderFunction } from 'react';
 
 export interface TimerProps {}
 
 export interface TimerHandle {
   start: () => void;
-  stop: () => void;
+  stop: () => number;
   reset: () => number;
   success: () => void;
+  getElapsedTime: () => number;
 }
 
 const Timer: ForwardRefRenderFunction<TimerHandle, TimerProps> = (_props, ref) => {
   const [centiSecond, setCentiSecond] = useState(0);
   const [isActive, setIsActive] = useState(false);
   const [svgStatus, setSvgStatus] = useState<'start' | 'stop' | 'pause'>('start');
+  const startTimeRef = useRef<number | null>(null);
+  const elapsedMsRef = useRef<number>(0);
 
   useEffect(() => {
     let intervalId: number | null = null;
@@ -20,7 +23,12 @@ const Timer: ForwardRefRenderFunction<TimerHandle, TimerProps> = (_props, ref) =
     if (isActive) {
       setSvgStatus('pause');
       intervalId = window.setInterval(() => {
-        setCentiSecond((prevCentiSecond: number) => prevCentiSecond + 1);
+        if (startTimeRef.current !== null) {
+          const currentElapsed = elapsedMsRef.current + (performance.now() - startTimeRef.current);
+          setCentiSecond(Math.floor(currentElapsed / 10));
+        } else {
+          setCentiSecond((prevCentiSecond: number) => prevCentiSecond + 1);
+        }
       }, 10);
     } else if (!isActive && centiSecond !== 0) {
       setSvgStatus('start');
@@ -33,30 +41,51 @@ const Timer: ForwardRefRenderFunction<TimerHandle, TimerProps> = (_props, ref) =
   }, [isActive, centiSecond]);
 
   const start = () => {
-    setIsActive(true);
+    if (!isActive) {
+      startTimeRef.current = performance.now();
+      setIsActive(true);
+    }
   };
 
-  const stop = () => {
+  const stop = (): number => {
+    if (isActive && startTimeRef.current !== null) {
+      elapsedMsRef.current += performance.now() - startTimeRef.current;
+      startTimeRef.current = null;
+    }
     setIsActive(false);
+    return elapsedMsRef.current > 0 ? elapsedMsRef.current / 1000 : centiSecond / 100;
   };
 
   const reset = (): number => {
-    setIsActive(false);
-    const finalCentiSecond = centiSecond;
+    const finalSeconds = stop();
+    elapsedMsRef.current = 0;
+    startTimeRef.current = null;
     setCentiSecond(0);
-    return finalCentiSecond;
+    setIsActive(false);
+    return finalSeconds;
   };
 
   const success = () => {
+    elapsedMsRef.current = 0;
+    startTimeRef.current = null;
     setCentiSecond(0);
     setIsActive(false);
+  };
+
+  const getElapsedTime = (): number => {
+    let totalMs = elapsedMsRef.current;
+    if (isActive && startTimeRef.current !== null) {
+      totalMs += performance.now() - startTimeRef.current;
+    }
+    return totalMs > 0 ? totalMs / 1000 : centiSecond / 100;
   };
 
   useImperativeHandle(ref, () => ({
     start,
     stop,
     reset,
-    success
+    success,
+    getElapsedTime
   }));
 
   const renderSvg = () => {

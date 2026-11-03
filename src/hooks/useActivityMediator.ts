@@ -115,6 +115,8 @@ export function useActivityMediator(): {
                 return ActivityType.TUTORIAL;
             case 'Game':
                 return ActivityType.GAME;
+            case 'WPM':
+                return ActivityType.WPM;
             default:
                 return ActivityType.NORMAL;
         }

@@ -138,10 +138,10 @@ export const useMonacoTerminal = (
     const currentLine = m.getLineCount();
     const currentCommand = m.getLineContent(currentLine).replace(TERMINAL_CONSTANTS.PROMPT, '');
 
-    // In GAME mode with a partially typed phrase, if the line is NOT a valid command,
+    // In GAME or WPM mode with a partially typed phrase, if the line is NOT a valid command,
     // register Enter like any other wrongly typed character (with a newline indicator '↵')
     // so the user can backspace over it instead of resetting the level/phrase.
-    if (activitySignal.value === ActivityType.GAME && currentCommand.length > 0) {
+    if ((activitySignal.value === ActivityType.GAME || activitySignal.value === ActivityType.WPM) && currentCommand.length > 0) {
       const trimmed = currentCommand.trim();
       const parsedCmd = parseCommand(trimmed);
       const isRegisteredCommand = Boolean(parsedCmd.command && commandRegistry.getCommand(parsedCmd.command));

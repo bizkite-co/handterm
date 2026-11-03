@@ -18,7 +18,7 @@ import { isNullOrEmptyString } from 'src/utils/typeSafetyUtils';
 
 export interface INextCharsDisplayProps {
     isInPhraseMode: boolean;
-    onPhraseSuccess: (phrase: GamePhrase | null) => void;
+    onPhraseSuccess: (phrase: GamePhrase | null, elapsedSeconds?: number) => void;
     onError: (error: number | undefined) => void;
 }
 
@@ -92,7 +92,7 @@ const NextCharsDisplay = forwardRef<NextCharsDisplayHandle, INextCharsDisplayPro
         setNextChars('');
     }, []);
 
-    const handleSuccess = useCallback(() => {
+    const handleSuccess = useCallback((elapsedSeconds?: number) => {
         const completed = gamePhraseSignal.value;
         if (completed?.key != null) {
             lastCompletedKeyRef.current = completed.key;
@@ -106,7 +106,7 @@ const NextCharsDisplay = forwardRef<NextCharsDisplayHandle, INextCharsDisplayPro
         ) {
             setCompletedGamePhrase(completed.key);
         }
-        onPhraseSuccess(completed);
+        onPhraseSuccess(completed, elapsedSeconds);
     }, [onPhraseSuccess, clearPhraseState]);
 
     const stopTimer = useCallback(() => {
@@ -135,7 +135,7 @@ const NextCharsDisplay = forwardRef<NextCharsDisplayHandle, INextCharsDisplayPro
 
     const handleCommandLineChange = useCallback((stringBeingTested: string) => {
         const currentPhrase = gamePhraseSignal.value;
-        if (!currentPhrase || currentPhrase.displayAs !== 'Game') {
+        if (!currentPhrase || (currentPhrase.displayAs !== 'Game' && currentPhrase.displayAs !== 'WPM')) {
             return;
         }
         if (currentPhrase.key != null && currentPhrase.key === lastCompletedKeyRef.current) {
@@ -171,8 +171,8 @@ const NextCharsDisplay = forwardRef<NextCharsDisplayHandle, INextCharsDisplayPro
         }
 
         if (stringBeingTested.trim() === phraseText.trim()) {
-            stopTimer();
-            handleSuccess();
+            const elapsedSeconds = timerRef.current?.stop() ?? 0;
+            handleSuccess(elapsedSeconds);
             return;
         }
 
@@ -201,7 +201,7 @@ const NextCharsDisplay = forwardRef<NextCharsDisplayHandle, INextCharsDisplayPro
     // useComputed object as a useEffect dep would only fire once).
     useSignalEffect(() => {
         const foundPhrase = gamePhraseSignal.value;
-        if (foundPhrase === null || foundPhrase === undefined || isNullOrEmptyString(foundPhrase.value) || foundPhrase.displayAs !== 'Game') {
+        if (foundPhrase === null || foundPhrase === undefined || isNullOrEmptyString(foundPhrase.value) || (foundPhrase.displayAs !== 'Game' && foundPhrase.displayAs !== 'WPM')) {
             lastCompletedKeyRef.current = null;
             setNextChars('');
             return;

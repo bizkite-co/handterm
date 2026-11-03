@@ -9,7 +9,9 @@ import {
   userNameSignal,
   isInLoginProcessSignal,
   isInSignUpProcessSignal,
-  isInVerifyProcessSignal
+  isInVerifyProcessSignal,
+  appendToOutput,
+  setActivity
 } from '../signals/appSignals';
 import { setGamePhrase } from '../signals/gameSignals';
 import { tutorialSignal, setCompletedTutorial, getNextTutorial, completedTutorialsSignal } from '../signals/tutorialSignals';
@@ -114,7 +116,7 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
     terminalAdapter?.resetPrompt();
   }, [activityMediator, terminalAdapter]);
 
-  const handlePhraseSuccess = useCallback((phrase: GamePhrase | null) => {
+  const handlePhraseSuccess = useCallback((phrase: GamePhrase | null, elapsedSeconds?: number) => {
     if (phrase === null) return;
 
     const key = phrase.key?.trim() ?? '';
@@ -123,6 +125,31 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
       return;
     }
     logger.debug('handlePhraseSuccess called with phrase:', key, 'Activity:', currentActivityValue);
+
+    if (currentActivityValue === ActivityType.WPM) {
+      handlePhraseComplete();
+      terminalAdapter?.resetPrompt();
+      setActivity(ActivityType.NORMAL);
+
+      const elapsedSec = (elapsedSeconds && elapsedSeconds > 0) ? elapsedSeconds : 1;
+      const words = phrase.value.length / 5;
+      const wpm = Math.round(words / (elapsedSec / 60));
+      const formattedTime = elapsedSec.toFixed(1);
+
+      appendToOutput({
+        command: { command: 'wpm', args: [phrase.tutorialGroup ?? '100'], switches: {} },
+        response: `<div class="wpm-test-result">
+  <div style="color: #4ade80; font-weight: bold; margin-bottom: 4px;">✓ WPM Speed Test Completed!</div>
+  <div>Speed: <strong style="color: #38bdf8; font-size: 1.1em;">${wpm} WPM</strong></div>
+  <div>Time: ${formattedTime}s | Length: ${phrase.value.length} characters (~${Math.round(words)} words)</div>
+  <div style="color: #94a3b8; font-size: 0.9em; margin-top: 4px;">Level ${phrase.tutorialGroup ?? '100'} completed successfully.</div>
+</div>`,
+        status: 200,
+        wpmAverage: wpm,
+        commandTime: new Date(),
+      });
+      return;
+    }
 
     const game = gameHandleRef.current;
     if (isGameHandle(game)) {
@@ -295,7 +322,7 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
           onHeroDeath={() => terminalAdapter?.resetPrompt()}
         />
       )}
-      {currentActivityValue === ActivityType.GAME && (
+      {(currentActivityValue === ActivityType.GAME || currentActivityValue === ActivityType.WPM) && (
         <NextCharsDisplay
           ref={nextCharsDisplayRef}
           isInPhraseMode={true}
