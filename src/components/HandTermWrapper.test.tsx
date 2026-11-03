@@ -1,7 +1,7 @@
 import { render, act, screen } from '@testing-library/react';
 import { vi, describe, test, expect, beforeEach, afterEach } from 'vitest';
 import { HandTermWrapper } from './HandTermWrapper';
-import { activitySignal } from '../signals/appSignals';
+import { activitySignal, outputElementsSignal } from '../signals/appSignals';
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 import { parseLocation } from '../utils/navigationUtils';
 import {
@@ -33,6 +33,9 @@ vi.mock('monaco-editor/esm/vs/editor/editor.api', () => ({
         getValue: vi.fn(() => ''),
         getLanguageId: vi.fn(() => 'plaintext'),
         setValue: vi.fn(),
+        getLineCount: vi.fn(() => 1),
+        getLineMaxColumn: vi.fn(() => 10),
+        getLineContent: vi.fn(() => ''),
       }),
       layout: vi.fn(),
       updateOptions: vi.fn(),
@@ -97,8 +100,12 @@ vi.mock('../utils/navigationUtils', () => ({
 }));
 
 // Add this mock with the other mocks at the top
+let capturedNextCharsProps: any = null;
 vi.mock('../components/NextCharsDisplay', () => ({
-  default: () => null
+  default: (props: any) => {
+    capturedNextCharsProps = props;
+    return null;
+  }
 }));
 
 vi.mock('src/signals/tutorialSignals', async (importOriginal) => {
@@ -321,5 +328,37 @@ describe('HandTermWrapper', () => {
     expect(editorCall).toBeDefined();
     expect(editorCall[1].value).toBe('# Fresh content');
   }, 10000);
+
+  test('gameplay phrase success reports WPM and completed phrase to Output', async () => {
+    vi.mocked(parseLocation).mockReturnValue({
+      activityKey: ActivityType.GAME,
+      contentKey: 'game-1',
+      groupKey: 'single-click',
+      clearParams: false,
+    });
+
+    await act(async () => {
+      activitySignal.value = ActivityType.GAME;
+    });
+
+    render(<HandTermWrapper {...mockProps} />);
+
+    expect(capturedNextCharsProps).not.toBeNull();
+
+    await act(async () => {
+      capturedNextCharsProps.onPhraseSuccess(
+        { key: 'game-1', value: 'All sad lads ask dad; alas fads fall', displayAs: 'Game' },
+        6.0 // 36 chars = 7.2 words in 6.0s (0.1 min) = 72 WPM
+      );
+    });
+
+    const outputElements = outputElementsSignal.value;
+    const lastOutput = outputElements[outputElements.length - 1];
+    expect(lastOutput).toBeDefined();
+    expect(lastOutput.command.command).toBe('All sad lads ask dad; alas fads fall');
+    expect(lastOutput.wpmAverage).toBe(72);
+    expect(lastOutput.response).toContain('72 WPM');
+    expect(lastOutput.response).toContain('6.0s');
+  });
 
 });

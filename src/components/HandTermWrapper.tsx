@@ -126,15 +126,16 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
     }
     logger.debug('handlePhraseSuccess called with phrase:', key, 'Activity:', currentActivityValue);
 
+    const elapsedSec = (elapsedSeconds && elapsedSeconds > 0) ? elapsedSeconds : 1;
+    const words = phrase.value.length / 5;
+    const wpm = Math.round(words / (elapsedSec / 60));
+    const formattedTime = elapsedSec.toFixed(1);
+
     if (currentActivityValue === ActivityType.WPM) {
       handlePhraseComplete();
       terminalAdapter?.resetPrompt();
       setActivity(ActivityType.NORMAL);
 
-      const elapsedSec = (elapsedSeconds && elapsedSeconds > 0) ? elapsedSeconds : 1;
-      const words = phrase.value.length / 5;
-      const wpm = Math.round(words / (elapsedSec / 60));
-      const formattedTime = elapsedSec.toFixed(1);
       const isTrialMode = Boolean(phrase.tutorialGroup?.includes('trial'));
       const testTitle = isTrialMode ? 'WPM Time Trial Completed!' : 'WPM Speed Test Completed!';
 
@@ -152,6 +153,17 @@ const HandTermWrapper = forwardRef<IHandTermWrapperMethods, IHandTermWrapperProp
       });
       return;
     }
+
+    // Gameplay mode: report WPM and the completed phrase into the Output section
+    appendToOutput({
+      command: { command: phrase.value, args: [], switches: {} },
+      response: `<div class="gameplay-phrase-result" style="color: #4ade80; font-size: 0.9em; margin-top: 2px;">
+  ✓ Level completed: <strong>${wpm} WPM</strong> in ${formattedTime}s
+</div>`,
+      status: 200,
+      wpmAverage: wpm,
+      commandTime: new Date(),
+    });
 
     const game = gameHandleRef.current;
     if (isGameHandle(game)) {
